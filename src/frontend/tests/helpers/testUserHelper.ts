@@ -24,18 +24,19 @@ export async function loginAsTestUser(page: Page): Promise<boolean> {
 
   await page.getByRole("textbox", { name: "Username" }).fill(testUser.username);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(testUser.password);
+  const loginResponse = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === "/api/v1/auth/login" && response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Login" }).click();
+  if (!(await loginResponse).ok()) return false;
 
-  try {
-    await expect(
-      page.getByRole("alert").filter({
-        hasText: `Login successful for ${testUser.username}`,
-      }),
-    ).toBeVisible({ timeout: 3_000 });
-    return true;
-  } catch {
-    return false;
-  }
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: `Login successful for ${testUser.username}`,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText(`You are currently logged in as ${testUser.username}`)).toBeVisible();
+  return true;
 }
 
 export async function registerTestUser(page: Page) {

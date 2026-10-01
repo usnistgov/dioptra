@@ -58,7 +58,9 @@ Optional Attributes
 
 - **Description**: (string, optional) A text description of the Entrypoint's purpose or scope. Defaults to empty.
 - **Plugins**: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
+- **Plugin Snapshots**: (list of Plugin Snapshot IDs, optional) The selected plugin versions that provide Function Tasks to the Entrypoint Task Graph.
 - **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
+- **Artifact Plugin Snapshots**: (list of Plugin Snapshot IDs, optional) The selected plugin versions that provide artifact serialization and deserialization tasks to the Entrypoint.
 - **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Output Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
     - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs 
     - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-parameter-types>`) 

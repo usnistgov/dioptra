@@ -98,8 +98,12 @@ type UpdateParams = {
     name: string;
     description: string;
     taskGraph: string;
+    artifactGraph: string;
     parameters: EntrypointParameters[];
+    artifactParameters: object[];
     queues: number[];
+    pluginSnapshotIds: number[];
+    artifactPluginSnapshotIds: number[];
   };
   models: {
     name: string;

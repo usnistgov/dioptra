@@ -28,6 +28,9 @@ fi
 
 source "${REPO_DIR}/dev-kb/local-setup/dev-set.sh" --env "${ENV_FILE}"
 
+# Managed tests always use the backend started below, including after env-file overrides.
+export DIOPTRA_E2E_API_URL="http://localhost:5000"
+
 mkdir -p "${E2E_DEPLOY}/instance" "${E2E_DEPLOY}/workdir"
 
 export DIOPTRA_DEPLOY="${E2E_DEPLOY}"

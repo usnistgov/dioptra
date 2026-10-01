@@ -1166,6 +1166,13 @@ def test_create_job_using_entrypoint_snapshot_id(
     modified_entrypoint = dioptra_client.entrypoints.modify_by_id(
         entrypoint_id=entrypoint_id,
         name=updated_entrypoint_name,
+        plugin_snapshot_ids=[
+            p["snapshotId"] for p in registered_entrypoints["entrypoint1"]["plugins"]
+        ],
+        artifact_plugin_snapshot_ids=[
+            p["snapshotId"]
+            for p in registered_entrypoints["entrypoint1"]["artifactPlugins"]
+        ],
         task_graph=registered_entrypoints["entrypoint1"]["taskGraph"],
         artifact_graph=registered_entrypoints["entrypoint1"]["artifactGraph"],
         description=registered_entrypoints["entrypoint1"]["description"],

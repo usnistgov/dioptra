@@ -331,20 +331,9 @@
         <h2>Task Plugins</h2>
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
-            ref="taskPluginsDropdown"
             v-model:selectedPlugins="entryPoint.plugins"
-            v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-            v-model:pluginIDsToRemove="pluginIDsToRemove"
             class="col"
             :disable="entryPoint.deleted"
-          />
-          <q-btn
-            label="Save Plugin Selection"
-            color="primary"
-            class="q-ml-sm"
-            :loading="savingPluginType === 'plugins'"
-            :disable="route.params.id === 'new' || history || entryPoint.deleted || !taskPluginChangesPending"
-            @click="savePluginChanges('plugins')"
           />
         </div>
         <TableComponent
@@ -483,20 +472,9 @@
         <h2>Artifact Task Plugins</h2>
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
-            ref="artifactTaskPluginsDropdown"
             v-model:selectedPlugins="entryPoint.artifactPlugins"
-            v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
-            v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
             class="col"
             :disable="entryPoint.deleted"
-          />
-          <q-btn
-            label="Save Plugin Selection"
-            color="primary"
-            class="q-ml-sm"
-            :loading="savingPluginType === 'artifactPlugins'"
-            :disable="route.params.id === 'new' || history || entryPoint.deleted || !artifactPluginChangesPending"
-            @click="savePluginChanges('artifactPlugins')"
           />
         </div>
         <TableComponent
@@ -564,12 +542,9 @@
       <q-btn
         label="Validate"
         color="primary"
-        :disable="pluginChangesBlockValidation"
+        :disable="history || entryPoint.deleted"
         @click="validateEntrypoint()"
       />
-      <q-tooltip v-if="pluginChangesBlockValidation">
-        Plugin selections have changed. Save your plugin changes before validating.
-      </q-tooltip>
     </span>
 
     <q-btn
@@ -726,12 +701,7 @@ const ORIGINAL_COPY = {
 };
 
 const valuesChangedFromOriginal = computed(() => {
-  for (const key in ORIGINAL_COPY) {
-    if (JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(entryPoint.value[key])) {
-      return true;
-    }
-  }
-  return false;
+  return hasEntrypointChanges(ORIGINAL_COPY);
 });
 
 const enableSubmit = computed(() => {
@@ -771,7 +741,7 @@ watch(
   (ep) => {
     if (ep) {
       entryPoint.value = ep;
-      copyAtEditStart.value = entryPoint.value;
+      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
     } else {
       getEntrypoint();
     }
@@ -779,18 +749,7 @@ watch(
 );
 
 const valuesChangedFromEditStart = computed(() => {
-  for (const key in copyAtEditStart.value) {
-    if (JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(entryPoint.value[key])) {
-      return true;
-    }
-  }
-  return false;
-});
-
-const valuesChangedFromEditStartBesidesPlugins = computed(() => {
-  const { plugins: _1, artifactPlugins: _2, ...copyRest } = copyAtEditStart.value;
-  const { plugins: _3, artifactPlugins: _4, ...entryRest } = entryPoint.value;
-  return JSON.stringify(copyRest) !== JSON.stringify(entryRest);
+  return Object.keys(copyAtEditStart.value).length > 0 && hasEntrypointChanges(copyAtEditStart.value);
 });
 
 const tasks = ref([]);
@@ -988,7 +947,6 @@ function submit() {
   }
   basicInfoForm.value.validate().then((success) => {
     if (success && taskGraphError.value === "") {
-      confirmLeave.value = true;
       addOrModifyEntrypoint();
     } else {
       // error
@@ -996,40 +954,67 @@ function submit() {
   });
 }
 
-function prepareEntrypointPayload() {
-  const payload = JSON.parse(JSON.stringify(entryPoint.value));
-  const keysToKeep = [
-    "group",
-    "name",
-    "description",
-    "taskGraph",
-    "artifactGraph",
-    "parameters",
-    "artifactParameters",
-    "queues",
-    "plugins",
-    "artifactPlugins",
-  ];
-  for (const key of Object.keys(payload)) {
-    if (!keysToKeep.includes(key)) {
-      delete payload[key];
-    }
-  }
-
-  // turn objects into ids
-  payload.queues = payload.queues.map((queue) => queue.id);
-  payload.plugins = payload.plugins.map((plugin) => plugin.id);
-  payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
-
-  payload.artifactParameters = payload.artifactParameters.map((param) => ({
-    ...param,
-    outputParams: param.outputParams.map((oParam) => ({
-      ...oParam,
-      parameterType: oParam.parameterType.id,
+function prepareEntrypointPayload(candidate = entryPoint.value) {
+  const payload = {
+    name: candidate.name,
+    description: candidate.description,
+    taskGraph: candidate.taskGraph,
+    artifactGraph: candidate.artifactGraph,
+    parameters: candidate.parameters.map((param) => ({
+      name: param.name,
+      parameterType: param.parameterType,
+      defaultValue: param.defaultValue,
     })),
-  }));
-
+    artifactParameters: candidate.artifactParameters.map((param) => ({
+      name: param.name,
+      outputParams: param.outputParams.map((oParam) => ({
+        name: oParam.name,
+        parameterType: oParam.parameterType.id,
+      })),
+    })),
+    queues: candidate.queues.map((queue) => queue.id),
+  };
+  if (route.params.id === "new") {
+    payload.group = candidate.group;
+    payload.plugins = candidate.plugins.map((plugin) => plugin.id);
+    payload.artifactPlugins = candidate.artifactPlugins.map((plugin) => plugin.id);
+  } else {
+    payload.pluginSnapshotIds = candidate.plugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+    payload.artifactPluginSnapshotIds = candidate.artifactPlugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+  }
   return payload;
+}
+
+function hasEntrypointChanges(original) {
+  const before = prepareEntrypointPayload(original);
+  const after = prepareEntrypointPayload();
+  // Binding order has no effect; retain ordering in the submitted payload and other content.
+  for (const key of ["plugins", "artifactPlugins", "pluginSnapshotIds", "artifactPluginSnapshotIds"]) {
+    before[key]?.sort((a, b) => a - b);
+    after[key]?.sort((a, b) => a - b);
+  }
+  return JSON.stringify(before) !== JSON.stringify(after);
+}
+
+async function refreshPluginLatestState() {
+  const pluginIds = [...new Set([...entryPoint.value.plugins, ...entryPoint.value.artifactPlugins].map((p) => p.id))];
+  await Promise.all(
+    pluginIds.map(async (id) => {
+      try {
+        const res = await api.getItem("plugins", id);
+        for (const type of ["plugins", "artifactPlugins"]) {
+          entryPoint.value[type]
+            .filter((plugin) => plugin.id === id)
+            .forEach((plugin) => {
+              plugin.latestSnapshot = (plugin.snapshotId ?? plugin.snapshot) === res.data.snapshot;
+            });
+        }
+      } catch (err) {
+        console.warn(err);
+        notify.error(err?.response?.data?.message || "Failed to refresh plugin versions");
+      }
+    }),
+  );
 }
 
 async function addOrModifyEntrypoint() {
@@ -1040,28 +1025,14 @@ async function addOrModifyEntrypoint() {
       store.savedForms.entryPoint = null;
       notify.success(`Successfully created '${entryPoint.value.name}'`);
     } else {
-      if (pluginIDsToUpdate.value.length > 0) {
-        await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins");
-      }
-      if (artifactPluginIDsToUpdate.value.length > 0) {
-        await api.addPluginsToEntrypoint(route.params.id, artifactPluginIDsToUpdate.value, "artifactPlugins");
-      }
-      for (const pluginId of pluginIDsToRemove.value) {
-        await api.removePluginFromEntrypoint(route.params.id, pluginId, "plugins");
-      }
-      for (const pluginId of artifactPluginIDsToRemove.value) {
-        await api.removePluginFromEntrypoint(route.params.id, pluginId, "artifactPlugins");
-      }
-      if (valuesChangedFromEditStartBesidesPlugins.value) {
-        const keysToRemove = ["group", "plugins", "artifactPlugins"];
-        keysToRemove.forEach((key) => delete submitObject[key]);
-        await api.updateItem("entrypoints", route.params.id, submitObject);
-      }
+      await api.updateItem("entrypoints", route.params.id, submitObject);
       notify.success(`Successfully updated '${entryPoint.value.name}'`);
     }
+    confirmLeave.value = true;
     router.push("/entrypoints");
   } catch (err) {
-    notify.error(err.response.data.message);
+    showValidationError(err, "Failed to save Entrypoint");
+    await refreshPluginLatestState();
   }
 }
 
@@ -1202,8 +1173,14 @@ const taskGraphObject = computed(() => {
 });
 
 function findEligibleSwapGroups() {
-  if (!taskGraphObject.value || typeof taskGraphObject.value !== "object") return [];
-
+  if (
+    !selectedSwapTask.value ||
+    !taskGraphObject.value ||
+    typeof taskGraphObject.value !== "object" ||
+    Array.isArray(taskGraphObject.value)
+  )
+    return [];
+  console.log("eligibleSwappableTasks = ", eligibleSwappableTasks.value);
   const eligibleTaskNames = new Set(eligibleSwappableTasks.value.map((task) => task.name));
   if (selectedSwapTask.value) {
     eligibleTaskNames.add(selectedSwapTask.value.name);
@@ -1220,13 +1197,18 @@ function findEligibleSwapGroups() {
     if (swapEntries.length !== 1) return;
 
     const [swapName, swapGroup] = swapEntries[0];
+    const outputs = swapGroup["?outputs"];
+    if (!Array.isArray(outputs) || outputs.length !== selectedSwapTask.value.outputParams.length) return;
+
     const taskAliases = Object.entries(swapGroup).filter(([name]) => name !== "?outputs");
-    const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
+    const taskNames = taskAliases.map(([, taskDefinition]) => {
+      if (!taskDefinition || typeof taskDefinition !== "object" || Array.isArray(taskDefinition)) return null;
+      if ("task" in taskDefinition) return taskDefinition.task;
+      const names = Object.keys(taskDefinition).filter((name) => name !== "dependencies");
+      return names.length === 1 ? names[0] : null;
+    });
     const allTasksAreSwappable =
-      taskAliases.length > 0 &&
-      taskNames.every(
-        (taskName) => eligibleTaskNames.has(taskName) || (typeof taskName === "string" && /^<[^>]+>$/.test(taskName)),
-      );
+      taskAliases.length > 0 && taskNames.every((taskName) => eligibleTaskNames.has(taskName));
 
     if (allTasksAreSwappable) {
       swapGroups.push({ stepName, swapName, taskNames, label: stepName, createNew: false });
@@ -1263,6 +1245,20 @@ function openAddSwappableTaskDialog(task) {
   prepareSwappableTaskSelection(task);
   showAddSwappableTaskDialog.value = true;
 }
+
+watch(
+  [tasks, taskGraphObject],
+  () => {
+    if (!showAddSwappableTaskDialog.value) return;
+    const task = tasks.value.find((candidate) => candidate.name === selectedSwapTask.value?.name);
+    if (task) {
+      prepareSwappableTaskSelection(task);
+    } else {
+      showAddSwappableTaskDialog.value = false;
+    }
+  },
+  { deep: true },
+);
 
 const selectableSwappableTasks = computed(() =>
   selectedSwapStep.value?.createNew
@@ -1399,56 +1395,6 @@ function leaveForm() {
   router.push(toPath.value);
 }
 
-const pluginIDsToUpdate = ref([]);
-const artifactPluginIDsToUpdate = ref([]);
-const pluginIDsToRemove = ref([]);
-const artifactPluginIDsToRemove = ref([]);
-const taskPluginsDropdown = ref(null);
-const artifactTaskPluginsDropdown = ref(null);
-const savingPluginType = ref(null);
-
-const taskPluginChangesPending = computed(
-  () => pluginIDsToUpdate.value.length > 0 || pluginIDsToRemove.value.length > 0,
-);
-const artifactPluginChangesPending = computed(
-  () => artifactPluginIDsToUpdate.value.length > 0 || artifactPluginIDsToRemove.value.length > 0,
-);
-const pluginChangesBlockValidation = computed(
-  () => route.params.id !== "new" && (taskPluginChangesPending.value || artifactPluginChangesPending.value),
-);
-
-async function savePluginChanges(pluginType) {
-  const isArtifactPlugin = pluginType === "artifactPlugins";
-  const pluginIDsToSave = isArtifactPlugin ? artifactPluginIDsToUpdate : pluginIDsToUpdate;
-  const pluginIDsToDelete = isArtifactPlugin ? artifactPluginIDsToRemove : pluginIDsToRemove;
-  const dropdown = isArtifactPlugin ? artifactTaskPluginsDropdown : taskPluginsDropdown;
-  const pluginLabel = isArtifactPlugin ? "artifact task plugins" : "task plugins";
-
-  if (route.params.id === "new" || (pluginIDsToSave.value.length === 0 && pluginIDsToDelete.value.length === 0)) {
-    return;
-  }
-
-  savingPluginType.value = pluginType;
-  try {
-    if (pluginIDsToSave.value.length > 0) {
-      await api.addPluginsToEntrypoint(route.params.id, pluginIDsToSave.value, pluginType);
-    }
-    for (const pluginId of pluginIDsToDelete.value) {
-      await api.removePluginFromEntrypoint(route.params.id, pluginId, pluginType);
-    }
-
-    pluginIDsToSave.value = [];
-    pluginIDsToDelete.value = [];
-    copyAtEditStart.value[pluginType] = JSON.parse(JSON.stringify(entryPoint.value[pluginType]));
-    dropdown.value?.resetOriginalSelectedPlugins();
-    notify.success(`Successfully saved ${pluginLabel}`);
-  } catch (err) {
-    notify.error(err.response?.data?.message ?? `Failed to save ${pluginLabel}`);
-  } finally {
-    savingPluginType.value = null;
-  }
-}
-
 const objectForDeletion = ref();
 
 async function deleteEntrypoint() {
@@ -1482,27 +1428,30 @@ async function validateEntrypoint() {
       await api.addItem("entrypoints", submitObject, true);
       notify.success(`Entrypoint is valid!`);
     } else {
-      const keysToRemove = ["group", "plugins", "artifactPlugins"];
-      keysToRemove.forEach((key) => delete submitObject[key]);
       await api.updateItem("entrypoints", route.params.id, submitObject, true);
       notify.success(`Entrypoint is valid!`);
     }
   } catch (err) {
-    const reason = err.response?.data?.detail?.reason;
-    const responseValidationIssues = [
-      ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
-      ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
-      ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
-      ...(Array.isArray(reason?.missing_global_params)
-        ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
-        : []),
-    ];
-    if (responseValidationIssues.length > 0) {
-      validationIssues.value = responseValidationIssues;
-      displayErrorDialog.value = true;
-    } else {
-      notify.error(err.response?.data?.message ?? "Failed to validate Entrypoint");
-    }
+    showValidationError(err, "Failed to validate Entrypoint");
+    await refreshPluginLatestState();
+  }
+}
+
+function showValidationError(err, fallbackMessage) {
+  const reason = err.response?.data?.detail?.reason;
+  const responseValidationIssues = [
+    ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
+    ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+    ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
+    ...(Array.isArray(reason?.missing_global_params)
+      ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
+      : []),
+  ];
+  if (responseValidationIssues.length > 0) {
+    validationIssues.value = responseValidationIssues;
+    displayErrorDialog.value = true;
+  } else {
+    notify.error(err.response?.data?.message ?? fallbackMessage);
   }
 }
 
@@ -1544,15 +1493,16 @@ async function syncPlugin(plugin, type = "plugins") {
     const res = await api.getItem("plugins", plugin.id);
 
     const index = entryPoint.value[type].findIndex((p) => p.id === plugin.id);
+    if (index === -1) return;
+    const selectionChanged =
+      (entryPoint.value[type][index].snapshotId ?? entryPoint.value[type][index].snapshot) !== res.data.snapshot;
     entryPoint.value[type].splice(index, 1, res.data);
 
-    if (type === "plugins" && !pluginIDsToUpdate.value.includes(plugin.id)) {
-      pluginIDsToUpdate.value.push(plugin.id);
-    } else if (type === "artifactPlugins" && !artifactPluginIDsToUpdate.value.includes(plugin.id)) {
-      artifactPluginIDsToUpdate.value.push(plugin.id);
-    }
-
-    notify.success(`Synced '${res.data.name}'`);
+    notify.success(
+      selectionChanged
+        ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
+        : `Already selected latest version of '${res.data.name}'.`,
+    );
   } catch (err) {
     console.warn(err);
     notify.error(err?.response?.data?.message || "Failed to sync plugin");

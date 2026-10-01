@@ -26,12 +26,16 @@ import structlog
 import yaml
 from flask_login import current_user
 from injector import inject
+from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
 from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
 from dioptra.restapi.db.models.users import User
-from dioptra.restapi.db.repository.utils import assert_user_in_group
+from dioptra.restapi.db.repository.utils import (
+    assert_resource_exists,
+    assert_user_in_group,
+)
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
 from dioptra.restapi.errors import (
@@ -510,6 +514,9 @@ class EntrypointIdService(UnitOfWorkService):
         artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
         on_save: bool = True,
+        *,
+        plugin_snapshot_ids: list[int] | None = None,
+        artifact_plugin_snapshot_ids: list[int] | None = None,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Modify an entrypoint.
@@ -529,6 +536,11 @@ class EntrypointIdService(UnitOfWorkService):
                 the current plugin snapshots are retained.
             artifact_plugin_ids: Artifact plugins to append or sync to their latest
                 snapshots. If None, the current artifact plugin snapshots are retained.
+            plugin_snapshot_ids: Complete task-plugin snapshot selection for PUT.
+                Each snapshot must be currently bound in this role or latest.
+            artifact_plugin_snapshot_ids: Complete artifact-plugin snapshot selection
+                for PUT. Both snapshot lists must be supplied together and cannot be
+                combined with resource-ID add-or-sync lists.
             commit: If True, commit the transaction. Defaults to True.
             on_save: If True, perform full save-time validation independently of
                 committing the transaction. Defaults to True.
@@ -546,6 +558,35 @@ class EntrypointIdService(UnitOfWorkService):
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
         assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
+        replacing_bindings = (
+            plugin_snapshot_ids is not None or artifact_plugin_snapshot_ids is not None
+        )
+        if replacing_bindings:
+            if (
+                plugin_snapshot_ids is None
+                or artifact_plugin_snapshot_ids is None
+                or plugin_ids is not None
+                or artifact_plugin_ids is not None
+            ):
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            "Supply both complete snapshot lists without resource-ID lists."
+                        ]
+                    },
+                )
+            selected_plugins = self._select_plugin_snapshots(
+                plugin_snapshot_ids,
+                [binding.plugin for binding in entrypoint.entry_point_plugins],
+                "task",
+            )
+            selected_artifact_plugins = self._select_plugin_snapshots(
+                artifact_plugin_snapshot_ids,
+                [binding.plugin for binding in entrypoint.entry_point_artifact_plugins],
+                "artifact",
+            )
+
         type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
         artifact_parameter_types = (
             list(
@@ -573,7 +614,13 @@ class EntrypointIdService(UnitOfWorkService):
             creator=current_user,
         )
 
-        if plugin_ids is None:
+        if replacing_bindings:
+            plugins = selected_plugins
+            new_entrypoint.entry_point_plugins = [
+                models.EntryPointPlugin(entry_point=new_entrypoint, plugin=plugin)
+                for plugin in plugins
+            ]
+        elif plugin_ids is None:
             plugins = _copy_plugins(
                 plugins=entrypoint.entry_point_plugins,
                 target_entrypoint=new_entrypoint,
@@ -597,7 +644,15 @@ class EntrypointIdService(UnitOfWorkService):
                 new_entrypoint.entry_point_plugins.append(new_plugin)
                 plugins.append(new_plugin.plugin)
 
-        if artifact_plugin_ids is None:
+        if replacing_bindings:
+            artifact_plugins = selected_artifact_plugins
+            new_entrypoint.entry_point_artifact_plugins = [
+                models.EntryPointArtifactPlugin(
+                    entry_point=new_entrypoint, plugin=plugin
+                )
+                for plugin in artifact_plugins
+            ]
+        elif artifact_plugin_ids is None:
             artifact_plugins = _copy_artifact_plugins(
                 artifact_plugins=entrypoint.entry_point_artifact_plugins,
                 target_entrypoint=new_entrypoint,
@@ -633,12 +688,12 @@ class EntrypointIdService(UnitOfWorkService):
         )
 
         with self._uow(commit):
-            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
             queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
             self._uow.entrypoint_repo.set_plugins(
                 new_entrypoint,
                 _deduplicate_plugin_resources(plugins, artifact_plugins),
             )
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
 
         log.debug(
             "Entrypoint modification successful",
@@ -650,6 +705,58 @@ class EntrypointIdService(UnitOfWorkService):
         return utils.EntrypointDict(
             entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
+
+    def _select_plugin_snapshots(
+        self,
+        snapshot_ids: list[int],
+        current_plugins: list[models.Plugin],
+        role: str,
+    ) -> list[models.Plugin]:
+        """Resolve exact bindings and enforce current-or-latest eligibility per role."""
+        current = {
+            plugin.resource_id: plugin.resource_snapshot_id
+            for plugin in current_plugins
+        }
+        selected: dict[int, models.Plugin] = {}
+        for snapshot_id in snapshot_ids:
+            selection = self._uow.session.execute(
+                select(models.Plugin, models.Resource.latest_snapshot_id)
+                .join(models.Resource)
+                .where(models.Plugin.resource_snapshot_id == snapshot_id)
+            ).first()
+            if selection is None:
+                raise EntityDoesNotExistError(
+                    EntityType.PLUGIN, plugin_snapshot_id=snapshot_id
+                )
+            plugin, latest_snapshot_id = selection
+            assert_resource_exists(
+                self._uow.session, plugin.resource, DeletionPolicy.NOT_DELETED
+            )
+            assert_user_in_group(self._uow.session, current_user, plugin.resource.owner)
+            if plugin.resource_id in selected:
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            f"Select only one snapshot per {role} plugin."
+                        ]
+                    },
+                )
+            if snapshot_id not in (
+                current.get(plugin.resource_id),
+                latest_snapshot_id,
+            ):
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            f"Plugin snapshot {snapshot_id} must be the currently bound "
+                            f"or latest snapshot for its {role} role."
+                        ]
+                    },
+                )
+            selected[plugin.resource_id] = plugin
+        return list(selected.values())
 
     def delete(
         self, entrypoint_id: int, commit: bool = True, **kwargs

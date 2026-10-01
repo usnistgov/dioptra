@@ -42,6 +42,7 @@
 
       <q-btn
         v-if="resource?.latestSnapshot === false"
+        :aria-label="`Sync ${resource.name} to latest version`"
         round
         dense
         color="red"

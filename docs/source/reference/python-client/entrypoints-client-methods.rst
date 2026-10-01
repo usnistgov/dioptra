@@ -148,8 +148,8 @@ Lightweight lint reports
 
 For inexpensive editor feedback, use ``POST /api/v1/entrypoints:lint`` or
 ``POST /api/v1/entrypoints/{id}:lint`` with the corresponding create or update
-request body. The colon is a literal part of the URL. Item lint uses the saved
-plugin associations, just like an update. These endpoints perform schema,
+content fields. The colon is a literal part of the URL. Item lint uses the saved
+plugin associations and accepts entrypoint content without PUT's snapshot lists. These endpoints perform schema,
 task-reference, and swap checks without full rendered-graph validation. Changes
 are rolled back on both success and failure.
 

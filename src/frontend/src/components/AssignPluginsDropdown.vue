@@ -8,7 +8,7 @@
     @filter="getPlugins"
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
-    @sync="(plugin, index) => syncPlugin(plugin.id, index)"
+    @sync="(plugin) => syncPlugin(plugin.id)"
   />
 </template>
 
@@ -29,8 +29,8 @@ watch(
   { once: true },
 );
 
-const pluginIDsToUpdate = defineModel("pluginIDsToUpdate");
-const pluginIDsToRemove = defineModel("pluginIDsToRemove");
+const pluginIDsToUpdate = defineModel("pluginIDsToUpdate", { default: () => [] });
+const pluginIDsToRemove = defineModel("pluginIDsToRemove", { default: () => [] });
 
 const pluginOptions = ref([]);
 
@@ -49,12 +49,21 @@ async function getPlugins(val = "", update) {
   });
 }
 
-async function syncPlugin(pluginId, index) {
+async function syncPlugin(pluginId) {
   try {
     const res = await api.getItem("plugins", pluginId);
-    selectedPlugins.value.splice(index, 1, res.data);
-    pluginIDsToUpdate.value.push(pluginId);
-    notify.success(`Synced '${res.data.name}'`);
+    const currentIndex = selectedPlugins.value.findIndex((plugin) => plugin.id === pluginId);
+    if (currentIndex === -1) return;
+    const selectionChanged =
+      (selectedPlugins.value[currentIndex].snapshotId ?? selectedPlugins.value[currentIndex].snapshot) !==
+      res.data.snapshot;
+    selectedPlugins.value.splice(currentIndex, 1, res.data);
+    if (selectionChanged) pluginIDsToUpdate.value.push(pluginId);
+    notify.success(
+      selectionChanged
+        ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
+        : `Already selected latest version of '${res.data.name}'.`,
+    );
   } catch (err) {
     console.warn(err);
     notify.error(err?.response?.data?.message || "Failed to sync plugin");

@@ -26,9 +26,12 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE, V1_ROOT
 from dioptra.restapi.v1.shared.resource_service import _plugin_file_payload_adapter
 
@@ -801,6 +804,90 @@ def test_rename_plugin(
         existing_name=existing_plugin["name"],
         existing_description=plugin_to_rename["description"],
     )
+
+
+def test_unchanged_plugin_put_creates_snapshots(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    db_session: DBSession,
+) -> None:
+    """Test that identical PUTs add history while preserving plugin file bindings."""
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    response = dioptra_client.plugins.get_by_id(plugin_id)
+    assert response.status_code == HTTPStatus.OK
+    original = response.json()
+    snapshot_ids = set(
+        db_session.scalars(
+            select(models.ResourceSnapshot.resource_snapshot_id).where(
+                models.ResourceSnapshot.resource_id == plugin_id
+            )
+        )
+    )
+    assert original["snapshot"] in snapshot_ids
+    initial_snapshot_count = len(snapshot_ids)
+    file_bindings = {
+        plugin_file["snapshot"]
+        for key, plugin_file in registered_plugin_with_files.items()
+        if key != "plugin"
+    }
+    file_ids = {plugin_file["id"] for plugin_file in original["files"]}
+    tested_snapshot_ids = {original["snapshot"]}
+
+    for additional_snapshot_count in (1, 2):
+        response = dioptra_client.plugins.modify_by_id(
+            plugin_id=plugin_id,
+            name=original["name"],
+            description=original["description"],
+        )
+        assert response.status_code == HTTPStatus.OK
+        modified = response.json()
+        assert modified["id"] == plugin_id
+        assert modified["snapshot"] not in snapshot_ids
+        assert modified["latestSnapshot"]
+        assert modified["name"] == original["name"]
+        assert modified["description"] == original["description"]
+        assert modified["user"] == original["user"]
+        assert modified["group"] == original["group"]
+        assert modified["files"] == original["files"]
+        assert_retrieving_plugin_by_id_works(
+            dioptra_client, plugin_id=plugin_id, expected=modified
+        )
+        snapshot_ids.add(modified["snapshot"])
+        tested_snapshot_ids.add(modified["snapshot"])
+
+        db_session.expire_all()
+        persisted_ids = set(
+            db_session.scalars(
+                select(models.ResourceSnapshot.resource_snapshot_id).where(
+                    models.ResourceSnapshot.resource_id == plugin_id
+                )
+            )
+        )
+        assert persisted_ids == snapshot_ids
+        assert len(persisted_ids) == initial_snapshot_count + additional_snapshot_count
+        resource = db_session.get(models.Resource, plugin_id)
+        assert resource.latest_snapshot_id == modified["snapshot"]
+        assert {child.resource_id for child in resource.children} == file_ids
+        file_binding_stmt = select(
+            models.PluginPluginFile.plugin_file_resource_snapshot_id
+        )
+        for snapshot_id in tested_snapshot_ids:
+            snapshot = db_session.get(models.Plugin, snapshot_id)
+            assert snapshot.resource_id == plugin_id
+            assert snapshot.name == original["name"]
+            assert snapshot.description == original["description"]
+            assert (
+                set(
+                    db_session.scalars(
+                        file_binding_stmt.where(
+                            models.PluginPluginFile.plugin_resource_snapshot_id
+                            == snapshot_id
+                        )
+                    )
+                )
+                == file_bindings
+            )
 
 
 def test_delete_plugin_by_id(

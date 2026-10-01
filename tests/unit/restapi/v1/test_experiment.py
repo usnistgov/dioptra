@@ -20,13 +20,17 @@ This module contains a set of tests that validate the supported CRUD operations 
 additional functionalities for the experiment entity. The tests ensure that the
 experiments can be registered, retrieved, and deleted as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
 
 from ..lib import helpers, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
@@ -525,6 +529,79 @@ def test_rename_experiment(
         experiment_id=experiment_to_rename["id"],
         expected_name=updated_experiment_name,
     )
+
+
+def test_unchanged_experiment_put_creates_snapshots(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    db_session: DBSession,
+) -> None:
+    """Test that identical PUTs add history while preserving experiment contents."""
+    name = "unchanged_experiment"
+    description = "An experiment saved without changes."
+    entrypoint_ids = [
+        registered_entrypoints["entrypoint1"]["id"],
+        registered_entrypoints["entrypoint2"]["id"],
+    ]
+    response = dioptra_client.experiments.create(
+        group_id=auth_account["default_group_id"],
+        name=name,
+        description=description,
+        entrypoints=entrypoint_ids,
+    )
+    assert response.status_code == HTTPStatus.OK
+    original = response.json()
+    experiment_id = original["id"]
+    snapshot_ids = {original["snapshot"]}
+
+    for snapshot_count in (2, 3):
+        response = dioptra_client.experiments.modify_by_id(
+            experiment_id=experiment_id,
+            name=name,
+            description=description,
+            entrypoints=entrypoint_ids,
+        )
+        assert response.status_code == HTTPStatus.OK
+        modified = response.json()
+        assert modified["id"] == experiment_id
+        assert modified["snapshot"] not in snapshot_ids
+        assert modified["latestSnapshot"]
+        assert modified["entrypoints"] == original["entrypoints"]
+        assert_experiment_response_contents_matches_expectations(
+            response=modified,
+            expected_contents={
+                "name": name,
+                "description": description,
+                "user_id": auth_account["id"],
+                "group_id": auth_account["default_group_id"],
+            },
+        )
+        assert_retrieving_experiment_by_id_works(
+            dioptra_client, experiment_id=experiment_id, expected=modified
+        )
+        snapshot_ids.add(modified["snapshot"])
+
+        db_session.expire_all()
+        persisted_ids = set(
+            db_session.scalars(
+                select(models.ResourceSnapshot.resource_snapshot_id).where(
+                    models.ResourceSnapshot.resource_id == experiment_id
+                )
+            )
+        )
+        assert persisted_ids == snapshot_ids
+        assert len(persisted_ids) == snapshot_count
+        resource = db_session.get(models.Resource, experiment_id)
+        assert resource.latest_snapshot_id == modified["snapshot"]
+        assert sorted(child.resource_id for child in resource.children) == sorted(
+            entrypoint_ids
+        )
+        for snapshot_id in snapshot_ids:
+            snapshot = db_session.get(models.Experiment, snapshot_id)
+            assert snapshot.resource_id == experiment_id
+            assert snapshot.name == name
+            assert snapshot.description == description
 
 
 def test_modify_experiment_replaces_entrypoints(
