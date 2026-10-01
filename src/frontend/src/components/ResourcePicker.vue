@@ -31,7 +31,6 @@
         :removable="!$attrs.disable"
         :clickable="false"
         :stacked="stackedBadges"
-        :allowSync="allowSync"
         @remove="scope.removeAtIndex(scope.index)"
         @sync="$emit('sync', scope.opt, scope.index)"
       />
@@ -111,10 +110,6 @@ const props = defineProps({
   multiple: {
     type: Boolean,
     default: true,
-  },
-  allowSync: {
-    type: Boolean,
-    default: false,
   },
   stackedBadges: {
     type: Boolean,

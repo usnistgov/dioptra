@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures/test";
 
 import { syncEntrypointPlugin, validateEntrypoint } from "./helpers/entrypointHelper";
 import { ensureLoggedInAsTestUser } from "./helpers/testUserHelper";
@@ -130,6 +130,9 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   }
   await page.goto(`/entrypoints/${saved.id}`);
   await expect(page.getByRole("heading", { name: saved.name })).toBeVisible();
+  await expect(taskInfo.locator(".q-field .q-chip").filter({ hasText: "outdated" })).toHaveCount(0);
+  await expect(taskInfo.getByRole("button", { name: /^Sync / })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
   await page.getByRole("textbox", { name: "Description:" }).fill("subsequent complete save");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);

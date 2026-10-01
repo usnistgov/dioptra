@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function syncEntrypointPlugin(page: Page, info: Locator, id: number, name: string) {
   const notification = page.getByRole("alert").filter({
-    hasText: `Selected latest version of '${name}'. Submit Entrypoint to save.`,
+    hasText: `latest version of '${name}'`,
   });
   // A previous notification must expire before it can identify this model update.
   await expect(notification).toHaveCount(0);
@@ -18,6 +18,7 @@ export async function syncEntrypointPlugin(page: Page, info: Locator, id: number
   // The application publishes this notification after replacing the selected plugin.
   await expect(notification).toBeVisible();
   await expect(info.locator(".q-field .q-chip").filter({ hasText: name })).not.toContainText("outdated");
+  await expect(info.getByRole("button", { name: `Sync ${name} to latest version`, exact: true })).toHaveCount(0);
 }
 
 export async function validateEntrypoint(page: Page, id: number) {
@@ -33,4 +34,14 @@ export async function validateEntrypoint(page: Page, id: number) {
   const response = await responsePromise;
   expect(response.ok(), await response.text()).toBe(true);
   await expect(notification).toBeVisible();
+}
+
+export async function navigateToEntrypoints(page: Page) {
+  const menu = page.getByRole("button", { name: "Navigation Menu", exact: true });
+  if (await menu.isVisible()) {
+    await menu.click();
+    await page.getByRole("link", { name: "Entrypoints", exact: true }).click();
+  } else {
+    await page.getByRole("tab", { name: "Entrypoints", exact: true }).click();
+  }
 }

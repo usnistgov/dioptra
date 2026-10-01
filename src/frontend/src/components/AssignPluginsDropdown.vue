@@ -5,7 +5,6 @@
     resourceType="plugin"
     label="Plugins:"
     :stacked-badges="true"
-    :allowSync="allowSync"
     @filter="getPlugins"
     @add="(added) => addPlugin(added.value)"
     @remove="(removed) => removePlugin(removed.value)"
@@ -18,8 +17,6 @@ import { ref, watch } from "vue";
 import * as api from "@/services/dataApi";
 import ResourcePicker from "@/components/ResourcePicker.vue";
 import * as notify from "../notify";
-
-const props = defineProps({ allowSync: { type: Boolean, default: false } });
 
 const selectedPlugins = defineModel("selectedPlugins");
 const originalSelectedPluginIds = ref([]);
@@ -57,12 +54,15 @@ async function syncPlugin(pluginId) {
     const res = await api.getItem("plugins", pluginId);
     const currentIndex = selectedPlugins.value.findIndex((plugin) => plugin.id === pluginId);
     if (currentIndex === -1) return;
+    const selectionChanged =
+      (selectedPlugins.value[currentIndex].snapshotId ?? selectedPlugins.value[currentIndex].snapshot) !==
+      res.data.snapshot;
     selectedPlugins.value.splice(currentIndex, 1, res.data);
-    pluginIDsToUpdate.value.push(pluginId);
+    if (selectionChanged) pluginIDsToUpdate.value.push(pluginId);
     notify.success(
-      props.allowSync
+      selectionChanged
         ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
-        : `Synced '${res.data.name}'`,
+        : `Already selected latest version of '${res.data.name}'.`,
     );
   } catch (err) {
     console.warn(err);

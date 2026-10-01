@@ -1,6 +1,8 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
-import { syncEntrypointPlugin, validateEntrypoint } from "./helpers/entrypointHelper";
+import { expect, test } from "./fixtures/test";
+
+import { navigateToEntrypoints, syncEntrypointPlugin, validateEntrypoint } from "./helpers/entrypointHelper";
 
 type Mutation = { method: string; path: string; dryRun: boolean; body: any };
 
@@ -29,7 +31,7 @@ function plugin(id: number, snapshotId: number, latestSnapshot = true) {
   };
 }
 
-async function mockEditor(page: Page) {
+async function mockEditor(page: Page, latestSelections = false) {
   const current = {
     id: 101,
     snapshot: 1001,
@@ -41,14 +43,14 @@ async function mockEditor(page: Page) {
     artifactParameters: [],
     taskGraph: "step:\n  task: task_1\n",
     artifactGraph: "",
-    plugins: [plugin(1, 11, false), plugin(2, 21, false)],
-    artifactPlugins: [plugin(1, 11, false), plugin(3, 31, false)],
+    plugins: [plugin(1, 11, latestSelections), plugin(2, 21, latestSelections)],
+    artifactPlugins: [plugin(1, 11, latestSelections), plugin(3, 31, latestSelections)],
   };
   function latestPlugin(id: number, snapshot: number) {
     const { snapshotId: _snapshotId, latestSnapshot: _latestSnapshot, ...resource } = plugin(id, snapshot);
     return { ...resource, snapshot };
   }
-  const latest = new Map([1, 2, 3, 4].map((id) => [id, latestPlugin(id, id * 10 + 2)]));
+  const latest = new Map([1, 2, 3, 4].map((id) => [id, latestPlugin(id, id * 10 + (latestSelections ? 1 : 2))]));
   const mutations: Mutation[] = [];
   const failures: string[] = [];
   const pluginGetHolds = new Map<number, { requested: () => void; released: Promise<void> }>();
@@ -72,6 +74,19 @@ async function mockEditor(page: Page) {
         body: request.postDataJSON(),
       });
       const message = failures.shift();
+      if (!message && url.searchParams.get("validateOnly") !== "true") {
+        const { pluginSnapshotIds, artifactPluginSnapshotIds, ...content } = request.postDataJSON();
+        Object.assign(current, content);
+        for (const [role, snapshots] of [
+          ["plugins", pluginSnapshotIds],
+          ["artifactPlugins", artifactPluginSnapshotIds],
+        ] as const) {
+          current[role] = snapshots.map((snapshot: number) => {
+            const id = Math.floor(snapshot / 10);
+            return plugin(id, snapshot, latest.get(id)?.snapshot === snapshot);
+          });
+        }
+      }
       await route.fulfill({
         status: message ? 400 : 200,
         json: message
@@ -147,6 +162,18 @@ test("validate unchanged bindings and save an independent task plugin update in 
   expect(mutations[2].body.artifactPluginSnapshotIds).toEqual([11, 31]);
   expect(mutations[2].body).not.toHaveProperty("plugins");
   expect(mutations[2].body).not.toHaveProperty("artifactPlugins");
+  await page.goto("/entrypoints/101");
+  await expect(page.getByRole("heading", { name: "coordinated-entrypoint" })).toBeVisible();
+  await expect(
+    taskInfo(page).getByRole("button", { name: "Sync plugin-1 to latest version", exact: true }),
+  ).toHaveCount(0);
+  await expect(taskInfo(page).locator(".q-field .q-chip").filter({ hasText: "plugin-1" })).not.toContainText(
+    "outdated",
+  );
+  await expect(
+    artifactInfo(page).getByRole("button", { name: "Sync plugin-1 to latest version", exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
 });
 
 test("artifact synchronization retains task-role pins including the same plugin", async ({ page }) => {
@@ -157,6 +184,18 @@ test("artifact synchronization retains task-role pins including the same plugin"
   expectMutations(mutations, [false]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([11, 21]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([12, 31]);
+  await page.goto("/entrypoints/101");
+  await expect(page.getByRole("heading", { name: "coordinated-entrypoint" })).toBeVisible();
+  await expect(
+    artifactInfo(page).getByRole("button", { name: "Sync plugin-1 to latest version", exact: true }),
+  ).toHaveCount(0);
+  await expect(artifactInfo(page).locator(".q-field .q-chip").filter({ hasText: "plugin-1" })).not.toContainText(
+    "outdated",
+  );
+  await expect(
+    taskInfo(page).getByRole("button", { name: "Sync plugin-1 to latest version", exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
 });
 
 test("stage additions and removals in both roles with complete latest selections", async ({ page }) => {
@@ -196,8 +235,12 @@ for (const action of ["Validate", "Submit EntryPoint"]) {
     const { mutations, failures, latest, latestPlugin, holdNextPluginGet } = await mockEditor(page);
     await syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
     await page.getByRole("textbox", { name: "Name:" }).fill("retained-name");
+    await page.getByRole("textbox", { name: "Description:" }).fill("retained-description");
+    await artifactInfo(page).getByRole("textbox").fill("retained_artifact: {}\n");
+    await add(page, artifactInfo(page), 4);
     const editedGraph = "edited_step:\n  task: task_1\n";
     await taskInfo(page).getByRole("textbox").fill(editedGraph);
+    latest.set(1, latestPlugin(1, 13));
     failures.push("Selected plugin snapshot is no longer latest. Select the latest snapshot and retry.");
     await page.getByRole("button", { name: action, exact: true }).click();
     await expect(page.getByRole("dialog")).toContainText("no longer latest");
@@ -205,19 +248,24 @@ for (const action of ["Validate", "Submit EntryPoint"]) {
     await expect(page).toHaveURL(/\/entrypoints\/101$/);
     await expect(page.getByRole("textbox", { name: "Name:" })).toHaveValue("retained-name");
     await expect(taskInfo(page).getByRole("textbox")).toHaveText(editedGraph);
+    await expect(page.getByRole("textbox", { name: "Description:" })).toHaveValue("retained-description");
+    await expect(artifactInfo(page).getByRole("textbox")).toHaveText("retained_artifact: {}\n");
+    await expect(taskInfo(page).locator(".q-field .q-chip").filter({ hasText: "plugin-1" })).toContainText("outdated");
+    await expect(
+      taskInfo(page).getByRole("button", { name: "Sync plugin-1 to latest version", exact: true }).first(),
+    ).toBeVisible();
     const rejectedDryRun = action === "Validate";
     expectMutations(mutations, [rejectedDryRun]);
     expect(mutations[0].body.pluginSnapshotIds).toEqual([12, 21]);
-    expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([11, 31]);
+    expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([11, 31, 42]);
     await validateEntrypoint(page, 101);
     expectMutations(mutations, [rejectedDryRun, true]);
     expect(mutations[1].body).toEqual(mutations[0].body);
-    latest.set(1, latestPlugin(1, 13));
     const heldGet = holdNextPluginGet(1);
     const synchronization = syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
     await heldGet.received;
     try {
-      // Hold the repeated GET long enough to expose a wait on the already-absent outdated marker.
+      // A delayed response must not report synchronization before the staged model is updated.
       const state = await Promise.race([
         synchronization.then(() => "completed"),
         new Promise<string>((resolve) => setTimeout(() => resolve("waiting"), 250)),
@@ -234,9 +282,11 @@ for (const action of ["Validate", "Submit EntryPoint"]) {
     expect(mutations[2].body).toEqual({ ...mutations[1].body, pluginSnapshotIds: [13, 21] });
     expect(mutations[2].body).toMatchObject({
       name: "retained-name",
+      description: "retained-description",
       taskGraph: editedGraph,
+      artifactGraph: "retained_artifact: {}\n",
       pluginSnapshotIds: [13, 21],
-      artifactPluginSnapshotIds: [11, 31],
+      artifactPluginSnapshotIds: [11, 31, 42],
     });
   });
 }
@@ -250,14 +300,75 @@ test("a rejected graph save keeps the navigation warning and permits graph corre
   await expect(page.getByRole("dialog")).toContainText("unknown task");
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   expectMutations(mutations, [false]);
-  await page.getByRole("tab", { name: "Entrypoints", exact: true }).click();
+  await navigateToEntrypoints(page);
   await expect(page.getByRole("dialog")).toContainText("unsaved changes");
-  await page.getByRole("button", { name: "Cancel", exact: true }).last().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   const correctedGraph = "corrected_step:\n  task: task_1\n";
   await taskInfo(page).getByRole("textbox").fill(correctedGraph);
+  await expect(taskInfo(page).getByRole("textbox")).toHaveText(correctedGraph);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
   expectMutations(mutations, [false, false]);
   expect(mutations[1].body.pluginSnapshotIds).toEqual([12, 21]);
   expect(mutations[1].body.taskGraph).toEqual(correctedGraph);
+});
+
+test("latest bindings stay unchanged through reverted content and association edits", async ({ page }) => {
+  const { current, mutations } = await mockEditor(page, true);
+  const submit = page.getByRole("button", { name: "Submit EntryPoint" });
+  for (const info of [taskInfo(page), artifactInfo(page)]) {
+    await expect(info.locator(".q-field .q-chip").filter({ hasText: "outdated" })).toHaveCount(0);
+    await expect(info.getByRole("button", { name: /^Sync / })).toHaveCount(0);
+  }
+  await expect(submit).toBeDisabled();
+  for (const [name, saved] of [
+    ["Name:", current.name],
+    ["Description:", current.description],
+  ]) {
+    const field = page.getByRole("textbox", { name, exact: true });
+    await field.fill("temporary edit");
+    await expect(submit).toBeEnabled();
+    await field.fill(saved);
+    await expect(submit).toBeDisabled();
+  }
+  for (const [info, saved] of [
+    [taskInfo(page), current.taskGraph],
+    [artifactInfo(page), current.artifactGraph],
+  ] as const) {
+    await info.getByRole("textbox").fill("temporary: {}\n");
+    await expect(submit).toBeEnabled();
+    await info.getByRole("textbox").fill(saved);
+    await expect(submit).toBeDisabled();
+  }
+  for (const info of [taskInfo(page), artifactInfo(page)]) {
+    const id = 1;
+    await remove(info, id);
+    await expect(submit).toBeEnabled();
+    await add(page, info, id);
+    await expect(submit).toBeDisabled();
+  }
+  await navigateToEntrypoints(page);
+  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(mutations).toHaveLength(0);
+});
+
+test("same-snapshot refresh changes display metadata without enabling a save", async ({ page }) => {
+  const { latest, latestPlugin, mutations } = await mockEditor(page);
+  latest.set(
+    1,
+    Object.assign(latestPlugin(1, 11), { description: "refreshed display metadata", url: "/api/v1/plugins/1" }),
+  );
+  for (const info of [taskInfo(page), artifactInfo(page)]) {
+    await syncEntrypointPlugin(page, info, 1, "plugin-1");
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Already selected latest version of 'plugin-1'." }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
+  }
+  await navigateToEntrypoints(page);
+  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(mutations).toHaveLength(0);
 });

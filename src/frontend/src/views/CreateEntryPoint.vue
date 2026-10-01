@@ -332,7 +332,6 @@
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
             v-model:selectedPlugins="entryPoint.plugins"
-            :allowSync="true"
             class="col"
             :disable="entryPoint.deleted"
           />
@@ -474,7 +473,6 @@
         <div class="row items-start no-wrap q-mt-lg">
           <AssignPluginsDropdown
             v-model:selectedPlugins="entryPoint.artifactPlugins"
-            :allowSync="true"
             class="col"
             :disable="entryPoint.deleted"
           />
@@ -703,12 +701,7 @@ const ORIGINAL_COPY = {
 };
 
 const valuesChangedFromOriginal = computed(() => {
-  for (const key in ORIGINAL_COPY) {
-    if (JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(entryPoint.value[key])) {
-      return true;
-    }
-  }
-  return false;
+  return hasEntrypointChanges(ORIGINAL_COPY);
 });
 
 const enableSubmit = computed(() => {
@@ -756,12 +749,7 @@ watch(
 );
 
 const valuesChangedFromEditStart = computed(() => {
-  for (const key in copyAtEditStart.value) {
-    if (JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(entryPoint.value[key])) {
-      return true;
-    }
-  }
-  return false;
+  return Object.keys(copyAtEditStart.value).length > 0 && hasEntrypointChanges(copyAtEditStart.value);
 });
 
 const tasks = ref([]);
@@ -966,48 +954,67 @@ function submit() {
   });
 }
 
-function prepareEntrypointPayload() {
-  const payload = JSON.parse(JSON.stringify(entryPoint.value));
-  const keysToKeep = [
-    "group",
-    "name",
-    "description",
-    "taskGraph",
-    "artifactGraph",
-    "parameters",
-    "artifactParameters",
-    "queues",
-    "plugins",
-    "artifactPlugins",
-  ];
-  for (const key of Object.keys(payload)) {
-    if (!keysToKeep.includes(key)) {
-      delete payload[key];
-    }
-  }
-
-  // turn objects into ids
-  payload.queues = payload.queues.map((queue) => queue.id);
-  if (route.params.id === "new") {
-    payload.plugins = payload.plugins.map((plugin) => plugin.id);
-    payload.artifactPlugins = payload.artifactPlugins.map((plugin) => plugin.id);
-  } else {
-    payload.pluginSnapshotIds = payload.plugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
-    payload.artifactPluginSnapshotIds = payload.artifactPlugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
-    delete payload.group;
-    delete payload.plugins;
-    delete payload.artifactPlugins;
-  }
-
-  payload.artifactParameters = payload.artifactParameters.map((param) => ({
-    ...param,
-    outputParams: param.outputParams.map((oParam) => ({
-      ...oParam,
-      parameterType: oParam.parameterType.id,
+function prepareEntrypointPayload(candidate = entryPoint.value) {
+  const payload = {
+    name: candidate.name,
+    description: candidate.description,
+    taskGraph: candidate.taskGraph,
+    artifactGraph: candidate.artifactGraph,
+    parameters: candidate.parameters.map((param) => ({
+      name: param.name,
+      parameterType: param.parameterType,
+      defaultValue: param.defaultValue,
     })),
-  }));
-
+    artifactParameters: candidate.artifactParameters.map((param) => ({
+      name: param.name,
+      outputParams: param.outputParams.map((oParam) => ({
+        name: oParam.name,
+        parameterType: oParam.parameterType.id,
+      })),
+    })),
+    queues: candidate.queues.map((queue) => queue.id),
+  };
+  if (route.params.id === "new") {
+    payload.group = candidate.group;
+    payload.plugins = candidate.plugins.map((plugin) => plugin.id);
+    payload.artifactPlugins = candidate.artifactPlugins.map((plugin) => plugin.id);
+  } else {
+    payload.pluginSnapshotIds = candidate.plugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+    payload.artifactPluginSnapshotIds = candidate.artifactPlugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+  }
   return payload;
+}
+
+function hasEntrypointChanges(original) {
+  const before = prepareEntrypointPayload(original);
+  const after = prepareEntrypointPayload();
+  // Binding order has no effect; retain ordering in the submitted payload and other content.
+  for (const key of ["plugins", "artifactPlugins", "pluginSnapshotIds", "artifactPluginSnapshotIds"]) {
+    before[key]?.sort((a, b) => a - b);
+    after[key]?.sort((a, b) => a - b);
+  }
+  return JSON.stringify(before) !== JSON.stringify(after);
+}
+
+async function refreshPluginLatestState() {
+  const pluginIds = [...new Set([...entryPoint.value.plugins, ...entryPoint.value.artifactPlugins].map((p) => p.id))];
+  await Promise.all(
+    pluginIds.map(async (id) => {
+      try {
+        const res = await api.getItem("plugins", id);
+        for (const type of ["plugins", "artifactPlugins"]) {
+          entryPoint.value[type]
+            .filter((plugin) => plugin.id === id)
+            .forEach((plugin) => {
+              plugin.latestSnapshot = (plugin.snapshotId ?? plugin.snapshot) === res.data.snapshot;
+            });
+        }
+      } catch (err) {
+        console.warn(err);
+        notify.error(err?.response?.data?.message || "Failed to refresh plugin versions");
+      }
+    }),
+  );
 }
 
 async function addOrModifyEntrypoint() {
@@ -1025,6 +1032,7 @@ async function addOrModifyEntrypoint() {
     router.push("/entrypoints");
   } catch (err) {
     showValidationError(err, "Failed to save Entrypoint");
+    await refreshPluginLatestState();
   }
 }
 
@@ -1400,6 +1408,7 @@ async function validateEntrypoint() {
     }
   } catch (err) {
     showValidationError(err, "Failed to validate Entrypoint");
+    await refreshPluginLatestState();
   }
 }
 
@@ -1460,9 +1469,15 @@ async function syncPlugin(plugin, type = "plugins") {
 
     const index = entryPoint.value[type].findIndex((p) => p.id === plugin.id);
     if (index === -1) return;
+    const selectionChanged =
+      (entryPoint.value[type][index].snapshotId ?? entryPoint.value[type][index].snapshot) !== res.data.snapshot;
     entryPoint.value[type].splice(index, 1, res.data);
 
-    notify.success(`Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`);
+    notify.success(
+      selectionChanged
+        ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
+        : `Already selected latest version of '${res.data.name}'.`,
+    );
   } catch (err) {
     console.warn(err);
     notify.error(err?.response?.data?.message || "Failed to sync plugin");

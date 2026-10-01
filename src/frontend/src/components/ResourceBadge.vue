@@ -41,11 +41,11 @@
       </span>
 
       <q-btn
-        v-if="resource?.latestSnapshot === false || allowSync"
+        v-if="resource?.latestSnapshot === false"
         :aria-label="`Sync ${resource.name} to latest version`"
         round
         dense
-        :color="resource?.latestSnapshot === false ? 'red' : 'primary'"
+        color="red"
         icon="sync"
         size="xs"
         padding="xs"
@@ -105,7 +105,6 @@ const props = defineProps({
   resource: Object,
   resourceType: String,
   removable: { type: Boolean, default: false },
-  allowSync: { type: Boolean, default: false },
   clickable: { type: Boolean, default: true },
   // When true, place the badge on its own line
   stacked: { type: Boolean, default: false },
