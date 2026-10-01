@@ -14,19 +14,42 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from unittest.mock import Mock
+from typing import Any
 
 import pytest
 
 from dioptra.client.entrypoints import EntrypointsCollectionClient
+from dioptra.client.sessions import DioptraRequestsSession
+
+
+@pytest.fixture
+def recorded_session(monkeypatch):
+    """Use real URL construction while recording every transport request."""
+    session = DioptraRequestsSession("https://example.test/api/v1")
+    requests = []
+    response = object()
+
+    def record_request(method_name, url, **kwargs):
+        requests.append((method_name, url, kwargs))
+        return response
+
+    monkeypatch.setattr(session, "make_request", record_request)
+    return session, requests, response
 
 
 @pytest.mark.parametrize("validate_only", [False, True])
-@pytest.mark.parametrize("snapshot_ids", [[], [17, 29]])
+@pytest.mark.parametrize(
+    "task_snapshot_ids, artifact_snapshot_ids",
+    [
+        pytest.param([], [31], id="empty-task-list"),
+        pytest.param([17, 29], [], id="empty-artifact-list"),
+        pytest.param([17, 29], [31, 43], id="nonempty-lists"),
+    ],
+)
 def test_modify_sends_complete_exact_snapshot_selection_in_one_put(
-    validate_only, snapshot_ids
+    recorded_session, validate_only, task_snapshot_ids, artifact_snapshot_ids
 ):
-    session = Mock()
+    session, requests, expected_response = recorded_session
     client = EntrypointsCollectionClient(session)
     response = client.modify_by_id(
         entrypoint_id=10,
@@ -37,34 +60,36 @@ def test_modify_sends_complete_exact_snapshot_selection_in_one_put(
         parameters=None,
         artifact_parameters=None,
         queues=None,
-        plugin_snapshot_ids=snapshot_ids,
-        artifact_plugin_snapshot_ids=[31],
+        plugin_snapshot_ids=task_snapshot_ids,
+        artifact_plugin_snapshot_ids=artifact_snapshot_ids,
         validate_only=validate_only,
     )
-    assert response is session.put.return_value
-    session.put.assert_called_once_with(
-        client.url,
-        "10",
-        params={"validateOnly": validate_only},
-        json_={
-            "name": "entrypoint",
-            "taskGraph": "selected: {task: []}",
-            "pluginSnapshotIds": snapshot_ids,
-            "artifactPluginSnapshotIds": [31],
-        },
-    )
-    session.get.assert_not_called()
-    session.post.assert_not_called()
-    session.delete.assert_not_called()
+    assert response is expected_response
+    assert requests == [
+        (
+            "put",
+            "https://example.test/api/v1/entrypoints/10",
+            {
+                "params": {"validateOnly": validate_only},
+                "json_": {
+                    "name": "entrypoint",
+                    "taskGraph": "selected: {task: []}",
+                    "pluginSnapshotIds": task_snapshot_ids,
+                    "artifactPluginSnapshotIds": artifact_snapshot_ids,
+                },
+            },
+        )
+    ]
+    assert session._session is None
 
 
 @pytest.mark.parametrize(
     "missing", ["plugin_snapshot_ids", "artifact_plugin_snapshot_ids"]
 )
-def test_modify_requires_both_snapshot_lists(missing):
-    session = Mock()
+def test_modify_requires_both_snapshot_lists(recorded_session, missing):
+    session, requests, _ = recorded_session
     client = EntrypointsCollectionClient(session)
-    arguments = {
+    arguments: dict[str, Any] = {
         "entrypoint_id": 10,
         "name": "entrypoint",
         "task_graph": "graph",
@@ -79,4 +104,5 @@ def test_modify_requires_both_snapshot_lists(missing):
     arguments.pop(missing)
     with pytest.raises(TypeError, match=missing):
         client.modify_by_id(**arguments)
-    assert session.mock_calls == []
+    assert requests == []
+    assert session._session is None
