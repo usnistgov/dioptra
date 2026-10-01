@@ -1,5 +1,16 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { syncEntrypointPlugin, validateEntrypoint } from "./helpers/entrypointHelper";
+
+type Mutation = { method: string; path: string; dryRun: boolean; body: any };
+
+function expectMutations(mutations: Mutation[], dryRuns: boolean[]) {
+  expect(mutations).toHaveLength(dryRuns.length);
+  expect(mutations.map(({ method, path, dryRun }) => [method, path, dryRun])).toEqual(
+    dryRuns.map((dryRun) => ["PUT", "/api/v1/entrypoints/101", dryRun]),
+  );
+}
+
 function plugin(id: number, snapshotId: number, latestSnapshot = true) {
   return {
     id,
@@ -28,7 +39,7 @@ async function mockEditor(page: Page) {
     queues: [],
     parameters: [],
     artifactParameters: [],
-    taskGraph: "step: task_1",
+    taskGraph: "step:\n  task: task_1\n",
     artifactGraph: "",
     plugins: [plugin(1, 11, false), plugin(2, 21, false)],
     artifactPlugins: [plugin(1, 11, false), plugin(3, 31, false)],
@@ -38,8 +49,17 @@ async function mockEditor(page: Page) {
     return { ...resource, snapshot };
   }
   const latest = new Map([1, 2, 3, 4].map((id) => [id, latestPlugin(id, id * 10 + 2)]));
-  const mutations: { method: string; path: string; dryRun: boolean; body: any }[] = [];
+  const mutations: Mutation[] = [];
   const failures: string[] = [];
+  const pluginGetHolds = new Map<number, { requested: () => void; released: Promise<void> }>();
+  function holdNextPluginGet(id: number) {
+    let requested!: () => void;
+    let release!: () => void;
+    const received = new Promise<void>((resolve) => (requested = resolve));
+    const released = new Promise<void>((resolve) => (release = resolve));
+    pluginGetHolds.set(id, { requested, released });
+    return { received, release };
+  }
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -63,7 +83,14 @@ async function mockEditor(page: Page) {
     } else if (path === "/api/v1/entrypoints/101") {
       await route.fulfill({ json: current });
     } else if (/\/plugins\/\d+$/.test(path)) {
-      await route.fulfill({ json: latest.get(Number(path.split("/").at(-1))) });
+      const id = Number(path.split("/").at(-1));
+      const hold = pluginGetHolds.get(id);
+      if (hold) {
+        pluginGetHolds.delete(id);
+        hold.requested();
+        await hold.released;
+      }
+      await route.fulfill({ json: latest.get(id) });
     } else {
       await route.fulfill({
         json: { data: path === "/api/v1/plugins/" ? [...latest.values()] : [], next: null, totalNumItems: 0 },
@@ -72,7 +99,7 @@ async function mockEditor(page: Page) {
   });
   await page.goto("/entrypoints/101");
   await expect(page.getByRole("heading", { name: current.name })).toBeVisible();
-  return { current, latest, latestPlugin, mutations, failures };
+  return { current, latest, latestPlugin, mutations, failures, holdNextPluginGet };
 }
 
 function taskInfo(page: Page) {
@@ -81,14 +108,6 @@ function taskInfo(page: Page) {
 
 function artifactInfo(page: Page) {
   return page.locator("fieldset").filter({ has: page.locator("legend", { hasText: "Artifact Info" }) });
-}
-
-async function sync(info: Locator, id: number) {
-  await info
-    .getByRole("button", { name: `Sync plugin-${id} to latest version`, exact: true })
-    .first()
-    .click();
-  await expect(info.locator(".q-field .q-chip").filter({ hasText: `plugin-${id}` })).not.toContainText("outdated");
 }
 
 async function remove(info: Locator, id: number) {
@@ -113,18 +132,16 @@ async function add(page: Page, info: Locator, id: number) {
 test("validate unchanged bindings and save an independent task plugin update in one PUT", async ({ page }) => {
   const { mutations } = await mockEditor(page);
   await expect(page.getByRole("button", { name: "Save Plugin Selection" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect.poll(() => mutations.length).toBe(1);
+  await validateEntrypoint(page, 101);
+  expectMutations(mutations, [true]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([11, 21]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([11, 31]);
-  await sync(taskInfo(page), 1);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect.poll(() => mutations.length).toBe(2);
+  await syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
+  await validateEntrypoint(page, 101);
+  expectMutations(mutations, [true, true]);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
-  expect(mutations).toHaveLength(3);
-  expect(mutations.every(({ method, path }) => method === "PUT" && path === "/api/v1/entrypoints/101")).toBe(true);
-  expect(mutations.map(({ dryRun }) => dryRun)).toEqual([true, true, false]);
+  expectMutations(mutations, [true, true, false]);
   expect(mutations[1].body).toEqual(mutations[2].body);
   expect(mutations[2].body.pluginSnapshotIds).toEqual([12, 21]);
   expect(mutations[2].body.artifactPluginSnapshotIds).toEqual([11, 31]);
@@ -134,10 +151,10 @@ test("validate unchanged bindings and save an independent task plugin update in 
 
 test("artifact synchronization retains task-role pins including the same plugin", async ({ page }) => {
   const { mutations } = await mockEditor(page);
-  await sync(artifactInfo(page), 1);
+  await syncEntrypointPlugin(page, artifactInfo(page), 1, "plugin-1");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
-  expect(mutations).toHaveLength(1);
+  expectMutations(mutations, [false]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([11, 21]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([12, 31]);
 });
@@ -148,52 +165,76 @@ test("stage additions and removals in both roles with complete latest selections
   await remove(artifactInfo(page), 3);
   await add(page, taskInfo(page), 4);
   await add(page, artifactInfo(page), 4);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect.poll(() => mutations.length).toBe(1);
+  await taskInfo(page).getByRole("textbox").fill("step:\n  task: task_2\n");
+  await validateEntrypoint(page, 101);
+  expectMutations(mutations, [true]);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
-  expect(mutations).toHaveLength(2);
+  expectMutations(mutations, [true, false]);
   expect(mutations[0].body).toEqual(mutations[1].body);
   expect(mutations[1].body.pluginSnapshotIds).toEqual([21, 42]);
   expect(mutations[1].body.artifactPluginSnapshotIds).toEqual([11, 42]);
 });
 
-test("send explicit empty association lists", async ({ page }) => {
+test("send explicit empty association lists as transport-only evidence", async ({ page }) => {
   const { mutations } = await mockEditor(page);
   await remove(taskInfo(page), 1);
   await remove(taskInfo(page), 2);
   await remove(artifactInfo(page), 1);
   await remove(artifactInfo(page), 3);
   await taskInfo(page).getByRole("textbox").fill("{}");
+  // The mock accepts this body; a native entrypoint still requires a valid task graph.
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
-  expect(mutations).toHaveLength(1);
+  expectMutations(mutations, [false]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([]);
 });
 
 for (const action of ["Validate", "Submit EntryPoint"]) {
   test(`${action} rejection retains edits and allows a newer snapshot correction`, async ({ page }) => {
-    const { mutations, failures, latest, latestPlugin } = await mockEditor(page);
-    await sync(taskInfo(page), 1);
+    const { mutations, failures, latest, latestPlugin, holdNextPluginGet } = await mockEditor(page);
+    await syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
     await page.getByRole("textbox", { name: "Name:" }).fill("retained-name");
-    await taskInfo(page).getByRole("textbox").fill("step: updated_task");
+    const editedGraph = "edited_step:\n  task: task_1\n";
+    await taskInfo(page).getByRole("textbox").fill(editedGraph);
     failures.push("Selected plugin snapshot is no longer latest. Select the latest snapshot and retry.");
     await page.getByRole("button", { name: action, exact: true }).click();
     await expect(page.getByRole("dialog")).toContainText("no longer latest");
     await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
     await expect(page).toHaveURL(/\/entrypoints\/101$/);
     await expect(page.getByRole("textbox", { name: "Name:" })).toHaveValue("retained-name");
-    await expect(taskInfo(page).getByRole("textbox")).toHaveText("step: updated_task");
-    expect(mutations).toHaveLength(1);
+    await expect(taskInfo(page).getByRole("textbox")).toHaveText(editedGraph);
+    const rejectedDryRun = action === "Validate";
+    expectMutations(mutations, [rejectedDryRun]);
+    expect(mutations[0].body.pluginSnapshotIds).toEqual([12, 21]);
+    expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([11, 31]);
+    await validateEntrypoint(page, 101);
+    expectMutations(mutations, [rejectedDryRun, true]);
+    expect(mutations[1].body).toEqual(mutations[0].body);
     latest.set(1, latestPlugin(1, 13));
-    await sync(taskInfo(page), 1);
+    const heldGet = holdNextPluginGet(1);
+    const synchronization = syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
+    await heldGet.received;
+    try {
+      // Hold the repeated GET long enough to expose a wait on the already-absent outdated marker.
+      const state = await Promise.race([
+        synchronization.then(() => "completed"),
+        new Promise<string>((resolve) => setTimeout(() => resolve("waiting"), 250)),
+      ]);
+      expect(state).toBe("waiting");
+      expectMutations(mutations, [rejectedDryRun, true]);
+    } finally {
+      heldGet.release();
+    }
+    await synchronization;
     await page.getByRole("button", { name: "Submit EntryPoint" }).click();
     await expect(page).toHaveURL(/\/entrypoints$/);
-    expect(mutations).toHaveLength(2);
-    expect(mutations[1].body).toMatchObject({
+    expectMutations(mutations, [rejectedDryRun, true, false]);
+    expect(mutations[2].body).toEqual({ ...mutations[1].body, pluginSnapshotIds: [13, 21] });
+    expect(mutations[2].body).toMatchObject({
       name: "retained-name",
-      taskGraph: "step: updated_task",
+      taskGraph: editedGraph,
       pluginSnapshotIds: [13, 21],
       artifactPluginSnapshotIds: [11, 31],
     });
@@ -202,19 +243,21 @@ for (const action of ["Validate", "Submit EntryPoint"]) {
 
 test("a rejected graph save keeps the navigation warning and permits graph correction", async ({ page }) => {
   const { failures, mutations } = await mockEditor(page);
-  await sync(taskInfo(page), 1);
-  await taskInfo(page).getByRole("textbox").fill("step: invalid_task");
+  await syncEntrypointPlugin(page, taskInfo(page), 1, "plugin-1");
+  await taskInfo(page).getByRole("textbox").fill("step:\n  task: invalid_task\n");
   failures.push("Graph invokes an unknown task: invalid_task");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page.getByRole("dialog")).toContainText("unknown task");
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+  expectMutations(mutations, [false]);
   await page.getByRole("tab", { name: "Entrypoints", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("unsaved changes");
   await page.getByRole("button", { name: "Cancel", exact: true }).last().click();
-  await taskInfo(page).getByRole("textbox").fill("step: corrected_task");
+  const correctedGraph = "corrected_step:\n  task: task_1\n";
+  await taskInfo(page).getByRole("textbox").fill(correctedGraph);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
-  expect(mutations).toHaveLength(2);
+  expectMutations(mutations, [false, false]);
   expect(mutations[1].body.pluginSnapshotIds).toEqual([12, 21]);
-  expect(mutations[1].body.taskGraph).toEqual("step: corrected_task");
+  expect(mutations[1].body.taskGraph).toEqual(correctedGraph);
 });

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { syncEntrypointPlugin, validateEntrypoint } from "./helpers/entrypointHelper";
 import { ensureLoggedInAsTestUser } from "./helpers/testUserHelper";
 
 test("save a one-to-two-output swap change with its exact plugin snapshots", async ({ page }) => {
@@ -75,12 +76,15 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
     latestSnapshots.push((await get(`plugins/${plugin.id}`)).snapshot);
   }
   const baseline = await get(`entrypoints/${saved.id}`);
-  const mutations: { dryRun: boolean; body: any; status: number }[] = [];
+  const mutations: { method: string; path: string; dryRun: boolean; body: any; status: number }[] = [];
   page.on("response", async (response) => {
     const request = response.request();
-    if (request.method() !== "GET" && request.url().includes(`/entrypoints/${saved.id}`)) {
+    const url = new URL(request.url());
+    if (request.method() !== "GET" && url.pathname.startsWith(`/api/v1/entrypoints/${saved.id}`)) {
       mutations.push({
-        dryRun: new URL(request.url()).searchParams.get("validateOnly") === "true",
+        method: request.method(),
+        path: url.pathname,
+        dryRun: url.searchParams.get("validateOnly") === "true",
         body: request.postDataJSON(),
         status: response.status(),
       });
@@ -92,23 +96,18 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   await expect(page.getByRole("heading", { name: saved.name })).toBeVisible();
   const taskInfo = page.locator("fieldset").filter({ has: page.locator("legend", { hasText: "Task Graph Info" }) });
   for (const plugin of plugins) {
-    await taskInfo
-      .getByRole("button", { name: `Sync ${plugin.name} to latest version`, exact: true })
-      .first()
-      .click();
-    await expect(taskInfo.locator(".q-field .q-chip").filter({ hasText: plugin.name })).not.toContainText("outdated");
+    await syncEntrypointPlugin(page, taskInfo, plugin.id, plugin.name);
   }
   await taskInfo.getByRole("textbox").fill(newGraph);
-  await page.getByRole("button", { name: "Validate", exact: true }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Entrypoint is valid!" })).toBeVisible();
+  await validateEntrypoint(page, saved.id);
   expect(await get(`entrypoints/${saved.id}`)).toEqual(baseline);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
   const after = await get(`entrypoints/${saved.id}`);
   expect(mutations).toHaveLength(2);
-  expect(mutations.map(({ dryRun, status }) => [dryRun, status])).toEqual([
-    [true, 200],
-    [false, 200],
+  expect(mutations.map(({ method, path, dryRun, status }) => [method, path, dryRun, status])).toEqual([
+    ["PUT", `/api/v1/entrypoints/${saved.id}`, true, 200],
+    ["PUT", `/api/v1/entrypoints/${saved.id}`, false, 200],
   ]);
   expect(mutations[0].body).toEqual(mutations[1].body);
   expect(mutations[1].body.pluginSnapshotIds).toEqual(latestSnapshots);
@@ -134,7 +133,15 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   await page.getByRole("textbox", { name: "Description:" }).fill("subsequent complete save");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
   await expect(page).toHaveURL(/\/entrypoints$/);
+  expect(mutations).toHaveLength(3);
+  expect(mutations[2]).toMatchObject({
+    method: "PUT",
+    path: `/api/v1/entrypoints/${saved.id}`,
+    dryRun: false,
+    status: 200,
+  });
   expect(mutations[2].body.pluginSnapshotIds).toEqual(latestSnapshots);
+  expect(mutations[2].body.artifactPluginSnapshotIds).toEqual([]);
   expect(
     (await get(`entrypoints/${saved.id}`)).plugins.map(({ snapshotId }: { snapshotId: number }) => snapshotId),
   ).toEqual(latestSnapshots);
