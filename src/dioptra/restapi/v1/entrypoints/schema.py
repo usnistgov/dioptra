@@ -258,8 +258,10 @@ class EntrypointUpdateSchema(EntrypointMutableFieldsSchema):
         attribute="plugin_snapshot_ids",
         required=True,
         metadata={
-            "description": "Complete task-plugin snapshot list. Select each plugin's "
-            "currently bound or latest snapshot; omitted plugins are removed."
+            "description": "Complete list of task-plugin resource snapshot IDs. "
+            "Select each plugin's currently bound or latest snapshot; new "
+            "associations require latest. Omitted plugins are removed; an empty "
+            "list removes all task plugins, subject to graph validation."
         },
     )
     artifactPluginSnapshotIds = fields.List(
@@ -267,8 +269,10 @@ class EntrypointUpdateSchema(EntrypointMutableFieldsSchema):
         attribute="artifact_plugin_snapshot_ids",
         required=True,
         metadata={
-            "description": "Complete artifact-plugin snapshot list. Select each "
-            "plugin's currently bound or latest snapshot; omitted plugins are removed."
+            "description": "Complete list of artifact-plugin resource snapshot IDs. "
+            "Select each plugin's currently bound or latest snapshot; new "
+            "associations require latest. Omitted plugins are removed; an empty "
+            "list removes all artifact plugins, subject to graph validation."
         },
     )
 
