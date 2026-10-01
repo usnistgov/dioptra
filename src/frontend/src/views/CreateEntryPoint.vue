@@ -1173,8 +1173,14 @@ const taskGraphObject = computed(() => {
 });
 
 function findEligibleSwapGroups() {
-  if (!taskGraphObject.value || typeof taskGraphObject.value !== "object") return [];
-
+  if (
+    !selectedSwapTask.value ||
+    !taskGraphObject.value ||
+    typeof taskGraphObject.value !== "object" ||
+    Array.isArray(taskGraphObject.value)
+  )
+    return [];
+  console.log("eligibleSwappableTasks = ", eligibleSwappableTasks.value);
   const eligibleTaskNames = new Set(eligibleSwappableTasks.value.map((task) => task.name));
   if (selectedSwapTask.value) {
     eligibleTaskNames.add(selectedSwapTask.value.name);
@@ -1191,13 +1197,18 @@ function findEligibleSwapGroups() {
     if (swapEntries.length !== 1) return;
 
     const [swapName, swapGroup] = swapEntries[0];
+    const outputs = swapGroup["?outputs"];
+    if (!Array.isArray(outputs) || outputs.length !== selectedSwapTask.value.outputParams.length) return;
+
     const taskAliases = Object.entries(swapGroup).filter(([name]) => name !== "?outputs");
-    const taskNames = taskAliases.map(([, taskDefinition]) => taskDefinition?.task);
+    const taskNames = taskAliases.map(([, taskDefinition]) => {
+      if (!taskDefinition || typeof taskDefinition !== "object" || Array.isArray(taskDefinition)) return null;
+      if ("task" in taskDefinition) return taskDefinition.task;
+      const names = Object.keys(taskDefinition).filter((name) => name !== "dependencies");
+      return names.length === 1 ? names[0] : null;
+    });
     const allTasksAreSwappable =
-      taskAliases.length > 0 &&
-      taskNames.every(
-        (taskName) => eligibleTaskNames.has(taskName) || (typeof taskName === "string" && /^<[^>]+>$/.test(taskName)),
-      );
+      taskAliases.length > 0 && taskNames.every((taskName) => eligibleTaskNames.has(taskName));
 
     if (allTasksAreSwappable) {
       swapGroups.push({ stepName, swapName, taskNames, label: stepName, createNew: false });
@@ -1234,6 +1245,20 @@ function openAddSwappableTaskDialog(task) {
   prepareSwappableTaskSelection(task);
   showAddSwappableTaskDialog.value = true;
 }
+
+watch(
+  [tasks, taskGraphObject],
+  () => {
+    if (!showAddSwappableTaskDialog.value) return;
+    const task = tasks.value.find((candidate) => candidate.name === selectedSwapTask.value?.name);
+    if (task) {
+      prepareSwappableTaskSelection(task);
+    } else {
+      showAddSwappableTaskDialog.value = false;
+    }
+  },
+  { deep: true },
+);
 
 const selectableSwappableTasks = computed(() =>
   selectedSwapStep.value?.createNew
