@@ -77,6 +77,7 @@ class ArtifactEndpoint(Resource):
         self._artifact_service = artifact_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
     @responds(schema=ArtifactPageSchema, api=api)
     def get(self):
