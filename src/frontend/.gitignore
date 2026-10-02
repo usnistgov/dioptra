@@ -17,6 +17,10 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
+/playwright-report
+/test-results
+/.dioptra-e2e
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

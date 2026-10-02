@@ -50,6 +50,7 @@ class PluginParameterTypeRefDict(TypedDict):
     group: GroupRefDict
     url: str
     name: str
+    deleted: bool
 
 
 class PluginTaskInputParameterDict(TypedDict):
@@ -147,6 +148,7 @@ class JobDict(TypedDict):
     job: models.Job
     artifacts: list[models.Artifact]
     has_draft: bool | None
+    swap_task_names: dict[tuple[int, str, str], str]
 
 
 class ModelWithVersionDict(TypedDict):
@@ -172,6 +174,7 @@ def build_experiment_ref(experiment: models.Experiment) -> dict[str, Any]:
         "name": experiment.name,
         "group": build_group_ref(experiment.resource.owner),
         "url": build_url(f"{EXPERIMENTS}/{experiment.resource_id}"),
+        "deleted": experiment.resource.is_deleted,
     }
 
 
@@ -194,6 +197,7 @@ def build_experiment_snapshot_ref(experiment: models.Experiment) -> dict[str, An
             f"{EXPERIMENTS}/{experiment.resource_id}/snapshots/"
             f"{experiment.resource_snapshot_id}"
         ),
+        "deleted": experiment.resource.is_deleted,
     }
 
 
@@ -272,6 +276,7 @@ def build_plugin_ref(plugin: models.Plugin) -> dict[str, Any]:
         "name": plugin.name,
         "group": build_group_ref(plugin.resource.owner),
         "url": build_url(f"{PLUGINS}/{plugin.resource_id}"),
+        "deleted": plugin.resource.is_deleted,
     }
 
 
@@ -330,6 +335,7 @@ def build_plugin_snapshot_ref(plugin: models.Plugin) -> dict[str, Any]:
         "url": build_url(
             f"{PLUGINS}/{plugin.resource_id}/snapshots/{plugin.resource_snapshot_id}"
         ),
+        "deleted": plugin.resource.is_deleted,
     }
 
 
@@ -353,6 +359,7 @@ def build_plugin_file_ref(plugin_file: models.PluginFile) -> dict[str, Any]:
             f"{PLUGINS}/{plugin_id}/{PLUGIN_FILES}/{plugin_file.resource_id}"
         ),
         "tasks": build_plugin_task(plugin_file.tasks),
+        "deleted": plugin_file.resource.is_deleted,
     }
 
 
@@ -370,6 +377,7 @@ def build_entrypoint_ref(entrypoint: models.EntryPoint) -> dict[str, Any]:
         "name": entrypoint.name,
         "group": build_group_ref(entrypoint.resource.owner),
         "url": build_url(f"{ENTRYPOINTS}/{entrypoint.resource_id}"),
+        "deleted": entrypoint.resource.is_deleted,
     }
 
 
@@ -391,6 +399,7 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
             f"{ENTRYPOINTS}/{entrypoint.resource_id}"
             f"/snapshots/{entrypoint.resource_snapshot_id}"
         ),
+        "deleted": entrypoint.resource.is_deleted,
     }
 
 
@@ -408,6 +417,7 @@ def build_model_ref(model: models.MlModel) -> dict[str, Any]:
         "name": model.name,
         "group": build_group_ref(model.resource.owner),
         "url": f"{MODELS}/{model.resource_id}",
+        "deleted": model.resource.is_deleted,
     }
 
 
@@ -425,6 +435,7 @@ def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
         "name": queue.name,
         "group": build_group_ref(queue.resource.owner),
         "url": build_url(f"{QUEUES}/{queue.resource_id}"),
+        "deleted": queue.resource.is_deleted,
     }
 
 
@@ -445,6 +456,7 @@ def build_queue_snapshot_ref(queue: models.Queue) -> dict[str, Any]:
         "url": build_url(
             f"{QUEUES}/{queue.resource_id}/snapshots/{queue.resource_snapshot_id}"
         ),
+        "deleted": queue.resource.is_deleted,
     }
 
 
@@ -465,6 +477,7 @@ def build_plugin_parameter_type_ref(
         "name": plugin_param_type.name,
         "group": build_group_ref(plugin_param_type.resource.owner),
         "url": build_url(f"{PLUGIN_PARAMETER_TYPES}/{plugin_param_type.resource_id}"),
+        "deleted": plugin_param_type.resource.is_deleted,
     }
 
 
@@ -481,6 +494,7 @@ def build_artifact_ref(artifact: models.Artifact) -> dict[str, Any]:
         "id": artifact.resource_id,
         "group": build_group_ref(artifact.resource.owner),
         "url": build_url(f"{ARTIFACTS}/{artifact.resource_id}"),
+        "deleted": artifact.resource.is_deleted,
     }
 
 
@@ -632,6 +646,7 @@ def build_experiment(experiment_dict: ExperimentDict) -> dict[str, Any]:
         "group": build_group_ref(experiment.resource.owner),
         "created_on": experiment.resource.created_on,
         "last_modified_on": experiment.resource.last_modified_on,
+        "deleted": experiment.resource.is_deleted,
         "snapshot_created_on": experiment.created_on,
         "latest_snapshot": experiment.resource.latest_snapshot_id
         == experiment.resource_snapshot_id,
@@ -702,6 +717,7 @@ def build_entrypoint(entrypoint_dict: EntrypointDict) -> dict[str, Any]:
         "group": build_group_ref(entrypoint.resource.owner),
         "created_on": entrypoint.resource.created_on,
         "last_modified_on": entrypoint.resource.last_modified_on,
+        "deleted": entrypoint.resource.is_deleted,
         "snapshot_created_on": entrypoint.created_on,
         "latest_snapshot": entrypoint.resource.latest_snapshot_id
         == entrypoint.resource_snapshot_id,
@@ -775,6 +791,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     job = job_dict["job"]
     artifacts = job_dict.get("artifacts", None)
     has_draft = job_dict.get("has_draft", None)
+    swap_task_names = job_dict.get("swap_task_names", {})
 
     data = {
         "id": job.resource_id,
@@ -789,6 +806,21 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
             av.artifact_parameter.name: build_artifact_value(av.artifact)
             for av in job.entry_point_job.entry_point_artifact_parameter_values
         },
+        "swaps": [
+            {
+                "swap_name": swap.swap_name,
+                "task_alias": swap.task_alias,
+                "task_name": swap_task_names.get(
+                    (
+                        swap.plugin_file_resource_snapshot_id,
+                        swap.swap_name,
+                        swap.task_alias,
+                    )
+                ),
+                "plugin_file_resource_snapshot_id": swap.plugin_file_resource_snapshot_id,
+            }
+            for swap in sorted(job.job_swaps, key=lambda swap: swap.swap_name)
+        ],
         "timeout": job.timeout,
         "user": build_user_ref(job.creator),
         "group": build_group_ref(job.resource.owner),
@@ -798,6 +830,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "created_on": job.resource.created_on,
         "last_modified_on": job.resource.last_modified_on,
         "snapshot_created_on": job.created_on,
+        "deleted": job.resource.is_deleted,
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
     }
@@ -852,6 +885,7 @@ def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
         "latest_snapshot": model.resource.latest_snapshot_id
         == model.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in model.tags],
+        "deleted": model.resource.is_deleted,
         "latest_version": latest_version,
         "versions": versions,
     }
@@ -941,6 +975,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         "artifact_uri": artifact.uri,
         "is_dir": artifact.is_dir,
         "file_size": artifact.file_size,
+        "deleted": artifact.resource.is_deleted,
         "task": build_artifact_artifact_task(artifact=artifact),
         "file_url": build_url(f"{ARTIFACTS}/{artifact.resource_id}/contents"),
     }
@@ -1005,6 +1040,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         "group": build_group_ref(queue.resource.owner),
         "created_on": queue.resource.created_on,
         "last_modified_on": queue.resource.last_modified_on,
+        "deleted": queue.resource.is_deleted,
         "snapshot_created_on": queue.created_on,
         "latest_snapshot": queue.resource.latest_snapshot_id
         == queue.resource_snapshot_id,
@@ -1039,6 +1075,7 @@ def build_plugin(plugin_with_files: PluginWithFilesDict) -> dict[str, Any]:
         "group": build_group_ref(plugin.resource.owner),
         "created_on": plugin.resource.created_on,
         "last_modified_on": plugin.resource.last_modified_on,
+        "deleted": plugin.resource.is_deleted,
         "snapshot_created_on": plugin.created_on,
         "latest_snapshot": plugin.resource.latest_snapshot_id
         == plugin.resource_snapshot_id,
@@ -1070,6 +1107,7 @@ def build_plugin_file(plugin_file_with_plugin: PluginFileDict) -> dict[str, Any]
         "group": build_group_ref(plugin_file.resource.owner),
         "created_on": plugin_file.resource.created_on,
         "last_modified_on": plugin_file.resource.last_modified_on,
+        "deleted": plugin_file.resource.is_deleted,
         "snapshot_created_on": plugin_file.created_on,
         "latest_snapshot": plugin_file.resource.latest_snapshot_id
         == plugin_file.resource_snapshot_id,
@@ -1201,6 +1239,7 @@ def build_plugin_parameter_type(
         "group": build_group_ref(plugin_parameter_type.resource.owner),
         "created_on": plugin_parameter_type.resource.created_on,
         "last_modified_on": plugin_parameter_type.resource.last_modified_on,
+        "deleted": plugin_parameter_type.resource.is_deleted,
         "snapshot_created_on": plugin_parameter_type.created_on,
         "latest_snapshot": plugin_parameter_type.resource.latest_snapshot_id
         == plugin_parameter_type.resource_snapshot_id,
@@ -1269,6 +1308,7 @@ def build_paging_envelope(
     total_num_elements: int,
     sort_by: Optional[str] = None,
     descending: Optional[bool] = None,
+    show_deleted: Optional[bool] = None,
 ) -> dict[str, Any]:
     """Build the paging envelope for a response.
 
@@ -1285,6 +1325,7 @@ def build_paging_envelope(
         total_num_elements: The total number of elements in the collection.
         sort_by: The name of the column to sort.
         descending: Boolean indicating whether to sort by descending or not.
+        show_deleted: Boolean indicating whether to include deleted resources.
 
     Returns:
         The paging envelope for the response.
@@ -1306,6 +1347,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=0,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         ),
         "data": [build_fn(x) for x in data],
     }
@@ -1319,6 +1363,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=prev_index,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         )
         paged_data["prev"] = prev_url
 
@@ -1331,6 +1378,9 @@ def build_paging_envelope(
             draft_type=draft_type,
             index=next_index,
             length=length,
+            sort_by=sort_by,
+            descending=descending,
+            show_deleted=show_deleted,
         )
         paged_data["next"] = next_url
 
@@ -1344,6 +1394,9 @@ def build_paging_url(
     draft_type: str | None,
     index: int,
     length: int,
+    sort_by: str | None = None,
+    descending: bool | None = None,
+    show_deleted: bool | None = None,
 ) -> str:
     """Build a URL for a paged resource endpoint.
 
@@ -1353,6 +1406,9 @@ def build_paging_url(
         draft_type: The type of drafts to return.
         index: The starting index of the current page.
         length: The number of results to return per page.
+        sort_by: The name of the column to sort.
+        descending: Boolean indicating whether to sort by descending or not.
+        show_deleted: Boolean indicating whether to include deleted resources.
 
     Returns:
         A quoted URL string for the paged resource endpoint.
@@ -1367,6 +1423,14 @@ def build_paging_url(
 
     if draft_type:
         query_params["draft_type"] = draft_type
+
+    if sort_by:
+        query_params["sortBy"] = sort_by
+        if descending is not None:
+            query_params["descending"] = descending
+
+    if show_deleted is not None:
+        query_params["showDeleted"] = show_deleted
 
     return build_url(route_prefix, query_params)
 

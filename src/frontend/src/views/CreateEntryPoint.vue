@@ -1,8 +1,10 @@
 <template>
   <div class="row items-center justify-between">
     <div class="row items-center">
-      <PageTitle 
+      <PageTitle
         :title="route.params.id === 'new' ? 'Create Entrypoint' : copyAtEditStart?.name"
+        resourceType="entrypoint"
+        :deleted="entryPoint.deleted"
       />
       <q-chip
         v-if="route.params.id !== 'new'"
@@ -10,8 +12,8 @@
         :color="`${darkMode ? 'grey-9' : ''}`"
         label="View History"
         icon="history"
-        @click="store.showRightDrawer = !store.showRightDrawer"
         clickable
+        @click="store.showRightDrawer = !store.showRightDrawer"
       >
         <q-toggle
           v-model="store.showRightDrawer"
@@ -21,37 +23,57 @@
       </q-chip>
     </div>
     <div>
-      <q-btn 
-        v-if="route.params.id !== 'new'"
-        :color="history ? 'red-3' : 'negative'" 
-        icon="sym_o_delete" 
+      <q-btn
+        v-if="route.params.id !== 'new' && !entryPoint.deleted"
+        :color="history ? 'red-3' : 'negative'"
+        icon="sym_o_delete"
         label="Delete Entrypoint"
-        @click="showDeleteDialogEntrypoint = true; objectForDeletion = entryPoint"
-        :disable="history"
+        :disable="history || entryPoint.deleted"
+        @click="
+          showDeleteDialogEntrypoint = true;
+          objectForDeletion = entryPoint;
+        "
       />
     </div>
   </div>
-  <fieldset class="q-px-lg q-mt-lg" :class="history ? `disabled` : ``">
+  <q-banner
+    v-if="entryPoint.deleted"
+    dense
+    class="text-white bg-red q-mt-md"
+  >
+    <template #avatar>
+      <q-icon name="error" />
+    </template>
+    <span class="text-bold">This Entrypoint has been deleted. Info is read only.</span>
+  </q-banner>
+  <fieldset
+    class="q-px-lg q-mt-lg"
+    :class="history || entryPoint.deleted ? `disabled` : ``"
+  >
     <legend>Basic Info</legend>
-    <q-form ref="basicInfoForm" greedy :style="{ 'pointer-events': history ? 'none' : '' }">
+    <q-form
+      ref="basicInfoForm"
+      greedy
+      :style="{ 'pointer-events': history || entryPoint.deleted ? 'none' : '' }"
+    >
       <div class="row">
         <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl`">
-          <q-input 
-            outlined 
-            dense 
+          <q-input
             v-model.trim="entryPoint.name"
+            outlined
+            dense
             :rules="[requiredRule]"
             class="q-mb-sm q-mt-md"
             aria-required="true"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
           >
-            <template v-slot:before>
+            <template #before>
               <label :class="`field-label`">Name:</label>
             </template>
           </q-input>
           <q-select
-            outlined 
-            v-model="entryPoint.group" 
+            v-model="entryPoint.group"
+            outlined
             :options="store.groups"
             option-label="name"
             option-value="id"
@@ -60,50 +82,31 @@
             dense
             :rules="[requiredRule]"
             aria-required="true"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
             class="q-mb-sm"
           >
-            <template v-slot:before>
+            <template #before>
               <div class="field-label">Group:</div>
-            </template>  
-          </q-select>
-          <q-select
-            v-if="!history"
-            outlined
-            dense
-            v-model="entryPoint.queues"
-            use-input
-            use-chips
-            multiple
-            map-options
-            option-label="name"
-            option-value="id"
-            input-debounce="100"
-            :options="queues"
-            @filter="getQueues"
-            class="q-mb-md"
-            :disable="history"
-          >
-            <template v-slot:before>
-              <div class="field-label">Queues:</div>
-            </template>  
-            <template v-slot:selected-item="scope">
-              <q-chip
-                :label="scope.opt.name"
-                removable
-                dense
-                @remove="scope.removeAtIndex(scope.index)"
-                :tabindex="scope.tabindex"
-                color="primary"
-                text-color="white"
-              />
             </template>
           </q-select>
-          <div v-else class="row items-center q-mb-md">
+          <ResourcePicker
+            v-if="!history"
+            v-model="entryPoint.queues"
+            :options="queues"
+            resourceType="queue"
+            label="Queues:"
+            class="q-mb-md"
+            :disable="history || entryPoint.deleted"
+            @filter="getQueues"
+          />
+          <div
+            v-else
+            class="row items-center q-mb-md"
+          >
             <label class="field-label">Queues:</label>
-            <div 
-              class="col" 
-              style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px;"
+            <div
+              class="col"
+              style="border: 1px solid lightgray; border-radius: 4px; padding: 5px 8px; margin-left: 6px"
             >
               <q-icon
                 name="sym_o_info"
@@ -116,16 +119,16 @@
           </div>
         </div>
         <div class="col">
-          <q-input 
-            outlined 
-            dense 
+          <q-input
             v-model.trim="entryPoint.description"
+            outlined
+            dense
             type="textarea"
-            :disable="history"
+            :disable="history || entryPoint.deleted"
             class="q-mt-md"
             input-style="height: 173px"
           >
-            <template v-slot:before>
+            <template #before>
               <label :class="`field-label`">Description:</label>
             </template>
           </q-input>
@@ -134,9 +137,15 @@
     </q-form>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-py-lg" :class="history ? `disabled` : ``">
+  <fieldset
+    class="q-px-lg q-mt-lg q-py-lg"
+    :class="history || entryPoint.deleted ? `disabled` : ``"
+  >
     <legend>Parameters</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div
+      class="row"
+      :style="{ 'pointer-events': history || entryPoint.deleted ? 'none' : '' }"
+    >
       <div :class="`${isMobile ? 'col-12' : 'col-6'} q-mr-xl column`">
         <TableComponent
           title="Entrypoint Parameters"
@@ -149,33 +158,36 @@
           :hideDeleteBtn="true"
           :hideBottom="true"
           :showAll="true"
-          @create="selectedParam = null; showEntrypointParamDialog = true;"
-          style="margin-top: 0;"
+          style="margin-top: 0"
+          @create="
+            selectedParam = null;
+            showEntrypointParamDialog = true;
+          "
         >
-          <template #body-cell-defaultValue="props">
+          <template #body-cell-defaultValue="cellProps">
             <q-chip
-              v-if="props.row.defaultValue === null"
+              v-if="cellProps.row.defaultValue === null"
               label="No Default"
               color="negative"
               text-color="white"
             />
             <div v-else>
-              {{ props.row.defaultValue }}
+              {{ cellProps.row.defaultValue }}
             </div>
           </template>
-          <template #body-cell-actions="props">
-            <q-btn 
+          <template #body-cell-actions="cellProps">
+            <q-btn
               icon="edit"
               round
               size="sm"
               color="primary"
               flat
               @click="
-                selectedParam = props.row; 
-                selectedParamIndex = props.rowIndex; 
+                selectedParam = cellProps.row;
+                selectedParamIndex = cellProps.rowIndex;
                 showEntrypointParamDialog = true;
                 selectedParamType = 'parameters';
-              " 
+              "
             />
             <q-btn
               icon="sym_o_delete"
@@ -184,9 +196,9 @@
               color="negative"
               flat
               @click="
-                selectedParam = props.row; 
-                showDeleteDialogParam = true
-                selectedParamType = 'parameters'
+                selectedParam = cellProps.row;
+                showDeleteDialogParam = true;
+                selectedParamType = 'parameters';
               "
             />
           </template>
@@ -205,31 +217,56 @@
           :hideBottom="true"
           :showAll="true"
           rightCaption="*Click parameter to edit, or X to delete"
-          style="margin-top: 0;"
+          style="margin-top: 0"
           @create="showArtifactParamDialog = true"
         >
-          <template #body-cell-name="props">
-            <div style="font-size: 18px;">
-              {{ props.row.name }}
-              <q-btn icon="edit" round size="sm" color="primary" flat />
+          <template #body-cell-name="cellProps">
+            <div style="font-size: 18px">
+              {{ cellProps.row.name }}
+              <q-btn
+                icon="edit"
+                round
+                size="sm"
+                color="primary"
+                flat
+              />
             </div>
-            <q-popup-edit v-model="props.row.name" v-slot="scope">
-              <q-input v-model="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+            <q-popup-edit
+              v-slot="scope"
+              v-model="cellProps.row.name"
+            >
+              <q-input
+                v-model="scope.value"
+                dense
+                autofocus
+                counter
+                @keyup.enter="scope.set"
+              />
             </q-popup-edit>
           </template>
-          <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
+          <template #body-cell-outputParams="cellProps">
+            <div
+              v-for="(param, i) in cellProps.row.outputParams"
+              :key="i"
+            >
               <q-chip
                 color="purple"
                 text-color="white"
                 dense
                 clickable
                 removable
-                @click="handleSelectedParam('edit', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true; console.log('param = ', param)"
-                @remove="entryPoint.artifactParameters[props.rowIndex].outputParams.splice(i, 1)"
                 :label="`${param.name}: ${param.parameterType.name}`"
+                @click="
+                  handleSelectedParam('edit', cellProps, i, 'outputParams', 'artifacts');
+                  showEditArtifactParamDialog = true;
+                  console.log('param = ', param);
+                "
+                @remove="entryPoint.artifactParameters[cellProps.rowIndex].outputParams.splice(i, 1)"
               />
-              <div v-if="!param.parameterType" class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders">
+              <div
+                v-if="!param.parameterType"
+                class="text-white q-mr-sm q-my-xs bg-red q-pa-xs rounded-borders"
+              >
                 Resolve missing type above
               </div>
             </div>
@@ -240,16 +277,23 @@
               color="grey-5"
               text-color="black"
               class="q-mr-xs q-my-xs"
-              @click="handleSelectedParam('create', props, i, 'outputParams', 'artifacts'); showEditArtifactParamDialog = true"
+              @click="
+                handleSelectedParam('create', cellProps, i, 'outputParams', 'artifacts');
+                showEditArtifactParamDialog = true;
+              "
             />
           </template>
-          <template #body-cell-delete="props">
-            <q-btn 
+          <template #body-cell-delete="cellProps">
+            <q-btn
               icon="sym_o_delete"
-              round size="md"
+              round
+              size="md"
               color="negative"
               flat
-              @click="selectedArtifactParamProps = props; showDeleteDialogArtifactParam = true"
+              @click="
+                selectedArtifactParamProps = cellProps;
+                showDeleteDialogArtifactParam = true;
+              "
             />
           </template>
         </TableComponent>
@@ -257,40 +301,41 @@
     </div>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
+  <fieldset
+    class="q-px-lg q-mt-lg q-pt-lg"
+    :class="history || entryPoint.deleted ? `disabled` : ``"
+  >
     <legend>Task Graph Info</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div
+      class="row"
+      :style="{ 'pointer-events': history || entryPoint.deleted ? 'none' : '' }"
+    >
       <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Task Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
-          Use "Add to Task Graph" button in Plugin Tasks table to insert YAML, and 
-          CTRL + Space or $ to trigger autocompletion.
+          Use "Add to Task Graph" button in Plugin Tasks table to insert YAML, and CTRL + Space or $ to trigger
+          autocompletion.
         </p>
-        <CodeEditor 
+        <CodeEditor
           v-model="entryPoint.taskGraph"
           language="yaml"
           placeholder="# task graph yaml file"
           :showError="taskGraphError"
           :autocompletions="autocompletions"
-          :readOnly="history"
-          style="min-height: 200px;"
-        />  
-        <q-btn
-          label="Validate Inputs"
-          color="primary"
-          @click="validateInputs()"
-          class="self-start"
+          :readOnly="history || entryPoint.deleted"
+          style="min-height: 200px"
         />
       </div>
-      
+
       <div class="col">
         <h2>Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.plugins"
-          v-model:pluginIDsToUpdate="pluginIDsToUpdate"
-          v-model:pluginIDsToRemove="pluginIDsToRemove"
-          class="q-mt-lg"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            v-model:selectedPlugins="entryPoint.plugins"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+        </div>
         <TableComponent
           :rows="tasks"
           :columns="taskColumns"
@@ -300,10 +345,14 @@
           :disableSelect="true"
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
-          :hideCreateBtn=true
+          :hideCreateBtn="true"
+          @syncResource="({ resource }) => syncPlugin(resource)"
         >
-          <template #body-cell-inputParams="props">
-            <div v-for="(param, i) in props.row.inputParams" :key="i">
+          <template #body-cell-inputParams="cellProps">
+            <div
+              v-for="(param, i) in cellProps.row.inputParams"
+              :key="i"
+            >
               <q-chip
                 color="indigo"
                 text-color="white"
@@ -312,13 +361,20 @@
                 class="q-mr-none"
               >
                 {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
+                <span
+                  v-if="param.required"
+                  class="text-red"
+                  >*</span
+                >
                 : {{ param.parameterType.name }}
               </q-chip>
             </div>
           </template>
-          <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
+          <template #body-cell-outputParams="cellProps">
+            <div
+              v-for="(param, i) in cellProps.row.outputParams"
+              :key="i"
+            >
               <q-chip
                 color="purple"
                 text-color="white"
@@ -327,47 +383,100 @@
                 class="q-mr-none"
               >
                 {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
+                <span
+                  v-if="param.required"
+                  class="text-red"
+                  >*</span
+                >
                 : {{ param.parameterType.name }}
               </q-chip>
             </div>
           </template>
-          <template #body-cell-add="props">
-            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToTaskGraph(props.row)" />
+          <template #body-cell-add="cellProps">
+            <div
+              class="row items-center justify-center no-wrap"
+              style="gap: 4px"
+            >
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  icon="add"
+                  round
+                  size="xs"
+                  color="grey-5"
+                  text-color="black"
+                  aria-label="Add Task"
+                  @click="addToTaskGraph(cellProps.row)"
+                >
+                  <q-tooltip>Add Task</q-tooltip>
+                </q-btn>
+              </div>
+
+              <div class="row items-center justify-center action-button-slot">
+                <q-btn
+                  v-if="swappableTasksByTask.get(cellProps.row)?.length"
+                  icon="sym_o_sync_alt"
+                  round
+                  size="xs"
+                  color="primary"
+                  aria-label="Add Swappable Task"
+                  @click="openAddSwappableTaskDialog(cellProps.row)"
+                >
+                  <q-tooltip>
+                    <div class="q-mb-sm">Add Swappable Task</div>
+                    <div>Swappable with:</div>
+                    <ul class="q-my-none q-pl-md">
+                      <li
+                        v-for="task in swappableTasksByTask.get(cellProps.row)"
+                        :key="`${task.plugin.id}-${task.id || task.name}`"
+                      >
+                        {{ task.name }}
+                      </li>
+                    </ul>
+                  </q-tooltip>
+                </q-btn>
+              </div>
+            </div>
           </template>
         </TableComponent>
       </div>
     </div>
   </fieldset>
 
-  <fieldset class="q-px-lg q-mt-lg q-pt-lg" :class="history ? `disabled` : ``">
+  <fieldset
+    class="q-px-lg q-mt-lg q-pt-lg"
+    :class="history || entryPoint.deleted ? `disabled` : ``"
+  >
     <legend>Artifact Info</legend>
-    <div class="row" :style="{ 'pointer-events': history ? 'none' : '' }">
+    <div
+      class="row"
+      :style="{ 'pointer-events': history || entryPoint.deleted ? 'none' : '' }"
+    >
       <div :class="`${isMobile ? 'col-12 q-mb-xl' : 'col-6'} q-mr-xl`">
         <h2>Artifact Output Graph</h2>
         <p class="text-caption q-mb-none text-grey-8 q-pl-xs">
-          Use "Add to Artifact Output Graph" button in Artifact Tasks table to insert YAML, and 
-          CTRL + Space or $ to trigger autocompletion.
+          Use "Add to Artifact Output Graph" button in Artifact Tasks table to insert YAML, and CTRL + Space or $ to
+          trigger autocompletion.
         </p>
-        <CodeEditor 
+        <CodeEditor
           v-model="entryPoint.artifactGraph"
           :additionalCode="entryPoint.taskGraph"
           language="yaml"
           :autocompletions="autocompletions"
           placeholder="# task graph yaml file"
-          :readOnly="history"
-          style="min-height: 200px;"
-        />  
+          :readOnly="history || entryPoint.deleted"
+          style="min-height: 200px"
+        />
       </div>
-      
+
       <div class="col">
         <h2>Artifact Task Plugins</h2>
-        <AssignPluginsDropdown
-          v-model:selectedPlugins="entryPoint.artifactPlugins"
-          v-model:pluginIDsToUpdate="artifactPluginIDsToUpdate"
-          v-model:pluginIDsToRemove="artifactPluginIDsToRemove"
-          class="q-mt-lg"
-        />
+        <div class="row items-start no-wrap q-mt-lg">
+          <AssignPluginsDropdown
+            v-model:selectedPlugins="entryPoint.artifactPlugins"
+            class="col"
+            :disable="entryPoint.deleted"
+          />
+        </div>
         <TableComponent
           :rows="artifactTasks"
           :columns="artifactTaskColumns"
@@ -377,10 +486,14 @@
           :disableSelect="true"
           :hideOpenBtn="true"
           :hideDeleteBtn="true"
-          :hideCreateBtn=true
+          :hideCreateBtn="true"
+          @syncResource="({ resource }) => syncPlugin(resource, 'artifactPlugins')"
         >
-          <template #body-cell-outputParams="props">
-            <div v-for="(param, i) in props.row.outputParams" :key="i">
+          <template #body-cell-outputParams="cellProps">
+            <div
+              v-for="(param, i) in cellProps.row.outputParams"
+              :key="i"
+            >
               <q-chip
                 color="purple"
                 text-color="white"
@@ -389,13 +502,24 @@
                 class="q-mr-none"
               >
                 {{ `${param.name}` }}
-                <span v-if="param.required" class="text-red">*</span>
+                <span
+                  v-if="param.required"
+                  class="text-red"
+                  >*</span
+                >
                 : {{ param.parameterType.name }}
               </q-chip>
             </div>
           </template>
-          <template #body-cell-add="props">
-            <q-btn icon="add" round size="xs" color="grey-5" text-color="black" @click="addToArtifactGraph(props.row)" />
+          <template #body-cell-add="cellProps">
+            <q-btn
+              icon="add"
+              round
+              size="xs"
+              color="grey-5"
+              text-color="black"
+              @click="addToArtifactGraph(cellProps.row)"
+            />
           </template>
         </TableComponent>
       </div>
@@ -405,43 +529,56 @@
   <div class="float-right q-my-lg">
     <q-btn
       outline
-      color="primary" 
+      color="primary"
       label="Cancel"
       class="q-mr-lg cancel-btn"
-      @click="confirmLeave = true; store.initialPage ? router.push('/entrypoints') : router.back()"
+      @click="
+        confirmLeave = true;
+        store.initialPage ? router.push('/entrypoints') : router.back();
+      "
     />
-    <q-btn  
-      @click="submit()" 
-      :color="history ? 'blue-2' : 'primary'" 
+
+    <span class="q-mr-lg">
+      <q-btn
+        label="Validate"
+        color="primary"
+        :disable="history || entryPoint.deleted"
+        @click="validateEntrypoint()"
+      />
+    </span>
+
+    <q-btn
+      :color="history ? 'blue-2' : 'primary'"
       label="Submit EntryPoint"
-      :disable="history || !enableSubmit"
+      :disable="history || entryPoint.deleted || !enableSubmit"
+      @click="submit()"
     >
-      <q-tooltip v-if="!enableSubmit">
-        No changes detected — nothing to save
-      </q-tooltip>
+      <q-tooltip v-if="!enableSubmit"> No changes detected — nothing to save </q-tooltip>
     </q-btn>
   </div>
 
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialogEntrypoint"
-    @submit="deleteEntrypoint()"
     type="Entrypoint"
     :name="entryPoint.name"
-    @click=""
+    @submit="deleteEntrypoint()"
   />
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialogParam"
-    @submit="deleteParam()"
     type="Parameter"
     :name="selectedParam?.name"
+    @submit="deleteParam()"
   />
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialogArtifactParam"
-    @submit="entryPoint.artifactParameters.splice(selectedArtifactParamProps.rowIndex, 1); showDeleteDialogArtifactParam = false"
     type="Artifact Parameter"
     :name="selectedArtifactParamProps?.row?.name"
+    @submit="
+      entryPoint.artifactParameters.splice(selectedArtifactParamProps.rowIndex, 1);
+      showDeleteDialogArtifactParam = false;
+    "
   />
-  <EntrypointParamDialog 
+  <EntrypointParamDialog
     v-model="showEntrypointParamDialog"
     :editParam="selectedParam"
     @updateParam="updateParam"
@@ -451,7 +588,18 @@
     v-model="showArtifactParamDialog"
     @submit="addArtifactParam"
   />
-  <LeaveFormDialog 
+  <AddSwappableTaskDialog
+    v-model="showAddSwappableTaskDialog"
+    v-model:selectedSwapStep="selectedSwapStep"
+    v-model:selectedSwappableTasks="selectedSwappableTasks"
+    :selectedSwapTask="selectedSwapTask"
+    :swapStepOptions="swapStepOptions"
+    :selectableSwappableTasks="selectableSwappableTasks"
+    :canSubmit="canSubmitSwappableTasks"
+    @stepChanged="resetSelectedSwappableTasks"
+    @submit="addSelectedSwappableTasks"
+  />
+  <LeaveFormDialog
     v-model="showLeaveDialog"
     type="entrypoint"
     @leaveForm="leaveForm"
@@ -460,23 +608,24 @@
     v-model="showReturnDialog"
     @cancel="clearForm"
   />
-  <InfoPopupDialog
-    v-model="displayErrorDialog"
-  >
+  <InfoPopupDialog v-model="displayErrorDialog">
     <template #title>
-      <label id="modalTitle">
-        Entrypoint Input Errors
-      </label>
+      <label id="modalTitle"> Entrypoint Validation Errors </label>
     </template>
-    Errors found: {{ inputErrors.length }}
+    Errors found: {{ validationIssues.length }}
     <ul>
-      <li v-for="error in inputErrors">
-        {{ error.message }}
+      <li
+        v-for="(issue, i) in validationIssues"
+        :key="i"
+        class="q-mb-md"
+        style="white-space: pre-wrap"
+      >
+        {{ issue }}
       </li>
     </ul>
   </InfoPopupDialog>
 
-  <EditPluginTaskParamDialog 
+  <EditPluginTaskParamDialog
     v-model="showEditArtifactParamDialog"
     :editParam="selectedParam"
     :pluginParameterTypes="pluginParameterTypes"
@@ -487,578 +636,883 @@
 </template>
 
 <script setup>
-  import { ref, inject, reactive, watch, computed, onMounted, nextTick } from 'vue'
-  import { useLoginStore } from '@/stores/LoginStore.ts'
-  import { useRouter, onBeforeRouteLeave } from 'vue-router'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import CodeEditor from '@/components/CodeEditor.vue'
-  import EntrypointParamDialog from '@/dialogs/EntrypointParamDialog.vue'
-  import { useRoute } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import TableComponent from '@/components/TableComponent.vue'
-  import LeaveFormDialog from '@/dialogs/LeaveFormDialog.vue'
-  import ReturnToFormDialog from '@/dialogs/ReturnToFormDialog.vue'
-  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
-  import ArtifactParamDialog from '@/dialogs/ArtifactParamDialog.vue'
-  import EditPluginTaskParamDialog from '@/dialogs/EditPluginTaskParamDialog.vue'
-  import AssignPluginsDropdown from '@/components/AssignPluginsDropdown.vue'
+import { ref, inject, watch, computed, onMounted } from "vue";
+import { useLoginStore } from "@/stores/LoginStore.ts";
+import { useRouter, onBeforeRouteLeave } from "vue-router";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import CodeEditor from "@/components/CodeEditor.vue";
+import EntrypointParamDialog from "@/dialogs/EntrypointParamDialog.vue";
+import { useRoute } from "vue-router";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import PageTitle from "@/components/PageTitle.vue";
+import TableComponent from "@/components/TableComponent.vue";
+import LeaveFormDialog from "@/dialogs/LeaveFormDialog.vue";
+import ReturnToFormDialog from "@/dialogs/ReturnToFormDialog.vue";
+import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
+import ArtifactParamDialog from "@/dialogs/ArtifactParamDialog.vue";
+import AddSwappableTaskDialog from "@/dialogs/AddSwappableTaskDialog.vue";
+import EditPluginTaskParamDialog from "@/dialogs/EditPluginTaskParamDialog.vue";
+import AssignPluginsDropdown from "@/components/AssignPluginsDropdown.vue";
+import ResourcePicker from "@/components/ResourcePicker.vue";
+import YAML from "yaml";
 
-  const route = useRoute()
-  
-  const router = useRouter()
+const route = useRoute();
 
-  const store = useLoginStore()
+const router = useRouter();
 
-  const isMobile = inject('isMobile')
-  const darkMode = inject('darkMode')
+const store = useLoginStore();
 
-  const history = computed(() => {
-    return store.showRightDrawer
-  })
+const isMobile = inject("isMobile");
+const darkMode = inject("darkMode");
 
-  function requiredRule(val) {
-    return (!!val) || "This field is required"
+const history = computed(() => {
+  return store.showRightDrawer;
+});
+
+function requiredRule(val) {
+  return !!val || "This field is required";
+}
+
+const entryPoint = ref({
+  name: "",
+  group: store.loggedInGroup.id,
+  description: "",
+  parameters: [],
+  artifactParameters: [],
+  taskGraph: "",
+  artifactGraph: "",
+  queues: [],
+  plugins: [],
+  artifactPlugins: [],
+});
+
+const ORIGINAL_COPY = {
+  name: "",
+  group: store.loggedInGroup.id,
+  description: "",
+  parameters: [],
+  artifactParameters: [],
+  taskGraph: "",
+  artifactGraph: "",
+  queues: [],
+  plugins: [],
+  artifactPlugins: [],
+};
+
+const valuesChangedFromOriginal = computed(() => {
+  return hasEntrypointChanges(ORIGINAL_COPY);
+});
+
+const enableSubmit = computed(() => {
+  if (route.params.id === "new" && valuesChangedFromOriginal.value) {
+    return true;
+  } else if (route.params.id !== "new" && valuesChangedFromEditStart.value) {
+    return true;
+  } else {
+    return false;
   }
+});
 
-  const entryPoint = ref({
-    name: '',
-    group: store.loggedInGroup.id,
-    description: '',
-    parameters: [],
-    artifactParameters: [],
-    taskGraph: '',
-    artifactGraph: '',
-    queues: [],
-    plugins: [],
-    artifactPlugins: [],
-  })
+const copyAtEditStart = ref({});
 
-  const ORIGINAL_COPY = {
-    name: '',
-    group: store.loggedInGroup.id,
-    description: '',
-    parameters: [],
-    artifactParameters: [],
-    taskGraph: '',
-    artifactGraph: '',
-    queues: [],
-    plugins: [],
-    artifactPlugins: [],
+onMounted(() => {
+  if (route.query.snapshotId && !store.showRightDrawer) {
+    store.showRightDrawer = true;
+  } else {
+    getEntrypoint();
+    getPluginParameterTypes();
   }
+});
 
-  const valuesChangedFromOriginal = computed(() => {
-    for (const key in ORIGINAL_COPY) {
-      if(JSON.stringify(ORIGINAL_COPY[key]) !== JSON.stringify(entryPoint.value[key])) {
-        return true
-      }
-    }
-    return false
-  })
+const pluginParameterTypes = ref([]);
 
-  const enableSubmit = computed(() => {
-    if(route.params.id === 'new' && valuesChangedFromOriginal.value) {
-      return true
-    } else if(route.params.id !== 'new' && valuesChangedFromEditStart.value) {
-      return true
-    } else {
-      return false
-    }
-  })
-
-  const copyAtEditStart = ref({})
-
-  onMounted(() => {
-    if(route.query.snapshotId && !store.showRightDrawer) {
-      store.showRightDrawer = true
-    } else {
-      getEntrypoint()
-      getPluginParameterTypes()
-    }
-  })
-
-  const pluginParameterTypes = ref([])
-
-  async function getPluginParameterTypes() {
-    try {
-      const res = await api.getData('pluginParameterTypes', { rowsPerPage: 0 })
-      pluginParameterTypes.value = res.data.data
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
+async function getPluginParameterTypes() {
+  try {
+    const res = await api.getData("pluginParameterTypes", { rowsPerPage: 0 });
+    pluginParameterTypes.value = res.data.data;
+  } catch (err) {
+    notify.error(err.response.data.message);
   }
+}
 
-  watch(() => store.selectedSnapshot, (ep) => {
-    if(ep) {
-      entryPoint.value = {
-        name: ep.name,
-        group: ep.group.id,
-        description: ep.description,
-        parameters: ep.parameters,
-        artifactParameters: ep.artifactParameters,
-        taskGraph: ep.taskGraph,
-        artifactGraph: ep.artifactGraph,
-        queues: ep.queues,
-        plugins: ep.plugins,
-        artifactPlugins: ep.artifactPlugins
-      }
+watch(
+  () => store.selectedSnapshot,
+  (ep) => {
+    if (ep) {
+      entryPoint.value = ep;
+      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
     } else {
-      getEntrypoint()
+      getEntrypoint();
     }
-  })
+  },
+);
 
-  const valuesChangedFromEditStart = computed(() => {
-    for (const key in copyAtEditStart.value) {
-      if(JSON.stringify(copyAtEditStart.value[key]) !== JSON.stringify(entryPoint.value[key])) {
-        return true
-      }
-    }
-    return false
-  })
+const valuesChangedFromEditStart = computed(() => {
+  return Object.keys(copyAtEditStart.value).length > 0 && hasEntrypointChanges(copyAtEditStart.value);
+});
 
-  const valuesChangedFromEditStartBesidesPlugins = computed(() => {
-    const { plugins: _1, artifactPlugins: _2, ...copyRest } = copyAtEditStart.value
-    const { plugins: _3, artifactPlugins: _4, ...entryRest } = entryPoint.value
-    return JSON.stringify(copyRest) !== JSON.stringify(entryRest)
-  })
+const tasks = ref([]);
+const artifactTasks = ref([]);
 
-  const tasks = ref([])
-  const artifactTasks = ref([])
-
-  watch(() => entryPoint.value.plugins, () => {
-    tasks.value = []
+watch(
+  () => entryPoint.value.plugins,
+  () => {
+    tasks.value = [];
     entryPoint.value.plugins.forEach((plugin) => {
-      if(typeof plugin === 'number') return
-      const pluginName = plugin.name
+      if (typeof plugin === "number") return;
       plugin.files.forEach((file) => {
         file.tasks.functions.forEach((fTask) => {
-          tasks.value.push({ ...fTask, pluginName: pluginName })
-        })
-      })
-    })
-  }, { deep: true })
+          tasks.value.push({ ...fTask, plugin });
+        });
+      });
+    });
+  },
+  { deep: true },
+);
 
-  watch(() => entryPoint.value.artifactPlugins, () => {
-    artifactTasks.value = []
+watch(
+  () => entryPoint.value.artifactPlugins,
+  () => {
+    artifactTasks.value = [];
     entryPoint.value.artifactPlugins.forEach((plugin) => {
-      if(typeof plugin === 'number') return
-      const pluginName = plugin.name
+      if (typeof plugin === "number") return;
       plugin.files.forEach((file) => {
         file.tasks.artifacts.forEach((fTask) => {
-          artifactTasks.value.push({ ...fTask, pluginName: pluginName })
-        })
-      })
-    })
-  }, { deep: true })
+          artifactTasks.value.push({ ...fTask, plugin });
+        });
+      });
+    });
+  },
+  { deep: true },
+);
 
-  const autocompletions = computed(() => {
-    return [...entryPoint.value.parameters, ...entryPoint.value.artifactParameters].map((param) => {
-      return {
-        label: `$${param.name}`,
-        type: 'variable'
-      }
-    })
-  })
+const autocompletions = computed(() => {
+  return [...entryPoint.value.parameters, ...entryPoint.value.artifactParameters].map((param) => {
+    return {
+      label: `$${param.name}`,
+      type: "variable",
+    };
+  });
+});
 
-  const autocompletionsArtifacts = computed(() => {
-    if(entryPoint.value.artifactParameters.length === 0) return []
-    return entryPoint.value.artifactParameters.map((param) => {
-      return {
-        label: `$${param.name}`,
-        type: 'variable'
-      }
-    })
-  })
+// const autocompletionsArtifacts = computed(() => {
+//   if (entryPoint.value.artifactParameters.length === 0) return [];
+//   return entryPoint.value.artifactParameters.map((param) => {
+//     return {
+//       label: `$${param.name}`,
+//       type: "variable",
+//     };
+//   });
+// });
 
-  const basicInfoForm = ref(null)
+const basicInfoForm = ref(null);
 
-  const columns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'type', label: 'Type', align: 'left', field: 'parameterType', sortable: true, },
-    { name: 'defaultValue', label: 'Default Value (optional)', align: 'left', field: 'defaultValue', sortable: true, },
-    { name: 'actions', label: 'Actions', align: 'center', },
-  ]
+const columns = [
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  { name: "type", label: "Type", align: "left", field: "parameterType", sortable: true },
+  { name: "defaultValue", label: "Default Value (optional)", align: "left", field: "defaultValue", sortable: true },
+  { name: "actions", label: "Actions", align: "center" },
+];
 
-  const artifactColumns = [
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'delete', label: 'Delete', align: 'center', },
-  ]
+const artifactColumns = [
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  {
+    name: "outputParams",
+    label: "Output Parameters",
+    align: "right",
+    field: "outputParams",
+    sortable: false,
+    classes: "vertical-top",
+  },
+  { name: "delete", label: "Delete", align: "center" },
+];
 
-  const taskColumns = [
-    { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
-    { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'inputParams', label: 'Input Parameters', align: 'right', field: 'inputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'add', label: 'Add to Task Graph', align: 'center', sortable: false, },
-  ]
+const taskColumns = [
+  {
+    name: "plugin",
+    label: "Plugin",
+    align: "left",
+    field: "plugin",
+    sortable: true,
+    resourceType: "plugin",
+    sort: (a, b) => a.name.localeCompare(b.name),
+  },
+  { name: "taskName", label: "Task", align: "left", field: "name", sortable: true },
+  {
+    name: "inputParams",
+    label: "Input Parameters",
+    align: "right",
+    field: "inputParams",
+    sortable: false,
+    classes: "vertical-top",
+  },
+  {
+    name: "outputParams",
+    label: "Output Parameters",
+    align: "right",
+    field: "outputParams",
+    sortable: false,
+    classes: "vertical-top",
+  },
+  { name: "add", label: "Add to Task Graph", align: "center", sortable: false },
+];
 
-  const artifactTaskColumns = [
-    { name: 'pluginName', label: 'Plugin', align: 'left', field: 'pluginName', sortable: true, },
-    { name: 'taskName', label: 'Task', align: 'left', field: 'name', sortable: true, },
-    { name: 'outputParams', label: 'Output Parameters', align: 'right', field: 'outputParams', sortable: false, classes: 'vertical-top' },
-    { name: 'add', label: 'Add to Artifact Output Graph', align: 'center', sortable: false, },
-  ]
+const artifactTaskColumns = [
+  {
+    name: "plugin",
+    label: "Plugin",
+    align: "left",
+    field: "plugin",
+    sortable: true,
+    resourceType: "plugin",
+    sort: (a, b) => a.name.localeCompare(b.name),
+  },
+  {
+    name: "taskName",
+    label: "Task",
+    align: "left",
+    field: "name",
+    sortable: true,
+  },
+  {
+    name: "outputParams",
+    label: "Output Parameters",
+    align: "right",
+    field: "outputParams",
+    sortable: false,
+    classes: "vertical-top",
+  },
+  { name: "add", label: "Add to Artifact Output Graph", align: "center", sortable: false },
+];
 
-  const showReturnDialog = ref(false)
+const showReturnDialog = ref(false);
 
-  async function getEntrypoint() {
-    if(route.params.id === 'new') {
-      if(store.savedForms?.entryPoint) {
-        showReturnDialog.value = true
-        await checkIfStillValid('queues')
-        await checkIfStillValid('plugins')
-        entryPoint.value = store.savedForms.entryPoint
-        copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint))
-      } else {
-        copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
-      }
-      return
+async function getEntrypoint() {
+  if (route.params.id === "new") {
+    if (store.savedForms?.entryPoint) {
+      showReturnDialog.value = true;
+      await checkIfStillValid("queues");
+      await checkIfStillValid("plugins");
+      entryPoint.value = store.savedForms.entryPoint;
+      copyAtEditStart.value = JSON.parse(JSON.stringify(store.savedForms.entryPoint));
+    } else {
+      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
     }
+    return;
+  }
+  try {
+    const res = await api.getItem("entrypoints", route.params.id);
+    entryPoint.value = res.data;
+    copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
+    console.log("entryPoint = ", entryPoint.value);
+  } catch (err) {
+    notify.error(err.response.data.message);
+  }
+}
+
+async function checkIfStillValid(type) {
+  for (let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
+    const id = store.savedForms.entryPoint[type][index].id;
     try {
-      const res = await api.getItem('entrypoints', route.params.id)
-      entryPoint.value = res.data
-      copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
-      console.log('entryPoint = ', entryPoint.value)
-    } catch(err) {
-      notify.error(err.response.data.message)
-    } 
-  }
-
-  async function checkIfStillValid(type) {
-    for(let index = store.savedForms.entryPoint[type].length - 1; index >= 0; index--) {
-      let id = store.savedForms.entryPoint[type][index].id
-      try {
-        const res =  await api.getItem(type, id)
-      } catch(err) {
-        await store.savedForms.entryPoint[type].splice(index, 1)
-        console.warn(err)
-      } 
+      await api.getItem(type, id);
+    } catch (err) {
+      await store.savedForms.entryPoint[type].splice(index, 1);
+      console.warn(err);
     }
   }
+}
 
-  const taskGraphError = ref('')
+const taskGraphError = ref("");
 
-  const taskGraphPlaceholderError = computed(() => {
-    if(entryPoint.value.taskGraph.includes('<step-name>') && entryPoint.value.taskGraph.includes('<input-value>')) {
-      return 'Replace <step-name> and <input-value> placeholders'
-    } else if(entryPoint.value.taskGraph.includes('<step-name>')) {
-      return 'Replace <step-name> placeholders'
-    } else if(entryPoint.value.taskGraph.includes('<input-value>')) {
-      return 'Replace <input-value> placeholders'
-    }
-    return ''
-  })
+const taskGraphPlaceholderError = computed(() => {
+  const placeholders = entryPoint.value.taskGraph.match(
+    /<(?:step-name(?:-\d+)?|swap-name(?:-\d+)?|task-alias(?:-\d+)?|input-value)>/g,
+  );
+  if (!placeholders) return "";
 
-  function submit() {
-    if(entryPoint.value.taskGraph.length === 0) {
-      taskGraphError.value = 'This field is required'
-    }
-    basicInfoForm.value.validate().then(success => {
-      if (success && taskGraphError.value === '') {
-        confirmLeave.value = true
-        addOrModifyEntrypoint()
-      }
-      else {
-        // error
-      }
-    })
+  const normalizedPlaceholders = placeholders.map((placeholder) => {
+    if (/^<step-name(?:-\d+)?>$/.test(placeholder)) return "<step-name>";
+    if (/^<swap-name(?:-\d+)?>$/.test(placeholder)) return "<swap-name>";
+    if (/^<task-alias(?:-\d+)?>$/.test(placeholder)) return "<task-alias>";
+    return placeholder;
+  });
+
+  return `Replace ${[...new Set(normalizedPlaceholders)].join(", ")} placeholders`;
+});
+
+function submit() {
+  if (entryPoint.value.taskGraph.length === 0) {
+    taskGraphError.value = "This field is required";
   }
-
-  async function addOrModifyEntrypoint() {
-    let submitObject = JSON.parse(JSON.stringify(entryPoint.value))
-    const keysToKeep = [
-      'group', 
-      'name', 
-      'description', 
-      'taskGraph', 
-      'artifactGraph', 
-      'parameters', 
-      'artifactParameters', 
-      'queues', 
-      'plugins', 
-      'artifactPlugins'
-    ]
-    for (const key of Object.keys(submitObject)) {
-      if (!keysToKeep.includes(key)) {
-        delete submitObject[key]
-      }
+  basicInfoForm.value.validate().then((success) => {
+    if (success && taskGraphError.value === "") {
+      addOrModifyEntrypoint();
+    } else {
+      // error
     }
-    // turn objects into ids
-    submitObject.queues = submitObject.queues.map(q => q.id)
-    submitObject.plugins = submitObject.plugins.map(p => p.id)
-    submitObject.artifactPlugins = submitObject.artifactPlugins.map(p => p.id)
+  });
+}
 
-    submitObject.artifactParameters = submitObject.artifactParameters.map((param) => ({
-      ...param,
+function prepareEntrypointPayload(candidate = entryPoint.value) {
+  const payload = {
+    name: candidate.name,
+    description: candidate.description,
+    taskGraph: candidate.taskGraph,
+    artifactGraph: candidate.artifactGraph,
+    parameters: candidate.parameters.map((param) => ({
+      name: param.name,
+      parameterType: param.parameterType,
+      defaultValue: param.defaultValue,
+    })),
+    artifactParameters: candidate.artifactParameters.map((param) => ({
+      name: param.name,
       outputParams: param.outputParams.map((oParam) => ({
-        ...oParam,
-        parameterType: oParam.parameterType.id
-      }))
-
-    }))
-    try {
-      if (route.params.id === 'new') {
-        await api.addItem('entrypoints', submitObject)
-        store.savedForms.entryPoint = null
-        notify.success(`Successfully created '${entryPoint.value.name}'`)
-      } else {
-        if(valuesChangedFromEditStartBesidesPlugins.value) {
-          const keysToRemove = ['group', 'plugins', 'artifactPlugins']
-          keysToRemove.forEach((key) => delete submitObject[key])
-          await api.updateItem('entrypoints', route.params.id, submitObject)
-        }
-        if(pluginIDsToUpdate.value.length > 0) {
-          await api.addPluginsToEntrypoint(route.params.id, pluginIDsToUpdate.value, "plugins")
-        }
-        if(artifactPluginIDsToUpdate.value.length > 0) {
-          await api.addPluginsToEntrypoint(route.params.id, artifactPluginIDsToUpdate.value, "artifactPlugins")
-        }
-        for(const pluginId of pluginIDsToRemove.value) {
-          await api.removePluginFromEntrypoint(route.params.id, pluginId, 'plugins')
-        }
-        for(const pluginId of artifactPluginIDsToRemove.value) {
-          await api.removePluginFromEntrypoint(route.params.id, pluginId, 'artifactPlugins')
-        }
-        notify.success(`Successfully updated '${entryPoint.value.name}'`)
-      }
-      router.push('/entrypoints')
-    } catch(err) {
-      notify.error(err.response.data.message)
-    }
+        name: oParam.name,
+        parameterType: oParam.parameterType.id,
+      })),
+    })),
+    queues: (candidate.queues ?? []).map((queue) => queue.id),
+  };
+  if (route.params.id === "new") {
+    payload.group = candidate.group;
+    payload.plugins = candidate.plugins.map((plugin) => plugin.id);
+    payload.artifactPlugins = candidate.artifactPlugins.map((plugin) => plugin.id);
+  } else {
+    payload.pluginSnapshotIds = candidate.plugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
+    payload.artifactPluginSnapshotIds = candidate.artifactPlugins.map((plugin) => plugin.snapshotId ?? plugin.snapshot);
   }
+  return payload;
+}
 
-  watch(() => entryPoint.value.taskGraph, (newVal) => {
-    if(clearFormExecuted.value) {
-      clearFormExecuted.value = false
-    } else {
-      taskGraphError.value = newVal.length > 0 ? '' : 'This field is required'
-      if(taskGraphPlaceholderError.value) {
-        taskGraphError.value = taskGraphPlaceholderError.value
-      }
-    }
-  })
-
-  const showDeleteDialogEntrypoint = ref(false)
-  const showDeleteDialogParam = ref(false)
-  const showDeleteDialogArtifactParam = ref(false)
-  const selectedParam = ref({})
-  const selectedParamIndex = ref('')
-  const selectedParamType = ref('')
-  const selectedArtifactParamProps = ref('')
-
-  function deleteParam() {
-    console.log('selectedParamType.value = ', selectedParamType.value)
-    entryPoint.value[selectedParamType.value] = entryPoint.value[selectedParamType.value].filter((param) => param.name !== selectedParam.value.name)
-    showDeleteDialogParam.value = false
+function hasEntrypointChanges(original) {
+  const before = prepareEntrypointPayload(original);
+  const after = prepareEntrypointPayload();
+  // Binding order has no effect; retain ordering in the submitted payload and other content.
+  for (const key of ["plugins", "artifactPlugins", "pluginSnapshotIds", "artifactPluginSnapshotIds"]) {
+    before[key]?.sort((a, b) => a - b);
+    after[key]?.sort((a, b) => a - b);
   }
+  return JSON.stringify(before) !== JSON.stringify(after);
+}
 
-  const showEntrypointParamDialog = ref(false)
-  const showArtifactParamDialog = ref(false)
-
-  function updateParam(parameter) {
-    entryPoint.value.parameters[selectedParamIndex.value] = { ...parameter }
-    showEntrypointParamDialog.value = false
-  }
-
-  function createParam(parameter) {
-    entryPoint.value.parameters.push({...parameter})
-    showEntrypointParamDialog.value = false
-  }
-
-  const queues = ref([])
-  const plugins = ref([])
-
-  async function getQueues(val = '', update) {
-    update(async () => {
+async function refreshPluginLatestState() {
+  const pluginIds = [...new Set([...entryPoint.value.plugins, ...entryPoint.value.artifactPlugins].map((p) => p.id))];
+  await Promise.all(
+    pluginIds.map(async (id) => {
       try {
-        const res = await api.getData('queues', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        queues.value = res.data.data
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    })
-  }
+        const res = await api.getItem("plugins", id);
+        for (const type of ["plugins", "artifactPlugins"]) {
+          entryPoint.value[type]
+            .filter((plugin) => plugin.id === id)
+            .forEach((plugin) => {
+              plugin.latestSnapshot = (plugin.snapshotId ?? plugin.snapshot) === res.data.snapshot;
+            });
+        }
+      } catch (err) {
+        console.warn(err);
+        notify.error(err?.response?.data?.message || "Failed to refresh plugin versions");
+      }
+    }),
+  );
+}
 
-  async function getPlugins(val = '', update) {
-    update(async () => {
-      try {
-        const res = await api.getData('plugins', {
-          search: val,
-          rowsPerPage: 0, // get all
-          index: 0
-        })
-        plugins.value = res.data.data
-      } catch(err) {
-        notify.error(err.response.data.message)
-      } 
-    })
-  }
-
-  function addToTaskGraph(task) {
-    console.log('task = ', task)
-    // always use Mixed Style Invocation
-    let string = `<step-name>:\n  task: ${task.name}`
-    if(task.inputParams.length > 0) {
-      string += `\n  kwargs:`
-      task.inputParams.forEach((param) => {
-        string += `\n    ${param.name}: <input-value>`
-      })
-    }
-    if(entryPoint.value.taskGraph.trim().length === 0) {
-      entryPoint.value.taskGraph = string
+async function addOrModifyEntrypoint() {
+  const submitObject = prepareEntrypointPayload();
+  try {
+    if (route.params.id === "new") {
+      await api.addItem("entrypoints", submitObject);
+      store.savedForms.entryPoint = null;
+      notify.success(`Successfully created '${entryPoint.value.name}'`);
     } else {
-      entryPoint.value.taskGraph += `\n${string}`
+      await api.updateItem("entrypoints", route.params.id, submitObject);
+      notify.success(`Successfully updated '${entryPoint.value.name}'`);
     }
+    confirmLeave.value = true;
+    router.push("/entrypoints");
+  } catch (err) {
+    showValidationError(err, "Failed to save Entrypoint");
+    await refreshPluginLatestState();
   }
+}
 
-  function addToArtifactGraph(task) {
-    let string = `<output-name>:\n  contents: <contents>\n  task:\n    name: ${task.name}`
-    if(entryPoint.value.artifactGraph.trim().length === 0) {
-      entryPoint.value.artifactGraph = string
+watch(
+  () => entryPoint.value.taskGraph,
+  (newVal) => {
+    if (clearFormExecuted.value) {
+      clearFormExecuted.value = false;
     } else {
-      entryPoint.value.artifactGraph += `\n${string}`
+      taskGraphError.value = newVal.length > 0 ? "" : "This field is required";
+      if (taskGraphPlaceholderError.value) {
+        taskGraphError.value = taskGraphPlaceholderError.value;
+      }
     }
-  }
+  },
+);
 
-  const showLeaveDialog = ref(false)
-  const confirmLeave = ref(false)
-  const toPath = ref()
+const showDeleteDialogEntrypoint = ref(false);
+const showDeleteDialogParam = ref(false);
+const showDeleteDialogArtifactParam = ref(false);
+const selectedParam = ref({});
+const selectedParamIndex = ref("");
+const selectedParamType = ref("");
+const selectedArtifactParamProps = ref("");
 
-  onBeforeRouteLeave((to, from, next) => {
-    toPath.value = to.path
-    if(confirmLeave.value || !valuesChangedFromEditStart.value || history.value) {
-      next(true)
-    } else if(route.params.id === 'new') {
-      leaveForm()
-    } else {
-      showLeaveDialog.value = true
-    }
-  })
+function deleteParam() {
+  console.log("selectedParamType.value = ", selectedParamType.value);
+  entryPoint.value[selectedParamType.value] = entryPoint.value[selectedParamType.value].filter(
+    (param) => param.name !== selectedParam.value.name,
+  );
+  showDeleteDialogParam.value = false;
+}
 
-  const clearFormExecuted = ref(false)
+const showEntrypointParamDialog = ref(false);
+const showArtifactParamDialog = ref(false);
 
-  function clearForm() {
-    entryPoint.value = {
-      name: '',
-      group: store.loggedInGroup.id,
-      description: '',
-      parameters: [],
-      artifactParameters: [],
-      taskGraph: '',
-      artifactGraph: '',
-      queues: [],
-      plugins: [],
-      artifactPlugins: [],
-    }
-    basicInfoForm.value.reset()
-    clearFormExecuted.value = true
-    taskGraphError.value = ''
-    store.savedForms.entryPoint = null
-    copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value))
-  }
+function updateParam(parameter) {
+  entryPoint.value.parameters[selectedParamIndex.value] = { ...parameter };
+  showEntrypointParamDialog.value = false;
+}
 
-  const isEmptyValues = computed(() => {
-    return Object.values(entryPoint.value).every((value) => 
-      (typeof value === 'string' && value === '') || 
-      (Array.isArray(value) && value.length === 0)
-    )
-  })
+function createParam(parameter) {
+  entryPoint.value.parameters.push({ ...parameter });
+  showEntrypointParamDialog.value = false;
+}
 
-  function leaveForm() {
-    if(route.params.id === 'new' && valuesChangedFromOriginal.value) {
-      store.savedForms.entryPoint = entryPoint.value
-    } else {
-      store.savedForms.entryPoint = null
-    }
-    confirmLeave.value = true
-    router.push(toPath.value)
-  }
+const queues = ref([]);
 
-  const pluginIDsToUpdate = ref([])
-  const artifactPluginIDsToUpdate = ref([])
-  const pluginIDsToRemove = ref([])
-  const artifactPluginIDsToRemove = ref([])
-
-  const objectForDeletion = ref()
-
-  async function deleteEntrypoint() {
+async function getQueues(val = "", update) {
+  update(async () => {
     try {
-      await api.deleteItem('entrypoints', objectForDeletion.value.id)
-      confirmLeave.value = true
-      notify.success(`Successfully deleted '${objectForDeletion.value.name}'`)
-      showDeleteDialogEntrypoint.value = false
-      router.push(`/entrypoints`)
-    } catch(err) {
+      const res = await api.getData("queues", {
+        search: val,
+        rowsPerPage: 0, // get all
+        index: 0,
+      });
+      queues.value = res.data.data;
+    } catch (err) {
       notify.error(err.response.data.message);
     }
+  });
+}
+
+function getNextStepNamePlaceholder() {
+  let highestStepNumber = 0;
+
+  for (const match of entryPoint.value.taskGraph.matchAll(/^<step-name-(\d+)>:/gm)) {
+    highestStepNumber = Math.max(highestStepNumber, Number(match[1]));
   }
 
-  const inputErrors = ref([])
-  const displayErrorDialog = ref(false)
+  return `<step-name-${highestStepNumber + 1}>`;
+}
 
-  async function validateInputs() {
-    try {
+function getNextSwapNamePlaceholder() {
+  let highestSwapNumber = 0;
 
-      const res = await api.validateEntrypoint({
-        group: entryPoint.value.group.id || entryPoint.value.group,
-        taskGraph: entryPoint.value.taskGraph,
-        pluginSnapshots: entryPoint.value.plugins.map(plugin => plugin.snapshotId || plugin.snapshot),
-        parameters: entryPoint.value.parameters,
-        artifacts: entryPoint.value.artifactParameters.map((param) => ({
-            ...param,
-            outputParams: param.outputParams.map((oParam) => ({
-              ...oParam,
-              parameterType: oParam.parameterType.id
-            }))
+  for (const match of entryPoint.value.taskGraph.matchAll(/<swap-name-(\d+)>/g)) {
+    highestSwapNumber = Math.max(highestSwapNumber, Number(match[1]));
+  }
 
-          }))
-      })
-      if(res?.data?.schemaValid && !taskGraphPlaceholderError.value) {
-        notify.success(`Entrypoint inputs are valid!`)
-      } else if(res?.data?.schemaIssues.length > 0 || taskGraphPlaceholderError.value) {
-        inputErrors.value = res.data.schemaIssues
-        if(taskGraphPlaceholderError.value) {
-          inputErrors.value.push({message: taskGraphPlaceholderError.value})
-        }
-        displayErrorDialog.value = true
-      }
-    } catch(err) {
-      notify.error(err.response.data.message)
+  return `<swap-name-${highestSwapNumber + 1}>`;
+}
+
+function addToTaskGraph(task) {
+  console.log("task = ", task);
+  // always use Mixed Style Invocation
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  task: ${task.name}`;
+  if (task.inputParams.length > 0) {
+    string += `\n  kwargs:`;
+    task.inputParams.forEach((param) => {
+      string += `\n    ${param.name}: <input-value>`;
+    });
+  }
+  if (entryPoint.value.taskGraph.trim().length === 0) {
+    entryPoint.value.taskGraph = string;
+  } else {
+    entryPoint.value.taskGraph += `\n${string}`;
+  }
+}
+
+const selectedSwapTask = ref(null);
+const eligibleSwappableTasks = ref([]);
+const selectedSwappableTasks = ref([]);
+const eligibleSwapGroups = ref([]);
+const swapStepOptions = ref([]);
+const selectedSwapStep = ref(null);
+const showAddSwappableTaskDialog = ref(false);
+
+function getOutputParameterTypes(task) {
+  return task.outputParams.map(
+    (parameter) => parameter.parameterType?.id ?? parameter.parameterType?.name ?? parameter.parameterType,
+  );
+}
+
+function findSwappableTasks(task) {
+  const outputParameterTypes = getOutputParameterTypes(task);
+
+  return tasks.value.filter((candidate) => {
+    if (candidate === task) return false;
+
+    const candidateOutputParameterTypes = getOutputParameterTypes(candidate);
+    return (
+      candidateOutputParameterTypes.length === outputParameterTypes.length &&
+      candidateOutputParameterTypes.every((type, index) => type === outputParameterTypes[index])
+    );
+  });
+}
+
+const swappableTasksByTask = computed(() => new Map(tasks.value.map((task) => [task, findSwappableTasks(task)])));
+
+const taskGraphObject = computed(() => {
+  try {
+    return YAML.parse(entryPoint.value.taskGraph);
+  } catch {
+    return null;
+  }
+});
+
+function findEligibleSwapGroups() {
+  if (
+    !selectedSwapTask.value ||
+    !taskGraphObject.value ||
+    typeof taskGraphObject.value !== "object" ||
+    Array.isArray(taskGraphObject.value)
+  )
+    return [];
+  console.log("eligibleSwappableTasks = ", eligibleSwappableTasks.value);
+  const eligibleTaskNames = new Set(eligibleSwappableTasks.value.map((task) => task.name));
+  if (selectedSwapTask.value) {
+    eligibleTaskNames.add(selectedSwapTask.value.name);
+  }
+  const swapGroups = [];
+
+  Object.entries(taskGraphObject.value).forEach(([stepName, step]) => {
+    if (!step || typeof step !== "object" || Array.isArray(step)) return;
+
+    const swapEntries = Object.entries(step).filter(
+      ([swapName, swapGroup]) =>
+        swapName.startsWith("?") && swapGroup && typeof swapGroup === "object" && !Array.isArray(swapGroup),
+    );
+    if (swapEntries.length !== 1) return;
+
+    const [swapName, swapGroup] = swapEntries[0];
+    const outputs = swapGroup["?outputs"];
+    if (!Array.isArray(outputs) || outputs.length !== selectedSwapTask.value.outputParams.length) return;
+
+    const taskAliases = Object.entries(swapGroup).filter(([name]) => name !== "?outputs");
+    const taskNames = taskAliases.map(([, taskDefinition]) => {
+      if (!taskDefinition || typeof taskDefinition !== "object" || Array.isArray(taskDefinition)) return null;
+      if ("task" in taskDefinition) return taskDefinition.task;
+      const names = Object.keys(taskDefinition).filter((name) => name !== "dependencies");
+      return names.length === 1 ? names[0] : null;
+    });
+    const allTasksAreSwappable =
+      taskAliases.length > 0 && taskNames.every((taskName) => eligibleTaskNames.has(taskName));
+
+    if (allTasksAreSwappable) {
+      swapGroups.push({ stepName, swapName, taskNames, label: stepName, createNew: false });
     }
-  }
+  });
 
-  function addArtifactParam(param) {
-    entryPoint.value.artifactParameters.push(param)
-    showArtifactParamDialog.value = false
-  }
+  return swapGroups;
+}
 
-  const showEditArtifactParamDialog = ref(false)
-  const selectedTaskProps = ref()
+function resetSelectedSwappableTasks() {
+  selectedSwappableTasks.value = [selectedSwapTask.value];
+}
 
-  function handleSelectedParam(action, paramProps, paramIndex, inputOrOutputParams, functionsOrArtifacts) {
-    selectedTaskProps.value = paramProps
-    selectedTaskProps.value.paramIndex = paramIndex
-    selectedTaskProps.value.inputOrOutputParams = inputOrOutputParams
-    selectedTaskProps.value.functionsOrArtifacts = functionsOrArtifacts
-    if(action === 'create') {
-      selectedParam.value = ''
-      return
+function prepareSwappableTaskSelection(task) {
+  selectedSwapTask.value = task;
+  eligibleSwappableTasks.value = findSwappableTasks(task);
+  eligibleSwapGroups.value = findEligibleSwapGroups();
+  const newStepName = getNextStepNamePlaceholder();
+  swapStepOptions.value = [
+    {
+      stepName: newStepName,
+      swapName: null,
+      taskNames: [],
+      label: newStepName,
+      createNew: true,
+    },
+    ...eligibleSwapGroups.value,
+  ];
+  selectedSwapStep.value = swapStepOptions.value[0];
+  resetSelectedSwappableTasks();
+}
+
+function openAddSwappableTaskDialog(task) {
+  prepareSwappableTaskSelection(task);
+  showAddSwappableTaskDialog.value = true;
+}
+
+watch(
+  [tasks, taskGraphObject],
+  () => {
+    if (!showAddSwappableTaskDialog.value) return;
+    const task = tasks.value.find((candidate) => candidate.name === selectedSwapTask.value?.name);
+    if (task) {
+      prepareSwappableTaskSelection(task);
+    } else {
+      showAddSwappableTaskDialog.value = false;
     }
-    selectedParam.value = selectedTaskProps.value.row[selectedTaskProps.value.inputOrOutputParams][selectedTaskProps.value.paramIndex]
+  },
+  { deep: true },
+);
+
+const selectableSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? eligibleSwappableTasks.value
+    : [selectedSwapTask.value, ...eligibleSwappableTasks.value].filter(Boolean),
+);
+
+const canSubmitSwappableTasks = computed(() =>
+  selectedSwapStep.value?.createNew
+    ? selectedSwappableTasks.value.length >= 2
+    : selectedSwappableTasks.value.length >= 1,
+);
+
+function addSwappableTaskToGraph() {
+  const stepNamePlaceholder = getNextStepNamePlaceholder();
+  const swapNamePlaceholder = getNextSwapNamePlaceholder();
+  let string = `${stepNamePlaceholder}:\n  ?${swapNamePlaceholder}:`;
+  const outputNames = selectedSwapTask.value.outputParams.map((parameter) => parameter.name);
+  string += `\n    ?outputs: ${JSON.stringify(outputNames)}`;
+
+  selectedSwappableTasks.value.forEach((task, index) => {
+    string += `\n    <task-alias-${index + 1}>:\n      task: ${task.name}`;
+    if (task.inputParams.length > 0) {
+      string += `\n      kwargs:`;
+      task.inputParams.forEach((parameter) => {
+        string += `\n        ${parameter.name}: <input-value>`;
+      });
+    }
+  });
+
+  if (entryPoint.value.taskGraph.trim().length === 0) {
+    entryPoint.value.taskGraph = string;
+  } else {
+    entryPoint.value.taskGraph += `\n${string}`;
+  }
+}
+
+function getNextTaskAliasPlaceholder(swapGroup) {
+  let highestAliasNumber = 0;
+
+  Object.keys(swapGroup).forEach((alias) => {
+    const match = alias.match(/^<task-alias-(\d+)>$/);
+    if (match) {
+      highestAliasNumber = Math.max(highestAliasNumber, Number(match[1]));
+    }
+  });
+
+  return `<task-alias-${highestAliasNumber + 1}>`;
+}
+
+function addTasksToExistingSwapGroup() {
+  if (!taskGraphObject.value || !selectedSwapStep.value) return;
+
+  const { stepName, swapName } = selectedSwapStep.value;
+  const swapGroup = taskGraphObject.value[stepName]?.[swapName];
+  if (!swapGroup) return;
+
+  selectedSwappableTasks.value.forEach((task) => {
+    const taskDefinition = { task: task.name };
+    if (task.inputParams.length > 0) {
+      taskDefinition.kwargs = Object.fromEntries(
+        task.inputParams.map((parameter) => [parameter.name, "<input-value>"]),
+      );
+    }
+
+    swapGroup[getNextTaskAliasPlaceholder(swapGroup)] = taskDefinition;
+  });
+
+  entryPoint.value.taskGraph = YAML.stringify(taskGraphObject.value).trimEnd();
+}
+
+function addSelectedSwappableTasks() {
+  if (selectedSwapStep.value?.createNew) {
+    addSwappableTaskToGraph();
+  } else {
+    addTasksToExistingSwapGroup();
+  }
+}
+
+function addToArtifactGraph(task) {
+  const string = `<output-name>:\n  contents: <contents>\n  task:\n    name: ${task.name}`;
+  if (entryPoint.value.artifactGraph.trim().length === 0) {
+    entryPoint.value.artifactGraph = string;
+  } else {
+    entryPoint.value.artifactGraph += `\n${string}`;
+  }
+}
+
+const showLeaveDialog = ref(false);
+const confirmLeave = ref(false);
+const toPath = ref();
+
+onBeforeRouteLeave((to) => {
+  toPath.value = to.path;
+  if (confirmLeave.value || !valuesChangedFromEditStart.value || history.value) {
+    return true;
+  } else if (route.params.id === "new") {
+    leaveForm();
+  } else {
+    showLeaveDialog.value = true;
+    return false;
+  }
+});
+
+const clearFormExecuted = ref(false);
+
+function clearForm() {
+  entryPoint.value = {
+    name: "",
+    group: store.loggedInGroup.id,
+    description: "",
+    parameters: [],
+    artifactParameters: [],
+    taskGraph: "",
+    artifactGraph: "",
+    queues: [],
+    plugins: [],
+    artifactPlugins: [],
+  };
+  basicInfoForm.value.reset();
+  clearFormExecuted.value = true;
+  taskGraphError.value = "";
+  store.savedForms.entryPoint = null;
+  copyAtEditStart.value = JSON.parse(JSON.stringify(entryPoint.value));
+}
+
+function leaveForm() {
+  if (route.params.id === "new" && valuesChangedFromOriginal.value) {
+    store.savedForms.entryPoint = entryPoint.value;
+  } else {
+    store.savedForms.entryPoint = null;
+  }
+  confirmLeave.value = true;
+  router.push(toPath.value);
+}
+
+const objectForDeletion = ref();
+
+async function deleteEntrypoint() {
+  try {
+    await api.deleteItem("entrypoints", objectForDeletion.value.id);
+    confirmLeave.value = true;
+    notify.success(`Successfully deleted '${objectForDeletion.value.name}'`);
+    showDeleteDialogEntrypoint.value = false;
+    router.push(`/entrypoints`);
+  } catch (err) {
+    notify.error(err.response.data.message);
+  }
+}
+
+const validationIssues = ref([]);
+const displayErrorDialog = ref(false);
+
+async function validateEntrypoint() {
+  if (taskGraphError.value) {
+    notify.error(taskGraphError.value);
+    return;
+  }
+  if (!entryPoint.value.name) {
+    notify.error("Please provide an Entrypoint name");
+    return;
   }
 
-  function updateArtifactOutputParam(updatedParam) {
-    entryPoint.value.artifactParameters[selectedTaskProps.value.rowIndex][selectedTaskProps.value.inputOrOutputParams][selectedTaskProps.value.paramIndex] = updatedParam
+  const submitObject = prepareEntrypointPayload();
+  try {
+    if (route.params.id === "new") {
+      await api.addItem("entrypoints", submitObject, true);
+      notify.success(`Entrypoint is valid!`);
+    } else {
+      await api.updateItem("entrypoints", route.params.id, submitObject, true);
+      notify.success(`Entrypoint is valid!`);
+    }
+  } catch (err) {
+    showValidationError(err, "Failed to validate Entrypoint");
+    await refreshPluginLatestState();
   }
+}
 
-  function addArtifactOutputParam(newParam) {
-    entryPoint.value.artifactParameters[selectedTaskProps.value.rowIndex][selectedTaskProps.value.inputOrOutputParams].push(newParam)
+function showValidationError(err, fallbackMessage) {
+  const reason = err.response?.data?.detail?.reason;
+  const responseValidationIssues = [
+    ...(Array.isArray(reason?.schema_issues) ? reason.schema_issues : []),
+    ...(Array.isArray(reason?.swap_issues) ? reason.swap_issues : []),
+    ...(Array.isArray(reason?.rendered_validation_errors) ? reason.rendered_validation_errors : []),
+    ...(Array.isArray(reason?.missing_global_params)
+      ? reason.missing_global_params.map((name) => `Missing global parameter: ${name}`)
+      : []),
+  ];
+  if (responseValidationIssues.length > 0) {
+    validationIssues.value = responseValidationIssues;
+    displayErrorDialog.value = true;
+  } else {
+    notify.error(err.response?.data?.message ?? fallbackMessage);
   }
+}
 
+function addArtifactParam(param) {
+  entryPoint.value.artifactParameters.push(param);
+  showArtifactParamDialog.value = false;
+}
+
+const showEditArtifactParamDialog = ref(false);
+const selectedTaskProps = ref();
+
+function handleSelectedParam(action, paramProps, paramIndex, inputOrOutputParams, functionsOrArtifacts) {
+  selectedTaskProps.value = paramProps;
+  selectedTaskProps.value.paramIndex = paramIndex;
+  selectedTaskProps.value.inputOrOutputParams = inputOrOutputParams;
+  selectedTaskProps.value.functionsOrArtifacts = functionsOrArtifacts;
+  if (action === "create") {
+    selectedParam.value = "";
+    return;
+  }
+  selectedParam.value =
+    selectedTaskProps.value.row[selectedTaskProps.value.inputOrOutputParams][selectedTaskProps.value.paramIndex];
+}
+
+function updateArtifactOutputParam(updatedParam) {
+  entryPoint.value.artifactParameters[selectedTaskProps.value.rowIndex][selectedTaskProps.value.inputOrOutputParams][
+    selectedTaskProps.value.paramIndex
+  ] = updatedParam;
+}
+
+function addArtifactOutputParam(newParam) {
+  entryPoint.value.artifactParameters[selectedTaskProps.value.rowIndex][
+    selectedTaskProps.value.inputOrOutputParams
+  ].push(newParam);
+}
+
+async function syncPlugin(plugin, type = "plugins") {
+  try {
+    const res = await api.getItem("plugins", plugin.id);
+
+    const index = entryPoint.value[type].findIndex((p) => p.id === plugin.id);
+    if (index === -1) return;
+    const selectionChanged =
+      (entryPoint.value[type][index].snapshotId ?? entryPoint.value[type][index].snapshot) !== res.data.snapshot;
+    entryPoint.value[type].splice(index, 1, res.data);
+
+    notify.success(
+      selectionChanged
+        ? `Selected latest version of '${res.data.name}'. Submit Entrypoint to save.`
+        : `Already selected latest version of '${res.data.name}'.`,
+    );
+  } catch (err) {
+    console.warn(err);
+    notify.error(err?.response?.data?.message || "Failed to sync plugin");
+  }
+}
 </script>
+
+<style scoped>
+.action-button-slot {
+  width: 24px;
+  height: 24px;
+}
+</style>

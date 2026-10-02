@@ -263,6 +263,7 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         artifact_values: dict[str, Any] | None = None,
         timeout: str | None = None,
         description: str | None = None,
+        swaps: list[dict[str, str]] | dict[str, str] | None = None,
     ) -> T:
         """Creates a job for an experiment.
 
@@ -284,7 +285,10 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
                 stopped. If omitted, the job timeout will use the default set in the
                 API.
             description: The description for the job. Optional, defaults to None.
-
+            swaps: A list of swap choices. Each swap choice should contain two keys - the
+                "swap_name" and the "task_alias" chosen for that swap name. Alternatively, if
+                a single dictionary is provided, it will be assumed to be a mapping between swap names
+                and choices and will be reformatted as a list.
         Returns:
             The response from the Dioptra API.
         """
@@ -304,6 +308,14 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
 
         if description is not None:
             json_["description"] = description
+
+        if swaps is not None:
+            if isinstance(swaps, list):
+                json_["swaps"] = swaps
+            elif isinstance(swaps, dict):
+                json_["swaps"] = [
+                    {"swap_name": k, "task_alias": v} for k, v in swaps.items()
+                ]
 
         return self._session.post(
             self.build_sub_collection_url(experiment_id), json_=json_
@@ -599,6 +611,7 @@ class ExperimentsCollectionClient(CollectionClient[T]):
         sort_by: str | None = None,
         descending: bool | None = None,
         search: str | None = None,
+        show_deleted: bool | None = None,
     ) -> T:
         """Get a list of experiments.
 
@@ -635,6 +648,9 @@ class ExperimentsCollectionClient(CollectionClient[T]):
 
         if group_id is not None:
             params["groupId"] = group_id
+
+        if show_deleted is not None:
+            params["showDeleted"] = show_deleted
 
         return self._session.get(
             self.url,

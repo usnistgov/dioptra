@@ -18,13 +18,14 @@
 
 import mimetypes
 import shutil
+import tempfile
 import uuid
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from typing import Generator
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, request, send_file
+from flask import Response, request
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
@@ -36,6 +37,7 @@ from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import verify_filename_is_safe
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
 from dioptra.restapi.v1.shared.snapshots.controller import (
@@ -51,17 +53,14 @@ from .schema import (
     ArtifactPageSchema,
     ArtifactSchema,
 )
-from .service import (
-    RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
-    ArtifactIdService,
-    ArtifactService,
-)
+from .service import SEARCHABLE_FIELDS, ArtifactIdService, ArtifactService
 from .snapshot import ArtifactSnapshotIdService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
-api: Namespace = Namespace("Artifacts", description="Artifacts endpoint")
+api: Namespace = Namespace(
+    EntityType.ARTIFACT.display_name, description="Artifacts endpoint"
+)
 
 
 @api.route("/")
@@ -78,12 +77,15 @@ class ArtifactEndpoint(Resource):
         self._artifact_service = artifact_service
         super().__init__(*args, **kwargs)
 
+    @login_required
     @accepts(query_params_schema=ArtifactGetQueryParameters, api=api)
     @responds(schema=ArtifactPageSchema, api=api)
     def get(self):
         """Gets a list of all Artifact resources."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET"
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.display_name,
+            request_type="GET",
         )
         parsed_query_params = request.parsed_query_params  # noqa: F841
 
@@ -117,6 +119,7 @@ class ArtifactEndpoint(Resource):
             total_num_elements=total_num_artifacts,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -125,7 +128,9 @@ class ArtifactEndpoint(Resource):
     def post(self):
         """Creates an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="POST"
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.display_name,
+            request_type="POST",
         )
         log.debug("Request received")
         parsed_obj = request.parsed_obj
@@ -162,7 +167,10 @@ class ArtifactIdEndpoint(Resource):
     def get(self, id: int):
         """Gets an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.display_name,
+            request_type="GET",
+            id=id,
         )
 
         artifact = self._artifact_id_service.get(id, log=log)
@@ -174,7 +182,10 @@ class ArtifactIdEndpoint(Resource):
     def put(self, id: int):
         """Modifies an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="PUT", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.display_name,
+            request_type="PUT",
+            id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore
         artifact = self._artifact_id_service.modify(
@@ -207,7 +218,10 @@ class ArtifactIdFilesEndpoint(Resource):
     def get(self, id: int):
         """Gets a list of all files associated with an Artifact resource."""
         log = LOGGER.new(
-            request_id=str(uuid.uuid4()), resource="Artifact", request_type="GET", id=id
+            request_id=str(uuid.uuid4()),
+            resource=EntityType.ARTIFACT.display_name,
+            request_type="GET",
+            id=id,
         )
 
         listing = self._artifact_id_service.get_listing(
@@ -252,12 +266,13 @@ class ArtifactIdContentsEndpoint(Resource):
         Returns:
             A list of the files associated with artifact.
         """
+
         return _handle_artifact_contents(
             job_run_store=self._job_run_store,
             artifact=self._artifact_id_service.get(artifact_id=id)["artifact"],
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource="Artifact",
+                resource=EntityType.ARTIFACT.display_name,
                 request_type="GET",
                 id=id,
             ),
@@ -308,7 +323,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
             ),
             log=LOGGER.new(
                 request_id=str(uuid.uuid4()),
-                resource="Artifact",
+                resource=EntityType.ARTIFACT.display_name,
                 request_type="GET",
                 id=id,
                 snapshotId=snapshotId,
@@ -319,7 +334,7 @@ class ArtifactSnapshotIdContentsEndpoint(Resource):
 ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ARTIFACT,
     route_prefix=V1_ARTIFACTS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
@@ -328,7 +343,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
 ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Artifact,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ARTIFACT,
     response_schema=ArtifactSchema,
     build_fn=utils.build_artifact,
 )
@@ -347,36 +362,51 @@ def _handle_artifact_contents(
         except ValueError as e:
             log.error("Query Parameter validation failed.", error=e)
             raise QueryParameterValidationError(
-                RESOURCE_TYPE, constraint="invalid path query parameter"
+                EntityType.ARTIFACT.db_table_name,
+                constraint="invalid path query parameter",
             ) from None
 
     file_type: FileTypes | None = parsed_query_params.get("file_type")
 
     if not artifact.is_dir and path is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            EntityType.ARTIFACT.db_table_name,
             constraint="path query parameter may not be provided for a file",
         )
     if not artifact.is_dir and file_type is not None:
         raise QueryParameterValidationError(
-            RESOURCE_TYPE,
+            EntityType.ARTIFACT.db_table_name,
             constraint="file_type query parameter may not be provided for a file",
         )
 
-    with TemporaryDirectory() as tmp_dir:
-        mimetype, result = _download_artifacts(
-            job_run_store=job_run_store,
-            tmp_dir=tmp_dir,
-            artifact=artifact,
-            path=path,
-            file_type=file_type,
-        )
-        return send_file(
-            path_or_file=result,
-            mimetype=mimetype,
-            as_attachment=False,
-            download_name=result.name,
-        )
+    tmp_dir = tempfile.mkdtemp()
+
+    mimetype, result_path = _download_artifacts(
+        job_run_store=job_run_store,
+        tmp_dir=tmp_dir,
+        artifact=artifact,
+        path=path,
+        file_type=file_type,
+    )
+
+    def generate() -> Generator:
+        with result_path.open("rb") as f:
+            yield from f
+        shutil.rmtree(tmp_dir)
+
+    response = Response(
+        generate(),
+        mimetype=mimetype,
+        direct_passthrough=True,
+    )
+
+    response.headers.set(
+        "Content-Disposition",
+        "attachment",
+        filename=result_path.name,
+    )
+
+    return response
 
 
 def _download_artifacts(
@@ -398,7 +428,7 @@ def _download_artifacts(
             file_type = FileTypes.TAR_GZ
 
         archive = shutil.make_archive(
-            result.name,
+            str(Path(tmp_dir) / result.name),
             format=file_type.format,
             root_dir=result.parent,
             base_dir=result.name,

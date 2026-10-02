@@ -28,6 +28,7 @@ from dioptra.restapi.db.models import (
     Resource,
     Tag,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 class TypeRepository:
@@ -77,7 +78,7 @@ class TypeRepository:
         """
 
         utils.assert_can_create_resource(
-            self.session, type_, "plugin_task_parameter_type"
+            self.session, type_, EntityType.PLUGIN_TASK_PARAMETER_TYPE
         )
         utils.assert_resource_name_available(self.session, type_)
 
@@ -108,7 +109,7 @@ class TypeRepository:
         """
 
         utils.assert_can_create_snapshot(
-            self.session, type_, "plugin_task_parameter_type"
+            self.session, type_, EntityType.PLUGIN_TASK_PARAMETER_TYPE
         )
         utils.assert_snapshot_name_available(self.session, type_)
 

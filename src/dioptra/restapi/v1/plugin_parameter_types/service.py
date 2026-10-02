@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform plugin parameter type endpoint operations."""
 
-from typing import Any, Final, Iterable
+from typing import Any, Iterable
 
 import structlog
 from flask_login import current_user
@@ -34,12 +34,11 @@ from dioptra.restapi.errors import (
     PluginParameterTypeMatchesBuiltinTypeError,
 )
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.task_engine.type_registry import BUILTIN_TYPES
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-RESOURCE_TYPE: Final[str] = "plugin_task_parameter_type"
 
 
 class PluginParameterTypeService(object):
@@ -101,7 +100,10 @@ class PluginParameterTypeService(object):
             group_id, repoutils.DeletionPolicy.NOT_DELETED
         )
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
+        resource = models.Resource(
+            resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_table_name,
+            owner=group,
+        )
         new_plugin_parameter_type = models.PluginTaskParameterType(
             name=name,
             structure=structure,
@@ -136,6 +138,7 @@ class PluginParameterTypeService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.PluginParameterTypeDict], int]:
         """Fetch a list of plugin parameter types, optionally filtering by
@@ -171,7 +174,9 @@ class PluginParameterTypeService(object):
             page_length,
             sort_by_string,
             descending,
-            repoutils.DeletionPolicy.NOT_DELETED,
+            repoutils.DeletionPolicy.ANY
+            if show_deleted
+            else repoutils.DeletionPolicy.NOT_DELETED,
         )
 
         plugin_parameter_types_dict: dict[int, utils.PluginParameterTypeDict] = {
@@ -238,13 +243,14 @@ class PluginParameterTypeIdService(object):
         )
 
         plugin_parameter_type = self._uow.type_repo.get(
-            plugin_parameter_type_id, repoutils.DeletionPolicy.NOT_DELETED
+            plugin_parameter_type_id, repoutils.DeletionPolicy.ANY
         )
 
         if plugin_parameter_type is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, plugin_parameter_type_id=plugin_parameter_type_id
+                    EntityType.PLUGIN_TASK_PARAMETER_TYPE,
+                    plugin_parameter_type_id=plugin_parameter_type_id,
                 )
 
             return None
@@ -336,17 +342,20 @@ class PluginParameterTypeIdService(object):
             plugin_task_parameter_type=new_plugin_parameter_type, has_draft=False
         )
 
-    def delete(self, plugin_parameter_type_id: int, **kwargs) -> dict[str, Any]:
+    def delete(
+        self, plugin_parameter_type_id: int, commit: bool = True, **kwargs
+    ) -> dict[str, Any]:
         """Delete a plugin parameter type.
 
         Args:
             plugin_parameter_type_id: The unique id of the plugin parameter type.
+            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        with self._uow:
+        with self._uow(commit):
             self._uow.type_repo.delete(plugin_parameter_type_id)
 
         log.debug(
@@ -411,7 +420,7 @@ class PluginParameterTypeNameService(object):
         if plugin_parameter_type is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
+                    EntityType.PLUGIN_TASK_PARAMETER_TYPE, name=name, group_id=group_id
                 )
 
             return None
@@ -583,10 +592,11 @@ def get_plugin_task_parameter_types_by_id(
         returned_parameter_type_ids = {x.resource_id for x in parameter_types}
         ids_not_found = id_list - returned_parameter_type_ids
         raise EntityDoesNotExistError(
-            "plugin task parameter types",
+            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
             num_expected=num_ids,
             num_found=len(parameter_types),
             ids_not_found=sorted(ids_not_found),
         )
 
+    return {x.resource_id: x for x in parameter_types}
     return {x.resource_id: x for x in parameter_types}

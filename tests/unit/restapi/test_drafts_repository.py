@@ -24,6 +24,7 @@ import dioptra.restapi.errors as e
 from dioptra.restapi.db.models.constants import resource_lock_types, user_lock_types
 from dioptra.restapi.db.repository.drafts import DraftType
 from dioptra.restapi.db.repository.utils import DeletionPolicy
+from dioptra.restapi.v1.entity_types import EntityType
 
 
 @pytest.fixture
@@ -440,8 +441,10 @@ def test_drafts_create_draft_resource_base_not_exist(
         account.user,
     )
 
-    with pytest.raises(e.EntityDoesNotExistError):
+    with pytest.raises(e.DraftBaseResourceDoesNotExistError) as exc_info:
         drafts_repo.create_draft_resource(draft)
+
+    assert "999999" in exc_info.value.to_message()
 
 
 def test_drafts_create_draft_resource_base_deleted(
@@ -616,8 +619,10 @@ def test_drafts_create_draft_modification_resource_not_exist(
         account.user,
     )
 
-    with pytest.raises(e.EntityDoesNotExistError):
+    with pytest.raises(e.EntityDoesNotExistError) as exc_info:
         drafts_repo.create_draft_modification(draft)
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
 
     draft.payload["resource_id"] = 999999
     draft.payload["resource_snapshot_id"] = 999999
@@ -654,8 +659,10 @@ def test_drafts_create_draft_modification_resource_deleted(
         account.user,
     )
 
-    with pytest.raises(e.EntityDeletedError):
+    with pytest.raises(e.EntityDeletedError) as exc_info:
         drafts_repo.create_draft_modification(draft)
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
 
 
 def test_drafts_create_draft_modification_resource_snapshot_not_exist(

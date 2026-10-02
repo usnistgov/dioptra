@@ -17,6 +17,7 @@ examples/**/s3
 
 # all files starting with . or ~
 .*
+!src/frontend/.nvmrc
 ~*
 
 # os generated files
@@ -436,3 +437,4 @@ mlruns/
 !tests/**/lib
 !src/**/tags
 !src/**/lib
+!src/frontend/.prettierrc.json

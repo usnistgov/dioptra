@@ -20,7 +20,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dioptra-platform"
-version = "1.1.0"
+version = "1.2.0"
 authors = [
     { name="Harold Booth", email="harold.booth@nist.gov" },
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
@@ -84,7 +84,8 @@ dependencies = [
     "rq>=1.5.0",
     "scipy>=1.4.1",
     "simplejson>=3.10.0",
-    "SQLAlchemy>=2",
+    # Flask-SQLAlchemy dataclass compatibility: pallets-eco/flask-sqlalchemy#1420
+    "SQLAlchemy>=2,<2.1",
     "structlog>=20.2.0",
     "tensorflow-datasets>=4.9.9",
     "tomli>=2.2.0",
@@ -144,7 +145,7 @@ dev = [
     "pytest-cookies>=0.7.0",
     "pytest-cov>=6.1.1",
     "pytest-datadir>=1.7.2",
-    "pytest>=8.3.5",
+    "pytest>=8.4",
     "pytoml>=0.1.21",
     "tomli>=2.2.1",
     "tox>=4.25.0",
@@ -218,6 +219,7 @@ worker = [
     "opencv-python>=4",
     "pyarrow>=18.0.0",
     "scikit-learn>=1.8.0",
+    "tensorflow-metadata<1.21.0",
 ]
 
 [tool.black]
@@ -240,7 +242,7 @@ exclude = '''
 '''
 
 [tool.bumpver]
-current_version = "1.1.0"
+current_version = "1.2.0"
 version_pattern = "MAJOR.MINOR.PATCH[-TAG][NUM]"
 commit_message = "release {old_version} → {new_version}"
 commit = true
@@ -283,7 +285,7 @@ tag_scope = "branch"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.1.0"
+version = "1.2.0"
 changelog_file = "CHANGELOG.md"
 style = [
     ["qmark", "fg:#ff9d00 bold"],
@@ -384,7 +386,7 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.4"
 addopts = "--import-mode=importlib -ra"
 testpaths = [
     "tests/unit",

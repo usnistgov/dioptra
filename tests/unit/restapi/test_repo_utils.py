@@ -36,6 +36,7 @@ from dioptra.restapi.errors import (
     SearchParseError,
     SortParameterValidationError,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 
 _STATUS_COMBOS = list(
     itertools.chain.from_iterable(
@@ -87,7 +88,6 @@ def resource_status_combo(request, db_session, account, fake_data):
 
     child_snaps = []
     for idx, status in enumerate(request.param):
-
         epres = models.Resource("entry_point", account.group)
         ep = models.EntryPoint(
             "", epres, account.user, f"ep{idx}", "graph:", "artifacts_input:", [], []
@@ -98,7 +98,6 @@ def resource_status_combo(request, db_session, account, fake_data):
         # testing of methods to get latest snapshots, if there are old
         # snapshots (actual wrong answers).
         if status in (utils.ExistenceResult.EXISTS, utils.ExistenceResult.DELETED):
-
             db_session.add(ep)
 
             for snap_idx in range(3):
@@ -686,10 +685,11 @@ def test_assert_resource_exists(db_session, resource_status, deletion_policy):
 
 
 def test_assert_resource_exists_bad_id(db_session):
-    with pytest.raises(EntityDoesNotExistError):
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
         utils.assert_resource_exists(
             db_session, 999999, utils.DeletionPolicy.NOT_DELETED
         )
+    assert exc_info.value.entity_type is EntityType.RESOURCE
 
     with pytest.raises(EntityDoesNotExistError):
         utils.assert_resource_exists(db_session, 999999, utils.DeletionPolicy.ANY)
@@ -806,6 +806,14 @@ def test_assert_resources_exist_via_ids(
         utils.assert_resources_exist(db_session, snap_ids, deletion_policy)
 
 
+def test_assert_resources_exist_via_ids_uses_resource_entity_type(db_session):
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.assert_resources_exist(db_session, [999999], utils.DeletionPolicy.ANY)
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
+    assert exc_info.value.entity_attributes == {"resource_ids": (999999,)}
+
+
 def test_assert_resource_children_exist(
     db_session, resource_parent_combo, deletion_policy
 ):
@@ -891,43 +899,43 @@ def test_assert_resource_modifiable_readonly(db_session, fake_data, account):
 @pytest.mark.parametrize(
     "resource_type, should_error",
     [
-        ("job", True),
-        ("queue", False),
+        (EntityType.JOB, True),
+        (EntityType.QUEUE, False),
     ],
 )
 def test_assert_resource_type_resource(
     db_session, account, resource_type, should_error
 ):
-    resource = models.Resource(resource_type=resource_type, owner=account.group)
+    resource = models.Resource(resource_type.value, account.group)
 
     if should_error:
         with pytest.raises(MismatchedResourceTypeError):
-            utils.assert_resource_type(db_session, resource, "queue")
+            utils.assert_resource_type(db_session, resource, EntityType.QUEUE)
     else:
-        utils.assert_resource_type(db_session, resource, "queue")
+        utils.assert_resource_type(db_session, resource, EntityType.QUEUE)
 
 
 @pytest.mark.parametrize(
     "resource_type, snap_type, should_error",
     [
-        ("queue", "queue", False),
-        ("queue", "job", True),
-        ("job", "queue", True),
-        ("job", "job", True),
+        (EntityType.QUEUE, EntityType.QUEUE, False),
+        (EntityType.QUEUE, EntityType.JOB, True),
+        (EntityType.JOB, EntityType.QUEUE, True),
+        (EntityType.JOB, EntityType.JOB, True),
     ],
 )
 def test_assert_resource_type_snapshot(
     db_session, account, resource_type, snap_type, should_error
 ):
-    resource = models.Resource(resource_type=resource_type, owner=account.group)
+    resource = models.Resource(resource_type.value, account.group)
     snap = models.Queue("description", resource, account.user, "queue1")
-    snap.resource_type = snap_type
+    snap.resource_type = snap_type.value
 
     if should_error:
         with pytest.raises(MismatchedResourceTypeError):
-            utils.assert_resource_type(db_session, snap, "queue")
+            utils.assert_resource_type(db_session, snap, EntityType.QUEUE)
     else:
-        utils.assert_resource_type(db_session, snap, "queue")
+        utils.assert_resource_type(db_session, snap, EntityType.QUEUE)
 
 
 def test_assert_resource_type_id(db_session, fake_data, account):
@@ -935,13 +943,15 @@ def test_assert_resource_type_id(db_session, fake_data, account):
     db_session.add(queue)
     db_session.commit()
 
-    utils.assert_resource_type(db_session, queue.resource_id, "queue")
+    utils.assert_resource_type(db_session, queue.resource_id, EntityType.QUEUE)
 
     with pytest.raises(MismatchedResourceTypeError):
-        utils.assert_resource_type(db_session, queue.resource_id, "job")
+        utils.assert_resource_type(db_session, queue.resource_id, EntityType.JOB)
 
-    with pytest.raises(EntityDoesNotExistError):
-        utils.assert_resource_type(db_session, 999999, "queue")
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.assert_resource_type(db_session, 999999, EntityType.QUEUE)
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
 
 
 def test_snapshot_exists(db_session, fake_data, account):
@@ -1129,12 +1139,14 @@ def test_add_resource_lock_types_resource_not_exist(db_session, account, fake_da
     db_session.rollback()
 
     # using non-existent resource ID will cause an error
-    with pytest.raises(EntityDoesNotExistError):
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
         utils.add_resource_lock_types(
             db_session,
             999999,
             {utils.ResourceLockType.READONLY, utils.ResourceLockType.DELETED},
         )
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
 
 
 def test_add_resource_lock_types_resource_exists(db_session, account, fake_data):
@@ -1231,8 +1243,10 @@ def test_assert_resource_name_available(
     queue = fake_data.queue(account.user, account.group)
     queue.name = "Elfreda"  # already taken
 
-    with pytest.raises(EntityExistsError):
+    with pytest.raises(EntityExistsError) as exc_info:
         utils.assert_resource_name_available(db_session, queue)
+
+    assert exc_info.value.entity_type is EntityType.QUEUE
 
     queue.name = "UnusedName"
     utils.assert_resource_name_available(db_session, queue)
@@ -1243,8 +1257,10 @@ def test_assert_snapshot_name_available(db_session, queue_filter_setup):
 
     # "Zelda" already taken by a different resource
     elfreda_new = models.Queue("a queue", elfreda.resource, elfreda.creator, "Zelda")
-    with pytest.raises(EntityExistsError):
+    with pytest.raises(EntityExistsError) as exc_info:
         utils.assert_snapshot_name_available(db_session, elfreda_new)
+
+    assert exc_info.value.entity_type is EntityType.QUEUE
 
     elfreda_new.name = "UnusedName"
     utils.assert_snapshot_name_available(db_session, elfreda_new)
@@ -1309,6 +1325,30 @@ def test_get_one_latest_snapshot(db_session, resource_status, deletion_policy):
         assert latest_snap == expected_latest_snaps[0]
 
 
+def test_get_one_latest_snapshot_bad_id_uses_resource_entity_type(db_session):
+    with pytest.raises(EntityDoesNotExistError) as exc_info:
+        utils.get_one_latest_snapshot(
+            db_session, models.Queue, 999999, utils.DeletionPolicy.ANY
+        )
+
+    assert exc_info.value.entity_type is EntityType.RESOURCE
+
+
+def test_get_one_resource(db_session, resource_status, deletion_policy):
+
+    snap, status = resource_status
+
+    exc = helpers.expected_exception_for_combined_status((status,), deletion_policy)
+
+    if exc:
+        with pytest.raises(exc):
+            utils.get_one_resource(db_session, snap, deletion_policy)
+    else:
+        resource = utils.get_one_resource(db_session, snap.resource_id, deletion_policy)
+
+        assert resource == snap.resource
+
+
 def test_get_latest_child_snapshots(db_session, resource_parent_combo, deletion_policy):
 
     parent, child_snaps, _ = resource_parent_combo
@@ -1354,13 +1394,12 @@ def test_get_latest_child_snapshots_parent_deleted(
     db_session.add_all((exp, lock))
     db_session.commit()
 
-    with pytest.raises(EntityDeletedError):
-        utils.get_latest_child_snapshots(
-            db_session,
-            models.Queue,
-            exp,
-            deletion_policy,
-        )
+    utils.get_latest_child_snapshots(
+        db_session,
+        models.Queue,
+        exp,
+        deletion_policy,
+    )
 
 
 def test_get_snapshot_by_name(
@@ -1709,11 +1748,13 @@ def test_set_resource_children(db_session, fake_data, account, resource_status_c
 
     if exc:
         with pytest.raises(exc):
-            utils.set_resource_children(db_session, snap_class, exp, snaps)
+            utils.set_resource_children(
+                db_session, snap_class, exp, snaps, exp.resource_type
+            )
 
     else:
         result_children = utils.set_resource_children(
-            db_session, snap_class, exp, snaps
+            db_session, snap_class, exp, snaps, exp.resource_type
         )
         db_session.commit()
 
@@ -1722,7 +1763,9 @@ def test_set_resource_children(db_session, fake_data, account, resource_status_c
 
 def test_set_resource_children_parent_not_exist(db_session):
     with pytest.raises(EntityDoesNotExistError):
-        utils.set_resource_children(db_session, models.Queue, 999999, [])
+        utils.set_resource_children(
+            db_session, models.Queue, 999999, [], EntityType.QUEUE
+        )
 
 
 def test_set_resource_children_parent_deleted(db_session, fake_data, account):
@@ -1732,7 +1775,9 @@ def test_set_resource_children_parent_deleted(db_session, fake_data, account):
     db_session.commit()
 
     with pytest.raises(EntityDeletedError):
-        utils.set_resource_children(db_session, models.EntryPoint, exp, [])
+        utils.set_resource_children(
+            db_session, models.EntryPoint, exp, [], EntityType.QUEUE
+        )
 
 
 def test_append_resource_children(
@@ -1809,7 +1854,7 @@ def test_unlink_child(db_session, fake_data, account):
     db_session.commit()
 
     assert len(exp.children) == 2
-    utils.unlink_child(db_session, exp, ep1)
+    utils.unlink_child(db_session, exp, ep1, EntityType.ENTRY_POINT)
     db_session.commit()
 
     assert exp.children == [ep2.resource]
@@ -1817,7 +1862,7 @@ def test_unlink_child(db_session, fake_data, account):
 
 def test_unlink_child_parent_not_exist(db_session):
     with pytest.raises(EntityDoesNotExistError):
-        utils.unlink_child(db_session, 1, 2)
+        utils.unlink_child(db_session, 1, 2, EntityType.QUEUE)
 
 
 def test_unlink_child_child_not_exist(db_session, fake_data, account):
@@ -1826,7 +1871,39 @@ def test_unlink_child_child_not_exist(db_session, fake_data, account):
     db_session.commit()
 
     with pytest.raises(EntityDoesNotExistError):
-        utils.unlink_child(db_session, exp, 999999)
+        utils.unlink_child(db_session, exp, 999999, EntityType.QUEUE)
+
+
+def test_unlink_parents(db_session, fake_data, account):
+    qres = models.Resource("queue", account.group)
+    q = models.Queue("", qres, account.user, "queue1")
+
+    epres1 = models.Resource("entry_point", account.group)
+    ep1 = models.EntryPoint(
+        "", epres1, account.user, "ep1", "graph:", "artifacts_input:", [], []
+    )
+
+    epres2 = models.Resource("entry_point", account.group)
+    ep2 = models.EntryPoint(
+        "", epres2, account.user, "ep2", "graph:", "artifacts_input:", [], []
+    )
+
+    qres.parents.extend((ep1.resource, ep2.resource))
+    db_session.add(q)
+    db_session.commit()
+
+    assert len(q.parents) == 2
+    utils.unlink_parents(db_session, q)
+    db_session.commit()
+
+    assert q.parents == []
+    assert ep1.children == []
+    assert ep2.children == []
+
+
+def test_unlink_parents_parent_not_exist(db_session):
+    with pytest.raises(EntityDoesNotExistError):
+        utils.unlink_parents(db_session, -1)
 
 
 def test_filter_all_unsorted(db_session, queue_filter_setup):

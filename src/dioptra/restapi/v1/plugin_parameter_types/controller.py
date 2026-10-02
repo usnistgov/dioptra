@@ -31,6 +31,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.routes import V1_PLUGIN_PARAMETER_TYPES_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
@@ -52,11 +53,7 @@ from .schema import (
     PluginParameterTypePageSchema,
     PluginParameterTypeSchema,
 )
-from .service import (
-    RESOURCE_TYPE,
-    PluginParameterTypeIdService,
-    PluginParameterTypeService,
-)
+from .service import PluginParameterTypeIdService, PluginParameterTypeService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -99,6 +96,7 @@ class PluginParameterTypeEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         (
             plugin_parameter_types,
@@ -111,6 +109,7 @@ class PluginParameterTypeEndpoint(Resource):
             sort_by_string=sort_by_string,
             descending=descending,
             log=log,
+            show_deleted=show_deleted,
         )
         return utils.build_paging_envelope(
             V1_PLUGIN_PARAMETER_TYPES_ROUTE,
@@ -124,6 +123,7 @@ class PluginParameterTypeEndpoint(Resource):
             total_num_elements=total_num_plugin_param_types,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -228,27 +228,27 @@ class PluginParameterTypeIdEndpoint(Resource):
 
 PluginParameterTypeDraftResource = generate_resource_drafts_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     request_schema=PluginParameterTypeSchema,
 )
 
 PluginParameterTypeDraftIdResource = generate_resource_drafts_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     request_schema=PluginParameterTypeMutableFieldsSchema,
 )
 
 PluginParameterTypeIdDraftIdResource = generate_resource_id_draft_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     request_schema=PluginParameterTypeMutableFieldsSchema,
 )
 
 PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.PluginTaskParameterType,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     route_prefix=V1_PLUGIN_PARAMETER_TYPES_ROUTE,
     searchable_fields=TypeRepository.SEARCHABLE_FIELDS,
     page_schema=PluginParameterTypePageSchema,
@@ -257,16 +257,15 @@ PluginParameterTypeSnapshotsResource = generate_resource_snapshots_endpoint(
 PluginParameterTypeSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.PluginTaskParameterType,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.PLUGIN_TASK_PARAMETER_TYPE,
     response_schema=PluginParameterTypeSchema,
     build_fn=utils.build_plugin_parameter_type,
 )
 
 PluginParameterTypeTagsResource = generate_resource_tags_endpoint(
-    api=api,
-    resource_name=RESOURCE_TYPE,
+    api=api, resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_table_name
 )
 PluginParameterTypeTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.PLUGIN_TASK_PARAMETER_TYPE.db_table_name,
 )

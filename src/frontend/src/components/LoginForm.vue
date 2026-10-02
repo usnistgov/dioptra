@@ -1,28 +1,32 @@
 <template>
-  <q-card bordered class="q-pa-lg" style="min-width: 40%;">
+  <q-card
+    bordered
+    class="q-pa-lg"
+    style="min-width: 40%"
+  >
     <q-card-section class="text-center">
-        <h1 class="q-mt-none q-mb-sm">Login</h1>
-        <p>Sign in to access the Dioptra UI</p>
+      <h1 class="q-mt-none q-mb-sm">Login</h1>
+      <p>Sign in to access the Dioptra UI</p>
     </q-card-section>
     <q-form @submit="submit()">
       <q-input
+        v-model="username"
         class="q-py-md"
         outlined
         label="Username"
         :rules="[requiredRule]"
-        v-model="username"
         aria-required="true"
       />
       <q-input
+        v-model="password"
         class="q-py-sm"
         outlined
         label="Password"
         :type="showPassword ? 'text' : 'password'"
         :rules="[requiredRule]"
-        v-model="password"
         aria-required="true"
       >
-        <template v-slot:append>
+        <template #append>
           <q-icon
             :name="showPassword ? 'visibility' : 'visibility_off'"
             class="cursor-pointer"
@@ -38,15 +42,16 @@
         Login
       </q-btn>
       <q-card-section class="text-center q-pt-md">
-        <p>Don't have an account yet?
-          <router-link 
-            role="button" 
-            class="text-weight-bold text-primary" 
-            style="text-decoration: none; cursor: pointer" 
+        <p>
+          Don't have an account yet?
+          <router-link
+            role="button"
+            class="text-weight-bold text-primary"
+            style="text-decoration: none; cursor: pointer"
             to="/register"
           >
             Signup.
-          </router-link >
+          </router-link>
         </p>
       </q-card-section>
     </q-form>
@@ -54,37 +59,36 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue';
-  import * as api from '@/services/dataApi';
-  import { useLoginStore } from '@/stores/LoginStore.ts';
-  import * as notify from '../notify';
+import { ref } from "vue";
+import * as api from "@/services/dataApi";
+import { useLoginStore } from "@/stores/LoginStore.ts";
+import * as notify from "../notify";
 
-  const store = useLoginStore()
+const store = useLoginStore();
 
-  const requiredRule = (val) => (val && val.length > 0) || "This field is required";
+const requiredRule = (val) => (val && val.length > 0) || "This field is required";
 
-  const username = ref('');
-  const password = ref('');
-  const showPassword = ref(false);
+const username = ref("");
+const password = ref("");
+const showPassword = ref(false);
 
-  async function submit() {
-    try {
-      const res = await api.login(username.value, password.value);
-      callGetLoginStatus()
-      notify.success(`${res.data.status} for ${username.value}`);
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
+async function submit() {
+  try {
+    const res = await api.login(username.value, password.value);
+    callGetLoginStatus();
+    notify.success(`${res.data.status} for ${username.value}`);
+  } catch (err) {
+    notify.error(err.response.data.message);
   }
+}
 
-  async function callGetLoginStatus() {
-    try {
-      const res = await api.getLoginStatus()
-      store.loggedInUser = res.data
-      store.groups = res.data.groups
-    } catch(err) {
-      store.loggedInUser = ''
-    }
+async function callGetLoginStatus() {
+  try {
+    const res = await api.getLoginStatus();
+    store.loggedInUser = res.data;
+    store.groups = res.data.groups;
+  } catch {
+    store.loggedInUser = "";
   }
-
+}
 </script>

@@ -35,6 +35,7 @@ def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
     assert isinstance(response["hasDraft"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert helpers.is_iso_format(response["createdOn"])
     assert helpers.is_iso_format(response["snapshotCreatedOn"])
@@ -356,6 +357,25 @@ def assert_retrieving_snapshots_works(
     """
     response = snapshots_client.get(*resource_ids)
     assert response.status_code == HTTPStatus.OK and response.json()["data"] == expected
+
+
+def assert_retrieving_deleted_resource_snapshots_works(
+    snapshots_client: SnapshotsSubCollectionClient,
+    *resource_ids: int,
+) -> None:
+    """Assert that retrieving a snapshot by id works even if the resource is deleted.
+
+    Args:
+        snapshots_client: The SnapshotsSubCollectionClient client.
+        resource_id: The id of the resource to retrieve snapshots for.
+
+    Raises:
+        AssertionError: If the response status code is not 200 or if the resource
+            is not marked deleted.
+    """
+    response = snapshots_client.get(*resource_ids)
+    assert response.status_code == HTTPStatus.OK and response.json()['data'][0]['deleted']
+
 
 
 def assert_retrieving_snapshot_by_id_works(

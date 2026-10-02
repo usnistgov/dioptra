@@ -20,15 +20,20 @@ This module contains a set of tests that validate the supported CRUD operations 
 additional functionalities for the experiment entity. The tests ensure that the
 experiments can be registered, retrieved, and deleted as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
 
 from ..lib import helpers, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -55,6 +60,7 @@ def assert_experiment_response_contents_matches_expectations(
         "createdOn",
         "snapshotCreatedOn",
         "lastModifiedOn",
+        "deleted",
         "latestSnapshot",
         "hasDraft",
         "name",
@@ -73,6 +79,7 @@ def assert_experiment_response_contents_matches_expectations(
     assert isinstance(response["snapshotCreatedOn"], str)
     assert isinstance(response["lastModifiedOn"], str)
     assert isinstance(response["latestSnapshot"], bool)
+    assert isinstance(response["deleted"], bool)
 
     assert response["name"] == expected_contents["name"]
     assert response["description"] == expected_contents["description"]
@@ -212,7 +219,7 @@ def assert_experiment_name_matches_expected_name(
     )
 
 
-def assert_experiment_is_not_found(
+def assert_experiment_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     experiment_id: int,
 ) -> None:
@@ -226,7 +233,7 @@ def assert_experiment_is_not_found(
         AssertionError: If the response status code is not 404.
     """
     response = dioptra_client.experiments.get_by_id(experiment_id)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.OK and response.json()["deleted"]
 
 
 def assert_retrieving_all_entrypoints_for_experiment_works(
@@ -461,6 +468,39 @@ def test_experiment_get_by_id(
     )
 
 
+def test_experiment_show_deleted(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that deleted experiments only appear when the show_deleted parameter is passed.
+
+    Given an authenticated user and registered experiments, this test validates the
+        following sequence of actions:
+
+    - Not passing the show_deleted parameter returns only the not deleted experiments
+    - The deleted experiments are included in the response when the show_deleted parameter is passed.
+    """
+    experiment_to_delete = registered_experiments["experiment3"]
+    # Expected ID sets
+    expected_without = {
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment2"]["id"],
+    }
+    expected_with = {
+        registered_experiments["experiment1"]["id"],
+        registered_experiments["experiment2"]["id"],
+        registered_experiments["experiment3"]["id"],
+    }
+    # Use the shared routine to perform the test.
+    routines.run_show_deleted_tests(
+        client=dioptra_client.experiments,
+        delete_id=experiment_to_delete["id"],
+        expected_ids_without_show_deleted=expected_without,
+        expected_ids_with_show_deleted=expected_with,
+    )
+
+
 def test_rename_experiment(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -491,6 +531,141 @@ def test_rename_experiment(
     )
 
 
+def test_unchanged_experiment_put_creates_snapshots(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+    db_session: DBSession,
+) -> None:
+    """Test that identical PUTs add history while preserving experiment contents."""
+    name = "unchanged_experiment"
+    description = "An experiment saved without changes."
+    entrypoint_ids = [
+        registered_entrypoints["entrypoint1"]["id"],
+        registered_entrypoints["entrypoint2"]["id"],
+    ]
+    response = dioptra_client.experiments.create(
+        group_id=auth_account["default_group_id"],
+        name=name,
+        description=description,
+        entrypoints=entrypoint_ids,
+    )
+    assert response.status_code == HTTPStatus.OK
+    original = response.json()
+    experiment_id = original["id"]
+    snapshot_ids = {original["snapshot"]}
+
+    for snapshot_count in (2, 3):
+        response = dioptra_client.experiments.modify_by_id(
+            experiment_id=experiment_id,
+            name=name,
+            description=description,
+            entrypoints=entrypoint_ids,
+        )
+        assert response.status_code == HTTPStatus.OK
+        modified = response.json()
+        assert modified["id"] == experiment_id
+        assert modified["snapshot"] not in snapshot_ids
+        assert modified["latestSnapshot"]
+        assert modified["entrypoints"] == original["entrypoints"]
+        assert_experiment_response_contents_matches_expectations(
+            response=modified,
+            expected_contents={
+                "name": name,
+                "description": description,
+                "user_id": auth_account["id"],
+                "group_id": auth_account["default_group_id"],
+            },
+        )
+        assert_retrieving_experiment_by_id_works(
+            dioptra_client, experiment_id=experiment_id, expected=modified
+        )
+        snapshot_ids.add(modified["snapshot"])
+
+        db_session.expire_all()
+        persisted_ids = set(
+            db_session.scalars(
+                select(models.ResourceSnapshot.resource_snapshot_id).where(
+                    models.ResourceSnapshot.resource_id == experiment_id
+                )
+            )
+        )
+        assert persisted_ids == snapshot_ids
+        assert len(persisted_ids) == snapshot_count
+        resource = db_session.get(models.Resource, experiment_id)
+        assert resource.latest_snapshot_id == modified["snapshot"]
+        assert sorted(child.resource_id for child in resource.children) == sorted(
+            entrypoint_ids
+        )
+        for snapshot_id in snapshot_ids:
+            snapshot = db_session.get(models.Experiment, snapshot_id)
+            assert snapshot.resource_id == experiment_id
+            assert snapshot.name == name
+            assert snapshot.description == description
+
+
+def test_modify_experiment_replaces_entrypoints(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that modifying an experiment replaces associated entrypoints.
+
+    Given an authenticated user and an experiment that starts with associated
+    entrypoints, this test validates the following sequence of actions:
+
+    - The user updates the experiment with a new list containing one entrypoint.
+    - The user retrieves entrypoints for that experiment.
+    - The retrieved entrypoints match exactly the new list (not append behavior).
+    """
+    experiment_to_modify = registered_experiments["experiment1"]
+    replacement_entrypoints = [registered_entrypoints["entrypoint1"]["id"]]
+
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_to_modify["id"],
+        name=experiment_to_modify["name"],
+        description=experiment_to_modify["description"],
+        entrypoints=replacement_entrypoints,
+    )
+
+    assert_experiment_entrypoints_matches_expected_entrypoints(
+        dioptra_client,
+        experiment_id=experiment_to_modify["id"],
+        expected_entrypoints=replacement_entrypoints,
+    )
+
+
+def test_modify_experiment_clears_entrypoints(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_experiments: dict[str, Any],
+) -> None:
+    """Test that modifying an experiment with an empty list clears entrypoints.
+
+    Given an authenticated user and an experiment that starts with associated
+    entrypoints, this test validates the following sequence of actions:
+
+    - The user updates the experiment with an empty list.
+    - The user retrieves entrypoints for that experiment.
+    - The retrieved entrypoints is an empty list.
+    """
+    experiment_to_modify = registered_experiments["experiment1"]
+
+    dioptra_client.experiments.modify_by_id(
+        experiment_id=experiment_to_modify["id"],
+        name=experiment_to_modify["name"],
+        description=experiment_to_modify["description"],
+        entrypoints=[],
+    )
+
+    assert_experiment_entrypoints_matches_expected_entrypoints(
+        dioptra_client,
+        experiment_id=experiment_to_modify["id"],
+        expected_entrypoints=[],
+    )
+
+
 def test_delete_experiment_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -507,8 +682,13 @@ def test_delete_experiment_by_id(
     """
     experiment_to_delete = registered_experiments["experiment3"]
     dioptra_client.experiments.delete_by_id(experiment_to_delete["id"])
-    assert_experiment_is_not_found(
+    assert_experiment_is_deleted(
         dioptra_client, experiment_id=experiment_to_delete["id"]
+    )
+
+    assert_retrieving_deleted_resource_snapshots_works(
+        dioptra_client.experiments.snapshots,
+        experiment_to_delete["id"],
     )
 
 

@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+from http import HTTPStatus
 from typing import Any
 
 from dioptra.client.base import CollectionClient, DioptraResponseProtocol
@@ -82,6 +83,7 @@ def run_new_resource_drafts_tests(
     )
 
     # Delete operation tests
+
     draft_client.delete(*resource_ids, draft_id=draft1_response["id"])
     asserts.assert_new_draft_is_not_found(
         draft_client, *resource_ids, draft_id=draft1_response["id"]
@@ -243,3 +245,25 @@ def run_resource_tag_tests(
     client.remove_all(*resource_ids)
     response = client.get(*resource_ids)
     asserts.assert_tags_response_contents_matches_expectations(response.json(), [])
+
+def run_show_deleted_tests(
+    client: CollectionClient[DioptraResponseProtocol],
+    *,
+    delete_id: int,
+    expected_ids_without_show_deleted: set[int],
+    expected_ids_with_show_deleted: set[int],
+) -> None:
+    client.delete_by_id(delete_id)
+
+    # Verify deleted resources are hidden
+    response_no_show_deleted = client.get()
+    assert response_no_show_deleted.status_code == HTTPStatus.OK
+    ids_no_show_deleted = {item["id"] for item in response_no_show_deleted.json()["data"]}
+    assert ids_no_show_deleted == expected_ids_without_show_deleted
+
+    # Verify that passing show_deleted == True includes the deleted resource
+    response_with_show_deleted = client.get(show_deleted=True)
+    assert response_with_show_deleted.status_code == HTTPStatus.OK
+    ids_with_show_deleted = {item["id"] for item in response_with_show_deleted.json()["data"]}
+
+    assert ids_with_show_deleted == expected_ids_with_show_deleted

@@ -28,8 +28,10 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.routes import V1_ENTRYPOINTS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes, plugin_pluginfiles_to_bundle
 from dioptra.restapi.v1.queues.schema import QueueRefSchema
 from dioptra.restapi.v1.schemas import (
@@ -50,21 +52,28 @@ from dioptra.restapi.v1.shared.tags.controller import (
     generate_resource_tags_endpoint,
     generate_resource_tags_id_endpoint,
 )
-from dioptra.restapi.v1.shared.task_engine_yaml.service import TaskEngineYamlService
 
 from .schema import (
+    DynamicGlobalParametersResponseSchema,
     EntrypointArtifactPluginMutableFieldsSchema,
+    EntrypointConfigRequestSchema,
+    EntrypointConfigResponseSchema,
     EntrypointDraftSchema,
     EntrypointGetQueryParameters,
+    EntrypointLintResponseSchema,
     EntrypointMutableFieldsSchema,
     EntrypointPageSchema,
     EntrypointPluginMutableFieldsSchema,
     EntrypointPluginSchema,
     EntrypointSchema,
+    EntrypointUpdateSchema,
+    SwapChoiceRequestSchema,
+    SwapInfoSchema,
+    ValidateOnlySchema,
 )
 from .service import (
-    RESOURCE_TYPE,
-    SEARCHABLE_FIELDS,
+    DynamicGlobalParametersService,
+    EntrypointConfigService,
     EntrypointIdArtifactPluginsIdService,
     EntrypointIdArtifactPluginsService,
     EntrypointIdPluginsIdService,
@@ -74,6 +83,7 @@ from .service import (
     EntrypointIdService,
     EntrypointService,
     EntrypointSnapshotIdService,
+    SwapsRetrievalService,
 )
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -111,6 +121,7 @@ class EntrypointEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         entrypoints, total_num_entrypoints = self._entrypoint_service.get(
             group_id=group_id,
@@ -119,6 +130,7 @@ class EntrypointEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -133,10 +145,11 @@ class EntrypointEndpoint(Resource):
             total_num_elements=total_num_entrypoints,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
         )
 
     @login_required
-    @accepts(schema=EntrypointSchema, api=api)
+    @accepts(query_params_schema=ValidateOnlySchema, schema=EntrypointSchema, api=api)
     @responds(schema=EntrypointSchema, api=api)
     def post(self):
         """Creates an Entrypoint resource."""
@@ -144,20 +157,39 @@ class EntrypointEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="POST"
         )
         parsed_obj = request.parsed_obj  # noqa: F841
-        entrypoint = self._entrypoint_service.create(
-            name=parsed_obj["name"],
-            description=parsed_obj["description"],
-            task_graph=parsed_obj["task_graph"],
-            artifact_graph=parsed_obj.get("artifact_graph", ""),
-            parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj.get("artifact_parameters", []),
-            plugin_ids=parsed_obj["plugin_ids"],
-            artifact_plugin_ids=parsed_obj.get("artifact_plugin_ids", []),
-            queue_ids=parsed_obj["queue_ids"],
-            group_id=int(parsed_obj["group_id"]),
-            log=log,
-        )
-        return utils.build_entrypoint(entrypoint)
+
+        parsed_query_params = request.parsed_query_params  # noqa: F841
+        validate_only = bool(parsed_query_params.get("validate_only", False))
+
+        arguments = {
+            "name": parsed_obj["name"],
+            "description": parsed_obj["description"],
+            "task_graph": parsed_obj["task_graph"],
+            "artifact_graph": parsed_obj.get("artifact_graph", ""),
+            "parameters": parsed_obj["parameters"],
+            "artifact_parameters": parsed_obj.get("artifact_parameters", []),
+            "plugin_ids": parsed_obj["plugin_ids"],
+            "artifact_plugin_ids": parsed_obj.get("artifact_plugin_ids", []),
+            "queue_ids": parsed_obj["queue_ids"],
+            "group_id": int(parsed_obj["group_id"]),
+            "log": log,
+        }
+
+        if validate_only:
+            with self._entrypoint_service.validate_create(**arguments) as entrypoint:
+                response = utils.build_entrypoint(entrypoint)
+                for field in (
+                    "id",
+                    "created_on",
+                    "snapshot_id",
+                    "snapshot_created_on",
+                    "last_modified_on",
+                ):
+                    response.pop(field, None)
+                return response
+        else:
+            entrypoint = self._entrypoint_service.create(**arguments)
+            return utils.build_entrypoint(entrypoint)
 
 
 @api.route("/<int:id>")
@@ -191,7 +223,11 @@ class EntrypointIdEndpoint(Resource):
         return utils.build_entrypoint(entrypoint)
 
     @login_required
-    @accepts(schema=EntrypointMutableFieldsSchema, api=api)
+    @accepts(
+        query_params_schema=ValidateOnlySchema,
+        schema=EntrypointUpdateSchema,
+        api=api,
+    )
     @responds(schema=EntrypointSchema, api=api)
     def put(self, id: int):
         """Modifies an Entrypoint resource by its unique ID."""
@@ -202,18 +238,37 @@ class EntrypointIdEndpoint(Resource):
             id=id,
         )
         parsed_obj = request.parsed_obj  # type: ignore # noqa: F841
-        entrypoint = self._entrypoint_id_service.modify(
-            id,
-            name=parsed_obj["name"],
-            description=parsed_obj["description"],
-            task_graph=parsed_obj["task_graph"],
-            artifact_graph=parsed_obj.get("artifact_graph", ""),
-            parameters=parsed_obj["parameters"],
-            artifact_parameters=parsed_obj.get("artifact_parameters", []),
-            queue_ids=parsed_obj["queue_ids"],
-            log=log,
-        )
-        return utils.build_entrypoint(entrypoint)
+        parsed_query_params = request.parsed_query_params  # type: ignore  # noqa: F841
+        validate_only = bool(parsed_query_params.get("validate_only", False))
+
+        arguments = {
+            "name": parsed_obj["name"],
+            "description": parsed_obj["description"],
+            "task_graph": parsed_obj["task_graph"],
+            "artifact_graph": parsed_obj.get("artifact_graph", ""),
+            "parameters": parsed_obj["parameters"],
+            "artifact_parameters": parsed_obj.get("artifact_parameters", []),
+            "queue_ids": parsed_obj["queue_ids"],
+            "plugin_snapshot_ids": parsed_obj["plugin_snapshot_ids"],
+            "artifact_plugin_snapshot_ids": parsed_obj["artifact_plugin_snapshot_ids"],
+            "log": log,
+        }
+
+        if validate_only:
+            with self._entrypoint_id_service.validate_modify(
+                id, **arguments
+            ) as entrypoint:
+                response = utils.build_entrypoint(entrypoint)
+                for field in (
+                    "snapshot_id",
+                    "snapshot_created_on",
+                    "last_modified_on",
+                ):
+                    response.pop(field, None)
+                return response
+        else:
+            entrypoint = self._entrypoint_id_service.modify(id, **arguments)
+            return utils.build_entrypoint(entrypoint)
 
     @login_required
     @responds(schema=IdStatusResponseSchema, api=api)
@@ -226,6 +281,39 @@ class EntrypointIdEndpoint(Resource):
             id=id,
         )
         return self._entrypoint_id_service.delete(entrypoint_id=id, log=log)
+
+
+@api.route(":lint")
+class EntrypointLintEndpoint(Resource):
+    @inject
+    def __init__(self, entrypoint_service: EntrypointService, *args, **kwargs):
+        self._service = entrypoint_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointSchema, api=api)
+    @responds(schema=EntrypointLintResponseSchema, api=api)
+    def post(self):
+        """Lint a proposed entrypoint without full rendering or persistence."""
+        return self._service.lint(**request.parsed_obj)
+
+
+@api.route("/<int:id>:lint")
+class EntrypointIdLintEndpoint(Resource):
+    @inject
+    def __init__(self, entrypoint_id_service: EntrypointIdService, *args, **kwargs):
+        self._service = entrypoint_id_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(schema=EntrypointMutableFieldsSchema, api=api)
+    @responds(schema=EntrypointLintResponseSchema, api=api)
+    def post(self, id: int):
+        """Lint proposed content using the entrypoint's saved plugin selections."""
+        return self._service.lint(
+            id,
+            **request.parsed_obj,  # type: ignore[attr-defined]
+        )
 
 
 @api.route("/<int:id>/plugins")
@@ -277,8 +365,7 @@ class EntryPointSnapshotConfigEndpoint(Resource):
     @inject
     def __init__(
         self,
-        entrypoint_snapshot_id_service: EntrypointSnapshotIdService,
-        yaml_service: TaskEngineYamlService,
+        entrypoint_config_service: EntrypointConfigService,
         *args,
         **kwargs,
     ) -> None:
@@ -287,14 +374,14 @@ class EntryPointSnapshotConfigEndpoint(Resource):
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_snapshot_id_service: A EntrypointSnapshotIdService object.
-            yaml_service: A TaskEngineYamlService object
+            entrypoint_config_service: An EntrypointConfigService object.
         """
-        self._entrypoint_snapshot_id_service = entrypoint_snapshot_id_service
-        self._yaml_service = yaml_service
+        self._entrypoint_config_service = entrypoint_config_service
         super().__init__(*args, **kwargs)
 
     @login_required
+    @accepts(query_params_schema=EntrypointConfigRequestSchema, api=api)
+    @responds(schema=EntrypointConfigResponseSchema, api=api)
     def get(self, id: int, snapshotId: int):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
@@ -303,26 +390,23 @@ class EntryPointSnapshotConfigEndpoint(Resource):
             id=id,
             snapshotId=snapshotId,
         )
-        entry_point = self._entrypoint_snapshot_id_service.get(
-            entrypoint_id=id, entrypoint_snapshot_id=snapshotId, log=log
+
+        parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
+
+        swap_choices = parsed_query_params.get("swaps", {})
+        sections = parsed_query_params.get("sections", [])
+        partial = parsed_query_params.get("partial", False)
+
+        full_config = self._entrypoint_config_service.get_config(
+            id=id,
+            snapshotId=snapshotId,
+            log=log,
+            swap_choices=swap_choices,
+            sections=sections,
+            partial=partial,
         )
-        plugin_files = [
-            plugin_plugin_file
-            for entry_point_plugin in entry_point.entry_point_plugins
-            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
-        ]
-        # this call is part of a HACK fully explained in extract_tasks, which is called
-        # internally by build_task_engine_dict, the service call would not be needed
-        # if this issue is more permanantly resolved
-        types = self._entrypoint_snapshot_id_service.get_group_plugin_parameter_types(
-            entry_point.resource.group_id, log=log
-        )
-        return self._yaml_service.build_dict(
-            entry_point=entry_point,  # pyright: ignore
-            plugin_plugin_files=plugin_files,  # pyright: ignore
-            plugin_parameter_types=types,  # pyright: ignore
-            logger=log,
-        )
+
+        return full_config
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/plugins/bundle")
@@ -668,7 +752,7 @@ class EntrypointIdQueuesEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore
         queues = self._entrypoint_id_queues_service.modify(
-            id, queue_ids=parsed_obj["ids"], error_if_not_found=True, log=log
+            id, queue_ids=parsed_obj["ids"], log=log
         )
         return [utils.build_queue_ref(queue) for queue in queues]
 
@@ -679,9 +763,7 @@ class EntrypointIdQueuesEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Entrypoint", request_type="DELETE"
         )
-        return self._entrypoint_id_queues_service.delete(
-            id, error_if_not_found=True, log=log
-        )
+        return self._entrypoint_id_queues_service.delete(id, log=log)
 
 
 @api.route("/<int:id>/queues/<int:queueId>")
@@ -708,45 +790,123 @@ class EntrypointIdQueuesId(Resource):
         return self._entrypoint_id_queues_id_service.delete(id, queueId, log=log)
 
 
+@api.route("/<int:id>/snapshots/<int:snapshotId>/dynamicGlobalParameters")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint snapshot.")
+class DynamicGlobalParametersEntrypoint(Resource):
+    @inject
+    def __init__(
+        self,
+        dynamic_global_parameters_service: DynamicGlobalParametersService,
+        *args,
+        **kwargs,
+    ) -> None:
+        """Initialize the workflow resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            entrypoint_validate_service: An EntrypointValidateService object.
+        """
+        self._dynamic_global_parameters_service = dynamic_global_parameters_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=SwapChoiceRequestSchema, api=api)
+    @responds(schema=DynamicGlobalParametersResponseSchema, api=api)
+    def get(self, id: int, snapshotId: int):
+        """Finds the global parameters for the given entrypoint + swap choice dictionary."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="DynamicGlobalParameters",
+            request_type="GET",
+        )
+
+        entrypoint_id = id
+        entrypoint_snapshot_id = snapshotId
+        parsed_query_params = request.parsed_query_params  # type: ignore
+        swap_choices = parsed_query_params.get("swaps", {})
+
+        return self._dynamic_global_parameters_service.get_params(
+            entrypoint_id=entrypoint_id,
+            entrypoint_snapshot_id=entrypoint_snapshot_id,
+            swaps=swap_choices,
+            logger=log,
+        )
+
+
+@api.route("/<int:id>/snapshots/<int:snapshotId>/swaps")
+@api.param("id", "ID for the Entrypoint resource.")
+@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+class SwapsEndpoint(Resource):
+    @inject
+    def __init__(self, swaps_service: SwapsRetrievalService, *args, **kwargs) -> None:
+        """Initialize the endpoint for retrieving a list of possible swaps
+        from the entrypoint graph.
+
+        Args:
+            swaps_service: Service providing swap information.
+        """
+        self._swaps_service = swaps_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=SwapInfoSchema(many=True), api=api)
+    def get(self, id: int, snapshotId: int):
+        """Retrieve available swaps for a given entrypoint snapshot."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="Entrypoint",
+            request_type="GET",
+            id=id,
+            snapshotId=snapshotId,
+        )
+        return self._swaps_service.get_swaps(
+            entrypoint_id=id,
+            entrypoint_snapshot_id=snapshotId,
+            logger=log,
+        )
+
+
 EntrypointDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
     request_schema=EntrypointDraftSchema,
 )
 EntrypointDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     request_schema=EntrypointDraftSchema(exclude=["groupId"]),
 )
 EntrypointIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     request_schema=EntrypointDraftSchema(exclude=["groupId", "pluginIds"]),
 )
 
 EntrypointSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     route_prefix=V1_ENTRYPOINTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=EntrypointRepository.SEARCHABLE_FIELDS,
     page_schema=EntrypointPageSchema,
     build_fn=utils.build_entrypoint,
 )
 EntrypointSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.EntryPoint,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.ENTRY_POINT,
     response_schema=EntrypointSchema,
     build_fn=utils.build_entrypoint,
 )
 
 EntrypointTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.ENTRY_POINT.db_table_name,
 )
 EntrypointTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.ENTRY_POINT.db_table_name,
 )

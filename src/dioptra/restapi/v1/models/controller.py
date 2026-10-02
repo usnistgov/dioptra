@@ -31,6 +31,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_MODELS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
@@ -57,7 +58,6 @@ from .schema import (
     ModelVersionSchema,
 )
 from .service import (
-    MODEL_RESOURCE_TYPE,
     MODEL_SEARCHABLE_FIELDS,
     ModelIdService,
     ModelIdVersionsNumberService,
@@ -122,6 +122,7 @@ class ModelEndpoint(Resource):
             total_num_elements=total_num_models,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
     @login_required
@@ -253,6 +254,9 @@ class ModelIdVersionsEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_versions,
+            sort_by=None,
+            descending=None,
+            show_deleted=None,
         )
 
     @login_required
@@ -333,25 +337,25 @@ class ModelIdVersionsNumberEndpoint(Resource):
 
 ModelDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_type=EntityType.ML_MODEL,
     route_prefix=V1_MODELS_ROUTE,
     request_schema=ModelSchema,
 )
 ModelDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_type=EntityType.ML_MODEL,
     request_schema=ModelSchema(exclude=["groupId"]),
 )
 ModelIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_type=EntityType.ML_MODEL,
     request_schema=ModelSchema(exclude=["groupId"]),
 )
 
 ModelSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.MlModel,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_type=EntityType.ML_MODEL,
     route_prefix=V1_MODELS_ROUTE,
     searchable_fields=MODEL_SEARCHABLE_FIELDS,
     page_schema=ModelPageSchema,
@@ -360,16 +364,16 @@ ModelSnapshotsResource = generate_resource_snapshots_endpoint(
 ModelSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.MlModel,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_type=EntityType.ML_MODEL,
     response_schema=ModelSchema,
     build_fn=utils.build_model,
 )
 
 ModelTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_name=EntityType.ML_MODEL.db_table_name,
 )
 ModelTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=MODEL_RESOURCE_TYPE,
+    resource_name=EntityType.ML_MODEL.db_table_name,
 )

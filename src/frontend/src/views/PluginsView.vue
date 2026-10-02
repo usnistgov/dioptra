@@ -1,38 +1,46 @@
 <template>
-  <PageTitle title="Plugins" />
+  <PageTitle
+    title="Plugins"
+    resourceType="plugin"
+    subtitle="Units of code that define Tasks"
+  />
 
   <TableComponent
-    :rows="plugins"
+    ref="tableRef"
+    v-model:selected="selected"
+    :rows="rows"
     :columns="columns"
     title="Plugins"
-    v-model:selected="selected"  
-    @open="openTab => (openTab
-      ? openWindow.open(`/plugins/${selected[0].id}`, '_blank')
-      : router.push(`/plugins/${selected[0].id}`)
-    )"
-    @delete="showDeleteDialog = true"
-    @request="getPlugins"
-    ref="tableRef"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push('/plugins/new')"
     :loading="isLoading"
+    @open="
+      (openTab) =>
+        openTab ? openWindow.open(`/plugins/${selected[0].id}`, '_blank') : router.push(`/plugins/${selected[0].id}`)
+    "
+    @delete="showDeleteDialog = true"
+    @request="getData"
+    @editTags="
+      (row) => {
+        editObjTags = row;
+        showTagsDialog = true;
+      }
+    "
+    @create="router.push('/plugins/new')"
   >
-
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
+    <template #body-cell-group="cellProps">
+      <div>{{ cellProps.row.group.name }}</div>
     </template>
-    <template #body-cell-files="props">
-      {{ props.row.files?.length }}
+    <template #body-cell-files="cellProps">
+      {{ cellProps.row.files?.length }}
     </template>
   </TableComponent>
 
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialog"
-    @submit="deletePlugin"
     type="Plugin"
     :name="selected.length ? selected[0].name : ''"
+    @submit="deleteRow"
   />
-  <AssignTagsDialog 
+  <AssignTagsDialog
     v-model="showTagsDialog"
     :editObj="editObjTags"
     type="plugins"
@@ -41,69 +49,29 @@
 </template>
 
 <script setup>
-  import TableComponent from '@/components/TableComponent.vue'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
+import TableComponent from "@/components/TableComponent.vue";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import PageTitle from "@/components/PageTitle.vue";
+import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import { useTableUtils } from "@/services/useTableUtils";
 
-  const openWindow = window
+const openWindow = window;
 
-  const router = useRouter()
+const router = useRouter();
 
-  const selected = ref([])
+const showTagsDialog = ref(false);
+const editObjTags = ref({});
 
-  const showDeleteDialog = ref(false)
-  const showTagsDialog = ref(false)
-  const editObjTags = ref({})
+const { rows, isLoading, tableRef, selected, showDeleteDialog, getData, deleteRow } = useTableUtils("plugins");
 
-  const plugins = ref([])
-
-  const isLoading = ref(false)
-
-  async function getPlugins(pagination) {
-    isLoading.value = true
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
-    try {
-      const [res] = await Promise.all([
-        api.getData('plugins', pagination),
-        minLoadTimePromise
-      ]);
-      
-      plugins.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
-    { name: 'description', label: 'Description', field: 'description',align: 'left', sortable: true },
-    { name: 'files', label: 'Number of Files', align: 'left', field: 'files', sortable: false },
-    { name: 'tags', label: 'Tags', align: 'left', sortable: false },
-  ]
-
-  async function deletePlugin() {
-    try {
-      await api.deleteItem('plugins', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
-  }
-
-  const tableRef = ref(null)
-
+const columns = [
+  { name: "id", label: "ID", align: "left", field: "id", sortable: false },
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  { name: "description", label: "Description", field: "description", align: "left", sortable: true },
+  { name: "files", label: "Number of Files", align: "left", field: "files", sortable: false },
+  { name: "tags", label: "Tags", align: "left", sortable: false },
+  { name: "lastModifiedOn", label: "Last Modified", align: "left", field: "lastModifiedOn", sortable: true },
+];
 </script>

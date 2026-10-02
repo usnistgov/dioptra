@@ -1,16 +1,23 @@
 <template>
   <div class="row items-center">
-    <PageTitle :title="`Artifact ${route.params.id}`" />
+    <PageTitle
+      :title="`Artifact ${route.params.id}`"
+      resourceType="artifact"
+    />
     <q-chip
       v-if="route.params.id !== 'new'"
       class="q-ml-lg"
       :color="`${darkMode ? 'grey-9' : 'grey-3'}`"
       label="View History"
       icon="history"
-      @click="store.showRightDrawer = !store.showRightDrawer"
       clickable
+      @click="store.showRightDrawer = !store.showRightDrawer"
     >
-      <q-toggle v-model="store.showRightDrawer" left-label color="orange" />
+      <q-toggle
+        v-model="store.showRightDrawer"
+        left-label
+        color="orange"
+      />
     </q-chip>
   </div>
   <div class="row q-gutter-xl">
@@ -25,8 +32,18 @@
         >
           <template #description="{}">
             {{ artifact.description }}
-            <q-btn icon="edit" round size="sm" color="primary" flat />
-            <q-popup-edit v-model="artifact.description" auto-save v-slot="scope">
+            <q-btn
+              icon="edit"
+              round
+              size="sm"
+              color="primary"
+              flat
+            />
+            <q-popup-edit
+              v-slot="scope"
+              v-model="artifact.description"
+              auto-save
+            >
               <q-input
                 v-model="scope.value"
                 dense
@@ -36,28 +53,23 @@
               />
             </q-popup-edit>
           </template>
-          <template #fileUrl="{ fileUrl }">
+          <template #fileUrl="{}">
             <q-btn
-              @click="
-                downloadFile(
-                  artifact.fileUrl,
-                  artifact.artifactUri.split('/').pop(),
-                  'artifact'
-                )
-              "
               label="Download Artifact"
               color="primary"
               icon="download"
               :loading="isDownloadingArtifact"
+              @click="downloadFile(artifact.fileUrl, artifact.artifactUri.split('/').pop(), 'artifact')"
             />
           </template>
           <template #fileSize>
             {{ prettyBytes(artifact.fileSize) }}
           </template>
           <template #job>
-            <RouterLink :to="`/jobs/${artifact?.job}`">
-              {{ artifact?.job }}
-            </RouterLink>
+            <ResourceBadge
+              :resource="{ name: `Job ${artifact.job}`, url: `/jobs/${artifact.job}`, id: artifact.job }"
+              resourceType="job"
+            />
           </template>
           <template #plugin="{ plugin = {} }">
             <div class="row items-end">
@@ -65,71 +77,30 @@
                 v-if="Object.keys(plugin).length === 0 && !isLoading"
                 class="text-red"
               >
-                <q-icon name="sym_o_warning" size="2.5em" />
+                <q-icon
+                  name="sym_o_warning"
+                  size="2.5em"
+                />
                 The attached plugin has been deleted.
               </div>
-              <q-select
-                label="Plugin"
+              <ResourcePicker
                 v-model="artifact.plugin"
-                @filter="getPlugins"
                 :options="plugins"
-                option-label="name"
-                input-debounce="100"
-                dense
-                outlined
-                use-input
-                class="q-mt-sm q-ml-md col"
+                resourceType="plugin"
+                :multiple="false"
+                class="q-mt-sm"
+                @filter="getPlugins"
+                @sync="(p) => syncPlugin(p.id)"
               >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps">
-                    <q-item-section>
-                      <q-item-label>{{ scope.opt.name }}</q-item-label>
-                      <q-item-label caption
-                        >Number of Files:
-                        {{ scope.opt.files.length }}</q-item-label
-                      >
-                      <q-item-label caption
-                        >Number of artifact tasks:
-                        {{ countTasks(scope.opt) }}</q-item-label
-                      >
-                    </q-item-section>
-                  </q-item>
+                <template #option-extra="{ opt }">
+                  <q-item-label caption> Number of Files: {{ opt.files.length }} </q-item-label>
+                  <q-item-label caption> Number of artifact tasks: {{ countTasks(opt) }} </q-item-label>
                 </template>
-                <template v-slot:selected-item="scope">
-                  <q-item-label class="q-my-sm">
-                    <q-chip
-                      :label="plugin.name"
-                      color="secondary"
-                      text-color="white"
-                      v-if="Object.keys(plugin).length > 0"
-                    >
-                      <q-badge
-                        v-if="!plugin.latestSnapshot"
-                        color="red"
-                        label="outdated"
-                        rounded
-                        class="q-ml-xs"
-                      />
-                    </q-chip>
-                    <q-btn
-                      v-if="
-                        !plugin.latestSnapshot && Object.keys(plugin).length > 0
-                      "
-                      round
-                      color="red"
-                      icon="sync"
-                      size="sm"
-                      @click.stop="syncPlugin(plugin.id)"
-                    >
-                      <q-tooltip> Sync to latest version of plugin </q-tooltip>
-                    </q-btn>
-                  </q-item-label>
-                </template>
-              </q-select>
+              </ResourcePicker>
             </div>
             <q-select
-              dense
               v-model="selectedArtifactTask"
+              dense
               :options="artifactTaskOptions"
               option-label="name"
               outlined
@@ -138,16 +109,20 @@
               :disable="artifactTaskOptions.length === 0"
             >
               <template #before>
-                <q-icon name="subdirectory_arrow_right" color="black" />
+                <q-icon
+                  name="subdirectory_arrow_right"
+                  color="black"
+                />
               </template>
-              <template v-slot:option="scope">
+              <template #option="scope">
                 <q-item v-bind="scope.itemProps">
                   <q-item-section>
                     <q-item-label>{{ scope.opt.name }}</q-item-label>
                     <q-item-label caption>
                       Output Parameters:
                       <q-chip
-                        v-for="param in scope.opt.outputParams"
+                        v-for="(param, i) in scope.opt.outputParams"
+                        :key="i"
                         color="purple"
                         text-color="white"
                         dense
@@ -158,11 +133,11 @@
                   </q-item-section>
                 </q-item>
               </template>
-              <template v-slot:selected-item="scope">
+              <template #selected-item="scope">
                 <q-item
+                  v-if="artifactTaskOptions.length !== 0"
                   v-bind="scope.itemProps"
                   class="q-pl-none"
-                  v-if="artifactTaskOptions.length !== 0"
                 >
                   <q-item-section>
                     <q-item-label>{{ scope.opt.name }}</q-item-label>
@@ -185,8 +160,7 @@
               v-if="artifactTaskOptions.length === 0 && !isLoading"
               class="text-caption text-negative"
             >
-              The selected plugin has no files with artifact tasks. Please select
-              another plugin.
+              The selected plugin has no files with artifact tasks. Please select another plugin.
             </div>
           </template>
         </KeyValueTable>
@@ -199,30 +173,34 @@
             @click="store.initialPage ? router.push('/artifacts') : router.back()"
           />
           <q-btn
-            @click="submit()"
             color="primary"
             label="Save Artifact"
             type="submit"
             :disable="store.showRightDrawer"
+            @click="submit()"
           />
         </div>
       </div>
     </div>
-    <div :class="isLarge ? 'col-6' : 'col-3'" class="column" v-if="artifact.isDir">
+    <div
+      v-if="artifact.isDir"
+      :class="isLarge ? 'col-6' : 'col-3'"
+      class="column"
+    >
       <h2 class="q-mt-lg">Directory</h2>
       <q-card
         flat
         class="col q-py-sm"
-        style="border: 1px solid #cecece; "
+        style="border: 1px solid #cecece"
       >
         <q-card-section class="row justify-between q-pt-sm">
           <q-btn
-            @click="downloadFile(selectedNode?.fileUrl, selectedNode?.label)"
             label="Download File"
             color="primary"
             icon="download"
             :disable="!selectedNode || selectedNode.isDir"
             :loading="isDownloadingFile"
+            @click="downloadFile(selectedNode?.fileUrl, selectedNode?.label)"
           />
           <q-input
             v-model="filter"
@@ -244,27 +222,23 @@
           class="q-pl-md q-pt-sm"
         >
           <q-tree
+            v-model:expanded="expandedKeys"
             :nodes="nodes"
             node-key="relativePath"
-            v-model:expanded="expandedKeys"
             selected-color="primary"
             dense
             :filter="filter"
             :filter-method="myFilterMethod"
           >
-            <template v-slot:default-header="prop">
+            <template #default-header="prop">
               <q-item
                 clickable
                 style="width: 100%"
                 dense
                 class="q-pa-none"
-                @click="handleSelect(prop.node)"
                 :active="selectedNode === prop.node"
-                :active-class="`${
-                  $q.dark.isActive
-                    ? 'bg-deep-purple-10 text-white'
-                    : 'bg-grey-4 text-black'
-                }`"
+                :active-class="`${$q.dark.isActive ? 'bg-deep-purple-10 text-white' : 'bg-grey-4 text-black'}`"
+                @click="handleSelect(prop.node)"
               >
                 <q-item-section avatar>
                   <q-icon :name="prop.node.icon" />
@@ -291,36 +265,51 @@
       <q-card
         class="col"
         flat
-        style="border: 1px solid #cecece;"
+        style="border: 1px solid #cecece"
       >
-        <q-card-section style="height: 72px;" class="row items-center justify-between">
-          <div v-if="!selectedNode || selectedNode.isDir" class="text-grey">
+        <q-card-section
+          style="height: 72px"
+          class="row items-center justify-between"
+        >
+          <div
+            v-if="!selectedNode || selectedNode.isDir"
+            class="text-grey"
+          >
             Select a file to preview
           </div>
-          <div v-else class="row items-center text-subtitle2">
+          <div
+            v-else
+            class="row items-center text-subtitle2"
+          >
             {{ selectedNode.label }}
           </div>
           <q-toggle
             v-if="preview.kind === 'image'"
-            label="Full Width"
             v-model="imageFullWidth"
+            label="Full Width"
           />
         </q-card-section>
         <q-separator />
-        <q-card-section 
+        <q-card-section
           v-if="selectedNode && !selectedNode.isDir"
           style="max-height: 65vh; overflow-y: auto"
         >
-          <div v-if="preview.loading" class="q-pa-md">
+          <div
+            v-if="preview.loading"
+            class="q-pa-md"
+          >
             <q-spinner /> Loading preview...
           </div>
 
-          <div v-else-if="preview.error" class="text-negative q-pa-md">
+          <div
+            v-else-if="preview.error"
+            class="text-negative q-pa-md"
+          >
             {{ preview.error }}
           </div>
 
           <div v-else-if="preview.ext === 'json' || preview.ext === 'yaml'">
-            <CodeEditor 
+            <CodeEditor
               v-model="preview.text"
               language="yaml"
               :readOnly="true"
@@ -334,7 +323,7 @@
           <img
             v-else-if="preview.kind === 'image'"
             :src="preview.objectUrl"
-            style="max-width: 100%; height: auto;"
+            style="max-width: 100%; height: auto"
             :style="{ width: imageFullWidth ? '100%' : `auto` }"
           />
 
@@ -345,7 +334,10 @@
             style="width: 100%; height: 100%; border: 0"
           />
 
-          <div v-else class="text-caption text-grey">
+          <div
+            v-else
+            class="text-caption text-grey"
+          >
             No preview available for this file type. Use Download.
           </div>
         </q-card-section>
@@ -363,13 +355,13 @@ import KeyValueTable from "@/components/KeyValueTable.vue";
 import * as notify from "../notify";
 import { useLoginStore } from "@/stores/LoginStore.ts";
 import { useQuasar } from "quasar";
-import CodeEditor from '@/components/CodeEditor.vue'
+import CodeEditor from "@/components/CodeEditor.vue";
+import ResourcePicker from "@/components/ResourcePicker.vue";
+import ResourceBadge from "@/components/ResourceBadge.vue";
 
 const $q = useQuasar();
 
-const isMedium = inject("isMedium");
 const isLarge = inject("isLarge");
-const isMobile = inject("isMobile");
 
 const store = useLoginStore();
 
@@ -389,7 +381,7 @@ onMounted(async () => {
   if (artifact.value.isDir) {
     await getArtifactFiles();
   } else {
-    await getSingularFile()
+    await getSingularFile();
   }
   await getPluginSnapshot();
   await getPlugins("", (fn) => fn());
@@ -422,23 +414,17 @@ async function getPluginSnapshot() {
     const res = await api.getSnapshot(
       "plugins",
       artifact.value.task.pluginResourceId,
-      artifact.value.task.pluginResourceSnapshotId
+      artifact.value.task.pluginResourceSnapshotId,
     );
     console.log("plugin snap = ", res.data);
     artifact.value.plugin = res.data;
-    ORIGINAL_PLUGIN_SNAPSHOT = JSON.parse(
-      JSON.stringify(artifact.value.plugin)
-    );
+    ORIGINAL_PLUGIN_SNAPSHOT = JSON.parse(JSON.stringify(artifact.value.plugin));
     // load task dropdown
-    const pluginFile = artifact.value.plugin.files.find(
-      (file) => file.id === artifact.value.task.pluginFileResourceId
-    );
+    const pluginFile = artifact.value.plugin.files.find((file) => file.id === artifact.value.task.pluginFileResourceId);
     pluginFile.tasks.artifacts.forEach((task) => {
       artifactTaskOptions.value.push(task);
     });
-    selectedArtifactTask.value = artifactTaskOptions.value.find(
-      (task) => task.id === artifact.value.task.id
-    );
+    selectedArtifactTask.value = artifactTaskOptions.value.find((task) => task.id === artifact.value.task.id);
   } catch (err) {
     console.warn(err);
   }
@@ -452,14 +438,12 @@ const plugins = ref([]);
 async function getPlugins(val = "", update) {
   update(async () => {
     try {
-      let res = await api.getData("plugins", {
+      const res = await api.getData("plugins", {
         search: val,
         rowsPerPage: 0, // get all
         index: 0,
       });
-      const originalPluginIndex = res.data.data.findIndex(
-        (plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id
-      );
+      const originalPluginIndex = res.data.data.findIndex((plugin) => plugin.id === ORIGINAL_PLUGIN_SNAPSHOT.id);
       // replace latest plugin snapshot with original plugin snapshot from artifact
       res.data.data[originalPluginIndex] = ORIGINAL_PLUGIN_SNAPSHOT;
       plugins.value = res.data.data;
@@ -486,7 +470,7 @@ watch(
         });
       });
     }
-  }
+  },
 );
 
 function countTasks(plugin) {
@@ -503,40 +487,33 @@ async function syncPlugin(pluginID) {
     const latestPlugin = res.data;
     console.log("latest plugin = ", latestPlugin);
     // check if latest plugin still has artifact pluginFileResourceId
-    const pluginHasFile = latestPlugin?.files?.find(
-      (file) => file.id === artifact.value.task.pluginFileResourceId
-    );
+    const pluginHasFile = latestPlugin?.files?.find((file) => file.id === artifact.value.task.pluginFileResourceId);
     if (!pluginHasFile) {
       notify.error(
-        `Latest plugin does not contain a file with id: ${artifact.value.task.pluginFileResourceId}.  Plugin cannot be synced.`
+        `Latest plugin does not contain a file with id: ${artifact.value.task.pluginFileResourceId}.  Plugin cannot be synced.`,
       );
       return;
     }
     artifact.value.plugin = latestPlugin;
-    notify.success(
-      `Updated to latest snapshot of plugin: ${artifact.value.plugin.name}`
-    );
+    notify.success(`Updated to latest snapshot of plugin: ${artifact.value.plugin.name}`);
 
     // reload task dropdown with tasks from latest file
-    const resFile = await api.getFile(
-      pluginID,
-      artifact.value.task.pluginFileResourceId
-    );
+    const resFile = await api.getFile(pluginID, artifact.value.task.pluginFileResourceId);
     artifactTaskOptions.value = [];
     selectedArtifactTask.value = "";
-    let originalTaskFound = false;
+    // let originalTaskFound = false;
     resFile.data.tasks.artifacts.forEach((task) => {
       artifactTaskOptions.value.push(task);
       if (task.id === artifact.value.task.id) {
         selectedArtifactTask.value = task;
-        originalTaskFound = true;
+        // originalTaskFound = true;
       }
     });
-    if (!originalTaskFound) {
-      notify.info(
-        `Task "${artifact.value.task.name}" not found in latest file, please select a new artifact task.`
-      );
-    }
+    // if (!originalTaskFound) {
+    //   notify.info(
+    //     `Task "${artifact.value.task.name}" not found in latest file, please select a new artifact task.`
+    //   );
+    // }
   } catch (err) {
     console.warn(err);
   }
@@ -590,12 +567,13 @@ function formatDate(dateString) {
 
 async function submit() {
   try {
-    const res = await api.updateItem("artifacts", route.params.id, {
+    await api.updateItem("artifacts", route.params.id, {
       description: artifact.value.description,
       pluginSnapshotId: artifact.value.plugin.snapshot,
       taskId: selectedArtifactTask.value.id,
     });
     notify.success(`Successfully updated artifact '${route.params.id}'`);
+    router.push(`/artifacts`);
   } catch (err) {
     notify.error(err.response.data.message);
   }
@@ -614,7 +592,7 @@ watch(
       await getPlugins("", (fn) => fn());
     }
     isLoading.value = false;
-  }
+  },
 );
 
 function prettyBytes(num) {
@@ -637,8 +615,8 @@ async function getSingularFile() {
     isDir: false,
     fileUrl: artifact.value.fileUrl,
     relativePath: artifact.value.artifactUri,
-    label: artifact.value.artifactUri.split('/').pop()
-  }
+    label: artifact.value.artifactUri.split("/").pop(),
+  };
 }
 
 async function getArtifactFiles() {
@@ -658,16 +636,6 @@ const expandedKeys = ref([]);
 const selectedNode = ref();
 const filter = ref("");
 
-const relativePaths = computed(() => {
-  const walk = (items) => {
-    return items.flatMap((item) => [
-      item.relativePath,
-      ...(Array.isArray(item.children) ? walk(item.children) : []),
-    ]);
-  };
-  return walk(nodes.value);
-});
-
 function getExpandKeysForFilter(nodes, filter) {
   const f = (filter || "").toLowerCase().trim();
   if (!f) return ["/"];
@@ -676,7 +644,6 @@ function getExpandKeysForFilter(nodes, filter) {
 
   const matches = (node) => {
     const label = (node.label || "").toLowerCase();
-    const path = (node.relativePath || "").toLowerCase();
     return label.includes(f);
   };
 
@@ -746,9 +713,7 @@ function processFiles() {
       currentPath = currentPath ? `${currentPath}/${part}` : part;
 
       // Look for an existing node with this relativePath at the current level
-      let existing = currentChildren.find(
-        (node) => node.relativePath === currentPath
-      );
+      let existing = currentChildren.find((node) => node.relativePath === currentPath);
 
       if (!existing) {
         if (isLast) {
@@ -842,9 +807,9 @@ watch(selectedNode, async (node) => {
 const MAX_PREVIEW_BYTES = 10 * 1024 * 1024; // 10 MB
 
 async function getRemoteSize(url) {
-  if(artifact.value.fileSize) {
+  if (artifact.value.fileSize) {
     // if single file artifact, use already provided fileSize
-    return artifact.value.fileSize
+    return artifact.value.fileSize;
   }
   const head = await fetch(url, { method: "HEAD", credentials: "include" });
   if (!head.ok) return null;
@@ -861,22 +826,20 @@ async function loadPreview(node) {
     const size = await getRemoteSize(node.fileUrl);
 
     // If server provides size and it's too big, skip preview
-    if(size != null && size > MAX_PREVIEW_BYTES) {
+    if (size != null && size > MAX_PREVIEW_BYTES) {
       preview.value.kind = "none";
       preview.value.error = `File is ${(size / (1024 * 1024)).toFixed(1)} MB. Preview limit is 10 MB. Please download instead.`;
-      preview.value.loading = false
+      preview.value.loading = false;
       return;
     }
-  } catch(err) {
-    console.warn(err)
+  } catch (err) {
+    console.warn(err);
   }
 
   try {
     const ext = getExt(node.relativePath || node.label || "");
-    preview.value.ext = ext
-    const isText = ["json", "txt", "log", "yaml", "yml", "csv", "md"].includes(
-      ext
-    );
+    preview.value.ext = ext;
+    const isText = ["json", "txt", "log", "yaml", "yml", "csv", "md"].includes(ext);
 
     const isImage = ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext);
 
@@ -885,19 +848,14 @@ async function loadPreview(node) {
     // If you need auth headers, replace fetch() with an api call (axios) and responseType accordingly.
     if (isText) {
       const res = await fetch(node.fileUrl, { credentials: "include" });
-      if (!res.ok)
-        throw new Error(`Preview failed: ${res.status} ${res.statusText}`);
+      if (!res.ok) throw new Error(`Preview failed: ${res.status} ${res.statusText}`);
 
       preview.value.text = await res.text();
 
       // Pretty JSON if possible
       if (ext === "json") {
         try {
-          preview.value.text = JSON.stringify(
-            JSON.parse(preview.value.text),
-            null,
-            2
-          );
+          preview.value.text = JSON.stringify(JSON.parse(preview.value.text), null, 2);
         } catch {
           // keep as-is
         }
@@ -909,8 +867,7 @@ async function loadPreview(node) {
 
     if (isImage || isPdf) {
       const res = await fetch(node.fileUrl, { credentials: "include" });
-      if (!res.ok)
-        throw new Error(`Preview failed: ${res.status} ${res.statusText}`);
+      if (!res.ok) throw new Error(`Preview failed: ${res.status} ${res.statusText}`);
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -952,6 +909,5 @@ async function downloadFile(url, filename, type = null) {
   }
 }
 
-const imageFullWidth = ref(false)
-
+const imageFullWidth = ref(false);
 </script>

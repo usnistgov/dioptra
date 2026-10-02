@@ -16,54 +16,157 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform entrypoint endpoint operations."""
 
-from typing import Any, Final, Iterable
+from __future__ import annotations
+
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Any, Callable, Iterable, Iterator, cast
 
 import structlog
+import yaml
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, func, select
+from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
-from dioptra.restapi.db.models.constants import resource_lock_types
+from dioptra.restapi.db import models
+from dioptra.restapi.db.models.plugins import PluginTaskOutputParameter
+from dioptra.restapi.db.models.users import User
+from dioptra.restapi.db.repository.utils import (
+    assert_resource_exists,
+    assert_user_in_group,
+)
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
+from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
+    EmptyGraphError,
     EntityDoesNotExistError,
-    EntityExistsError,
-    QueryParameterNotUniqueError,
-    SortParameterValidationError,
+    EntityRelationshipDoesNotExistError,
+    EntrypointSwapsRenderError,
+    EntrypointValidationError,
+    InvalidYamlError,
+    TasksNotFoundError,
 )
-from dioptra.restapi.utils import find_non_unique
 from dioptra.restapi.v1 import utils
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.plugins.service import (
-    PluginIdsService,
-    get_plugin_task_parameter_types_by_id,
-)
-from dioptra.restapi.v1.queues.service import RESOURCE_TYPE as QUEUE_RESOURCE_TYPE
-from dioptra.restapi.v1.queues.service import QueueIdsService
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
-from dioptra.restapi.v1.shared.task_engine_yaml.service import (
+from dioptra.restapi.v1.entity_types import EntityType
+from dioptra.restapi.v1.entrypoints.task_engine_yaml import (
+    build_task_engine_dict,
     coerce_entrypoint_default_param_types,
 )
+from dioptra.restapi.v1.plugins.service import PluginIdsService
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
+from dioptra.restapi.v1.shared.views import (
+    get_plugin_plugin_files_from_plugin_snapshot_ids,
+)
+from dioptra.sdk.api.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
+from dioptra.sdk.utilities.entrypoint_swaps import (
+    check_duplicate_swap_names,
+    check_multiple_swaps_per_step,
+    check_swaps_graph_dependencies,
+    compile_swaps_config,
+    extract_swaps,
+    get_swap_choices,
+    render_swaps_config,
+    render_swaps_graph,
+)
+from dioptra.task_engine import util
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.validation import schema_validate
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-PLUGIN_RESOURCE_TYPE: Final[str] = "entry_point_plugin"
 
-RESOURCE_TYPE: Final[str] = "entry_point"
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": lambda x: models.EntryPoint.name.like(x, escape="/"),
-    "description": lambda x: models.EntryPoint.description.like(x, escape="/"),
-    "task_graph": lambda x: models.EntryPoint.task_graph.like(x, escape="/"),
-    "artifact_graph": lambda x: models.EntryPoint.artifact_graph.like(x, escape="/"),
-    "tag": lambda x: models.EntryPoint.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "name": models.EntryPoint.name,
-    "createdOn": models.EntryPoint.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.EntryPoint.description,
-}
+
+@dataclass
+class EntryPointParameterDataAdapter:
+    parameter_type: str
+    name: str
+    default_value: str | None
+
+
+@dataclass
+class TaskOutputParameterDataAdapter:
+    parameter_number: int
+    name: str
+    parameter_type: models.PluginTaskParameterType
+
+
+@dataclass
+class EntryPointArtifactDataAdapter:
+    name: str
+    output_parameters: list[TaskOutputParameterDataAdapter]
+
+
+@dataclass
+class EntryPointDataAdapter:
+    task_graph: str
+    artifact_graph: str
+    parameters: list[EntryPointParameterDataAdapter]
+    artifact_parameters: list[EntryPointArtifactDataAdapter]
+
+
+def _build_entrypoint_data_adapter(
+    task_graph: str,
+    artifact_graph: str,
+    entrypoint_parameters: list[dict[str, Any]],
+    entrypoint_artifacts: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
+) -> EntryPointDataAdapter:
+    return EntryPointDataAdapter(
+        task_graph=task_graph,
+        artifact_graph=artifact_graph,
+        parameters=[
+            EntryPointParameterDataAdapter(
+                parameter_type=param["parameter_type"],
+                name=param["name"],
+                default_value=param["default_value"],
+            )
+            for param in entrypoint_parameters
+        ],
+        artifact_parameters=[
+            EntryPointArtifactDataAdapter(
+                name=artifact["name"],
+                output_parameters=[
+                    TaskOutputParameterDataAdapter(
+                        name=param["name"],
+                        parameter_number=parameter_number,
+                        parameter_type=id_type_map[param["parameter_type_id"]],
+                    )
+                    for parameter_number, param in enumerate(artifact["output_params"])
+                ],
+            )
+            for artifact in entrypoint_artifacts
+        ],
+    )
+
+
+def _lint_report(
+    operation: Callable[..., utils.EntrypointDict], uow: UnitOfWork, **kwargs: Any
+) -> dict[str, Any]:
+    """Run lightweight validation and roll back on success or failure."""
+    kwargs.setdefault("artifact_graph", "")
+    if "entrypoint_id" not in kwargs:
+        kwargs.setdefault("artifact_plugin_ids", [])
+    try:
+        operation(commit=False, on_save=False, **kwargs)
+        uow.session.flush()
+    except EntrypointValidationError as error:
+        issues = [
+            {
+                "path": "entrypoint" if category == "schema_issues" else "graph",
+                "message": str(message),
+            }
+            for category, messages in error._validation_error_dict.items()
+            for message in messages
+        ]
+        return {"valid": False, "issues": issues}
+    except (InvalidYamlError, EmptyGraphError) as error:
+        return {"valid": False, "issues": [{"path": "graph", "message": str(error)}]}
+    finally:
+        uow.rollback()
+    return {"valid": True, "issues": []}
 
 
 class EntrypointService(object):
@@ -72,25 +175,36 @@ class EntrypointService(object):
     @inject
     def __init__(
         self,
-        entrypoint_name_service: "EntrypointNameService",
         plugin_ids_service: PluginIdsService,
-        queue_ids_service: QueueIdsService,
-        group_id_service: GroupIdService,
+        swaps_validation_service: SwapsValidationService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_name_service: A EntrypointNameService object.
             plugin_ids_service: A PluginIdsService object.
-            queue_ids_service: A QueueIdsService object.
-            group_id_service: A GroupIdService object.
+            swaps_validation_service: A SwapsValidationService object.
+            uow: A UnitOfWork instance
         """
-        self._entrypoint_name_service = entrypoint_name_service
         self._plugin_ids_service = plugin_ids_service
-        self._queue_ids_service = queue_ids_service
-        self._group_id_service = group_id_service
+        self._swaps_validation_service = swaps_validation_service
+        self._uow = uow
+
+    @contextmanager
+    def validate_create(self, **kwargs: Any) -> Iterator[utils.EntrypointDict]:
+        """Yield the validated entrypoint for serialization, then always roll back."""
+        try:
+            entrypoint = self.create(commit=False, on_save=True, **kwargs)
+            self._uow.session.flush()
+            yield entrypoint
+        finally:
+            self._uow.rollback()
+
+    def lint(self, **kwargs: Any) -> dict[str, Any]:
+        """Return lightweight findings without committing the proposed entrypoint."""
+        return _lint_report(self.create, self._uow, **kwargs)
 
     def create(
         self,
@@ -105,6 +219,7 @@ class EntrypointService(object):
         queue_ids: list[int],
         group_id: int,
         commit: bool = True,
+        on_save: bool = True,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Create a new entrypoint.
@@ -127,6 +242,8 @@ class EntrypointService(object):
             queue_ids: A list of queue ids to associate with the new entrypoint.
             group_id: The id of the group that will own the entrypoint.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The newly created entrypoint object.
@@ -136,25 +253,22 @@ class EntrypointService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        # TODO: need to add a check here that graphs are valid yaml
-
-        duplicate = self._entrypoint_name_service.get(name, group_id=group_id, log=log)
-        if duplicate is not None:
-            raise EntityExistsError(
-                RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+        owner = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+        assert_user_in_group(self._uow.session, current_user, owner)
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
             )
-
-        plugin_ids = list(set(plugin_ids))
-        artifact_plugin_ids = list(set(artifact_plugin_ids))
-        group = self._group_id_service.get(group_id, error_if_not_found=True)
-        queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
-        plugins = self._plugin_ids_service.get(plugin_ids, error_if_not_found=True)
-        artifact_plugins = self._plugin_ids_service.get(
-            artifact_plugin_ids, error_if_not_found=True
+            if type_ids
+            else []
         )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
-        resource = models.Resource(resource_type=RESOURCE_TYPE, owner=group)
-
+        resource = models.Resource(EntityType.ENTRY_POINT.db_table_name, owner)
         new_entrypoint = models.EntryPoint(
             name=name,
             description=description,
@@ -162,50 +276,64 @@ class EntrypointService(object):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
+
+        plugins = [
+            plugin["plugin"]
+            for plugin in self._plugin_ids_service.get(
+                list(set(plugin_ids)), error_if_not_found=True
+            )
+        ]
+        artifact_plugins = [
+            artifact_plugin["plugin"]
+            for artifact_plugin in self._plugin_ids_service.get(
+                list(set(artifact_plugin_ids)), error_if_not_found=True
+            )
+        ]
 
         new_entrypoint.entry_point_plugins = [
-            models.EntryPointPlugin(
-                entry_point=new_entrypoint,
-                plugin=plugin["plugin"],
-            )
-            for plugin in plugins
+            models.EntryPointPlugin(new_entrypoint, plugin=plugin) for plugin in plugins
         ]
 
         new_entrypoint.entry_point_artifact_plugins = [
-            models.EntryPointArtifactPlugin(
-                entry_point=new_entrypoint,
-                plugin=artifact_plugin["plugin"],
-            )
+            models.EntryPointArtifactPlugin(new_entrypoint, plugin=artifact_plugin)
             for artifact_plugin in artifact_plugins
         ]
 
-        plugin_resources = [plugin["plugin"].resource for plugin in plugins]
-        artifact_plugin_resources = [
-            artifact_plugin["plugin"].resource for artifact_plugin in artifact_plugins
-        ]
-        queue_resources = [queue.resource for queue in queues]
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            on_save=on_save,
+            log=log,
         )
 
-        new_entrypoint.children.extend(all_plugin_resources + queue_resources)
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Entrypoint registration successful",
-                entrypoint_id=new_entrypoint.resource_id,
-                name=new_entrypoint.name,
+        with self._uow(commit):
+            self._uow.entrypoint_repo.create(new_entrypoint)
+            queues = self._uow.entrypoint_repo.create_queues(
+                new_entrypoint, queues=queue_ids
+            )
+            self._uow.entrypoint_repo.create_plugins(
+                new_entrypoint,
+                plugins=_deduplicate_plugin_resources(plugins, artifact_plugins),
             )
 
+        log.debug(
+            "Entrypoint registration successful",
+            entrypoint_id=new_entrypoint.resource_id,
+            name=new_entrypoint.name,
+        )
+
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, has_draft=False
+            entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
 
     def get(
@@ -216,6 +344,7 @@ class EntrypointService(object):
         page_length: int,
         sort_by_string: str,
         descending: bool,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[utils.EntrypointDict], int]:
         """Fetch a list of entrypoints, optionally filtering by search string and paging
@@ -241,123 +370,92 @@ class EntrypointService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of entrypoints")
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.EntryPoint.resource_id))
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
-            )
-        )
-        total_num_entrypoints = db.session.scalars(stmt).first()
-
-        if total_num_entrypoints is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_entrypoints == 0:
-            return [], total_num_entrypoints
-
-        entrypoints_stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
+        deletion_policy = (
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
         )
 
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            entrypoints_stmt = entrypoints_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(RESOURCE_TYPE, sort_by_string)
-
-        entrypoints = list(db.session.scalars(entrypoints_stmt).unique().all())
-
-        queue_ids = {
-            resource.resource_id
-            for entrypoint in entrypoints
-            for resource in entrypoint.children
-            if resource.resource_type == "queue" and not resource.is_deleted
-        }
-        queues = {
-            queue.resource_id: queue
-            for queue in self._queue_ids_service.get(
-                list(queue_ids), error_if_not_found=True
+        entrypoints, total_num_entrypoints = (
+            self._uow.entrypoint_repo.get_by_filters_paged(
+                group_id,
+                search_struct,
+                page_index,
+                page_length,
+                sort_by_string,
+                descending,
+                deletion_policy,
             )
-        }
+        )
 
+        # TODO: do we want to issue a query for every entrypoint to get child snapshots?
+        #       this is how it was done in experiments
+        # James: get_many_queues that takes list of entrypoints and returns list of lists
+        #        then use zip iterator to build entrypoint_dicts
+        #        do this for experiments as well.
         entrypoint_dicts = {
             entrypoint.resource_id: utils.EntrypointDict(
-                entry_point=entrypoint, queues=[], has_draft=False
+                entry_point=entrypoint,
+                queues=list(
+                    self._uow.entrypoint_repo.get_queues(
+                        entrypoint.resource_id, DeletionPolicy.NOT_DELETED
+                    )
+                ),
+                has_draft=False,
             )
             for entrypoint in entrypoints
         }
-        for entrypoint in entrypoint_dicts.values():
-            for resource in entrypoint["entry_point"].children:
-                if resource.resource_type == "queue" and not resource.is_deleted:
-                    entrypoint["queues"].append(queues[resource.resource_id])
 
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(entrypoint_dicts.keys())),
-            models.DraftResource.user_id == current_user.user_id,
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            entrypoints,
+            cast(User, current_user),
         )
-        for resource_id in db.session.scalars(drafts_stmt):
+        for resource_id in resource_ids_with_drafts:
             entrypoint_dicts[resource_id]["has_draft"] = True
 
         return list(entrypoint_dicts.values()), total_num_entrypoints
 
 
-class EntrypointIdService(object):
+class EntrypointIdService(UnitOfWorkService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
     @inject
     def __init__(
         self,
-        entrypoint_name_service: "EntrypointNameService",
-        queue_ids_service: QueueIdsService,
+        plugin_ids_service: PluginIdsService,
+        swaps_validation_service: SwapsValidationService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_name_service: A EntrypointNameService object.
-            queue_ids_service: A QueueIdsService object.
         """
-        self._entrypoint_name_service = entrypoint_name_service
-        self._queue_ids_service = queue_ids_service
+        self._plugin_ids_service = plugin_ids_service
+        self._swaps_validation_service = swaps_validation_service
+        self._uow = uow
+
+    @contextmanager
+    def validate_modify(
+        self, entrypoint_id: int, **kwargs: Any
+    ) -> Iterator[utils.EntrypointDict]:
+        """Yield the validated update for serialization, then always roll back."""
+        try:
+            entrypoint = self.modify(
+                entrypoint_id, commit=False, on_save=True, **kwargs
+            )
+            self._uow.session.flush()
+            yield entrypoint
+        finally:
+            self._uow.rollback()
+
+    def lint(self, entrypoint_id: int, **kwargs: Any) -> dict[str, Any]:
+        """Lint an update against saved plugin associations, then roll it back."""
+        return _lint_report(
+            self.modify, self._uow, entrypoint_id=entrypoint_id, **kwargs
+        )
 
     def get(
         self,
@@ -378,51 +476,28 @@ class EntrypointIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
+
         # Get a specific snapshot if entrypoint_snapshot_id is specified
-        snapshot_id = (
-            entrypoint_snapshot_id
-            if entrypoint_snapshot_id is not None
-            else models.Resource.latest_snapshot_id
-        )
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.resource_id == entrypoint_id,
-                models.EntryPoint.resource_snapshot_id == snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
+        if entrypoint_snapshot_id is None:
+            entrypoint = self._uow.entrypoint_repo.get_one(
+                entrypoint_id, DeletionPolicy.ANY
             )
-        )
-        entrypoint = db.session.scalars(stmt).first()
-
-        if entrypoint is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
-                entrypoint_id=entrypoint_id,
-                entrypoint_snapshot_id=entrypoint_snapshot_id,
+        else:
+            entrypoint = self._uow.entrypoint_repo.get_one_snapshot(
+                entrypoint_id, entrypoint_snapshot_id, DeletionPolicy.ANY
             )
 
-        queue_ids = {
-            resource.resource_id
-            for resource in entrypoint.children
-            if resource.resource_type == "queue" and not resource.is_deleted
-        }
-        queues = self._queue_ids_service.get(list(queue_ids), error_if_not_found=True)
-
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == entrypoint.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        queues = self._uow.entrypoint_repo.get_queues(
+            entrypoint, DeletionPolicy.NOT_DELETED
         )
-        has_draft = db.session.scalar(drafts_stmt)
+
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            entrypoint,
+            cast(User, current_user),
+        )
 
         return utils.EntrypointDict(
-            entry_point=entrypoint, queues=queues, has_draft=has_draft
+            entry_point=entrypoint, queues=list(queues), has_draft=has_draft
         )
 
     def modify(
@@ -435,7 +510,13 @@ class EntrypointIdService(object):
         parameters: list[dict[str, Any]],
         artifact_parameters: list[dict[str, Any]],
         queue_ids: list[int],
+        plugin_ids: list[int] | None = None,
+        artifact_plugin_ids: list[int] | None = None,
         commit: bool = True,
+        on_save: bool = True,
+        *,
+        plugin_snapshot_ids: list[int] | None = None,
+        artifact_plugin_snapshot_ids: list[int] | None = None,
         **kwargs,
     ) -> utils.EntrypointDict:
         """Modify an entrypoint.
@@ -451,7 +532,18 @@ class EntrypointIdService(object):
                 or empty list, all artifact_parameters will be removed.
             queue_ids: A list of queue ids that will replace the current list of
                 entrypoint queues.
+            plugin_ids: Plugins to append or sync to their latest snapshots. If None,
+                the current plugin snapshots are retained.
+            artifact_plugin_ids: Artifact plugins to append or sync to their latest
+                snapshots. If None, the current artifact plugin snapshots are retained.
+            plugin_snapshot_ids: Complete task-plugin snapshot selection for PUT.
+                Each snapshot must be currently bound in this role or latest.
+            artifact_plugin_snapshot_ids: Complete artifact-plugin snapshot selection
+                for PUT. Both snapshot lists must be supplied together and cannot be
+                combined with resource-ID add-or-sync lists.
             commit: If True, commit the transaction. Defaults to True.
+            on_save: If True, perform full save-time validation independently of
+                committing the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -459,33 +551,54 @@ class EntrypointIdService(object):
         Raises:
             EntityDoesNotExistError: If the entrypoint is not found
             EntityExistsError: If the entrypoint name already exists.
-            QueryParameterNotUniqueError: If the values for the "name" parameter in the
-                parameters list is not unique
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-        duplicates = find_non_unique("name", parameters)
-        if len(duplicates) > 0:
-            raise QueryParameterNotUniqueError(RESOURCE_TYPE, name=duplicates)
-        artifact_parameter_duplicates = find_non_unique("name", artifact_parameters)
-        if len(artifact_parameter_duplicates) > 0:
-            raise QueryParameterNotUniqueError(
-                RESOURCE_TYPE, name=artifact_parameter_duplicates
-            )
 
-        entrypoint_dict = self.get(entrypoint_id, log=log)
-
-        entrypoint = entrypoint_dict["entry_point"]
-        group_id = entrypoint.resource.group_id
-        if name != entrypoint.name:
-            duplicate = self._entrypoint_name_service.get(
-                name, group_id=group_id, log=log
-            )
-            if duplicate is not None:
-                raise EntityExistsError(
-                    RESOURCE_TYPE, duplicate.resource_id, name=name, group_id=group_id
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
+        replacing_bindings = (
+            plugin_snapshot_ids is not None or artifact_plugin_snapshot_ids is not None
+        )
+        if replacing_bindings:
+            if (
+                plugin_snapshot_ids is None
+                or artifact_plugin_snapshot_ids is None
+                or plugin_ids is not None
+                or artifact_plugin_ids is not None
+            ):
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            "Supply both complete snapshot lists without resource-ID lists."
+                        ]
+                    },
                 )
+            selected_plugins = self._select_plugin_snapshots(
+                plugin_snapshot_ids,
+                [binding.plugin for binding in entrypoint.entry_point_plugins],
+                "task",
+            )
+            selected_artifact_plugins = self._select_plugin_snapshots(
+                artifact_plugin_snapshot_ids,
+                [binding.plugin for binding in entrypoint.entry_point_artifact_plugins],
+                "artifact",
+            )
 
-        queues = self._queue_ids_service.get(queue_ids, error_if_not_found=True)
+        type_ids = _get_artifact_parameter_type_ids(artifact_parameters)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
 
         new_entrypoint = models.EntryPoint(
             name=name,
@@ -494,71 +607,183 @@ class EntrypointIdService(object):
             artifact_graph=artifact_graph,
             parameters=_create_parameters(parameters),
             artifact_parameters=_create_artifact_parameters(
-                artifact_parameters=artifact_parameters, log=log
+                artifact_parameters=artifact_parameters,
+                id_type_map=id_type_map,
             ),
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
-        plugin_resources = _copy_plugins(
-            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
-        )
-        artifact_plugin_resources = _copy_artifact_plugins(
-            artifact_plugins=entrypoint.entry_point_artifact_plugins,
-            target_entrypoint=new_entrypoint,
-        )
-        queue_resources = [queue.resource for queue in queues]
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
-        )
-
-        new_entrypoint.children = all_plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Entrypoint modification successful",
-                entrypoint_id=entrypoint_id,
-                name=name,
-                description=description,
+        if replacing_bindings:
+            plugins = selected_plugins
+            new_entrypoint.entry_point_plugins = [
+                models.EntryPointPlugin(entry_point=new_entrypoint, plugin=plugin)
+                for plugin in plugins
+            ]
+        elif plugin_ids is None:
+            plugins = _copy_plugins(
+                plugins=entrypoint.entry_point_plugins,
+                target_entrypoint=new_entrypoint,
             )
+        else:
+            plugin_id_set = set(plugin_ids)
+            plugins = _copy_plugins(
+                plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_plugins
+                    if plugin.plugin.resource_id not in plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_plugins.append(new_plugin)
+                plugins.append(new_plugin.plugin)
+
+        if replacing_bindings:
+            artifact_plugins = selected_artifact_plugins
+            new_entrypoint.entry_point_artifact_plugins = [
+                models.EntryPointArtifactPlugin(
+                    entry_point=new_entrypoint, plugin=plugin
+                )
+                for plugin in artifact_plugins
+            ]
+        elif artifact_plugin_ids is None:
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=entrypoint.entry_point_artifact_plugins,
+                target_entrypoint=new_entrypoint,
+            )
+        else:
+            artifact_plugin_id_set = set(artifact_plugin_ids)
+            artifact_plugins = _copy_artifact_plugins(
+                artifact_plugins=(
+                    plugin
+                    for plugin in entrypoint.entry_point_artifact_plugins
+                    if plugin.plugin.resource_id not in artifact_plugin_id_set
+                ),
+                target_entrypoint=new_entrypoint,
+            )
+            for plugin in self._plugin_ids_service.get(
+                list(artifact_plugin_id_set), error_if_not_found=True
+            ):
+                new_plugin = models.EntryPointArtifactPlugin(
+                    entry_point=new_entrypoint, plugin=plugin["plugin"]
+                )
+                new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
+                artifact_plugins.append(new_plugin.plugin)
+
+        self._swaps_validation_service.raise_validation_errors(
+            group_id=entrypoint.resource.group_id,
+            task_graph=task_graph,
+            artifact_graph=artifact_graph,
+            parameters=parameters,
+            artifact_parameters=artifact_parameters,
+            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            on_save=on_save,
+            log=log,
+        )
+
+        with self._uow(commit):
+            queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
+            self._uow.entrypoint_repo.set_plugins(
+                new_entrypoint,
+                _deduplicate_plugin_resources(plugins, artifact_plugins),
+            )
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+
+        log.debug(
+            "Entrypoint modification successful",
+            entrypoint_id=entrypoint_id,
+            name=name,
+            description=description,
+        )
 
         return utils.EntrypointDict(
-            entry_point=new_entrypoint, queues=queues, has_draft=False
+            entry_point=new_entrypoint, queues=list(queues), has_draft=False
         )
 
-    def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
+    def _select_plugin_snapshots(
+        self,
+        snapshot_ids: list[int],
+        current_plugins: list[models.Plugin],
+        role: str,
+    ) -> list[models.Plugin]:
+        """Resolve exact bindings and enforce current-or-latest eligibility per role."""
+        current = {
+            plugin.resource_id: plugin.resource_snapshot_id
+            for plugin in current_plugins
+        }
+        selected: dict[int, models.Plugin] = {}
+        for snapshot_id in snapshot_ids:
+            selection = self._uow.session.execute(
+                select(models.Plugin, models.Resource.latest_snapshot_id)
+                .join(models.Resource)
+                .where(models.Plugin.resource_snapshot_id == snapshot_id)
+            ).first()
+            if selection is None:
+                raise EntityDoesNotExistError(
+                    EntityType.PLUGIN, plugin_snapshot_id=snapshot_id
+                )
+            plugin, latest_snapshot_id = selection
+            assert_resource_exists(
+                self._uow.session, plugin.resource, DeletionPolicy.NOT_DELETED
+            )
+            assert_user_in_group(self._uow.session, current_user, plugin.resource.owner)
+            if plugin.resource_id in selected:
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            f"Select only one snapshot per {role} plugin."
+                        ]
+                    },
+                )
+            if snapshot_id not in (
+                current.get(plugin.resource_id),
+                latest_snapshot_id,
+            ):
+                raise EntrypointValidationError(
+                    message="Validation failed for provided entrypoint",
+                    validation_error_dict={
+                        "schema_issues": [
+                            f"Plugin snapshot {snapshot_id} must be the currently bound "
+                            f"or latest snapshot for its {role} role."
+                        ]
+                    },
+                )
+            selected[plugin.resource_id] = plugin
+        return list(selected.values())
+
+    def delete(
+        self, entrypoint_id: int, commit: bool = True, **kwargs
+    ) -> dict[str, Any]:
         """Delete a entrypoint.
 
         Args:
             entrypoint_id: The unique id of the entrypoint.
+            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        stmt = select(models.Resource).filter_by(
-            resource_id=entrypoint_id, resource_type=RESOURCE_TYPE, is_deleted=False
-        )
-        entrypoint_resource = db.session.scalars(stmt).first()
+        with self._uow(commit):
+            self._uow.entrypoint_repo.delete(entrypoint_id)
 
-        if entrypoint_resource is None:
-            raise EntityDoesNotExistError(RESOURCE_TYPE, entrypoint_id=entrypoint_id)
-
-        deleted_resource_lock = models.ResourceLock(
-            resource_lock_type=resource_lock_types.DELETE,
-            resource=entrypoint_resource,
-        )
-        db.session.add(deleted_resource_lock)
-        db.session.commit()
-        log.debug("Entrypoint deleted", entrypoint_id=entrypoint_id)
+        log.debug("Experiment deleted", entrypoint_id=entrypoint_id)
 
         return {"status": "Success", "id": [entrypoint_id]}
 
 
-class EntrypointSnapshotIdService(object):
+class EntrypointSnapshotIdService(UnitOfWorkService):
+    """The service methods for creating and managing entrypoints by
+    their unique id."""
+
     def get(
         self, entrypoint_id: int, entrypoint_snapshot_id: int, **kwargs
     ) -> models.EntryPoint:
@@ -580,19 +805,12 @@ class EntrypointSnapshotIdService(object):
             resource_id=entrypoint_id,
             resource_snapshot_id=entrypoint_snapshot_id,
         )
-        entry_point_resource_snapshot_stmt = select(models.EntryPoint).where(
-            models.EntryPoint.resource_id == entrypoint_id,
-            models.EntryPoint.resource_snapshot_id == entrypoint_snapshot_id,
-        )
-        entry_point = db.session.scalar(entry_point_resource_snapshot_stmt)
 
-        if entry_point is None:
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE,
-                entrypoint_id=entrypoint_id,
-                entrypoint_snapshot_id=entrypoint_snapshot_id,
-            )
-        return entry_point
+        entrypoint = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id, entrypoint_snapshot_id, DeletionPolicy.NOT_DELETED
+        )
+
+        return entrypoint
 
     def get_plugin_files(
         self,
@@ -612,6 +830,8 @@ class EntrypointSnapshotIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
+        # change this to new repo method
+        # should not call other service methods from a service method
         entry_point = self.get(
             entrypoint_id=entrypoint_id,
             entrypoint_snapshot_id=entrypoint_snapshot_id,
@@ -666,18 +886,18 @@ class EntrypointSnapshotIdService(object):
             The plugin files for the Job's entrypoint.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
+        log.debug("get plugin param types", group_id=group_id)
 
-        plugin_parameter_types_stmt = (
-            select(models.PluginTaskParameterType)
-            .join(models.Resource)
-            .where(
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.group_id == group_id,
-                models.Resource.latest_snapshot_id
-                == models.PluginTaskParameterType.resource_snapshot_id,
-            )
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,  # unlimited page size
+            sort_by=None,
+            descending=True,  # unused because sort_by is None
         )
-        return list(db.session.scalars(plugin_parameter_types_stmt).all())
+
+        return list(types)
 
 
 class EntrypointIdPluginsService(object):
@@ -686,22 +906,22 @@ class EntrypointIdPluginsService(object):
     @inject
     def __init__(
         self,
-        entrypoint_id_service: EntrypointIdService,
         plugin_ids_service: PluginIdsService,
-        queue_ids_service: QueueIdsService,
+        swaps_validation_service: SwapsValidationService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_id_service: A EntrypointIdService object.
             plugin_ids_service: A PluginIdsService object.
-            queue_ids_service: A QueueIdsService object.
+            swaps_validation_service: Full validation for prospective entrypoint snapshots.
+            uow: A UnitOfWork instance
         """
-        self._entrypoint_id_service = entrypoint_id_service
         self._plugin_ids_service = plugin_ids_service
-        self._queue_ids_service = queue_ids_service
+        self._swaps_validation_service = swaps_validation_service
+        self._uow = uow
 
     def get(
         self,
@@ -722,15 +942,16 @@ class EntrypointIdPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
-        return _get_entrypoint_plugin_snapshots(entrypoint["entry_point"])
+        return _get_entrypoint_plugin_snapshots(entrypoint)
 
     def append(
         self,
         entrypoint_id: int,
         plugin_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[utils.PluginWithFilesDict]:
         """Append plugins to an entrypoint.
@@ -739,7 +960,6 @@ class EntrypointIdPluginsService(object):
             entrypoint_id: The unique id of the entrypoint.
             plugin_ids: The plugins to be appended. If a plugin is already attached
                 to the entrypoint, it is synced to the latest snapshot.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -750,11 +970,13 @@ class EntrypointIdPluginsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
         # make sure the ids are unique
+        # TODO: add schema post hook to dedupe
         plugin_id_set = set(plugin_ids)
         plugin_ids = list(plugin_id_set)
 
@@ -770,10 +992,9 @@ class EntrypointIdPluginsService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # copy over the existing plugins (except the ones which need to be updated)
-        plugin_resources = _copy_plugins(
+        plugins = _copy_plugins(
             plugins=filter(
                 lambda p: p.plugin.resource_id not in plugin_id_set,
                 entrypoint.entry_point_plugins,
@@ -787,56 +1008,37 @@ class EntrypointIdPluginsService(object):
                 entry_point=new_entrypoint, plugin=plugin["plugin"]
             )
             new_entrypoint.entry_point_plugins.append(new_plugin)
-            plugin_resources.append(new_plugin.plugin.resource)
+            plugins.append(new_plugin.plugin)
 
         # artifact plugins stay the same, task plugins are changing
-        artifact_plugin_resources = _copy_artifact_plugins(
+        _copy_artifact_plugins(
             artifact_plugins=entrypoint.entry_point_artifact_plugins,
             target_entrypoint=new_entrypoint,
         )
 
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
+        with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            self._uow.entrypoint_repo.add_plugins(new_entrypoint, plugin_ids)
 
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
+        log.debug(
+            "Plugins appended to Entrypoint successfully",
+            entrypoint_id=entrypoint_id,
+            plugin_ids=plugin_ids,
         )
-
-        new_entrypoint.children = all_plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugins appended to Entrypoint successfully",
-                entrypoint_id=entrypoint_id,
-                plugin_ids=plugin_ids,
-            )
 
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdPluginsIdService(object):
+class EntrypointIdPluginsIdService(UnitOfWorkService):
     """The service methods for creating and managing entrypoints by their unique id."""
 
     @inject
     def __init__(
-        self,
-        entrypoint_id_service: EntrypointIdService,
-        queue_ids_service: QueueIdsService,
+        self, swaps_validation_service: SwapsValidationService, uow: UnitOfWork
     ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_id_service: A EntrypointIdService object.
-            queue_ids_service: A QueueIdsService object.
-        """
-        self._entrypoint_id_service = entrypoint_id_service
-        self._queue_ids_service = queue_ids_service
+        super().__init__(uow)
+        self._swaps_validation_service = swaps_validation_service
 
     def get(
         self,
@@ -853,14 +1055,14 @@ class EntrypointIdPluginsIdService(object):
             The plugin snapshots for the entrypoint.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint or plugin is not found.
+            EntityRelationshipDoesNotExistError: If the entrypoint or plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
         plugin = [
             entry_point_plugin.plugin
@@ -869,8 +1071,10 @@ class EntrypointIdPluginsIdService(object):
         ]
 
         if not plugin:
-            raise EntityDoesNotExistError(
-                PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
+            raise EntityRelationshipDoesNotExistError(
+                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
+                entrypoint_id=entrypoint_id,
+                plugin_id=plugin_id,
             )
 
         return utils.PluginWithFilesDict(
@@ -881,7 +1085,6 @@ class EntrypointIdPluginsIdService(object):
         self,
         entrypoint_id: int,
         plugin_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Remove a plugin from an entrypoint.
@@ -889,26 +1092,31 @@ class EntrypointIdPluginsIdService(object):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             plugin_id: The plugin to be removed.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint or plugin is not found.
+            EntityRelationshipDoesNotExistError: If the entrypoint or plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
+        assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
+        # should this be a no-op? i.e. return success and don't make a new snapshot
+        # the other repo implementations changed resource deletion to be a no-op if not
+        # found instead of raising an error
         plugin_ids = {
             plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
         }
         if plugin_id not in plugin_ids:
-            raise EntityDoesNotExistError(
-                PLUGIN_RESOURCE_TYPE, entrypoint_id=entrypoint_id, plugin_id=plugin_id
+            raise EntityRelationshipDoesNotExistError(
+                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
+                entrypoint_id=entrypoint_id,
+                plugin_id=plugin_id,
             )
 
         # create a new snapshot with the plugin removed
@@ -924,14 +1132,14 @@ class EntrypointIdPluginsIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
-        artifact_plugin_resources = _copy_artifact_plugins(
+        artifact_plugins = _copy_artifact_plugins(
             artifact_plugins=entrypoint.entry_point_artifact_plugins,
             target_entrypoint=new_entrypoint,
         )
+
         # copy all plugins but the one targeted for deletion
-        plugin_resources = _copy_plugins(
+        _copy_plugins(
             plugins=filter(
                 lambda p: p.plugin.resource_id != plugin_id,
                 entrypoint.entry_point_plugins,
@@ -939,25 +1147,22 @@ class EntrypointIdPluginsIdService(object):
             target_entrypoint=new_entrypoint,
         )
 
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
+        with self._uow():
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
+            # if the removed plugin is also an artifact plugin do not remove the
+            # resource dependency relationship
+            artifact_plugin_ids = {
+                artifact_plugin.resource_id for artifact_plugin in artifact_plugins
+            }
+            if plugin_id not in artifact_plugin_ids:
+                self._uow.entrypoint_repo.unlink_plugin(new_entrypoint, plugin_id)
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
 
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
+        log.debug(
+            "Plugin removed from entrypoint",
+            entrypoint_id=entrypoint_id,
+            plugin_id=plugin_id,
         )
-
-        new_entrypoint.children = all_plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Plugin removed from entrypoint",
-                entrypoint_id=entrypoint_id,
-                plugin_id=plugin_id,
-            )
 
         return {"status": "Success", "id": [plugin_id]}
 
@@ -968,30 +1173,19 @@ class EntrypointIdArtifactPluginsService(object):
     """
 
     @inject
-    def __init__(
-        self,
-        entrypoint_id_service: EntrypointIdService,
-        plugin_ids_service: PluginIdsService,
-        queue_ids_service: QueueIdsService,
-    ) -> None:
+    def __init__(self, plugin_ids_service: PluginIdsService, uow: UnitOfWork) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            entrypoint_id_service: A EntrypointIdService object.
             plugin_ids_service: A PluginIdsService object.
-            queue_ids_service: A QueueIdsService object.
+            uow: A UnitOfWork instance
         """
-        self._entrypoint_id_service = entrypoint_id_service
         self._plugin_ids_service = plugin_ids_service
-        self._queue_ids_service = queue_ids_service
+        self._uow = uow
 
-    def get(
-        self,
-        entrypoint_id: int,
-        **kwargs,
-    ) -> list[utils.PluginWithFilesDict]:
+    def get(self, entrypoint_id: int, **kwargs) -> list[utils.PluginWithFilesDict]:
         """Fetch the artifact plugin snapshots for an entrypoint by its unique id.
 
         Args:
@@ -1006,15 +1200,16 @@ class EntrypointIdArtifactPluginsService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
-        return _get_entrypoint_artifact_plugin_snapshots(entrypoint["entry_point"])
+        return _get_entrypoint_artifact_plugin_snapshots(entrypoint)
 
     def append(
         self,
         entrypoint_id: int,
         artifact_plugin_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[utils.PluginWithFilesDict]:
         """Append artifact plugins to an entrypoint.
@@ -1024,7 +1219,6 @@ class EntrypointIdArtifactPluginsService(object):
             artifact_plugin_ids: The plugins to be appended. If an artifact
                 plugin is already attached to the entrypoint, it is synced to
                 the latest snapshot.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated entrypoint object.
@@ -1035,9 +1229,9 @@ class EntrypointIdArtifactPluginsService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
         artifact_plugin_id_set = set(artifact_plugin_ids)
         artifact_plugin_ids = list(artifact_plugin_id_set)
@@ -1054,15 +1248,14 @@ class EntrypointIdArtifactPluginsService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # plugins stay the same, artifact plugins are changing
-        plugin_resources = _copy_plugins(
+        _copy_plugins(
             plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
         )
 
         # copy over existing artifact plugins (except the ones which need to be updated)
-        artifact_plugin_resources = _copy_artifact_plugins(
+        artifact_plugins = _copy_artifact_plugins(
             artifact_plugins=filter(
                 lambda a: a.plugin.resource_id not in artifact_plugin_id_set,
                 entrypoint.entry_point_artifact_plugins,
@@ -1070,7 +1263,7 @@ class EntrypointIdArtifactPluginsService(object):
             target_entrypoint=new_entrypoint,
         )
 
-        # now add to the existing artfiact plugins (gets the latest version)
+        # now add to the existing artifact plugins (gets the latest version)
         for plugin in self._plugin_ids_service.get(
             artifact_plugin_ids, error_if_not_found=True
         ):
@@ -1078,51 +1271,24 @@ class EntrypointIdArtifactPluginsService(object):
                 entry_point=new_entrypoint, plugin=plugin["plugin"]
             )
             new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
-            artifact_plugin_resources.append(new_plugin.plugin.resource)
+            artifact_plugins.append(new_plugin.plugin)
 
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
+        with self._uow():
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            self._uow.entrypoint_repo.add_plugins(new_entrypoint, artifact_plugin_ids)
 
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
+        log.debug(
+            "Artifact Plugins appended to Entrypoint successfully",
+            entrypoint_id=entrypoint_id,
+            plugin_ids=artifact_plugin_ids,
         )
-
-        new_entrypoint.children = all_plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact Plugins appended to Entrypoint successfully",
-                entrypoint_id=entrypoint_id,
-                plugin_ids=artifact_plugin_ids,
-            )
 
         return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdArtifactPluginsIdService(object):
+class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
     """The service methods for creating and managing the artifact plugins for a specific
     entrypoint by their unique id."""
-
-    @inject
-    def __init__(
-        self,
-        entrypoint_id_service: EntrypointIdService,
-        queue_ids_service: QueueIdsService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_id_service: A EntrypointIdService object.
-            queue_ids_service: A QueueIdsService object.
-        """
-        self._entrypoint_id_service = entrypoint_id_service
-        self._queue_ids_service = queue_ids_service
 
     def get(
         self,
@@ -1140,14 +1306,14 @@ class EntrypointIdArtifactPluginsIdService(object):
             The artifact plugin snapshots for the entrypoint.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint or artifact plugin is not found.
+            EntityRelationshipDoesNotExistError: If the entrypoint or artifact plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
         artifact_plugin = [
             entry_point_artifact_plugin.plugin
@@ -1156,8 +1322,8 @@ class EntrypointIdArtifactPluginsIdService(object):
         ]
 
         if not artifact_plugin:
-            raise EntityDoesNotExistError(
-                PLUGIN_RESOURCE_TYPE,
+            raise EntityRelationshipDoesNotExistError(
+                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
                 entrypoint_id=entrypoint_id,
                 plugin_id=artifact_plugin_id,
             )
@@ -1172,7 +1338,6 @@ class EntrypointIdArtifactPluginsIdService(object):
         self,
         entrypoint_id: int,
         artifact_plugin_id: int,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Remove an artifact plugin from an entrypoint.
@@ -1180,27 +1345,26 @@ class EntrypointIdArtifactPluginsIdService(object):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             artifact_plugin_id: The artifact plugin to be removed.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary reporting the status of the request.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint or artifact plugin is not found.
+            EntityRelationshipDoesNotExistError: If the entrypoint or artifact plugin is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint = self._entrypoint_id_service.get(entrypoint_id, log=log)[
-            "entry_point"
-        ]
+        entrypoint = self._uow.entrypoint_repo.get_one(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
 
         artifact_plugin_ids = {
             artifact_plugin.plugin.resource_id
             for artifact_plugin in entrypoint.entry_point_artifact_plugins
         }
         if artifact_plugin_id not in artifact_plugin_ids:
-            raise EntityDoesNotExistError(
-                PLUGIN_RESOURCE_TYPE,
+            raise EntityRelationshipDoesNotExistError(
+                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
                 entrypoint_id=entrypoint_id,
                 artifact_plugin_id=artifact_plugin_id,
             )
@@ -1218,15 +1382,14 @@ class EntrypointIdArtifactPluginsIdService(object):
             resource=entrypoint.resource,
             creator=current_user,
         )
-        db.session.add(new_entrypoint)
 
         # plugins stay the same, artifact plugins are changing
-        plugin_resources = _copy_plugins(
+        plugins = _copy_plugins(
             plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
         )
 
         # copy over artifact plugins but the one targeted for deletion
-        artifact_plugin_resources = _copy_artifact_plugins(
+        _copy_artifact_plugins(
             artifact_plugins=filter(
                 lambda a: a.plugin.resource_id != artifact_plugin_id,
                 entrypoint.entry_point_artifact_plugins,
@@ -1234,130 +1397,54 @@ class EntrypointIdArtifactPluginsIdService(object):
             target_entrypoint=new_entrypoint,
         )
 
-        queue_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        ]
+        with self._uow():
+            self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            # if the removed artifact plugin is also a plugin do not remove the
+            # resource dependency relationship
+            if artifact_plugin_id not in plugins:
+                self._uow.entrypoint_repo.unlink_plugin(
+                    new_entrypoint, artifact_plugin_id
+                )
 
-        all_plugin_resources = _deduplicate_plugin_resources(
-            plugin_resources, artifact_plugin_resources
+        log.debug(
+            "Artifact Plugin removed from entrypoint",
+            entrypoint_id=entrypoint_id,
+            artifact_plugin_id=artifact_plugin_id,
         )
-
-        new_entrypoint.children = all_plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact Plugin removed from entrypoint",
-                entrypoint_id=entrypoint_id,
-                artifact_plugin_id=artifact_plugin_id,
-            )
 
         return {"status": "Success", "id": [artifact_plugin_id]}
 
 
-class EntrypointIdsService(object):
-    """The service methods for retrieving entrypoints from a list of ids."""
-
-    def get(
-        self,
-        entrypoint_ids: list[int],
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> list[models.EntryPoint]:
-        """Fetch a list of entrypoints by their unique ids.
-
-        Args:
-            entrypoint_ids: The unique ids of the entrypoints.
-            error_if_not_found: If True, raise an error if the entrypoint is not found.
-                Defaults to False.
-
-        Returns:
-            The entrypoint object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the entrypoint is not found and
-                `error_if_not_found` is True.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Get entrypoint by id", entrypoint_ids=entrypoint_ids)
-
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.resource_id.in_(tuple(entrypoint_ids)),
-                models.EntryPoint.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        entrypoints = list(db.session.scalars(stmt).all())
-
-        if len(entrypoints) != len(entrypoint_ids) and error_if_not_found:
-            entrypoint_ids_missing = set(entrypoint_ids) - {
-                entrypoint.resource_id for entrypoint in entrypoints
-            }
-            raise EntityDoesNotExistError(
-                RESOURCE_TYPE, entrypoint_ids=list(entrypoint_ids_missing)
-            )
-
-        return entrypoints
-
-
-class EntrypointIdQueuesService(object):
+class EntrypointIdQueuesService(UnitOfWorkService):
     """The service methods for managing queues attached to an entrypoint."""
 
-    @inject
-    def __init__(
-        self,
-        entrypoint_id_service: EntrypointIdService,
-        queue_ids_service: QueueIdsService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_id_service: A EntrypointIdService object.
-            queue_ids_service: A QueueIdsService object.
-        """
-        self._entrypoint_id_service = entrypoint_id_service
-        self._queue_ids_service = queue_ids_service
-
-    def get(
-        self,
-        entrypoint_id: int,
-        **kwargs,
-    ) -> list[models.Queue]:
+    def get(self, entrypoint_id: int, **kwargs) -> list[models.Queue]:
         """Fetch the list of queues for an entrypoint.
 
         Args:
             entrypoint_id: The unique id of the entrypoint.
-            error_if_not_found: If True, raise an error if the entrypoint is not found.
-                Defaults to False.
 
         Returns:
             The list of plugins.
 
         Raises:
-            EntityDoesNotExistError: If the entrypoint is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the entrypoint is not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug(
             "Get queues for an entrypoint by resource id", resource_id=entrypoint_id
         )
 
-        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
-        return entrypoint_dict["queues"]
+        queues = self._uow.entrypoint_repo.get_queues(
+            entrypoint_id, DeletionPolicy.NOT_DELETED
+        )
+
+        return list(queues)
 
     def append(
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[models.Queue] | None:
         """Append one or more Queues to an entrypoint
@@ -1365,7 +1452,6 @@ class EntrypointIdQueuesService(object):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             queue_ids: The list of queue ids to append.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated list of queues resource objects.
@@ -1379,33 +1465,17 @@ class EntrypointIdQueuesService(object):
             "Append queues to an entrypoint by resource id", resource_id=entrypoint_id
         )
 
-        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
-        entrypoint = entrypoint_dict["entry_point"]
-        queues = entrypoint_dict["queues"]
+        with self._uow():
+            queues = self._uow.entrypoint_repo.add_queues(entrypoint_id, queue_ids)
 
-        existing_queue_ids = {
-            resource.resource_id
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        }
-        new_queue_ids = set(queue_ids) - existing_queue_ids
-        new_queues = self._queue_ids_service.get(
-            list(new_queue_ids), error_if_not_found=True, log=log
-        )
+        log.debug("Queues appended successfully", queue_ids=queue_ids)
 
-        entrypoint.children.extend([queue.resource for queue in new_queues])
-
-        if commit:
-            db.session.commit()
-            log.debug("Queues appended successfully", queue_ids=queue_ids)
-
-        return queues + new_queues
+        return list(queues)
 
     def modify(
         self,
         entrypoint_id: int,
         queue_ids: list[int],
-        commit: bool = True,
         **kwargs,
     ) -> list[models.Queue]:
         """Modify the list of queues for an entrypoint.
@@ -1413,40 +1483,22 @@ class EntrypointIdQueuesService(object):
         Args:
             entrypoint_id: The unique id of the entrypoint.
             queue_ids: The list of queue ids to append.
-            error_if_not_found: If True, raise an error if the resource is not found.
-                Defaults to False.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated queue resource object.
 
         Raises:
-            EntityDoesNotExistError: If the resource is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the resource is not found.
             EntityDoesNotExistError: If one or more queues are not found.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
-        entrypoint = entrypoint_dict["entry_point"]
+        with self._uow():
+            queues = self._uow.entrypoint_repo.set_queues(entrypoint_id, queue_ids)
 
-        queues = self._queue_ids_service.get(
-            queue_ids, error_if_not_found=True, log=log
-        )
+        log.debug("Entrypoint queues updated successfully", queue_ids=queue_ids)
 
-        plugin_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "plugin"
-        ]
-        queue_resources = [queue.resource for queue in queues]
-        entrypoint.children = plugin_resources + queue_resources
-
-        if commit:
-            db.session.commit()
-            log.debug("Entrypoint queues updated successfully", queue_ids=queue_ids)
-
-        return queues
+        return list(queues)
 
     def delete(self, entrypoint_id: int, **kwargs) -> dict[str, Any]:
         """Remove queues from an entrypoint.
@@ -1459,17 +1511,9 @@ class EntrypointIdQueuesService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
-        entrypoint = entrypoint_dict["entry_point"]
-        entrypoint.children = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "plugin"
-        ]
+        with self._uow():
+            queue_ids = self._uow.entrypoint_repo.unlink_queues(entrypoint_id)
 
-        queue_ids = [queue.resource_id for queue in entrypoint_dict["queues"]]
-
-        db.session.commit()
         log.debug(
             "Queues removed from entrypoint",
             entrypoint_id=entrypoint_id,
@@ -1479,22 +1523,8 @@ class EntrypointIdQueuesService(object):
         return {"status": "Success", "id": queue_ids}
 
 
-class EntrypointIdQueuesIdService(object):
+class EntrypointIdQueuesIdService(UnitOfWorkService):
     """The service methods for removing a queue attached to an entrypoint."""
-
-    @inject
-    def __init__(
-        self,
-        entrypoint_id_service: EntrypointIdService,
-    ) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            entrypoint_id_service: A EntrypointIdService object.
-        """
-        self._entrypoint_id_service = entrypoint_id_service
 
     def delete(self, entrypoint_id: int, queue_id, **kwargs) -> dict[str, Any]:
         """Remove a queue from an entrypoint.
@@ -1508,83 +1538,916 @@ class EntrypointIdQueuesIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        entrypoint_dict = self._entrypoint_id_service.get(entrypoint_id, log=log)
-        entrypoint = entrypoint_dict["entry_point"]
+        with self._uow():
+            self._uow.entrypoint_repo.unlink_queue(entrypoint_id, queue_id)
 
-        queue_resources = {
-            resource.resource_id: resource
-            for resource in entrypoint.children
-            if resource.resource_type == "queue"
-        }
-
-        removed_queue = queue_resources.pop(queue_id, None)
-
-        if removed_queue is None:
-            raise EntityDoesNotExistError(QUEUE_RESOURCE_TYPE, queue_id=queue_id)
-
-        plugin_resources = [
-            resource
-            for resource in entrypoint.children
-            if resource.resource_type == "plugin"
-        ]
-        entrypoint.children = plugin_resources + list(queue_resources.values())
-
-        db.session.commit()
         log.debug("Queue removed", entrypoint_id=entrypoint_id, queue_id=queue_id)
 
         return {"status": "Success", "id": [queue_id]}
 
 
-class EntrypointNameService(object):
+class EntrypointNameService(UnitOfWorkService):
     """The service methods for managing entrypoints by their name."""
 
-    def get(
-        self,
-        name: str,
-        group_id: int,
-        error_if_not_found: bool = False,
-        **kwargs,
-    ) -> models.EntryPoint | None:
+    def get(self, name: str, group_id: int, **kwargs) -> models.EntryPoint | None:
         """Fetch a entrypoint by its name.
 
         Args:
             name: The name of the entrypoint.
             group_id: The the group id of the entrypoint.
-            error_if_not_found: If True, raise an error if the entrypoint is not found.
-                Defaults to False.
 
         Returns:
             The entrypoint object if found, otherwise None.
-
-        Raises:
-            EntityDoesNotExistError: If the entrypoint is not found and
-                `error_if_not_found` is True.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by name", entrypoint_name=name, group_id=group_id)
 
-        stmt = (
-            select(models.EntryPoint)
-            .join(models.Resource)
-            .where(
-                models.EntryPoint.name == name,
-                models.Resource.group_id == group_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.EntryPoint.resource_snapshot_id,
-            )
+        return self._uow.entrypoint_repo.get_by_name(
+            name, group_id, DeletionPolicy.NOT_DELETED
         )
-        entrypoint = db.session.scalars(stmt).first()
 
-        if entrypoint is None:
-            if error_if_not_found:
-                raise EntityDoesNotExistError(
-                    RESOURCE_TYPE, name=name, group_id=group_id
+
+class EntrypointConfigService(UnitOfWorkService):
+    """Service to retrieve a rendered YAML configuration for an Entrypoint."""
+
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ):
+        self._uow = uow
+
+    def get_config(
+        self,
+        id: int,
+        snapshotId: int,
+        log: BoundLogger,
+        swap_choices: dict[str, str] | None = None,
+        sections: list[str] | None = None,
+        partial: bool = False,
+    ) -> dict[str, Any]:
+        """Return the rendered YAML configuration dictionary for the given entrypoint.
+
+        Args:
+            id: The unique identifier of the Entrypoint.
+            snapshotId: The unique snapshot identifier of the Entrypoint.
+            log: A BoundLogger object.
+            swap_choices: An optional dictionary mapping swap names to task alias choices,
+                which will be used to render the task graph.
+            sections: An optional list which filters the sections included in the return result.
+            partial: If true, will not raise an error for missing swaps, and will return a partially rendered graph.
+        Returns:
+            A dictionary matching EntrypointConfigSchema.
+        """
+
+        swap_choices = swap_choices if swap_choices else {}
+
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            id, snapshotId, DeletionPolicy.NOT_DELETED
+        )
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+        # this call is part of a HACK fully explained in extract_tasks, which is called
+        # internally by build_task_engine_dict, the service call would not be needed
+        # if this issue is more permanantly resolved
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+
+        validate_rendered = not partial and (not sections or "graph" in sections)
+        config = build_task_engine_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+        )
+
+        if not sections or {"graph", "tasks"} & set(sections):
+            try:
+                config = render_swaps_config(
+                    config, swap_choices, raise_unspecified=not partial
+                )
+            except ValueError as error:
+                raise EntrypointSwapsRenderError(str(error)) from error
+
+        if "parameters" in config and not partial:
+            graph = config["graph"]
+            if swap_choices or not extract_swaps(graph):
+                try:
+                    rendered_graph = render_swaps_graph(graph, swap_choices)
+                except ValueError as error:
+                    raise EntrypointSwapsRenderError(str(error)) from error
+
+                required_globals, _ = _get_required_globals(rendered_graph)
+                config["parameters"] = {
+                    name: value
+                    for name, value in config["parameters"].items()
+                    if name in required_globals
+                }
+
+        if validate_rendered:
+            # Validate against all task/type definitions before projecting sections.
+            try:
+                errors = [
+                    str(issue)
+                    for issue in compile_swaps_config(config).validate()
+                    if issue.severity is IssueSeverity.ERROR
+                ]
+            except ValueError as error:
+                errors = [str(error)]
+            if errors:
+                raise EntrypointValidationError(
+                    message="Rendered entrypoint configuration is invalid",
+                    validation_error_dict={"rendered_validation_errors": errors},
+                )
+        if sections:
+            config = {name: value for name, value in config.items() if name in sections}
+
+        return config
+
+
+class DynamicGlobalParametersService(UnitOfWorkService):
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ) -> None:
+        """Initialize the entrypoint service.
+
+        All arguments are provided via dependency injection.
+
+        """
+        self._uow = uow
+
+    def get_params(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        swaps: dict[str, str],
+        logger: BoundLogger | None = None,
+    ) -> dict[str, Any]:
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
+        )
+
+        task_graph = entry_point.task_graph
+
+        graph = yaml.safe_load(task_graph)
+
+        try:
+            rendered = render_swaps_graph(graph, swaps)
+        except ValueError as error:
+            raise EntrypointSwapsRenderError(str(error)) from error
+
+        needed_vars, used_tasks = _get_required_globals(rendered)
+
+        topsorted = util.get_sorted_steps(rendered)
+
+        plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        types, _ = self._uow.type_repo.get_by_filters_paged(
+            entry_point.resource.group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+
+        task_engine_yaml = build_task_engine_dict(
+            entry_point=entry_point,
+            plugin_plugin_files=plugin_files,
+            plugin_parameter_types=types,
+        )
+
+        active_plugin_names = set()
+
+        for task in task_engine_yaml["tasks"]:
+            if task in used_tasks:
+                active_plugin_names.add(
+                    task_engine_yaml["tasks"][task]["plugin"].split(".")[0]
                 )
 
-            return None
+        active_plugins = []
 
-        return entrypoint
+        for epp in entry_point.entry_point_plugins:
+            if epp.plugin.name in active_plugin_names:
+                active_plugins.append(epp.plugin)
+
+        return {
+            "entrypoint_params": [
+                parameter
+                for parameter in sorted(
+                    entry_point.parameters,
+                    key=lambda parameter: parameter.parameter_number,
+                )
+                if parameter.name in needed_vars
+            ],
+            "topological_sort": topsorted,
+            "active_plugins": active_plugins,
+        }
+
+
+class SwapsValidationService(UnitOfWorkService):
+    """Validate proposed entrypoint graphs, including swap definitions.
+
+    All arguments are provided via dependency injection.
+
+    Args:
+        uow: A UnitOfWork instance.
+    """
+
+    def swaps_graph_validation(
+        self,
+        pre_rendered_task_graph: dict[str, Any],
+    ) -> list[ValidationIssue]:
+        from dioptra.sdk.api.swappable_validation import (
+            get_swap_graph_schema,
+            get_swappable_json_schema_resources,
+        )
+
+        return schema_validate(
+            pre_rendered_task_graph,
+            get_swap_graph_schema(),
+            resources=get_swappable_json_schema_resources(),
+        )
+
+    def validate_task_references(
+        self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
+    ) -> list[ValidationIssue]:
+        """Validate that all tasks in the graph are registered.
+
+        Args:
+            pre_rendered_task_graph: The task graph dictionary, before it is rendered.
+            task_lookup_dict: A dictionary mapping tasks to their plugins, generated by build_task_lookup_dict.
+
+        Returns:
+            A list of validation issues for unregistered task references.
+        """
+
+        collected_no_tasks_found = []
+
+        for step_name, definition in pre_rendered_task_graph.items():
+            swap_definitions = {
+                name: aliases
+                for name, aliases in definition.items()
+                if isinstance(name, str) and name.startswith("?")
+            }
+
+            if not swap_definitions:
+                task_name = util.step_get_plugin_short_name(definition)
+                if task_name not in task_lookup_dict:
+                    collected_no_tasks_found.append(
+                        ValidationIssue(
+                            type_=IssueType.SEMANTIC,
+                            severity=IssueSeverity.ERROR,
+                            message=f"In step '{step_name}', task with name '{task_name}' not found in registered tasks.",
+                        )
+                    )
+                continue
+
+            for swap_name, aliased_defns in swap_definitions.items():
+                for swap_definition in get_swap_choices(aliased_defns).values():
+                    task_name = util.step_get_plugin_short_name(swap_definition)
+                    if task_name not in task_lookup_dict:
+                        collected_no_tasks_found.append(
+                            ValidationIssue(
+                                type_=IssueType.SEMANTIC,
+                                severity=IssueSeverity.ERROR,
+                                message=f"In swap '{swap_name}', task with name '{task_name}' not found in registered tasks.",
+                            )
+                        )
+
+        return collected_no_tasks_found
+
+    def validate_swap_outputs(
+        self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
+    ) -> tuple[list[ValidationIssue], dict[str, Any]]:
+        """Validate output interface counts/types and collect each swap's tasks.
+
+        Args:
+            pre_rendered_task_graph: The task graph dictionary, before it is rendered.
+            task_lookup_dict: A dictionary mapping tasks to their plugins, generated by build_task_lookup_dict.
+
+        Returns:
+            A list of output type issues and tasks needed for the graph's swaps.
+        """
+
+        mismatched_aliases = {}
+        count_issues = []
+        swap_tasks: dict[str, Any] = {}
+
+        for definition in pre_rendered_task_graph.values():
+            swap_definitions = {
+                name: aliases
+                for name, aliases in definition.items()
+                if isinstance(name, str) and name.startswith("?")
+            }
+
+            for swap_name, aliased_defns in swap_definitions.items():
+                output_types = set()
+                swap_dict = {}
+
+                for alias, swap_definition in get_swap_choices(aliased_defns).items():
+                    task_name = util.step_get_plugin_short_name(swap_definition)
+                    if task_name not in task_lookup_dict:
+                        continue
+
+                    swap_dict[alias] = {
+                        "plugin_snapshot_id": task_lookup_dict[task_name][
+                            "plugin_snapshot_id"
+                        ],
+                        "pluginfile_filename": task_lookup_dict[task_name][
+                            "pluginfile_filename"
+                        ],
+                        "task_name": task_lookup_dict[task_name]["task_name"],
+                    }
+
+                    output_parameters: list[PluginTaskOutputParameter] = (
+                        task_lookup_dict[task_name]["output_parameters"]
+                    )
+                    expected_count = len(aliased_defns["?outputs"])
+                    if len(output_parameters) != expected_count:
+                        count_issues.append(
+                            ValidationIssue(
+                                type_=IssueType.TYPE,
+                                severity=IssueSeverity.ERROR,
+                                message=(
+                                    f"Swap '{swap_name}' choice '{alias}' task "
+                                    f"'{task_name}' has {len(output_parameters)} outputs; "
+                                    f"its interface requires {expected_count}."
+                                ),
+                            )
+                        )
+                    output_types.add(
+                        tuple(
+                            [
+                                parameter.parameter_type.name
+                                for parameter in sorted(
+                                    output_parameters, key=lambda p: p.parameter_number
+                                )
+                            ]
+                        )
+                    )
+
+                swap_tasks[swap_name] = swap_dict
+
+                if len(output_types) > 1:
+                    mismatched_aliases[swap_name] = output_types
+
+        return count_issues + [
+            ValidationIssue(
+                type_=IssueType.TYPE,
+                severity=IssueSeverity.ERROR,
+                message=f"Swap '{swap_name}' contains mismatched output types: {types}",
+            )
+            for swap_name, types in mismatched_aliases.items()
+        ], swap_tasks
+
+    def validate_single_swap_combinations(
+        self,
+        task_graph_yaml: dict[str, Any],
+        entrypoint_data: EntryPointDataAdapter,
+        plugin_plugin_files: list[models.PluginPluginFile],
+        plugin_parameter_types: list[models.PluginTaskParameterType],
+        swap_choices: dict[str, Any],
+        log: BoundLogger,
+    ) -> tuple[list[ValidationIssue], set[str]]:
+        """Renders a graph containing swaps for a given set of swap_choices, and performs
+        validation on the rendered graph.
+
+        Args:
+            task_graph_yaml: The task graph dictionary.
+            entrypoint_data: Proposed entrypoint data adapted for task-engine use.
+            plugin_plugin_files: A list of Plugin-PluginFile objects.
+            plugin_parameter_types: A list of plugin parameter types.
+            swap_choices: A dictionary representing the choices for each swap.
+            log: A BoundLogger instance.
+
+        Returns:
+            A list of validation issues and a list of global parameters required for the graph.
+        """
+        issues_for_swap = []
+        required_globals: set[str] = set()
+
+        try:
+            task_engine_dict = build_task_engine_dict(
+                entry_point=entrypoint_data,
+                plugin_plugin_files=plugin_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
+            )
+            task_engine_dict["graph"] = task_graph_yaml
+            task_engine_dict = render_swaps_config(task_engine_dict, swap_choices)
+            compiled = compile_swaps_config(task_engine_dict)
+        except ValueError as error:
+            issues_for_swap.append(
+                ValidationIssue(
+                    type_=IssueType.SEMANTIC,
+                    severity=IssueSeverity.ERROR,
+                    message=(
+                        f"[Swap combination {swap_choices}] "
+                        f"Error rendering graph: {error}"
+                    ),
+                )
+            )
+            return issues_for_swap, required_globals
+
+        # this is a schema check and deeper validation no longer present in workflows
+        issues = compiled.validate()
+
+        for issue in issues:
+            issue.message = f"[Swap combination {swap_choices}] {issue.message}"
+            issues_for_swap.append(issue)
+
+        # collect any globals needed for this rendering
+        required_globals, _ = _get_required_globals(compiled.config["graph"])
+
+        return issues_for_swap, required_globals
+
+    def validate(
+        self,
+        group_id: int,
+        swaps_graph: str,
+        artifact_graph: str,
+        entrypoint_parameters: list[dict[str, Any]],
+        entrypoint_artifacts: list[dict[str, Any]],
+        plugin_snapshot_ids: list[int],
+        rendered_validation: bool = False,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Validation for a proposed entrypoint graph.
+
+        This validation checks the following:
+            * Validates just the graph against a JSON schema which accounts for swaps (though swaps are not
+            required).
+            * Validates that all tasks in the graph are registered.
+            * Validates output counts against each swap interface and matching
+              registered type names at each output position.
+            * Collects all the tasks needed for the given graph and provides it in the response.
+
+        If the rendered_validation flag is set, this entrypoint also:
+            * Checks the union of dependencies across all swap choices for cycles.
+            * Iterates over swaps, renders the graph using different swap combinations, and performs in-depth
+            validation on the experiment with the rendered graph.
+            * Validates that all global parameters required for the graph are declared as entrypoint inputs.
+
+        Args:
+            group_id: The group ID.
+            swaps_graph: The task graph dictionary.
+            artifact_graph: The artifact graph dictionary.
+            entrypoint_parameters: A list of entrypoint parameters.
+            entrypoint_artifacts: A list of entrypoint artifacts parameters.
+            plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
+            rendered_validation: Whether to perform in-depth validation by looping over any swaps to render the task graph.
+        Returns:
+            A dictionary containing the following fields:
+                schema_issues - if applicable, a list of schema validation issues
+                swap_issues - if applicable, a list of task reference or swap validation errors.
+                rendered_validation_errors - if applicable, a list of validation errors found when
+                  validating via swap rendering.
+                missing_global_params - if applicable, a list of required global parameters that were not declared
+        """
+
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+
+        try:
+            swaps_yaml = yaml.safe_load(swaps_graph)
+        except yaml.YAMLError as e:
+            raise InvalidYamlError(
+                f"Failed to parse entrypoint task graph YAML: {e}"
+            ) from e
+
+        if swaps_yaml is None:
+            raise EmptyGraphError("Provided swaps graph is empty.")
+
+        duplicate_swap_issues = (
+            check_duplicate_swap_names(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
+        multiple_swaps_per_step_issues = (
+            check_multiple_swaps_per_step(swaps_yaml)
+            if isinstance(swaps_yaml, dict)
+            else []
+        )
+
+        type_ids = _get_artifact_parameter_type_ids(entrypoint_artifacts)
+        artifact_parameter_types = (
+            list(
+                cast(
+                    Iterable[models.PluginTaskParameterType],
+                    self._uow.type_repo.get(list(type_ids), DeletionPolicy.NOT_DELETED),
+                )
+            )
+            if type_ids
+            else []
+        )
+        id_type_map = _require_parameter_types(type_ids, artifact_parameter_types)
+
+        #### Pre-render Schema Issues
+        entrypoint = _build_entrypoint_data_adapter(
+            swaps_graph,
+            artifact_graph,
+            entrypoint_parameters,
+            entrypoint_artifacts,
+            id_type_map,
+        )
+
+        plugin_parameter_types, _ = self._uow.type_repo.get_by_filters_paged(
+            group_id,
+            filters=[],
+            page_start=0,
+            page_length=-1,
+            sort_by=None,
+            descending=False,
+        )
+        plugin_parameter_types = list(plugin_parameter_types)
+        plugin_plugin_files = get_plugin_plugin_files_from_plugin_snapshot_ids(
+            plugin_snapshot_ids=plugin_snapshot_ids, logger=log
+        )
+
+        try:
+            task_engine_dict = build_task_engine_dict(
+                entry_point=entrypoint,
+                plugin_plugin_files=plugin_plugin_files,
+                plugin_parameter_types=plugin_parameter_types,
+            )
+        except (InvalidYamlError, yaml.YAMLError) as e:
+            return {
+                "schema_issues": [
+                    str(
+                        ValidationIssue(
+                            type_=IssueType.SYNTAX,
+                            severity=IssueSeverity.ERROR,
+                            message=str(e),
+                        )
+                    )
+                ],
+                "swap_issues": [],
+                "rendered_validation_errors": [],
+                "missing_global_params": [],
+                "swaps": {},
+            }
+
+        merged_schema = get_swappable_experiment_schema()
+
+        # Full task-engine validation requires a rendered graph, which is not
+        # guaranteed at this stage.
+        schema_issues = schema_validate(
+            task_engine_dict,
+            merged_schema,
+            resources=get_swappable_json_schema_resources(),
+        )
+
+        schema_valid = schema_issues == []
+
+        #### Pre-render Schema Issues complete
+
+        pre_render_issues: list[ValidationIssue] = []
+        collected_rendered_validation_issues: list[ValidationIssue] = []
+        collected_required_globals = set()
+        tasks: dict[str, Any] = {}
+
+        if schema_valid:
+            #### Perform pre-render semantic validation
+
+            # build a lookup dictionary for tasks from the plugin files
+            task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
+
+            task_reference_issues = self.validate_task_references(
+                pre_rendered_task_graph=swaps_yaml,
+                task_lookup_dict=task_lookup_dict,
+            )
+            swap_output_issues, tasks = self.validate_swap_outputs(
+                pre_rendered_task_graph=swaps_yaml,
+                task_lookup_dict=task_lookup_dict,
+            )
+            pre_render_issues = task_reference_issues + swap_output_issues
+
+            #### Pre-render semantic validation complete
+
+            #### Specifically for saving and modifying entrypoints, perform in-depth validation
+            if (
+                rendered_validation
+                and not pre_render_issues
+                and not duplicate_swap_issues
+                and not multiple_swaps_per_step_issues
+            ):
+                pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
+                # extract a mapping of swaps to possible swap choices
+                swaps = extract_swaps(
+                    swaps_yaml
+                )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
+                swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
+
+                defaults = {name: aliases[0] for name, aliases in swaps.items()}
+                combinations = [defaults]
+
+                # Validate the baseline once, then vary each nondefault choice.
+                for swap_name in swap_names:
+                    for alias in swaps[swap_name][1:]:
+                        current_swap_choice = defaults.copy()
+                        current_swap_choice[swap_name] = alias
+
+                        combinations.append(current_swap_choice)
+
+                # loop over the combinations, render each, and validate as a normal experiment description
+                for combination in combinations:
+                    rendered_validation_issues, required_globals = (
+                        self.validate_single_swap_combinations(
+                            task_graph_yaml=swaps_yaml,
+                            entrypoint_data=entrypoint,
+                            plugin_plugin_files=plugin_plugin_files,
+                            plugin_parameter_types=plugin_parameter_types,
+                            swap_choices=combination,
+                            log=log,
+                        )
+                    )
+                    collected_required_globals.update(required_globals)
+                    collected_rendered_validation_issues.extend(
+                        rendered_validation_issues
+                    )
+
+        # compile a set of all declared parameter names
+        declared_globals = {p["name"] for p in entrypoint_parameters}
+        declared_globals.update({a["name"] for a in entrypoint_artifacts})
+
+        # any variable we have used that is not declared is missing
+        missing_globals = [
+            g for g in collected_required_globals if g not in declared_globals
+        ]
+
+        combined_swap_issues = (
+            pre_render_issues + duplicate_swap_issues + multiple_swaps_per_step_issues
+        )
+
+        return {
+            "schema_issues": [str(i) for i in schema_issues],
+            "swap_issues": [str(i) for i in combined_swap_issues],
+            "rendered_validation_errors": [
+                str(i) for i in collected_rendered_validation_issues
+            ],
+            "missing_global_params": missing_globals,
+            "swaps": tasks,
+        }
+
+    def validate_snapshot(
+        self, entrypoint: models.EntryPoint, log: BoundLogger
+    ) -> None:
+        """Apply ordinary save-time validation to prospective plugin associations."""
+        self.raise_validation_errors(
+            task_graph=entrypoint.task_graph,
+            artifact_graph=entrypoint.artifact_graph,
+            parameters=[
+                {
+                    "name": p.name,
+                    "parameter_type": p.parameter_type,
+                    "default_value": p.default_value,
+                }
+                for p in sorted(entrypoint.parameters, key=lambda p: p.parameter_number)
+            ],
+            artifact_parameters=[
+                {
+                    "name": a.name,
+                    "output_params": [
+                        {
+                            "name": p.name,
+                            "parameter_type_id": p.parameter_type.resource_id,
+                        }
+                        for p in sorted(
+                            a.output_parameters, key=lambda p: p.parameter_number
+                        )
+                    ],
+                }
+                for a in sorted(
+                    entrypoint.artifact_parameters, key=lambda a: a.artifact_number
+                )
+            ],
+            plugin_ids=[
+                p.plugin.resource_snapshot_id for p in entrypoint.entry_point_plugins
+            ],
+            group_id=entrypoint.resource.group_id,
+            log=log,
+            on_save=True,
+        )
+
+    def raise_validation_errors(
+        self,
+        task_graph: str,
+        artifact_graph: str,
+        parameters: list[dict[str, Any]],
+        artifact_parameters: list[dict[str, Any]],
+        plugin_ids: list[int],
+        group_id: int,
+        log: BoundLogger,
+        on_save: bool = False,
+    ) -> dict[str, Any]:
+
+        validation_results = self.validate(
+            group_id=group_id,
+            swaps_graph=task_graph,
+            artifact_graph=artifact_graph,
+            entrypoint_parameters=parameters,
+            entrypoint_artifacts=artifact_parameters,
+            plugin_snapshot_ids=plugin_ids,
+            rendered_validation=on_save,
+            log=log,
+        )
+
+        validation_errors = {}
+
+        if len(validation_results["missing_global_params"]) > 0:
+            validation_errors["missing_global_params"] = validation_results[
+                "missing_global_params"
+            ]
+        if len(validation_results["rendered_validation_errors"]) > 0:
+            validation_errors["rendered_validation_errors"] = validation_results[
+                "rendered_validation_errors"
+            ]
+        if len(validation_results["swap_issues"]) > 0:
+            validation_errors["swap_issues"] = validation_results["swap_issues"]
+        if len(validation_results["schema_issues"]) > 0:
+            validation_errors["schema_issues"] = validation_results["schema_issues"]
+
+        if validation_errors != {}:
+            raise EntrypointValidationError(
+                message="Validation failed for provided entrypoint",
+                validation_error_dict=validation_errors,
+            )
+
+        return validation_results
+
+
+class SwapsRetrievalService(UnitOfWorkService):
+    """Service for retrieving available swaps for an entrypoint snapshot.
+
+    Currently this implementation returns an empty mapping. It can be extended to
+    introspect the entrypoint graph and plugin metadata to provide detailed swap
+    information.
+    """
+
+    @inject
+    def __init__(
+        self,
+        uow: UnitOfWork,
+    ) -> None:
+        self._uow = uow
+
+    def get_swaps(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        logger: BoundLogger | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Retrieve information about the list of swaps for a given entrypoint snapshot.
+
+        Args:
+            entrypoint_id: The entrypoint ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+        Returns:
+            An object of the form:
+            [
+                {
+                    "swap_name": [{
+                        "task_alias": ...,
+                        "task_name": ...,
+                        "entrypoint_keyword_args": [...],
+                        "plugin_file_resource_snapshot_id": ...,
+                    }, ...]
+                }
+            ]
+        """
+        # Retrieve the snapshot entrypoint to get the graph.
+        entry_point = self._uow.entrypoint_repo.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
+        )
+
+        # Load the graph YAML
+        try:
+            graph = yaml.safe_load(entry_point.task_graph) or {}
+        except Exception as e:
+            raise InvalidYamlError("Failed to load YAML") from e
+
+        # this looks like {'swap_name1' : ['alias1', 'alias2'], 'swap_name2': ...}
+        swaps = extract_swaps(graph)
+
+        # need this to know which entrypoint keyword args to NOT include in return
+        step_names = set(graph.keys())
+
+        swaps_list: list[dict[str, Any]] = []
+
+        # build a list of all plugin‑plugin‑file pairs for this entrypoint.
+        plugin_plugin_files = [
+            plugin_plugin_file
+            for entry_point_plugin in entry_point.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+        task_lookup_dict = _build_task_lookup_dict(plugin_plugin_files)
+        not_found_tasks = set()
+
+        for swap_name in swaps:
+            for step in step_names:
+                if f"?{swap_name}" in graph[step]:
+                    task_defs = graph[step][f"?{swap_name}"]
+                    for alias, task_def in get_swap_choices(task_defs).items():
+                        keyword_args = _get_keywords_for_one_task(task_def) - step_names
+
+                        if "task" in task_def:
+                            # long form definition
+                            task_name = task_def["task"]
+                        else:
+                            # short form definition
+                            task_name = list(task_def.keys())[0]
+
+                        if task_name in task_lookup_dict:
+                            plugin_file_resource_snapshot_id = task_lookup_dict[
+                                task_name
+                            ]["plugin_file_snapshot_id"]
+                            swap_info = {
+                                "swap_name": swap_name,
+                                "task_alias": alias,
+                                "task_name": task_name,
+                                "entrypoint_keyword_args": list(keyword_args),
+                                "plugin_file_resource_snapshot_id": plugin_file_resource_snapshot_id,
+                            }
+
+                            swaps_list.append(swap_info)
+                        else:
+                            not_found_tasks.add(task_name)
+
+        if len(not_found_tasks) > 0:
+            raise TasksNotFoundError(list(not_found_tasks))
+
+        return swaps_list
+
+
+def _build_task_lookup_dict(
+    plugins: list[models.PluginPluginFile],
+) -> dict[str, Any]:
+    """Build task metadata indexed by function task name."""
+    lookup = {}
+
+    for pair in plugins:
+        plugin = pair.plugin
+        plugin_file = pair.plugin_file
+
+        for task in plugin_file.tasks:
+            if isinstance(task, models.FunctionTask):
+                lookup[task.plugin_task_name] = {
+                    "plugin_file_snapshot_id": plugin_file.resource_snapshot_id,
+                    "plugin_snapshot_id": plugin.resource_snapshot_id,
+                    "pluginfile_filename": plugin_file.filename,
+                    "task_name": task.plugin_task_name,
+                    "output_parameters": task.output_parameters,
+                }
+
+    return lookup
+
+
+def _get_keywords_for_one_task(task: dict[str, Any]) -> set[str]:
+    """Return graph reference roots used by one task definition."""
+    return {reference.split(".")[0] for reference in util.get_references(task)}
+
+
+def _get_required_globals(
+    rendered_graph: dict[str, Any],
+) -> tuple[set[str], set[str]]:
+    """Return external graph references and task names used by a graph."""
+    graph_steps = rendered_graph.keys()
+    needed_globals: set[str] = set()
+    used_tasks: set[str] = set()
+
+    for step in rendered_graph.values():
+        task_name = util.step_get_plugin_short_name(step)
+
+        # since it is rendered we can assume the entrypoint has been validated
+        if task_name is not None:
+            used_tasks.add(task_name)
+
+        references = _get_keywords_for_one_task(step)
+        needed_globals.update(
+            reference for reference in references if reference not in graph_steps
+        )
+
+    return needed_globals, used_tasks
 
 
 def _get_entrypoint_plugin_snapshots(
@@ -1615,7 +2478,7 @@ def _get_entrypoint_artifact_plugin_snapshots(
 
 def _copy_plugins(
     plugins: Iterable[models.EntryPointPlugin], target_entrypoint: models.EntryPoint
-) -> list[models.Resource]:
+) -> list[models.Plugin]:
     target_entrypoint.entry_point_plugins = [
         models.EntryPointPlugin(
             entry_point=target_entrypoint,
@@ -1626,7 +2489,7 @@ def _copy_plugins(
     # return a unique list of plugin resources
     return list(
         {
-            plugin.plugin.resource_id: plugin.plugin.resource
+            plugin.plugin.resource_id: plugin.plugin
             for plugin in target_entrypoint.entry_point_plugins
         }.values()
     )
@@ -1635,7 +2498,7 @@ def _copy_plugins(
 def _copy_artifact_plugins(
     artifact_plugins: Iterable[models.EntryPointArtifactPlugin],
     target_entrypoint: models.EntryPoint,
-) -> list[models.Resource]:
+) -> list[models.Plugin]:
     target_entrypoint.entry_point_artifact_plugins = [
         models.EntryPointArtifactPlugin(
             entry_point=target_entrypoint,  # pyright: ignore
@@ -1646,16 +2509,16 @@ def _copy_artifact_plugins(
     # return a unique list of artifact plugin resources
     return list(
         {
-            artifact_plugin.plugin.resource_id: artifact_plugin.plugin.resource
+            artifact_plugin.plugin.resource_id: artifact_plugin.plugin
             for artifact_plugin in target_entrypoint.entry_point_artifact_plugins
         }.values()
     )
 
 
 def _deduplicate_plugin_resources(
-    plugin_resources: list[models.Resource],
-    artifact_plugin_resources: list[models.Resource],
-) -> list[models.Resource]:
+    plugins: list[models.Plugin],
+    artifact_plugins: list[models.Plugin],
+) -> list[models.Plugin]:
     """
     De-duplicates two lists of Plugin resources and returns a combined list.
 
@@ -1663,10 +2526,7 @@ def _deduplicate_plugin_resources(
         A de-duplicated list of Plugin resources
     """
     return list(
-        {
-            resource.resource_id: resource
-            for resource in plugin_resources + artifact_plugin_resources
-        }.values()
+        {plugin.resource_id: plugin for plugin in plugins + artifact_plugins}.values()
     )
 
 
@@ -1703,25 +2563,11 @@ def _copy_parameters(
 
 
 def _create_artifact_parameters(
-    artifact_parameters: list[dict[str, Any]], log: BoundLogger
+    artifact_parameters: list[dict[str, Any]],
+    id_type_map: dict[int, models.PluginTaskParameterType],
 ) -> Iterable[models.EntryPointArtifactParameter]:
     if artifact_parameters is None or len(artifact_parameters) == 0:
         return []
-    for artifact in artifact_parameters:
-        duplicates = find_non_unique("name", artifact["output_params"])
-        if len(duplicates) > 0:
-            raise QueryParameterNotUniqueError(
-                "artifact output parameter",
-                artifact_parameter_name=artifact["name"],
-                parameter_names=duplicates,
-            )
-
-    type_ids = [
-        parameter["parameter_type_id"]
-        for artifact in artifact_parameters
-        for parameter in artifact["output_params"]
-    ]
-    id_type_map = get_plugin_task_parameter_types_by_id(ids=type_ids, log=log)
 
     return [
         models.EntryPointArtifactParameter(
@@ -1738,6 +2584,37 @@ def _create_artifact_parameters(
         )
         for a, artifact in enumerate(artifact_parameters)
     ]
+
+
+def _get_artifact_parameter_type_ids(
+    artifact_parameters: list[dict[str, Any]],
+) -> set[int]:
+    return {
+        parameter["parameter_type_id"]
+        for artifact in artifact_parameters
+        for parameter in artifact["output_params"]
+    }
+
+
+def _require_parameter_types(
+    requested_ids: Iterable[int],
+    parameter_types: Iterable[models.PluginTaskParameterType],
+) -> dict[int, models.PluginTaskParameterType]:
+    requested_id_set = set(requested_ids)
+    id_type_map = {
+        parameter_type.resource_id: parameter_type for parameter_type in parameter_types
+    }
+    missing_ids = requested_id_set - id_type_map.keys()
+
+    if missing_ids:
+        raise EntityDoesNotExistError(
+            EntityType.PLUGIN_TASK_PARAMETER_TYPE,
+            num_expected=len(requested_id_set),
+            num_found=len(id_type_map),
+            ids_not_found=sorted(missing_ids),
+        )
+
+    return id_type_map
 
 
 def _copy_artifact_parameters(

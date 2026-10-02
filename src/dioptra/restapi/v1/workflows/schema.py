@@ -19,15 +19,10 @@
 from enum import Enum
 
 from flask import request
-from marshmallow import Schema, ValidationError, fields, pre_dump, validates_schema
+from marshmallow import Schema, ValidationError, fields, validates_schema
 
 from dioptra.restapi.custom_schema_fields import FileUpload, MultiFileUpload
-from dioptra.restapi.v1.entrypoints.schema import (
-    EntrypointArtifactSchema,
-    EntrypointParameterSchema,
-)
 from dioptra.restapi.v1.schemas import FileDownloadParametersSchema
-from dioptra.task_engine.issues import ValidationIssue
 
 
 class JobFilesDownloadQueryParametersSchema(FileDownloadParametersSchema):
@@ -232,101 +227,3 @@ class ResourceImportSchema(Schema):
             raise ValidationError(
                 {"files": "field required when sourceType is 'upload_files'"}
             )
-
-
-class ValidateEntrypointRequestSchema(Schema):
-    """The proposed inputs for an Entrypoint resource to be validated."""
-
-    groupId = fields.Integer(
-        attribute="group_id",
-        data_key="group",
-        metadata={"description": "ID of the Group validating the Entrypoint resource."},
-        required=True,
-    )
-    taskGraph = fields.String(
-        attribute="task_graph",
-        metadata={"description": "Proposed task graph for the Entrypoint resource."},
-        required=True,
-    )
-    artifactGraph = fields.String(
-        attribute="artifact_graph",
-        metadata={
-            "description": "Proposed artifact graph for the Entrypoint resource."
-        },
-        required=False,
-    )
-    pluginSnapshotIds = fields.List(
-        fields.Integer(),
-        attribute="plugin_snapshot_ids",
-        data_key="pluginSnapshots",
-        metadata={
-            "description": (
-                "A list of IDs for the Plugin Snapshots that will be attached to the "
-                "Entrypoint resource."
-            )
-        },
-    )
-    parameters = fields.Nested(
-        EntrypointParameterSchema,
-        attribute="parameters",
-        many=True,
-        metadata={"description": "Proposed parameters for the Entrypoint resource."},
-    )
-    artifacts = fields.Nested(
-        EntrypointArtifactSchema,
-        attribute="artifacts",
-        many=True,
-        metadata={
-            "description": "Proposed artifact inputs for the Entrypoint resource."
-        },
-    )
-
-
-class ValidateEntrypointIssueSchema(Schema):
-    """The response for the validateEntrypoint endpoint."""
-
-    type_ = fields.String(
-        attribute="type",
-        data_key="type",
-        metadata={"description": "The validation issue type."},
-    )
-    severity = fields.String(
-        attribute="severity",
-        metadata={"description": "The severity of the validation issue."},
-    )
-    message = fields.String(
-        attribute="message",
-        metadata={"description": "A message describing the validation issue."},
-    )
-
-    @pre_dump
-    def stringify_enums(self, data, **kwargs):
-        if isinstance(data, ValidationIssue):
-            return {
-                "type": data.type.name,
-                "severity": data.severity.name,
-                "message": data.message,
-            }
-
-        return data
-
-
-class ValidateEntrypointResponseSchema(Schema):
-    """The response for the validateEntrypoint endpoint."""
-
-    schemaValid = fields.Bool(
-        attribute="schema_valid",
-        metadata={
-            "description": (
-                "Indicates whether the proposed inputs for the Entrypoint resource "
-                "are valid. If False, the schemaIssues field will contain a list of "
-                "validation issues."
-            ),
-        },
-    )
-    schemaIssues = fields.Nested(
-        ValidateEntrypointIssueSchema,
-        attribute="schema_issues",
-        metadata={"description": "A list of validation issues detected in the schema."},
-        many=True,
-    )

@@ -32,6 +32,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.routes import V1_QUEUES_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_endpoint,
@@ -53,7 +54,7 @@ from .schema import (
     QueuePageSchema,
     QueueSchema,
 )
-from .service import RESOURCE_TYPE, QueueIdService, QueueService
+from .service import QueueIdService, QueueService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -90,6 +91,7 @@ class QueueEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         queues, total_num_queues = self._queue_service.get(
             group_id=group_id,
@@ -98,6 +100,7 @@ class QueueEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -112,6 +115,7 @@ class QueueEndpoint(Resource):
             total_num_elements=total_num_queues,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -194,25 +198,25 @@ class QueueIdEndpoint(Resource):
 
 QueueDraftResource = generate_resource_drafts_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.QUEUE,
     route_prefix=V1_QUEUES_ROUTE,
     request_schema=QueueSchema,
 )
 QueueDraftIdResource = generate_resource_drafts_id_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.QUEUE,
     request_schema=QueueMutableFieldsSchema,
 )
 QueueIdDraftResource = generate_resource_id_draft_endpoint(
     api,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.QUEUE,
     request_schema=QueueMutableFieldsSchema,
 )
 
 QueueSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Queue,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.QUEUE,
     route_prefix=V1_QUEUES_ROUTE,
     searchable_fields=QueueRepository.SEARCHABLE_FIELDS,
     page_schema=QueuePageSchema,
@@ -221,16 +225,16 @@ QueueSnapshotsResource = generate_resource_snapshots_endpoint(
 QueueSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Queue,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.QUEUE,
     response_schema=QueueSchema,
     build_fn=utils.build_queue,
 )
 
 QueueTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.QUEUE.db_table_name,
 )
 QueueTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.QUEUE.db_table_name,
 )

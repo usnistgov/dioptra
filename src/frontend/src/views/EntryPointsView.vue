@@ -1,237 +1,170 @@
 <template>
-  <PageTitle 
+  <PageTitle
     title="Entrypoints"
+    resourceType="entrypoint"
+    subtitle="Reusable workflows composed of Tasks"
   />
-  <TableComponent 
-    :rows="entrypoints"
+  <TableComponent
+    ref="tableRef"
+    v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
+    :rows="rows"
     :columns="columns"
     title="Entrypoints"
-    v-model:selected="selected"
-    @open="openTab => (openTab
-      ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
-      : router.push(`/entrypoints/${selected[0].id}`)
-    )"
-    @delete="showDeleteDialog = true"
-    @request="getEntrypoints"
-    ref="tableRef"
-    @editTags="(row) => { editObjTags = row; showTagsDialog = true }"
-    @create="router.push('/entrypoints/new')"
+    :showDeletedToggle="true"
     :loading="isLoading"
+    @open="
+      (openTab) =>
+        openTab
+          ? openWindow.open(`/entrypoints/${selected[0].id}`, '_blank')
+          : router.push(`/entrypoints/${selected[0].id}`)
+    "
+    @delete="showDeleteDialog = true"
+    @request="getData"
+    @editTags="
+      (row) => {
+        editObjTags = row;
+        showTagsDialog = true;
+      }
+    "
+    @create="router.push('/entrypoints/new')"
+    @syncResource="({ row, col, resource }) => syncPlugin(row.id, resource.id, resource.name, col.name)"
+    @addResource="
+      ({ row, col }) => {
+        editEntrypoint = row;
+        pluginType = col.name;
+        showAssignPluginsDialog = true;
+      }
+    "
   >
-    <template #body-cell-group="props">
-      <div>{{ props.row.group.name }}</div>
+    <template #body-cell-group="cellProps">
+      <div>{{ cellProps.row.group.name }}</div>
     </template>
-    <template #body-cell-taskGraph="props">
+    <template #body-cell-taskGraph="cellProps">
       <q-btn
-        v-if="props.row.taskGraph.length"
+        v-if="cellProps.row.taskGraph.length"
         label="View YAML"
         color="primary"
-        @click.stop="displayYaml = props.row.taskGraph; showTaskGraphDialog = true;"
+        @click.stop="
+          displayYaml = cellProps.row.taskGraph;
+          showTaskGraphDialog = true;
+        "
       />
-      <span v-else class="text-negative">
+      <span
+        v-else
+        class="text-negative"
+      >
         EMPTY
       </span>
     </template>
-    <template #body-cell-plugins="props">
-      <span
-        v-for="(plugin, i) in props.row.plugins"
-        :key="i"
-      >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-        >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'plugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'plugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
-      />
-    </template>
-      <template #body-cell-artifactPlugins="props">
-      <span
-        v-for="(plugin, i) in props.row.artifactPlugins"
-        :key="i"
-      >
-        <q-chip
-          color="secondary" 
-          text-color="white"
-          clickable
-          @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        >
-          {{ plugin.name }}
-          <q-badge
-            v-if="!plugin.latestSnapshot" 
-            color="red" 
-            label="outdated" 
-            rounded
-            class="q-ml-xs"
-          />
-        </q-chip>
-        <q-btn
-          v-if="!plugin.latestSnapshot"
-          round 
-          color="red" 
-          icon="sync"
-          size="sm"
-          @click.stop="syncPlugin(props.row.id, plugin.id, plugin.name, 'artifactPlugins')"
-        >
-          <q-tooltip>
-            Sync to latest version of plugin
-          </q-tooltip>
-        </q-btn>
-      </span>
-      <q-btn
-        round
-        size="sm"
-        icon="add"
-        @click.stop="editEntrypoint = props.row; pluginType = 'artifactPlugins'; showAssignPluginsDialog = true"
-        class="q-ml-sm"
-      />
-    </template>
   </TableComponent>
 
-  <InfoPopupDialog
-    v-model="showTaskGraphDialog"
-  >
+  <InfoPopupDialog v-model="showTaskGraphDialog">
     <template #title>
-      <label id="modalTitle">
-        Task Graph YAML
-      </label>
+      <label id="modalTitle"> Task Graph YAML </label>
     </template>
-    <CodeEditor v-model="displayYaml" style="height: auto;" :readOnly="true" />
+    <CodeEditor
+      v-model="displayYaml"
+      style="height: auto"
+      :readOnly="true"
+    />
   </InfoPopupDialog>
-  <DeleteDialog 
+  <DeleteDialog
     v-model="showDeleteDialog"
-    @submit="deleteEntryPoint"
     type="Entry Point"
     :name="selected.length ? selected[0].name : ''"
+    @submit="deleteRow"
   />
-  <AssignTagsDialog 
+  <AssignTagsDialog
     v-model="showTagsDialog"
     :editObj="editObjTags"
     type="entrypoints"
     @refreshTable="tableRef.refreshTable()"
   />
-  <AssignPluginsDialog 
+  <AssignPluginsDialog
     v-model="showAssignPluginsDialog"
     :pluginType="pluginType"
     :editObj="editEntrypoint"
-    @refreshTable="tableRef.refreshTable()"
+    @refreshTable="(id) => updateSingleEntrypoint(id)"
   />
 </template>
 
 <script setup>
-  import TableComponent from '@/components/TableComponent.vue'
-  import { ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import CodeEditor from '@/components/CodeEditor.vue'
-  import InfoPopupDialog from '@/dialogs/InfoPopupDialog.vue'
-  import * as api from '@/services/dataApi'
-  import * as notify from '../notify'
-  import DeleteDialog from '@/dialogs/DeleteDialog.vue'
-  import PageTitle from '@/components/PageTitle.vue'
-  import AssignTagsDialog from '@/dialogs/AssignTagsDialog.vue'
-  import AssignPluginsDialog from '@/dialogs/AssignPluginsDialog.vue'
+import TableComponent from "@/components/TableComponent.vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import CodeEditor from "@/components/CodeEditor.vue";
+import InfoPopupDialog from "@/dialogs/InfoPopupDialog.vue";
+import * as api from "@/services/dataApi";
+import * as notify from "../notify";
+import DeleteDialog from "@/dialogs/DeleteDialog.vue";
+import PageTitle from "@/components/PageTitle.vue";
+import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import AssignPluginsDialog from "@/dialogs/AssignPluginsDialog.vue";
+import { useTableUtils } from "@/services/useTableUtils";
 
-  const openWindow = window
-  const router = useRouter()
+const openWindow = window;
+const router = useRouter();
 
-  const columns = [
-    { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: false, },
-    { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true, },
-    { name: 'description', label: 'Description', align: 'left', field: 'description', sortable: true, },
-    { name: 'taskGraph', label: 'Task Graph', align: 'left', field: 'taskGraph',sortable: false, },
-    { name: 'tags', label: 'Tags', align: 'left', field: 'tags', sortable: false },
-    { name: 'plugins', label: 'Plugins', align: 'left', field: 'plugins', sortable: false },
-    { name: 'artifactPlugins', label: 'Artifact Plugins', align: 'left', field: 'artifactPlugins', sortable: false },
-  ]
+const columns = [
+  { name: "id", label: "ID", align: "left", field: "id", sortable: false },
+  { name: "name", label: "Name", align: "left", field: "name", sortable: true },
+  { name: "description", label: "Description", align: "left", field: "description", sortable: true },
+  { name: "taskGraph", label: "Task Graph", align: "left", field: "taskGraph", sortable: false },
+  {
+    name: "plugins",
+    label: "Plugins",
+    align: "left",
+    field: "plugins",
+    sortable: false,
+    resourceType: "plugin",
+    showResourceAdd: true,
+  },
+  {
+    name: "artifactPlugins",
+    label: "Artifact Plugins",
+    align: "left",
+    field: "artifactPlugins",
+    sortable: false,
+    resourceType: "plugin",
+    showResourceAdd: true,
+  },
+  { name: "tags", label: "Tags", align: "left", field: "tags", sortable: false },
+  { name: "lastModifiedOn", label: "Last Modified", align: "left", field: "lastModifiedOn", sortable: true },
+];
 
-  const selected = ref([])
+const showTaskGraphDialog = ref(false);
+const displayYaml = ref("");
 
-  const showTaskGraphDialog = ref(false)
-  const displayYaml = ref('')
+const showAssignPluginsDialog = ref(false);
+const editEntrypoint = ref("");
+const pluginType = ref("");
 
-  const tableRef = ref(null)
-  
-  const isLoading = ref(false)
+const { rows, isLoading, showDeleted, tableRef, selected, showDeleteDialog, getData, deleteRow } =
+  useTableUtils("entrypoints");
 
-  const entrypoints = ref([])
+const editObjTags = ref({});
+const showTagsDialog = ref(false);
 
-  const showDeleteDialog = ref(false)
-  const showAssignPluginsDialog = ref(false)
-  const editEntrypoint = ref('')
-  const pluginType = ref('')
-
-  async function getEntrypoints(pagination, showDrafts) {
-    isLoading.value = true
-      
-    const minLoadTimePromise = new Promise(resolve => setTimeout(resolve, 300)); 
-
-    try {
-      const [res] = await Promise.all([
-        api.getData('entrypoints', pagination, showDrafts),
-        minLoadTimePromise
-      ]);
-        
-      entrypoints.value = res.data.data;
-      tableRef.value.updateTotalRows(res.data.totalNumResults);
-    } catch(err) {
-      console.log('err = ', err);
-      notify.error(err.response.data.message);
-    } finally {
-      isLoading.value = false;
-    }
+async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
+  try {
+    await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType);
+    await updateSingleEntrypoint(entrypointId);
+    notify.success(`Successfully updated plugin '${pluginName}' to latest version`);
+  } catch (err) {
+    console.warn(err);
+    notify.error(err.response.data.message);
   }
+}
 
-  async function deleteEntryPoint() {
-    try {
-      await api.deleteItem('entrypoints', selected.value[0].id)
-      notify.success(`Successfully deleted '${selected.value[0].name}'`)
-      showDeleteDialog.value = false
-      selected.value = []
-      tableRef.value.refreshTable()
-    } catch(err) {
-      notify.error(err.response.data.message);
-    }
+async function updateSingleEntrypoint(entrypointId) {
+  try {
+    const res = await api.getItem("entrypoints", entrypointId);
+    const idx = rows.value.findIndex((e) => e.id === entrypointId);
+    rows.value[idx] = res.data;
+  } catch (err) {
+    console.warn(err);
+    notify.error(err.response.data.message);
   }
-
-  const editObjTags = ref({})
-  const showTagsDialog = ref(false)
-
-  async function syncPlugin(entrypointId, pluginId, pluginName, pluginType) {
-    try {
-      await api.addPluginsToEntrypoint(entrypointId, [pluginId], pluginType)
-      tableRef.value.refreshTable()
-      notify.success(`Successfully updated plugin '${pluginName}' to latest version`)
-    } catch(err) {
-      console.warn(err)
-    }
-  }
-
+}
 </script>

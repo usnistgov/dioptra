@@ -7,6 +7,15 @@ This template should help get you started developing with Vue 3 in Vite.
 In order to get a development instance of the web app to work properly, the REST API also needs to be served.
 
 -   Follow the instructions in [Local Development Setup](../../DEVELOPER.md#local-development-setup-without-containers) to get a local development environment up and running.
+-   Use Node.js 22 LTS or Node.js 24. Do not use Node.js 23; some frontend linting dependencies do not support it.
+
+If you use [nvm](https://github.com/nvm-sh/nvm), run these commands from this directory to install and select the recommended Node.js version:
+
+```sh
+nvm install
+nvm use
+node --version
+```
 
 ## Recommended IDE Setup
 

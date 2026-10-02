@@ -30,6 +30,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_JOBS_ROUTE
 from dioptra.restapi.v1 import utils
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import IdStatusResponseSchema
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
@@ -45,6 +46,7 @@ from dioptra.restapi.v1.workflows.lib.export_job_parameters import (
 )
 
 from .schema import (
+    JobConfigSchema,
     JobGetQueryParameters,
     JobLogGetQueryParameters,
     JobLogRecordSchema,
@@ -59,8 +61,8 @@ from .schema import (
     MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
-    RESOURCE_TYPE,
     SEARCHABLE_FIELDS,
+    JobConfigService,
     JobIdMetricsService,
     JobIdMetricsSnapshotsService,
     JobIdMlflowrunService,
@@ -128,6 +130,7 @@ class JobEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
 
@@ -163,6 +166,29 @@ class JobIdEndpoint(Resource):
             request_id=str(uuid.uuid4()), resource="Job", request_type="DELETE", id=id
         )
         return self._job_id_service.delete(job_id=id, log=log)
+
+
+@api.route("/<int:id>/config")
+@api.param("id", "ID for the Job resource.")
+class JobConfigEndpoint(Resource):
+    """Endpoint to retrieve the rendered YAML configuration for a Job."""
+
+    @inject
+    def __init__(self, job_config_service: JobConfigService, *args, **kwargs) -> None:
+        self._job_config_service = job_config_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @responds(schema=JobConfigSchema, api=api)
+    def get(self, id: int):
+        """Return the YAML configuration dictionary for the specified Job."""
+        log = LOGGER.new(
+            request_id=str(uuid.uuid4()),
+            resource="JobConfig",
+            request_type="GET",
+            id=id,
+        )
+        return self._job_config_service.get(job_id=id, log=log)
 
 
 @api.route("/<int:id>/parameters")
@@ -413,6 +439,7 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             total_num_elements=total_num_metrics,
             sort_by=None,
             descending=None,
+            show_deleted=None,
         )
 
 
@@ -457,6 +484,7 @@ class JobIdLogEndpoint(Resource):
             total_num_elements=total,
             sort_by=sort_by_string,
             descending=descending,
+            show_deleted=None,
         )
 
         return page
@@ -472,7 +500,7 @@ class JobIdLogEndpoint(Resource):
 JobSnapshotsResource = generate_resource_snapshots_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.JOB,
     route_prefix=V1_JOBS_ROUTE,
     searchable_fields=SEARCHABLE_FIELDS,
     page_schema=JobPageSchema,
@@ -481,16 +509,16 @@ JobSnapshotsResource = generate_resource_snapshots_endpoint(
 JobSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
     api=api,
     resource_model=models.Job,
-    resource_name=RESOURCE_TYPE,
+    resource_type=EntityType.JOB,
     response_schema=JobSchema,
     build_fn=utils.build_job,
 )
 
 JobTagsResource = generate_resource_tags_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.JOB.db_table_name,
 )
 JobTagsIdResource = generate_resource_tags_id_endpoint(
     api=api,
-    resource_name=RESOURCE_TYPE,
+    resource_name=EntityType.JOB.db_table_name,
 )

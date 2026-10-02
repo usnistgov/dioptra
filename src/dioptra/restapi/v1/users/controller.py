@@ -92,6 +92,8 @@ class UserEndpoint(Resource):
             index=page_index,
             length=page_length,
             total_num_elements=total_num_users,
+            sort_by=None,
+            descending=None,
         )
 
     @accepts(schema=UserSchema, api=api)

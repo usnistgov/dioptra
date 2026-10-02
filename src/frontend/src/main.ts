@@ -1,47 +1,47 @@
-import './assets/main.css'
+import "./assets/main.css";
 
-import { createApp, nextTick } from 'vue'
-import { createPinia } from 'pinia'
-import VueCodemirror from 'vue-codemirror'
+import { createApp, nextTick } from "vue";
+import { createPinia } from "pinia";
+import VueCodemirror from "vue-codemirror";
 
-import { Quasar, AppFullscreen, Loading, Notify } from 'quasar'
+import { Quasar, AppFullscreen, Loading, Notify } from "quasar";
 
 // Import icon libraries
 nextTick(async () => {
-  await import('@quasar/extras/material-icons/material-icons.css')
-  await import('@quasar/extras/material-symbols-outlined/material-symbols-outlined.css')
-  await import('@quasar/extras/fontawesome-v6/fontawesome-v6.css')
-})
+  await import("@quasar/extras/material-icons/material-icons.css");
+  await import("@quasar/extras/material-symbols-outlined/material-symbols-outlined.css");
+  await import("@quasar/extras/fontawesome-v7/fontawesome-v7.css");
+});
 
 // Import Quasar css
-import 'quasar/src/css/index.sass'
+import "quasar/src/css/index.sass";
 
-import App from './App.vue'
-import router from './router'
+import App from "./App.vue";
+import router from "./router";
 
-const app = createApp(App)
+const app = createApp(App);
 
 app.use(Quasar, {
   plugins: {
     AppFullscreen,
     Loading,
-    Notify
+    Notify,
   },
   config: {
-    dark: getSavedDarkMode()
-  }
-})
+    dark: getSavedDarkMode(),
+  },
+});
 
-app.use(createPinia())
-app.use(router)
-app.use(VueCodemirror)
+app.use(createPinia());
+app.use(router);
+app.use(VueCodemirror);
 
-app.mount('#app')
+app.mount("#app");
 
 function getSavedDarkMode() {
-  let savedDarkMode = localStorage.getItem('darkMode')
-  if(savedDarkMode !== null) {
-    return savedDarkMode === 'true'
+  const savedDarkMode = localStorage.getItem("darkMode");
+  if (savedDarkMode !== null) {
+    return savedDarkMode === "true";
   }
-  return 'auto'
+  return "auto";
 }

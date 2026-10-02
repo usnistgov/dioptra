@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
@@ -89,5 +90,6 @@ class QueueGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /queues endpoint."""

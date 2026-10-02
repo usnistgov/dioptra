@@ -192,3 +192,22 @@ def select_one_or_more_files(
         )
 
     return dioptra_files
+
+
+def delimited_values(
+    kv_dict: dict[str, str] | None, equality: str = ":", separator: str = ","
+) -> str:
+    """Converts a dictionary to a string representing that dictionary.
+
+    Args:
+        kv_dict: The dictionary to convert.
+        equality: The character to use to represent mappings (between keys and values in the dictionary).
+        separator: The character to use to separate mappings.
+
+    Returns:
+        A string representing the dictionary.
+
+    """
+
+    kv_dict = kv_dict or {}
+    return separator.join([f"{k}{equality}{v}" for k, v in kv_dict.items()])

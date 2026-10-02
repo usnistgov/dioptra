@@ -25,6 +25,7 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
 from dioptra.restapi.errors import BackendDatabaseError, EntityDoesNotExistError
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -35,7 +36,7 @@ class ResourceSnapshotsService(object):
     def __init__(
         self,
         resource_model: Type[models.ResourceSnapshot],
-        resource_type: str,
+        resource_type: EntityType,
         searchable_fields: dict[str, Any],
     ) -> None:
         """Initialize the draft service.
@@ -80,14 +81,15 @@ class ResourceSnapshotsService(object):
         log.debug("Get resource snapshots by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+            resource_id=resource_id, resource_type=self._resource_type.db_table_name
         )
         resource = db.session.scalars(stmt).first()
 
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    self._resource_type, resource_id=resource_id
+                    self._resource_type,
+                    resource_id=resource_id,
                 )
 
             return None
@@ -105,7 +107,6 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         total_num_snapshots = db.session.scalars(stmt).unique().first()
@@ -127,14 +128,13 @@ class ResourceSnapshotsService(object):
             .where(
                 *filters,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
             .order_by(self.resource_model.created_on)
             .offset(page_index)
             .limit(page_length)
         )
         snapshots = [
-            {self._resource_type: snapshot, "has_draft": None}
+            {self._resource_type.db_table_name: snapshot, "has_draft": None}
             for snapshot in db.session.scalars(stmt).unique()
         ]
 
@@ -146,7 +146,7 @@ class ResourceSnapshotsIdService(object):
     def __init__(
         self,
         resource_model: Type[models.ResourceSnapshot],
-        resource_type: str,
+        resource_type: EntityType,
     ) -> None:
         """Initialize the draft service.
 
@@ -183,14 +183,15 @@ class ResourceSnapshotsIdService(object):
         log.debug("Get resource snapshot by id", resource_id=resource_id)
 
         stmt = select(models.Resource).filter_by(
-            resource_id=resource_id, resource_type=self._resource_type, is_deleted=False
+            resource_id=resource_id, resource_type=self._resource_type.db_table_name
         )
         resource = db.session.scalars(stmt).first()
 
         if resource is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    self._resource_type, resource_id=resource_id
+                    self._resource_type,
+                    resource_id=resource_id,
                 )
 
             return None
@@ -201,7 +202,6 @@ class ResourceSnapshotsIdService(object):
             .where(
                 models.ResourceSnapshot.resource_snapshot_id == snapshot_id,
                 models.Resource.resource_id == resource_id,
-                models.Resource.is_deleted == False,  # noqa: E712
             )
         )
         snapshot = db.session.scalars(stmt).first()
@@ -209,9 +209,10 @@ class ResourceSnapshotsIdService(object):
         if snapshot is None:
             if error_if_not_found:
                 raise EntityDoesNotExistError(
-                    self._resource_type + "_snapshot", snapshot_id=snapshot_id
+                    self._resource_type,
+                    snapshot_id=snapshot_id,
                 )
 
             return None
 
-        return {self._resource_type: snapshot, "has_draft": None}
+        return {self._resource_type.db_table_name: snapshot, "has_draft": None}
