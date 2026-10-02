@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Deployment Template Reference &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Deployment Template Reference &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -511,7 +512,7 @@ If you are using locally built images instead, set this to an empty string.</p>
 </section>
 <section id="container-tag">
 <h3>container_tag<a class="headerlink" href="#container-tag" title="Permalink to this headline">#</a></h3>
-<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.1.0</span></code></p>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.2.0</span></code></p>
 <p>This should match the tags of the Dioptra container images you will be using.
 If you are using Docker, you can see the available tags by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code>.
 If you built the images manually using the build commands in the repository, the images will have the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.</p>
@@ -627,7 +628,7 @@ The values between the square brackets <code class="docutils literal notranslate
 Press Enter to accept the default, or type a new value.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>deployment_name [Dioptra deployment]: Dioptra deployment
 container_registry [ghcr.io/usnistgov]:
-container_tag [1.1.0]: 1.1.0
+container_tag [1.2.0]: 1.2.0
 docker_compose_path [docker compose]: docker compose
 systemd_required_mounts []:
 nginx_server_name [dioptra.example.org]: _
@@ -666,16 +667,16 @@ The folder name will be a slugified version of the <strong>deployment_name</stro
 <p><strong>Override specific values on the command line:</strong></p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">&#39;{&quot;datasets_directory&quot;: &quot;~/datasets&quot;, &quot;nginx_server_name&quot;: &quot;_&quot;}&#39;</span>
+<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">'{"datasets_directory": "~/datasets", "nginx_server_name": "_"}'</span>
 </pre></div>
 </div>
 <p><strong>Override values from a JSON file:</strong></p>
 <p>Create a file named <code class="docutils literal notranslate"><span class="pre">overrides.json</span></code>:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;deployment_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;My Dioptra Deployment&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;datasets_directory&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/data/ml-datasets&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;nginx_server_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;num_tensorflow_cpu_workers&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2&quot;</span>
+<span class="w">  </span><span class="nt">"deployment_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"My Dioptra Deployment"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"datasets_directory"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/data/ml-datasets"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"nginx_server_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"_"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"num_tensorflow_cpu_workers"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span>
 <span class="p">}</span>
 </pre></div>
 </div>

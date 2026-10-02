@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Update Your Deployment &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Update Your Deployment &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -525,7 +526,7 @@ document.write(`
 <p>This compares your local deployment against the upstream template and applies any updates.</p>
 <p><strong>To update specific template variables at the same time:</strong></p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>update<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variables-to-update<span class="w"> </span><span class="s1">&#39;{ &quot;datasets_directory&quot;: &quot;/path/to/dioptra/data&quot; }&#39;</span>
+<span class="w">  </span>--variables-to-update<span class="w"> </span><span class="s1">'{ "datasets_directory": "/path/to/dioptra/data" }'</span>
 </pre></div>
 </div>
 <div class="admonition note">

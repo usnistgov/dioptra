@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Workflows Client Methods &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Workflows Client Methods &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -557,32 +558,13 @@ existing resource.</p>
 </section>
 <section id="workflows-analysis-and-validation">
 <span id="reference-workflows-client-methods-analysis-validation"></span><h2><a class="toc-backref" href="#id5">Workflows - Analysis and Validation</a><a class="headerlink" href="#workflows-analysis-and-validation" title="Permalink to this headline">#</a></h2>
-<p>These methods allow for the validation of entrypoint parameters and the analysis of plugin task signatures within the workflow context.</p>
+<p>Use the workflow method below to analyze plugin task signatures.</p>
 <section id="validate-entrypoint">
 <h3><a class="toc-backref" href="#id6">Validate Entrypoint</a><a class="headerlink" href="#validate-entrypoint" title="Permalink to this headline">#</a></h3>
-<blockquote>
-<div><dl class="py method">
-<dt class="sig sig-object py" id="dioptra.client.workflows.WorkflowsCollectionClient.validate_entrypoint">
-<span class="sig-prename descclassname"><span class="pre">WorkflowsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">validate_entrypoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugin_snapshots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.workflows.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/workflows.html#WorkflowsCollectionClient.validate_entrypoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.workflows.WorkflowsCollectionClient.validate_entrypoint" title="Permalink to this definition">#</a></dt>
-<dd><p>Validate a set of proposed inputs for an entrypoint resource.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>group_id</strong> – The ID of the group validating the entrypoint resource.</p></li>
-<li><p><strong>task_graph</strong> – The proposed task graph for the entrypoint resource.</p></li>
-<li><p><strong>plugin_snapshots</strong> – A list of identifiers for the plugin snapshots that will
-be attached to the Entrypoint resource.</p></li>
-<li><p><strong>entrypoint_parameters</strong> – The proposed list of parameters for the entrypoint
-resource.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The response from the Dioptra API.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div></blockquote>
+<p>For entrypoint dry runs, use <code class="docutils literal notranslate"><span class="pre">client.entrypoints.create(...,</span> <span class="pre">validate_only=True)</span></code>
+or <code class="docutils literal notranslate"><span class="pre">client.entrypoints.modify_by_id(...,</span> <span class="pre">validate_only=True)</span></code>.
+See <a class="reference internal" href="entrypoints-client-methods.html#reference-entrypoints-client-methods-validation"><span class="std std-ref">Entrypoints - Validation Dry Runs</span></a> for the supported
+interface and its validation behavior.</p>
 </section>
 <section id="analyze-plugin-task-signatures">
 <h3><a class="toc-backref" href="#id7">Analyze Plugin Task Signatures</a><a class="headerlink" href="#analyze-plugin-task-signatures" title="Permalink to this headline">#</a></h3>

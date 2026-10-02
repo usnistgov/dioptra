@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Declarative Experiment Description &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Declarative Experiment Description &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -670,22 +671,22 @@ which provide the basic ingredients for the experiment: types, parameters, artif
 input parameters, tasks, a graph which links task invocations together, and the artifact
 output declaration:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">types</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;&lt;type</span><span class="nv"> </span><span class="s">definitions</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+<span class="w">    </span><span class="s">"&lt;type</span><span class="nv"> </span><span class="s">definitions</span><span class="nv"> </span><span class="s">here&gt;"</span>
 
 <span class="nt">parameters</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;&lt;parameters</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+<span class="w">    </span><span class="s">"&lt;parameters</span><span class="nv"> </span><span class="s">here&gt;"</span>
 
 <span class="nt">artifact_inputs</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;&lt;artifact</span><span class="nv"> </span><span class="s">input</span><span class="nv"> </span><span class="s">parameters</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+<span class="w">    </span><span class="s">"&lt;artifact</span><span class="nv"> </span><span class="s">input</span><span class="nv"> </span><span class="s">parameters</span><span class="nv"> </span><span class="s">here&gt;"</span>
 
 <span class="nt">tasks</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;&lt;tasks</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+<span class="w">    </span><span class="s">"&lt;tasks</span><span class="nv"> </span><span class="s">here&gt;"</span>
 
 <span class="nt">graph</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;&lt;graph</span><span class="nv"> </span><span class="s">here&gt;&quot;</span>
+<span class="w">    </span><span class="s">"&lt;graph</span><span class="nv"> </span><span class="s">here&gt;"</span>
 
 <span class="nt">artifact_outputs</span><span class="p">:</span>
-<span class="w">    </span><span class="s">&quot;artifact</span><span class="nv"> </span><span class="s">output</span><span class="nv"> </span><span class="s">declaration</span><span class="nv"> </span><span class="s">here&quot;</span>
+<span class="w">    </span><span class="s">"artifact</span><span class="nv"> </span><span class="s">output</span><span class="nv"> </span><span class="s">declaration</span><span class="nv"> </span><span class="s">here"</span>
 </pre></div>
 </div>
 <p>The rest of the structural description describes what goes in each of those six places.</p>
@@ -865,7 +866,7 @@ to the parameter.  If a type is not explicitly given, it will be inferred from
 the default.  For example:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">global_a</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">global_b</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;foo&quot;</span>
+<span class="w">    </span><span class="nt">global_b</span><span class="p">:</span><span class="w"> </span><span class="s">"foo"</span>
 <span class="w">    </span><span class="nt">global_c</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integer</span>
 <span class="w">        </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
@@ -896,12 +897,12 @@ plugin description supports up to three keys: <code class="docutils literal notr
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">task_short_name1</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin1</span>
-<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;input_definitions&gt;&quot;</span>
-<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;output_definitions&gt;&quot;</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;input_definitions&gt;"</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;output_definitions&gt;"</span>
 <span class="w">    </span><span class="nt">task_short_name2</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">plugin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">org.example.plugin2</span>
-<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;input_definitions&gt;&quot;</span>
-<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;output_definitions&gt;&quot;</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;input_definitions&gt;"</span>
+<span class="w">        </span><span class="nt">outputs</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;output_definitions&gt;"</span>
 </pre></div>
 </div>
 <section id="task-plugin">
@@ -1014,9 +1015,9 @@ task plugin, so the step description describes which plugin to invoke and how
 to invoke it:</p>
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">step1</span><span class="p">:</span>
-<span class="w">        </span><span class="s">&quot;step</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">description&quot;</span>
+<span class="w">        </span><span class="s">"step</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">description"</span>
 <span class="w">    </span><span class="nt">step2</span><span class="p">:</span>
-<span class="w">        </span><span class="s">&quot;step</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">description&quot;</span>
+<span class="w">        </span><span class="s">"step</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">description"</span>
 </pre></div>
 </div>
 <section id="steps">

@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.artifacts &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.artifacts &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -424,35 +425,35 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">SnapshotsSubCollectionClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileTypes</span>
 
-<span class="n">FILES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;files&quot;</span>
-<span class="n">CONTENTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;contents&quot;</span>
+<span class="n">FILES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"files"</span>
+<span class="n">CONTENTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"contents"</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ArtifactsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /artifacts collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /artifacts collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;artifacts&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"artifacts"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ArtifactsCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the ArtifactsCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="n">ArtifactsSnapshotCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ArtifactsSnapshotCollectionClient[T]&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving artifact resource snapshots.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ArtifactsSnapshotCollectionClient[T]"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving artifact resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -468,9 +469,9 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/artifacts/1/snapshots/2/contents?fileType=tar_gz&amp;path=%2Fpath</span>
 <span class="sd">            client.artifacts.snapshots.get_contents(</span>
-<span class="sd">                1, snapshot_id=2, file_type=FileTypes.TAR_GZ, path=&quot;/path&quot;</span>
+<span class="sd">                1, snapshot_id=2, file_type=FileTypes.TAR_GZ, path="/path"</span>
 <span class="sd">            )</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
 <div class="viewcode-block" id="ArtifactsCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/artifacts-client-methods.html#dioptra.client.artifacts.ArtifactsCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -482,7 +483,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of artifacts.</span>
+<span class="w">        </span><span class="sd">"""Get a list of artifacts.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group id the artifacts belong to. If None, return</span>
@@ -495,28 +496,28 @@ document.write(`
 <span class="sd">                defaults to None.</span>
 <span class="sd">            descending: Sort the returned list in descending order.</span>
 <span class="sd">                Optional, defaults to None.</span>
-<span class="sd">            search: Search for artifacts using the Dioptra API&#39;s query</span>
+<span class="sd">            search: Search for artifacts using the Dioptra API's query</span>
 <span class="sd">                language. Optional, defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"groupId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -524,14 +525,14 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ArtifactsCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/artifacts-client-methods.html#dioptra.client.artifacts.ArtifactsCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">artifact_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the artifact matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the artifact matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            artifact_id: The artifact id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="ArtifactsCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/artifacts-client-methods.html#dioptra.client.artifacts.ArtifactsCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
@@ -543,7 +544,7 @@ document.write(`
         <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates an artifact and associates with an existing Job.</span>
+<span class="w">        </span><span class="sd">"""Creates an artifact and associates with an existing Job.</span>
 
 <span class="sd">            Both plugin_snapshot_id and must be None or not None. If None, then the</span>
 <span class="sd">            artifact is unavailable for use as input into another job and may only be</span>
@@ -563,21 +564,21 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">),</span>
-            <span class="s2">&quot;job&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
-            <span class="s2">&quot;artifactUri&quot;</span><span class="p">:</span> <span class="n">artifact_uri</span><span class="p">,</span>
+            <span class="s2">"group"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">),</span>
+            <span class="s2">"job"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
+            <span class="s2">"artifactUri"</span><span class="p">:</span> <span class="n">artifact_uri</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">plugin_snapshot_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;pluginSnapshotId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">plugin_snapshot_id</span><span class="p">)</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"pluginSnapshotId"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">plugin_snapshot_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">task_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;taskId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"taskId"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
@@ -588,7 +589,7 @@ document.write(`
         <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify the artifact matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Modify the artifact matching the provided id.</span>
 
 <span class="sd">            Both plugin_snapshot_id and must be None or not None. If None, then the</span>
 <span class="sd">            artifact is unavailable for use as input into another job and may only be</span>
@@ -607,29 +608,29 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="n">plugin_snapshot_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;pluginSnapshotId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">plugin_snapshot_id</span><span class="p">)</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"pluginSnapshotId"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">plugin_snapshot_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">task_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;taskId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"taskId"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ArtifactsCollectionClient.get_files"><a class="viewcode-back" href="../../../reference/python-client/artifacts-client-methods.html#dioptra.client.artifacts.ArtifactsCollectionClient.get_files">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">artifact_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the file listing for the artifact matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the file listing for the artifact matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            artifact_id: The artifact id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact_id</span><span class="p">),</span> <span class="n">FILES</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ArtifactsCollectionClient.get_contents"><a class="viewcode-back" href="../../../reference/python-client/artifacts-client-methods.html#dioptra.client.artifacts.ArtifactsCollectionClient.get_contents">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_contents</span><span class="p">(</span>
@@ -638,9 +639,9 @@ document.write(`
         <span class="n">file_type</span><span class="p">:</span> <span class="n">FileTypes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">artifact_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;contents&quot;</span><span class="p">,</span>
+        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"contents"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the contents of an artifact with the given artifact resource id.</span>
+<span class="w">        </span><span class="sd">"""Get the contents of an artifact with the given artifact resource id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            artifact_id: The artifact resource id, an integer.</span>
@@ -656,11 +657,11 @@ document.write(`
 <span class="sd">                defaults to None. If None, then the current working directory will be</span>
 <span class="sd">                used.</span>
 <span class="sd">            file_stem: the file prefix or stem to use for the name of the</span>
-<span class="sd">                downloaded file. Defaults to the value of &quot;contents&quot;.</span>
+<span class="sd">                downloaded file. Defaults to the value of "contents".</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A path to where the contents are downloaded.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">contents_path</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">file_stem</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">file_stem</span><span class="p">)</span>
         <span class="p">)</span>
@@ -668,9 +669,9 @@ document.write(`
         <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">contents_path</span> <span class="o">=</span> <span class="n">contents_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">file_type</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fileType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"fileType"</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span>
         <span class="k">if</span> <span class="n">artifact_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_path</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_path</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">download</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -696,9 +697,9 @@ document.write(`
         <span class="n">file_type</span><span class="p">:</span> <span class="n">FileTypes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">artifact_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;contents&quot;</span><span class="p">,</span>
+        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"contents"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the contents of an artifact with the given artifact resource id and</span>
+<span class="w">        </span><span class="sd">"""Get the contents of an artifact with the given artifact resource id and</span>
 <span class="sd">        artifact snapshot id.</span>
 
 <span class="sd">        Args:</span>
@@ -716,20 +717,20 @@ document.write(`
 <span class="sd">                defaults to None. If None, then the current working directory will be</span>
 <span class="sd">                used.</span>
 <span class="sd">            file_stem: the file prefix or stem to use for the name of the</span>
-<span class="sd">                downloaded file. Defaults to the value of &quot;contents&quot;.</span>
+<span class="sd">                downloaded file. Defaults to the value of "contents".</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A path to where the contents are downloaded.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">contents_path</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">file_stem</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">file_stem</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">contents_path</span> <span class="o">=</span> <span class="n">contents_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">file_type</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;fileType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"fileType"</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span>
         <span class="k">if</span> <span class="n">artifact_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_path</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_path</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">download</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">artifact_id</span><span class="p">),</span>

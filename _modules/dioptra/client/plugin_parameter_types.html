@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.plugin_parameter_types &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.plugin_parameter_types &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -428,26 +429,26 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">SnapshotsSubCollectionClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagsSubCollectionClient</span>
 
-<span class="n">DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;structure&quot;</span><span class="p">}</span>
+<span class="n">DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">,</span> <span class="s2">"structure"</span><span class="p">}</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">PluginParameterTypesCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /pluginParameterTypes collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /pluginParameterTypes collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pluginParameterTypes&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pluginParameterTypes"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the PluginParameterTypesCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the PluginParameterTypesCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span> <span class="o">=</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
@@ -472,7 +473,7 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the new plugin parameter type drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the new plugin parameter type drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -489,24 +490,24 @@ document.write(`
 <span class="sd">            # PUT /api/v1/pluginParameterTypes/drafts/1</span>
 <span class="sd">            client.plugin_parameter_types.new_resource_drafts.modify(</span>
 <span class="sd">                draft_id=1,</span>
-<span class="sd">                name=&quot;new-name&quot;,</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                name="new-name",</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">                structure=None,</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/pluginParameterTypes/drafts</span>
 <span class="sd">            client.plugin_parameter_types.new_resource_drafts.create(</span>
-<span class="sd">                group_id=1, name=&quot;name&quot;, description=&quot;description&quot;, structure=None</span>
+<span class="sd">                group_id=1, name="name", description="description", structure=None</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/pluginParameterTypes/drafts/1</span>
 <span class="sd">            client.plugin_parameter_types.new_resource_drafts.delete(draft_id=1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">modify_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The client for managing the plugin parameter type modification drafts</span>
 <span class="sd">        sub-collection.</span>
 
@@ -523,24 +524,24 @@ document.write(`
 <span class="sd">            client.plugin_parameter_types.modify_resource_drafts.modify(</span>
 <span class="sd">                1,</span>
 <span class="sd">                resource_snapshot_id=1,</span>
-<span class="sd">                name=&quot;new-name&quot;,</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                name="new-name",</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">                structure=None,</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/pluginParameterTypes/1/draft</span>
 <span class="sd">            client.plugin_parameter_types.modify_resource_drafts.create(</span>
-<span class="sd">                1, name=&quot;name&quot;, description=&quot;description&quot;, structure=None</span>
+<span class="sd">                1, name="name", description="description", structure=None</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/pluginParameterTypes/1/draft</span>
 <span class="sd">            client.plugin_parameter_types.modify_resource_drafts.delete(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving plugin parameter type resource snapshots.</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving plugin parameter type resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -553,12 +554,12 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/pluginParameterTypes/1/snapshots/2</span>
 <span class="sd">            client.plugin_parameter_types.snapshots.get_by_id(1, snapshot_id=2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The client for managing the tags sub-collection owned by the</span>
 <span class="sd">        /pluginParameterTypes collection.</span>
 
@@ -582,7 +583,7 @@ document.write(`
 
 <span class="sd">            # DELETE /api/v1/pluginParameterTypes/1/tags</span>
 <span class="sd">            client.plugin_parameter_types.tags.remove(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
 
 <div class="viewcode-block" id="PluginParameterTypesCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/param-types-client-methods.html#dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -593,8 +594,9 @@ document.write(`
         <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_deleted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of plugin parameter types.</span>
+<span class="w">        </span><span class="sd">"""Get a list of plugin parameter types.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group id the plugin parameter types belong to. If None, return</span>
@@ -607,28 +609,31 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for plugin parameter types using the Dioptra API&#39;s query</span>
+<span class="sd">            search: Search for plugin parameter types using the Dioptra API's query</span>
 <span class="sd">                language. Optional, defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"groupId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+
+        <span class="k">if</span> <span class="n">show_deleted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"showDeleted"</span><span class="p">]</span> <span class="o">=</span> <span class="n">show_deleted</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -636,14 +641,14 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginParameterTypesCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/param-types-client-methods.html#dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_parameter_type_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the plugin parameter type matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the plugin parameter type matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_parameter_type_id: The plugin parameter type id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_parameter_type_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="PluginParameterTypesCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/param-types-client-methods.html#dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
@@ -653,7 +658,7 @@ document.write(`
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">structure</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a plugin parameter type.</span>
+<span class="w">        </span><span class="sd">"""Creates a plugin parameter type.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The id of the group that will own the plugin parameter type.</span>
@@ -666,17 +671,17 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"group"</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">if</span> <span class="n">structure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;structure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">structure</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">structure</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
@@ -687,7 +692,7 @@ document.write(`
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">structure</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify the plugin parameter type matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Modify the plugin parameter type matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_parameter_type_id: The plugin parameter type id, an integer.</span>
@@ -700,26 +705,26 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">if</span> <span class="n">structure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;structure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">structure</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">structure</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_parameter_type_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginParameterTypesCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/param-types-client-methods.html#dioptra.client.plugin_parameter_types.PluginParameterTypesCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_parameter_type_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the plugin parameter type matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Delete the plugin parameter type matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_parameter_type_id: The plugin parameter type id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_parameter_type_id</span><span class="p">))</span></div>
 </pre></div>
 

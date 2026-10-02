@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Utilizing Metric Logging &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Utilizing Metric Logging &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -140,7 +140,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -235,6 +235,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -473,7 +474,7 @@ document.write(`
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
 <p>In the last tutorial, you built a multi-step workflow that transformed a numpy array multiple times. After each step, you printed summary stats and then viewed those in the logs.</p>
 <p>Instead of printing values in the logs, you will now record them using <strong>metrics</strong>. This will produce time-series visualizations. This is useful for tracking a metric across various steps, both within and across plugins. Metrics are stored at the job level.</p>
-<p>You will replace your prior <code class="docutils literal notranslate"><span class="pre">print_stats</span></code> plugin task with a new <code class="docutils literal notranslate"><span class="pre">log_metrics</span></code> task.</p>
+<p>You will replace your prior <code class="docutils literal notranslate"><span class="pre">print_stats</span></code> plugin task with a new <code class="docutils literal notranslate"><span class="pre">log_stats</span></code> task.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This part of the tutorial will not work properly until new changes from DIOPTRA-OPTIC branch are merged in for metric logging.</p>
@@ -502,11 +503,11 @@ document.write(`
     <span class="n">arr_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_array</span><span class="p">))</span>
     
     <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="n">arr_mean</span><span class="p">,</span>
-        <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="n">arr_std</span><span class="p">,</span>
-        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">arr_min</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">arr_max</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">&quot;len&quot;</span><span class="p">:</span> <span class="n">arr_len</span><span class="p">,</span>
+        <span class="s2">"mean"</span><span class="p">:</span> <span class="n">arr_mean</span><span class="p">,</span>
+        <span class="s2">"std"</span><span class="p">:</span> <span class="n">arr_std</span><span class="p">,</span>
+        <span class="s2">"min"</span><span class="p">:</span> <span class="n">arr_min</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"max"</span><span class="p">:</span> <span class="n">arr_max</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"len"</span><span class="p">:</span> <span class="n">arr_len</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -514,8 +515,8 @@ document.write(`
         <span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.sdk.utilities.auth_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_authenticated_worker_client</span>
 
         <span class="c1"># Get the job ID and client</span>
-        <span class="n">job_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;__JOB_ID&quot;</span><span class="p">]</span>
-        <span class="n">dioptra_client</span> <span class="o">=</span> <span class="n">get_authenticated_worker_client</span><span class="p">(</span><span class="n">LOGGER</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+        <span class="n">job_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"__JOB_ID"</span><span class="p">]</span>
+        <span class="n">dioptra_client</span> <span class="o">=</span> <span class="n">get_authenticated_worker_client</span><span class="p">(</span><span class="n">LOGGER</span><span class="p">,</span> <span class="s2">"json"</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dioptra_client</span><span class="o">.</span><span class="n">jobs</span><span class="o">.</span><span class="n">append_metric_by_id</span><span class="p">(</span>
@@ -528,20 +529,21 @@ document.write(`
     <span class="c1"># Handle failure and fall back to basic logging</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Failed to log metrics for &#39;</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">&#39; to Dioptra client, falling back to standard logger.&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"Failed to log metrics for '</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">' to Dioptra client, falling back to standard logger."</span><span class="p">,</span>
             <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="p">)</span>
         
         <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Plugin Task: &#39;</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">&#39; - &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;The mean value of the array after this step was </span><span class="si">{</span><span class="n">arr_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;with std=</span><span class="si">{</span><span class="n">arr_std</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, min=</span><span class="si">{</span><span class="n">arr_min</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">arr_max</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, len=</span><span class="si">{</span><span class="n">arr_len</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Plugin Task: '</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">' - "</span>
+            <span class="sa">f</span><span class="s2">"The mean value of the array after this step was </span><span class="si">{</span><span class="n">arr_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"with std=</span><span class="si">{</span><span class="n">arr_std</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, min=</span><span class="si">{</span><span class="n">arr_min</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">arr_max</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, len=</span><span class="si">{</span><span class="n">arr_len</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <ol class="arabic simple" start="4">
-<li><p>Click <strong>Import Function Tasks</strong> again to register the new plugin task.</p></li>
+<li><p>Click <strong>Import Function Tasks</strong>, select <code class="docutils literal notranslate"><span class="pre">log_stats</span></code>, and click <strong>Import</strong> to register the new plugin task.</p></li>
+<li><p>Click <strong>Submit File</strong> to save the edited code and registered task.</p></li>
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -550,11 +552,12 @@ document.write(`
 </section>
 <section class="header-on-a-card header-steps" id="step-2-modify-entrypoint-3">
 <h3>Step 2: Modify Entrypoint 3<a class="headerlink" href="#step-2-modify-entrypoint-3" title="Permalink to this headline">#</a></h3>
-<p>Now edit Entrypoint 3 to use this new plugin task. You will change the task graph to utilize <code class="docutils literal notranslate"><span class="pre">log_metrics</span></code> instead of <code class="docutils literal notranslate"><span class="pre">print_stats</span></code>.</p>
+<p>Now edit Entrypoint 3 to use this new plugin task. You will change the task graph to utilize <code class="docutils literal notranslate"><span class="pre">log_stats</span></code> instead of <code class="docutils literal notranslate"><span class="pre">print_stats</span></code>.</p>
 <ol class="arabic simple">
 <li><p>Navigate to <strong>Entrypoints</strong> and open <strong>Entrypoint 3</strong>.</p></li>
-<li><p>In the <strong>Task Graph YAML</strong> editor, find every reference to the task <code class="docutils literal notranslate"><span class="pre">print_stats</span></code> and replace it with <code class="docutils literal notranslate"><span class="pre">log_metrics</span></code>.</p></li>
-<li><p>Click <strong>Submit Entrypoint</strong>.</p></li>
+<li><p>Under <strong>Task Plugins</strong>, click the <strong>Sync to latest version</strong> button beside <strong>sample_and_transform</strong> to select the plugin’s latest version.</p></li>
+<li><p>In the <strong>Task Graph</strong> YAML editor, find every reference to the task <code class="docutils literal notranslate"><span class="pre">print_stats</span></code> and replace it with <code class="docutils literal notranslate"><span class="pre">log_stats</span></code>.</p></li>
+<li><p>Click <strong>Submit EntryPoint</strong> to save the edited task graph and selected plugin version together.</p></li>
 </ol>
 </section>
 <section class="header-on-a-card header-steps" id="step-3-re-run-entrypoint-3">

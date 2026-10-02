@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.snapshots &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.snapshots &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -426,17 +427,17 @@ document.write(`
 
 <span class="n">LOGGER</span><span class="p">:</span> <span class="n">BoundLogger</span> <span class="o">=</span> <span class="n">structlog</span><span class="o">.</span><span class="n">stdlib</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">SnapshotsSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing a snapshots sub-collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing a snapshots sub-collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the sub-collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;snapshots&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"snapshots"</span>
 
 <div class="viewcode-block" id="SnapshotsSubCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/snapshots-client-methods.html#dioptra.client.snapshots.SnapshotsSubCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -445,7 +446,7 @@ document.write(`
         <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the list of snapshots for a given resource.</span>
+<span class="w">        </span><span class="sd">"""Get the list of snapshots for a given resource.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            *resource_ids: The parent resource ids that own the snapshots</span>
@@ -453,19 +454,19 @@ document.write(`
 <span class="sd">            index: The paging index. Optional, defaults to 0.</span>
 <span class="sd">            page_length: The maximum number of snapshots to return in the paged</span>
 <span class="sd">                response. Optional, defaults to 10.</span>
-<span class="sd">            search: Search for snapshots using the Dioptra API&#39;s query language.</span>
+<span class="sd">            search: Search for snapshots using the Dioptra API's query language.</span>
 <span class="sd">                Optional, defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="o">*</span><span class="n">resource_ids</span><span class="p">),</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
@@ -476,7 +477,7 @@ document.write(`
         <span class="o">*</span><span class="n">resource_ids</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a snapshot by its id for a specific resource.</span>
+<span class="w">        </span><span class="sd">"""Get a snapshot by its id for a specific resource.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            *resource_ids: The parent resource ids that own the snapshots</span>
@@ -485,7 +486,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="o">*</span><span class="n">resource_ids</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
         <span class="p">)</span></div>

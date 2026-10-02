@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Download the Container Images &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Download the Container Images &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -576,7 +577,7 @@ Clone with SSH</label><div class="sd-tab-content docutils">
 <p>The repository root contains a <code class="docutils literal notranslate"><span class="pre">verify.json</span></code> file that specifies the path to the public key.
 Retrieve the key path:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dioptra
-<span class="nv">KEY_PATH</span><span class="o">=</span><span class="k">$(</span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.key_path&#39;</span><span class="w"> </span>verify.json<span class="k">)</span>
+<span class="nv">KEY_PATH</span><span class="o">=</span><span class="k">$(</span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">'.key_path'</span><span class="w"> </span>verify.json<span class="k">)</span>
 </pre></div>
 </div>
 <p>If you do not have <code class="docutils literal notranslate"><span class="pre">jq</span></code> installed, open <code class="docutils literal notranslate"><span class="pre">verify.json</span></code> and note the value of the <code class="docutils literal notranslate"><span class="pre">key_path</span></code> field (e.g., <code class="docutils literal notranslate"><span class="pre">keys/dioptra.pub</span></code>).</p>
@@ -585,7 +586,7 @@ Retrieve the key path:</p>
 <h3>Step 6: Verify Each Image<a class="headerlink" href="#step-6-verify-each-image" title="Permalink to this headline">#</a></h3>
 <p>Use <code class="docutils literal notranslate"><span class="pre">cosign</span> <span class="pre">verify</span></code> to verify each downloaded image.
 Run this command for each image, replacing the image name and tag as needed:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$KEY_PATH</span><span class="s2">&quot;</span><span class="w"> </span>ghcr.io/usnistgov/dioptra/nginx:<span class="nv">$TAG</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">"</span><span class="nv">$KEY_PATH</span><span class="s2">"</span><span class="w"> </span>ghcr.io/usnistgov/dioptra/nginx:<span class="nv">$TAG</span>
 </pre></div>
 </div>
 <p>Successful verification produces output similar to:</p>
@@ -595,7 +596,7 @@ The following checks were performed on each of these signatures:
     - Existence of the claims in the transparency log was verified offline
     - The signatures were verified against the specified public key
 
-[{&quot;critical&quot;:{&quot;identity&quot;:{&quot;docker-reference&quot;:&quot;ghcr.io/usnistgov/dioptra/nginx&quot;},&quot;image&quot;:{&quot;docker-manifest-digest&quot;:&quot;sha256:531d71113540f892bc896bb99dcb7d250abd0b38de122600aa4409463c94b9e7&quot;},&quot;type&quot;:&quot;cosign container image signature&quot;},&quot;optional&quot;:null}]
+[{"critical":{"identity":{"docker-reference":"ghcr.io/usnistgov/dioptra/nginx"},"image":{"docker-manifest-digest":"sha256:531d71113540f892bc896bb99dcb7d250abd0b38de122600aa4409463c94b9e7"},"type":"cosign container image signature"},"optional":null}]
 </pre></div>
 </div>
 <p>Repeat this step for each image you downloaded.</p>
@@ -603,13 +604,13 @@ The following checks were performed on each of these signatures:
 <p class="admonition-title">Tip</p>
 <p>To verify all CPU images at once, you can use a loop:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>IMAGE<span class="w"> </span><span class="k">in</span><span class="w"> </span>nginx<span class="w"> </span>restapi<span class="w"> </span>mlflow-tracking<span class="w"> </span>pytorch-cpu<span class="w"> </span>tensorflow2-cpu<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$KEY_PATH</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;ghcr.io/usnistgov/dioptra/</span><span class="nv">$IMAGE</span><span class="s2">:</span><span class="nv">$TAG</span><span class="s2">&quot;</span>
+<span class="w">  </span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">"</span><span class="nv">$KEY_PATH</span><span class="s2">"</span><span class="w"> </span><span class="s2">"ghcr.io/usnistgov/dioptra/</span><span class="nv">$IMAGE</span><span class="s2">:</span><span class="nv">$TAG</span><span class="s2">"</span>
 <span class="k">done</span>
 </pre></div>
 </div>
 <p>If you also downloaded GPU images, add them to the loop:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>IMAGE<span class="w"> </span><span class="k">in</span><span class="w"> </span>nginx<span class="w"> </span>restapi<span class="w"> </span>mlflow-tracking<span class="w"> </span>pytorch-cpu<span class="w"> </span>tensorflow2-cpu<span class="w"> </span>pytorch-gpu<span class="w"> </span>tensorflow2-gpu<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">  </span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$KEY_PATH</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;ghcr.io/usnistgov/dioptra/</span><span class="nv">$IMAGE</span><span class="s2">:</span><span class="nv">$TAG</span><span class="s2">&quot;</span>
+<span class="w">  </span>cosign<span class="w"> </span>verify<span class="w"> </span>--key<span class="w"> </span><span class="s2">"</span><span class="nv">$KEY_PATH</span><span class="s2">"</span><span class="w"> </span><span class="s2">"ghcr.io/usnistgov/dioptra/</span><span class="nv">$IMAGE</span><span class="s2">:</span><span class="nv">$TAG</span><span class="s2">"</span>
 <span class="k">done</span>
 </pre></div>
 </div>

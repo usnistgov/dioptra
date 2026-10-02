@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Entrypoints &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Entrypoints &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -452,7 +453,10 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-what-is-an-entrypoint">Summary: What is an Entrypoint?</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-job-inputs">Parameters (Job Inputs)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attached-plugins">Attached Plugins</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-task-graph">The Task Graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-task-graph">The Task Graph</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-swaps">Entrypoint Swaps</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-artifact-task-graph">The Artifact Task Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a></li>
 </ul>
@@ -508,6 +512,16 @@ They are determined when an entrypoint is executed as a job.</p>
 <p class="admonition-title">Learn more</p>
 <p>For a deep dive on graph syntax, dependency management, and invocation styles, see <a class="reference internal" href="task-graph-explanation.html#explanation-task-graph"><span class="std std-ref">Task Graphs explanation</span></a> and <a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoints reference</span></a>.</p>
 </div>
+<section id="entrypoint-swaps">
+<h3>Entrypoint Swaps<a class="headerlink" href="#entrypoint-swaps" title="Permalink to this headline">#</a></h3>
+<p>Entrypoint swaps allow for the reuse of a task graph’s structure by allowing the user to provide alternatives for a given task in the graph.
+When creating a job based on an entrypoint, if the task graph for the entrypoint has swaps in it, the user must select exactly one task alias for each swap in the graph.</p>
+<p>The choices are used to render the task graph into a task graph which does not contain swaps, which is then provided to the task engine at runtime.</p>
+<div class="admonition-learn-more admonition">
+<p class="admonition-title">Learn more</p>
+<p>For more information, see <a class="reference internal" href="task-graph-explanation.html#explanation-task-graph"><span class="std std-ref">Task Graph explanation</span></a>, <a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html#reference-entrypoints-task-graph-syntax-swaps"><span class="std std-ref">Entrypoint swaps reference</span></a>, and <a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html#reference-jobs-specifying-swaps"><span class="std std-ref">Specifying Swaps for a Job</span></a>.</p>
+</div>
+</section>
 </section>
 <section id="the-artifact-task-graph">
 <h2>The Artifact Task Graph<a class="headerlink" href="#the-artifact-task-graph" title="Permalink to this headline">#</a></h2>
@@ -586,7 +600,10 @@ By linking queues to entrypoints, workers can be assigned jobs to process the as
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#summary-what-is-an-entrypoint">Summary: What is an Entrypoint?</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters-job-inputs">Parameters (Job Inputs)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attached-plugins">Attached Plugins</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-task-graph">The Task Graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-task-graph">The Task Graph</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-swaps">Entrypoint Swaps</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-artifact-task-graph">The Artifact Task Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-validation">Type Validation</a></li>
 </ul>

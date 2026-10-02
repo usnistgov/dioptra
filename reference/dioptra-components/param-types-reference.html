@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Plugin Parameter Types &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Plugin Parameter Types &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -556,35 +557,35 @@ compatibility for plugin input, output, as well as artifact usage.</p>
 <section id="lists">
 <h4>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">#</a></h4>
 <p>A type representing a list of other types <code class="docutils literal notranslate"><span class="pre">type_x</span></code> can be represented as follows:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;list&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;type_x&quot;</span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">"list"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"type_x"</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="union">
 <h4>Union<a class="headerlink" href="#union" title="Permalink to this headline">#</a></h4>
 <p>A type representing a union of other types <code class="docutils literal notranslate"><span class="pre">type_x</span></code> and <code class="docutils literal notranslate"><span class="pre">type_y</span></code> can be represented as follows:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;union&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;type_x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;type_y&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">"union"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"type_x"</span><span class="p">,</span><span class="w"> </span><span class="s2">"type_y"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="tuples">
 <h4>Tuples<a class="headerlink" href="#tuples" title="Permalink to this headline">#</a></h4>
 <p>A type representing a tuple of other types <code class="docutils literal notranslate"><span class="pre">type_x</span></code> and <code class="docutils literal notranslate"><span class="pre">type_y</span></code> can be represented as follows:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tuple&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;type_x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;type_y&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">"tuple"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"type_x"</span><span class="p">,</span><span class="w"> </span><span class="s2">"type_y"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="mapping">
 <h4>Mapping<a class="headerlink" href="#mapping" title="Permalink to this headline">#</a></h4>
 <p>A type representing a mapping from one type <code class="docutils literal notranslate"><span class="pre">type_x</span></code> to another <code class="docutils literal notranslate"><span class="pre">type_y</span></code> can be represented as follows:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;type_x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;type_y&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"> </span><span class="nt">"mapping"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"type_x"</span><span class="p">,</span><span class="w"> </span><span class="s2">"type_y"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Alternatively, instead of mapping one type to another, a mapping of strings (<code class="docutils literal notranslate"><span class="pre">key1</span></code> and <code class="docutils literal notranslate"><span class="pre">key2</span></code>) to various types (<code class="docutils literal notranslate"><span class="pre">type_x</span></code> and <code class="docutils literal notranslate"><span class="pre">type_y</span></code>) can be described as follows:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">   </span><span class="nt">&quot;mapping&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;type_x&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;type_y&quot;</span>
+<span class="w">   </span><span class="nt">"mapping"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"key1"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type_x"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"key2"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type_y"</span>
 <span class="w">   </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>

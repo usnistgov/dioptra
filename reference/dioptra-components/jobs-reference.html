@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Jobs &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Jobs &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -456,6 +457,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-managed-state">System-Managed State</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-swaps">Specifying Swaps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration-interfaces">Registration Interfaces</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-python-client">Using Python Client</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-rest-api">Using REST API</a></li>
@@ -486,19 +488,20 @@ document.write(`
 <li><p><a class="reference internal" href="#system-managed-state" id="id5">System-Managed State</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#registration-interfaces" id="id6">Registration Interfaces</a></p>
+<li><p><a class="reference internal" href="#specifying-swaps" id="id6">Specifying Swaps</a></p></li>
+<li><p><a class="reference internal" href="#registration-interfaces" id="id7">Registration Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#using-python-client" id="id7">Using Python Client</a></p></li>
-<li><p><a class="reference internal" href="#using-rest-api" id="id8">Using REST API</a></p></li>
+<li><p><a class="reference internal" href="#using-python-client" id="id8">Using Python Client</a></p></li>
+<li><p><a class="reference internal" href="#using-rest-api" id="id9">Using REST API</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id9">See Also</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id10">See Also</a></p></li>
 </ul>
 </div>
 <section id="job-definition">
 <span id="reference-jobs-definition"></span><h2><a class="toc-backref" href="#id1">Job Definition</a><a class="headerlink" href="#job-definition" title="Permalink to this headline">#</a></h2>
 <p>A <strong>Job</strong> in Dioptra is a parameterized execution of an <a class="reference internal" href="entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoint</span></a>. While an Experiment defines the scope and available workflows, a Job represents the actual run of a workflow.</p>
-<p>When a Job is created, it is sent to a specific <a class="reference internal" href="queues-reference.html#reference-queues"><span class="std std-ref">Queue</span></a>. A <a class="reference internal" href="workers-reference.html#reference-workers"><span class="std std-ref">Worker</span></a> listening to that queue claims the Job and executes the entrypoint code using the provided parameters and artifact inputs.
+<p>When a Job is created, it is sent to a specific <a class="reference internal" href="queues-reference.html#reference-queues"><span class="std std-ref">Queue</span></a>. A <a class="reference internal" href="workers-reference.html#reference-workers"><span class="std std-ref">Worker</span></a> listening to that queue claims the Job and executes the entrypoint code using the provided parameters, artifact inputs, and swap selections.
 Dioptra maintains a full history of every Job, including its logs, metrics, and any generated artifacts, creating a permanent record of the execution even if the underlying entrypoint or plugins are later modified.</p>
 </section>
 <section id="job-attributes">
@@ -523,6 +526,14 @@ Dioptra maintains a full history of every Job, including its logs, metrics, and 
 <li><p><strong>Name</strong>: (string) The name of the artifact parameter defined in the entrypoint</p></li>
 <li><p><strong>Artifact ID</strong>: (integer ID) The unique identifier of the Artifact, which was created by another Job execution</p></li>
 <li><p><strong>Snapshot ID</strong>: (integer ID) The unique identifier of the specific Snapshot to load for this Artifact.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Swaps</strong>: (list, conditionally required) The task alias selected for each swap in the Entrypoint’s task graph. A selection is required for every swap when the selected Entrypoint contains swaps.</dt><dd><ul>
+<li><p><strong>Swap Name</strong>: (string) The swap name without the leading <code class="docutils literal notranslate"><span class="pre">?</span></code> used in the task graph.</p></li>
+<li><p><strong>Task Alias</strong>: (string) The task alias selected from the choices defined for the swap.</p></li>
 </ul>
 </dd>
 </dl>
@@ -580,16 +591,44 @@ Dioptra maintains a full history of every Job, including its logs, metrics, and 
 </ul>
 </section>
 </section>
+<section id="specifying-swaps">
+<span id="reference-jobs-specifying-swaps"></span><h2><a class="toc-backref" href="#id6">Specifying Swaps</a><a class="headerlink" href="#specifying-swaps" title="Permalink to this headline">#</a></h2>
+<p>If the selected Entrypoint contains swaps, the Job must provide exactly one
+task alias for every swap. Swap names and task aliases must match those defined
+in the Entrypoint’s task graph. The leading <code class="docutils literal notranslate"><span class="pre">?</span></code> used to identify a swap in
+the task graph is not included in the Job selection.</p>
+<p>The Python client accepts a dictionary that maps each swap name to its selected
+task alias:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">swaps</span><span class="o">=</span><span class="p">{</span><span class="s2">"training_method"</span><span class="p">:</span> <span class="s2">"training_method_A"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>When using the REST API directly, provide the selections as a list of objects:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"swaps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"swap_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"training_method"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"task_alias"</span><span class="p">:</span><span class="w"> </span><span class="s2">"training_method_A"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Dioptra rejects a Job if a required swap is missing, a swap is specified more
+than once, or a swap name or task alias is not defined by the selected
+Entrypoint. The selections are used to render a task graph without swaps before
+the graph is passed to the task engine. For the task graph syntax, see
+<a class="reference internal" href="entrypoints-reference.html#reference-entrypoints-task-graph-syntax-swaps"><span class="std std-ref">Entrypoint swaps</span></a>.</p>
+</section>
 <section id="registration-interfaces">
-<span id="reference-jobs-registration-interfaces"></span><h2><a class="toc-backref" href="#id6">Registration Interfaces</a><a class="headerlink" href="#registration-interfaces" title="Permalink to this headline">#</a></h2>
+<span id="reference-jobs-registration-interfaces"></span><h2><a class="toc-backref" href="#id7">Registration Interfaces</a><a class="headerlink" href="#registration-interfaces" title="Permalink to this headline">#</a></h2>
 <p>Jobs are typically created within the context of an Experiment.</p>
 <section id="using-python-client">
-<span id="reference-jobs-python-client"></span><h3><a class="toc-backref" href="#id7">Using Python Client</a><a class="headerlink" href="#using-python-client" title="Permalink to this headline">#</a></h3>
+<span id="reference-jobs-python-client"></span><h3><a class="toc-backref" href="#id8">Using Python Client</a><a class="headerlink" href="#using-python-client" title="Permalink to this headline">#</a></h3>
 <p><strong>Submit a Job through an Experiment</strong></p>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_snapshot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">ExperimentJobsSubCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">entrypoint_snapshot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.experiments.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/experiments.html#ExperimentJobsSubCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Creates a job for an experiment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -611,6 +650,10 @@ resource snapshot id respectively. Defaults to None.</p></li>
 stopped. If omitted, the job timeout will use the default set in the
 API.</p></li>
 <li><p><strong>description</strong> – The description for the job. Optional, defaults to None.</p></li>
+<li><p><strong>swaps</strong> – A list of swap choices. Each swap choice should contain two keys - the
+“swap_name” and the “task_alias” chosen for that swap name. Alternatively, if
+a single dictionary is provided, it will be assumed to be a mapping between swap names
+and choices and will be reformatted as a list.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -622,18 +665,19 @@ API.</p></li>
 </div></blockquote>
 </section>
 <section id="using-rest-api">
-<span id="reference-jobs-rest-api"></span><h3><a class="toc-backref" href="#id8">Using REST API</a><a class="headerlink" href="#using-rest-api" title="Permalink to this headline">#</a></h3>
+<span id="reference-jobs-rest-api"></span><h3><a class="toc-backref" href="#id9">Using REST API</a><a class="headerlink" href="#using-rest-api" title="Permalink to this headline">#</a></h3>
 <p>Jobs can be submitted directly via the HTTP API, usually via an experiment-specific endpoint.</p>
 <p><strong>Create Job</strong></p>
-<p>See the <a class="reference internal" href="../api-reference-restapi.html#post--api-v1-experiments-id-jobs" title="POST /api/v1/experiments/{id}/jobs"><code class="xref http http-post docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/experiments/{experimentId}/jobs</span></code></a> endpoint documentation for the required JSON payload, including parameters and artifact IDs.</p>
+<p>See the <a class="reference internal" href="../api-reference-restapi.html#post--api-v1-experiments-id-jobs" title="POST /api/v1/experiments/{id}/jobs"><code class="xref http http-post docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/experiments/{experimentId}/jobs</span></code></a> endpoint documentation for the required JSON payload, including parameters, artifact IDs, and swap selections.</p>
 </section>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
-<h2><a class="toc-backref" href="#id9">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id10">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <p>Additional reference pages:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="experiments-reference.html#reference-experiments"><span class="std std-ref">Experiments Reference</span></a></p></li>
 <li><p><a class="reference internal" href="entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoints Reference</span></a></p></li>
+<li><p><a class="reference internal" href="entrypoints-reference.html#reference-entrypoints-task-graph-syntax-swaps"><span class="std std-ref">Entrypoint Swaps</span></a></p></li>
 <li><p><a class="reference internal" href="queues-reference.html#reference-queues"><span class="std std-ref">Queues Reference</span></a></p></li>
 <li><p><a class="reference internal" href="metrics-reference.html#reference-metrics"><span class="std std-ref">Metrics Reference</span></a></p></li>
 </ul>
@@ -695,6 +739,7 @@ API.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-managed-state">System-Managed State</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specifying-swaps">Specifying Swaps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration-interfaces">Registration Interfaces</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-python-client">Using Python Client</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-rest-api">Using REST API</a></li>

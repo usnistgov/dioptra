@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prepare Your Deployment &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Prepare Your Deployment &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -510,7 +511,7 @@ After completing these steps, you will have a deployment folder ready to start.<
 <p><strong>Method 3: Use defaults except for specific values</strong></p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">&#39;{&quot;datasets_directory&quot;: &quot;~/datasets&quot;}&#39;</span>
+<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">'{"datasets_directory": "~/datasets"}'</span>
 </pre></div>
 </div>
 <p><strong>Method 4: Use defaults except for values in a config file</strong></p>
@@ -536,7 +537,7 @@ In most cases, the default value is appropriate.</p>
 <ul class="simple">
 <li><p><strong>deployment_name:</strong> A name to associate with the deployment (default: <code class="docutils literal notranslate"><span class="pre">Dioptra</span> <span class="pre">deployment</span></code>)</p></li>
 <li><p><strong>container_registry:</strong> Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See <a class="reference internal" href="get-container-images/index.html#how-to-get-container-images-registry-prefix"><span class="std std-ref">Understanding Container Registry Prefixes</span></a> for details. (default: <code class="docutils literal notranslate"><span class="pre">ghcr.io/usnistgov</span></code>)</p></li>
-<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.1.0</span></code>)</p></li>
+<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.2.0</span></code>)</p></li>
 <li><p><strong>nginx_server_name:</strong> Domain name, IP address, or <code class="docutils literal notranslate"><span class="pre">_</span></code> for local deployments (default: <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code>)</p></li>
 <li><p><strong>num_tensorflow_cpu_workers / num_pytorch_cpu_workers:</strong> Number of CPU workers (default: <code class="docutils literal notranslate"><span class="pre">1</span></code> each)</p></li>
 <li><p><strong>datasets_directory:</strong> Host directory to mount at <code class="docutils literal notranslate"><span class="pre">/dioptra/data</span></code> in workers (default: <em>empty</em>)</p></li>

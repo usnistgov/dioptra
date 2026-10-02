@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Create Plugins &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Create Plugins &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -239,6 +239,7 @@
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -523,7 +524,7 @@ document.write(`
 <p class="admonition-title">Example</p>
 <p>Create a plugin called “hello” with a description.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plugin</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">group_id</span><span class="p">,</span> <span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="s2">&quot;This is a Hello World Plugin&quot;</span>
+    <span class="n">group_id</span><span class="p">,</span> <span class="s2">"hello"</span><span class="p">,</span> <span class="s2">"This is a Hello World Plugin"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -571,28 +572,28 @@ None.</p></li>
 <p>Attach Python code embedded in a string to a Plugin, and register a task with
 two input parameters and one output parameter.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">file</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">plugin_id</span><span class="o">=</span><span class="n">plugin</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
-    <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;hello.py&quot;</span><span class="p">,</span>
+    <span class="n">plugin_id</span><span class="o">=</span><span class="n">plugin</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s2">"hello.py"</span><span class="p">,</span>
     <span class="n">content</span><span class="o">=</span><span class="n">PYTHON_CONTENTS</span><span class="p">,</span>
     <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;hello_world&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;inputParams&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"hello_world"</span><span class="p">,</span>
+            <span class="s2">"inputParams"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;greeting&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
-                    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"greeting"</span><span class="p">,</span>
+                    <span class="s2">"parameterType"</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
+                    <span class="s2">"required"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
-                    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"name"</span><span class="p">,</span>
+                    <span class="s2">"parameterType"</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
+                    <span class="s2">"required"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
                 <span class="p">},</span>
             <span class="p">],</span>
-            <span class="s2">&quot;outputParams&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"outputParams"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;message&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"message"</span><span class="p">,</span>
+                    <span class="s2">"parameterType"</span><span class="p">:</span> <span class="n">string_param_type_id</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">],</span>
         <span class="p">}</span>

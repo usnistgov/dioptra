@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Guidelines for Documentation &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Guidelines for Documentation &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -143,7 +143,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -238,6 +238,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -704,7 +705,7 @@ Section contents...
 <span class="gh">My Example Subheader</span>
 <span class="gh">~~~~~~~~~~~~~~~~~~~~</span>
 
-Section contents .. (nested under &quot;My Example Header&quot; in ToC)
+Section contents .. (nested under "My Example Header" in ToC)
 </pre></div>
 </div>
 <div class="admonition seealso">
@@ -831,7 +832,7 @@ sidebar.</p>
 <span class="gh">See Also</span>
 <span class="gh">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
 This is a hands-on tutorial intended to walk a user through the procedural steps required to
-use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra&#39;s
+use Dioptra. The following resources are complimentary and provide high level explanations on Dioptra's
 design and motivation.
 
 <span class="m">*</span> <span class="na">:ref:</span><span class="nv">`Overview of Experiments &lt;explanation-experiments-and-jobs&gt;`</span> - A summary of how Dioptra components interact to create an experiment
@@ -1064,7 +1065,7 @@ the extra width is necessary for readability.</p>
 <span class="linenos">5</span>
 <span class="linenos">6</span><span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="linenos">7</span><span class="k">def</span><span class="w"> </span><span class="nf">hello_world</span><span class="p">():</span>
-<span class="linenos">8</span>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Hello, World! Welcome to Dioptra.&quot;</span><span class="p">)</span>
+<span class="linenos">8</span>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Hello, World! Welcome to Dioptra."</span><span class="p">)</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-4-4-1" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-1" name="4-1" role="tabpanel" tabindex="0"><div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gs">**hello_world.py**</span>:
@@ -1117,14 +1118,14 @@ Apply these classes using the standard Sphinx admonition directive.</p>
 <span class="linenos">23</span>  <span class="n">pct</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">diff</span><span class="o">/</span><span class="n">mean</span>
 <span class="linenos">24</span>
 <span class="linenos">25</span>  <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-<span class="linenos">26</span>      <span class="s2">&quot;Plugin 2 - &quot;</span>
-<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">&quot;The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
-<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">&quot;which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). &quot;</span>
-<span class="linenos">29</span>      <span class="s2">&quot;[Passed-in Parameters]&quot;</span>
-<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">&quot;Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">&quot;Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">&quot;Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;&quot;</span>
+<span class="linenos">26</span>      <span class="s2">"Plugin 2 - "</span>
+<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">"The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, "</span>
+<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">"which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). "</span>
+<span class="linenos">29</span>      <span class="s2">"[Passed-in Parameters]"</span>
+<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">"Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">"Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">"Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">"Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;"</span>
 <span class="linenos">34</span>      <span class="p">)</span>
 <span class="linenos">35</span>
 <span class="linenos">36</span>  <span class="k">return</span> <span class="n">draws</span>
@@ -1147,7 +1148,7 @@ Apply these classes using the standard Sphinx admonition directive.</p>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$draw_samples.output</span><span class="w"> </span><span class="c1"># This is the output from Task 1</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">1:</span><span class="nv"> </span><span class="s">Drawing</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">normal</span><span class="nv"> </span><span class="s">distribution&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">1:</span><span class="nv"> </span><span class="s">Drawing</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">normal</span><span class="nv"> </span><span class="s">distribution"</span>
 
 <span class="nt">add_noise_step</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add_noise</span>
@@ -1164,7 +1165,7 @@ Apply these classes using the standard Sphinx admonition directive.</p>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$add_noise_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 3</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">2:</span><span class="nv"> </span><span class="s">Adding</span><span class="nv"> </span><span class="s">Noise&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">2:</span><span class="nv"> </span><span class="s">Adding</span><span class="nv"> </span><span class="s">Noise"</span>
 
 <span class="nt">transform_step</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nonlinear_transform</span>
@@ -1178,13 +1179,13 @@ Apply these classes using the standard Sphinx admonition directive.</p>
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$transform_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 5</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">3:</span><span class="nv"> </span><span class="s">Transforming</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">array&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">3:</span><span class="nv"> </span><span class="s">Transforming</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">array"</span>
 </pre></div>
 </div>
 </div>
 <div class="code-panel console admonition">
 <p class="admonition-title">&lt;My Console Input/Output&gt;</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin 1 was successfully completed. Output value was .7432 with parameter &quot;random&quot;.</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin 1 was successfully completed. Output value was .7432 with parameter "random".</span>
 </pre></div>
 </div>
 </div>
@@ -1206,7 +1207,7 @@ Apply these classes using the standard Sphinx admonition directive.</p>
 
 <span class="p">   ..</span> <span class="ow">code-block</span><span class="p">::</span> console
 
-      Plugin 1 was successfully completed. Output value was .7432 with parameter &quot;random&quot;.
+      Plugin 1 was successfully completed. Output value was .7432 with parameter "random".
 </pre></div>
 </div>
 </div></div>
@@ -1234,7 +1235,7 @@ to only grab sections of code. These tags must be present in the code files.</p>
 <img alt="Dioptra login screen" src="../_images/login_dioptra.png" style="width: 900px;" />
 </figure>
 </div><div aria-labelledby="tab-7-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-7-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Login using the Python client API</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://127.0.0.1&#39;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">'http://127.0.0.1'</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect_json_dioptra_client</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">connect_json_dioptra_client</span><span class="p">(</span><span class="n">LOCAL_PATH</span><span class="p">)</span>
 <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">USER_EMAIL</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">USER_PASSWORD</span><span class="p">)</span>
@@ -1249,8 +1250,8 @@ to only grab sections of code. These tags must be present in the code files.</p>
 </figure>
 </div><div aria-labelledby="tab-8-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-8-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p>Create a plugin using the Python client.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plugin</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">group_id</span><span class="p">,</span>
-                 <span class="s2">&quot;hello&quot;</span><span class="p">,</span>
-                 <span class="s2">&quot;This is a Hello World Plugin&quot;</span><span class="p">)</span>
+                 <span class="s2">"hello"</span><span class="p">,</span>
+                 <span class="s2">"This is a Hello World Plugin"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></div>
@@ -1269,7 +1270,7 @@ to only grab sections of code. These tags must be present in the code files.</p>
 
 <span class="p">      ..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">python</span>
 
-         <span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">&#39;http://127.0.0.1&#39;</span>
+         <span class="n">LOCAL_PATH</span> <span class="o">=</span> <span class="s1">'http://127.0.0.1'</span>
          <span class="kn">from</span><span class="w"> </span><span class="nn">dioptra.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect_json_dioptra_client</span>
          <span class="n">client</span> <span class="o">=</span> <span class="n">connect_json_dioptra_client</span><span class="p">(</span><span class="n">LOCAL_PATH</span><span class="p">)</span>
          <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">USER_NAME</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">USER_EMAIL</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">USER_PASSWORD</span><span class="p">)</span>
@@ -1291,8 +1292,8 @@ to only grab sections of code. These tags must be present in the code files.</p>
 <span class="p">      ..</span> <span class="ow">code-block</span><span class="p">::</span> <span class="k">python</span>
 
          <span class="n">plugin</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">plugins</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">group_id</span><span class="p">,</span>
-                        <span class="s2">&quot;hello&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;This is a Hello World Plugin&quot;</span><span class="p">)</span>
+                        <span class="s2">"hello"</span><span class="p">,</span>
+                        <span class="s2">"This is a Hello World Plugin"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></div>
@@ -1402,14 +1403,14 @@ Continue with the rest of the document...
 <span class="linenos">23</span>  <span class="n">pct</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">diff</span><span class="o">/</span><span class="n">mean</span>
 <span class="linenos">24</span>
 <span class="linenos">25</span>  <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-<span class="linenos">26</span>      <span class="s2">&quot;Plugin 2 - &quot;</span>
-<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">&quot;The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
-<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">&quot;which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). &quot;</span>
-<span class="linenos">29</span>      <span class="s2">&quot;[Passed-in Parameters]&quot;</span>
-<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">&quot;Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">&quot;Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
-<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">&quot;Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;&quot;</span>
+<span class="linenos">26</span>      <span class="s2">"Plugin 2 - "</span>
+<span class="linenos">27</span>      <span class="sa">f</span><span class="s2">"The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, "</span>
+<span class="linenos">28</span>      <span class="sa">f</span><span class="s2">"which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). "</span>
+<span class="linenos">29</span>      <span class="s2">"[Passed-in Parameters]"</span>
+<span class="linenos">30</span>      <span class="sa">f</span><span class="s2">"Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">31</span>      <span class="sa">f</span><span class="s2">"Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">32</span>      <span class="sa">f</span><span class="s2">"Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
+<span class="linenos">33</span>      <span class="sa">f</span><span class="s2">"Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;"</span>
 <span class="linenos">34</span>      <span class="p">)</span>
 <span class="linenos">35</span>
 <span class="linenos">36</span>  <span class="k">return</span> <span class="n">draws</span>

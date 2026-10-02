@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.sdk.api.artifact &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.sdk.api.artifact &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -423,17 +424,17 @@ document.write(`
 
 
 <div class="viewcode-block" id="ArtifactTaskInterface"><a class="viewcode-back" href="../../../../reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">ArtifactTaskInterface</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Interface class which exposes the logic for serialization and deserialization of an</span>
 <span class="sd">    artifact.</span>
 
 <span class="sd">    It is expected that implementations will override all methods in this interface.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ArtifactTaskInterface.serialize"><a class="viewcode-back" href="../../../../reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface.serialize">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Called to serialize an artifact. The value and type of contents is dependent on</span>
 <span class="sd">        the artifact output declaration.</span>
 
@@ -449,13 +450,13 @@ document.write(`
 <span class="sd">        Returns:</span>
 <span class="sd">            A Path pointing to the location where the artifact has been serialized. This</span>
 <span class="sd">            could be either a directory or a file depending on the type of artifact.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="ArtifactTaskInterface.deserialize"><a class="viewcode-back" href="../../../../reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface.deserialize">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Called to deserialize an artifact.</span>
 
 <span class="sd">        Arguments:</span>
@@ -470,13 +471,13 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The result of deserialization. This could be any type or value.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="ArtifactTaskInterface.validation"><a class="viewcode-back" href="../../../../reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface.validation">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">validation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The validation is inserted into the JSON Schema to validate any extra keyword</span>
 <span class="sd">        arguments that are passed to the serialization method of this artifact task. The</span>
 <span class="sd">        validation indicates the name and type of the arguments. See</span>
@@ -494,15 +495,15 @@ document.write(`
 <span class="sd">            .. code-block:: python</span>
 
 <span class="sd">                {</span>
-<span class="sd">                    &quot;foo&quot;: {&quot;type&quot;: &quot;string&quot;},</span>
-<span class="sd">                    &quot;bar&quot;: {&quot;enum&quot;: [&quot;value1&quot;, &quot;value2&quot;, &quot;value3&quot;]},</span>
-<span class="sd">                    &quot;baz&quot;: {&quot;type&quot;: &quot;integer&quot;},</span>
+<span class="sd">                    "foo": {"type": "string"},</span>
+<span class="sd">                    "bar": {"enum": ["value1", "value2", "value3"]},</span>
+<span class="sd">                    "baz": {"type": "integer"},</span>
 <span class="sd">                }</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A dictionary containing the validation information for the keyword arguments</span>
 <span class="sd">            to serialize or `None` if no extra keyword arguments are used.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
 </pre></div>
 

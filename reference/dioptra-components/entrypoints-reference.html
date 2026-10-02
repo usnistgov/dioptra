@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Entrypoints &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Entrypoints &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -239,6 +239,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -461,6 +462,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#task-graph-syntax">Task Graph Syntax</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-task-graph-model-training">Example Task Graph: Model Training</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#invocation-styles">Invocation Styles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#swaps">Swaps</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#argument-structure">Argument Structure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references-within-a-task-graph">References Within a Task Graph</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-graph-parameters">Task Graph Parameters</a></li>
@@ -508,27 +510,28 @@ document.write(`
 <ul>
 <li><p><a class="reference internal" href="#example-task-graph-model-training" id="id8">Example Task Graph: Model Training</a></p></li>
 <li><p><a class="reference internal" href="#invocation-styles" id="id9">Invocation Styles</a></p></li>
-<li><p><a class="reference internal" href="#argument-structure" id="id10">Argument Structure</a></p></li>
-<li><p><a class="reference internal" href="#references-within-a-task-graph" id="id11">References Within a Task Graph</a></p></li>
-<li><p><a class="reference internal" href="#task-graph-parameters" id="id12">Task Graph Parameters</a></p></li>
-<li><p><a class="reference internal" href="#additional-dependencies-managing-dependencies" id="id13">Additional Dependencies - Managing Dependencies</a></p></li>
+<li><p><a class="reference internal" href="#swaps" id="id10">Swaps</a></p></li>
+<li><p><a class="reference internal" href="#argument-structure" id="id11">Argument Structure</a></p></li>
+<li><p><a class="reference internal" href="#references-within-a-task-graph" id="id12">References Within a Task Graph</a></p></li>
+<li><p><a class="reference internal" href="#task-graph-parameters" id="id13">Task Graph Parameters</a></p></li>
+<li><p><a class="reference internal" href="#additional-dependencies-managing-dependencies" id="id14">Additional Dependencies - Managing Dependencies</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#artifact-output-graph-syntax" id="id14">Artifact Output Graph Syntax</a></p>
+<li><p><a class="reference internal" href="#artifact-output-graph-syntax" id="id15">Artifact Output Graph Syntax</a></p>
 <ul>
-<li><p><a class="reference internal" href="#example-artifact-task-graph-saving-a-model-and-a-dataset" id="id15">Example Artifact Task Graph: Saving a Model and a Dataset</a></p></li>
-<li><p><a class="reference internal" href="#generalized-syntax" id="id16">Generalized Syntax</a></p></li>
-<li><p><a class="reference internal" href="#id1" id="id17">Invocation Styles</a></p></li>
-<li><p><a class="reference internal" href="#artifact-output-graph-parameters" id="id18">Artifact Output Graph Parameters</a></p></li>
+<li><p><a class="reference internal" href="#example-artifact-task-graph-saving-a-model-and-a-dataset" id="id16">Example Artifact Task Graph: Saving a Model and a Dataset</a></p></li>
+<li><p><a class="reference internal" href="#generalized-syntax" id="id17">Generalized Syntax</a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id18">Invocation Styles</a></p></li>
+<li><p><a class="reference internal" href="#artifact-output-graph-parameters" id="id19">Artifact Output Graph Parameters</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#registration-interfaces" id="id19">Registration Interfaces</a></p>
+<li><p><a class="reference internal" href="#registration-interfaces" id="id20">Registration Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#using-python-client" id="id20">Using Python Client</a></p></li>
-<li><p><a class="reference internal" href="#using-rest-api" id="id21">Using REST API</a></p></li>
+<li><p><a class="reference internal" href="#using-python-client" id="id21">Using Python Client</a></p></li>
+<li><p><a class="reference internal" href="#using-rest-api" id="id22">Using REST API</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id22">See Also</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id23">See Also</a></p></li>
 </ul>
 </div>
 <section id="entrypoint-definition">
@@ -553,7 +556,9 @@ can be saved as Artifacts, and the logic for this is defined in the Artifact Out
 <ul class="simple">
 <li><p><strong>Description</strong>: (string, optional) A text description of the Entrypoint’s purpose or scope. Defaults to empty.</p></li>
 <li><p><strong>Plugins</strong>: (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Function Tasks are then made available to the Entrypoint Task Graph. Defaults to empty. (See: <a class="reference internal" href="plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a>)</p></li>
+<li><p><strong>Plugin Snapshots</strong>: (list of Plugin Snapshot IDs, optional) The selected plugin versions that provide Function Tasks to the Entrypoint Task Graph.</p></li>
 <li><p><strong>Artifact Plugins</strong>:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Graph. Defaults to empty. (See: <a class="reference internal" href="plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a>)</p></li>
+<li><p><strong>Artifact Plugin Snapshots</strong>: (list of Plugin Snapshot IDs, optional) The selected plugin versions that provide artifact serialization and deserialization tasks to the Entrypoint.</p></li>
 <li><dl class="simple">
 <dt><strong>Parameters</strong>: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Output Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.</dt><dd><ul>
 <li><p><strong>Name</strong> (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs</p></li>
@@ -799,8 +804,69 @@ the positional arguments are passed into the Python function without names in or
 </div>
 </div></div>
 </section>
+<section id="swaps">
+<span id="reference-entrypoints-task-graph-syntax-swaps"></span><h3><a class="toc-backref" href="#id10">Swaps</a><a class="headerlink" href="#swaps" title="Permalink to this headline">#</a></h3>
+<p>Swaps allow an Entrypoint to provide multiple task definitions for a graph
+step. When submitting a Job, the user selects which task definition Dioptra
+should use for each swap. Configuration responses and graph previews preserve
+the names from the entrypoint. Selected swaps retain their output interface and
+only the selected choice.</p>
+<p>The following rules apply when using swaps:</p>
+<ul class="simple">
+<li><p>A graph step may define at most one swap.</p></li>
+<li><p>Each swap name must be unique within the Task Graph.</p></li>
+<li><p>Exactly one task alias must be selected for each swap when executing a Job.</p></li>
+<li><p>Every swap must declare an ordered <code class="docutils literal notranslate"><span class="pre">?outputs</span></code> list of unique, nonempty names.
+Use an empty list for tasks without outputs.</p></li>
+<li><p>All choices must match the declared output count and have identical registered
+type names at each output position. Registered output names may differ.</p></li>
+<li><p>References to a swap step use only its declared output names. Input signatures
+may differ between choices.</p></li>
+</ul>
+<p>A swap is identified by a name beginning with <code class="docutils literal notranslate"><span class="pre">?</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">step_name</span><span class="p">:</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">?swap_name</span><span class="p p-Indicator">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">?outputs</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">result</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">task_alias1</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plugin1</span>
+<span class="w">            </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">posarg1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">posarg2</span><span class="p p-Indicator">]</span>
+<span class="w">            </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">keyword1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg1</span>
+<span class="w">                </span><span class="nt">keyword2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg2</span>
+<span class="w">        </span><span class="nt">task_alias2</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">plugin2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">arg1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">arg2</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">swap_name</span></code> is the swap name, and <code class="docutils literal notranslate"><span class="pre">task_alias1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">task_alias2</span></code> are the available selections. The leading <code class="docutils literal notranslate"><span class="pre">?</span></code> identifies
+the graph step as a swap but is omitted when providing the selection for a
+Job:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">swap_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">task_alias1</span>
+</pre></div>
+</div>
+<p>With this selection, Dioptra renders the graph step as follows:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">step_name</span><span class="p">:</span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">?swap_name</span><span class="p p-Indicator">:</span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">?outputs</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">result</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">task_alias1</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plugin1</span>
+<span class="w">            </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">posarg1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">posarg2</span><span class="p p-Indicator">]</span>
+<span class="w">            </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">keyword1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg1</span>
+<span class="w">                </span><span class="nt">keyword2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arg2</span>
+</pre></div>
+</div>
+<p>Downstream steps reference <code class="docutils literal notranslate"><span class="pre">$step_name.result</span></code> for either choice. The
+configuration’s <code class="docutils literal notranslate"><span class="pre">tasks</span></code> section retains the registered task names and
+definitions. Dioptra maps returned values to the declared interface by position
+when running the job. A downloaded configuration is a Dioptra job configuration;
+the Dioptra worker prepares it for task-engine execution.</p>
+<p>Full rendering selects one choice for every swap. Partial rendering selects
+only the supplied choices and preserves all choices in unresolved swaps,
+including their <code class="docutils literal notranslate"><span class="pre">?outputs</span></code> declarations.</p>
+</section>
 <section id="argument-structure">
-<h3><a class="toc-backref" href="#id10">Argument Structure</a><a class="headerlink" href="#argument-structure" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id11">Argument Structure</a><a class="headerlink" href="#argument-structure" title="Permalink to this headline">#</a></h3>
 <p>Though the above examples provide strings (such as <code class="docutils literal notranslate"><span class="pre">arg1</span></code> or <code class="docutils literal notranslate"><span class="pre">arg2</span></code>) as arguments, it is also fine to use YAML to provide
 arguments with structure. For example, a list of strings (in this case <code class="docutils literal notranslate"><span class="pre">[&quot;arg1&quot;,</span> <span class="pre">&quot;arg11&quot;,</span> <span class="pre">&quot;arg111&quot;]</span></code>) could be provided
 as an argument to the <code class="docutils literal notranslate"><span class="pre">keyword1</span></code> parameter as follows:</p>
@@ -878,7 +944,7 @@ as an argument to the <code class="docutils literal notranslate"><span class="pr
 </div></div>
 </section>
 <section id="references-within-a-task-graph">
-<h3><a class="toc-backref" href="#id11">References Within a Task Graph</a><a class="headerlink" href="#references-within-a-task-graph" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id12">References Within a Task Graph</a><a class="headerlink" href="#references-within-a-task-graph" title="Permalink to this headline">#</a></h3>
 <p>As mentioned earlier, the output of each function task is stored in a variable designated by the step name. These variables
 can be used in other steps.</p>
 <p>Here is an example of using the output of a function task.</p>
@@ -930,7 +996,7 @@ is given a name when registered. In an example where <code class="docutils liter
 </div></div>
 </section>
 <section id="task-graph-parameters">
-<h3><a class="toc-backref" href="#id12">Task Graph Parameters</a><a class="headerlink" href="#task-graph-parameters" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id13">Task Graph Parameters</a><a class="headerlink" href="#task-graph-parameters" title="Permalink to this headline">#</a></h3>
 <p>Parameters to the Task Graph are simply variables assumed to be provided by the job at runtime. In the following example,
 <code class="docutils literal notranslate"><span class="pre">$myparam</span></code> clearly does not reference a step name. As a result, this is a parameter which needs to be provided
 at job runtime, either as a default or by the user running the job.</p>
@@ -960,7 +1026,7 @@ graph, the usage is equivalent, though the parameters are supplied separately at
 </div></div>
 </section>
 <section id="additional-dependencies-managing-dependencies">
-<span id="reference-entrypoints-task-graph-dependencies"></span><h3><a class="toc-backref" href="#id13">Additional Dependencies - Managing Dependencies</a><a class="headerlink" href="#additional-dependencies-managing-dependencies" title="Permalink to this headline">#</a></h3>
+<span id="reference-entrypoints-task-graph-dependencies"></span><h3><a class="toc-backref" href="#id14">Additional Dependencies - Managing Dependencies</a><a class="headerlink" href="#additional-dependencies-managing-dependencies" title="Permalink to this headline">#</a></h3>
 <p>Explicit dependencies between steps can be added via the <code class="docutils literal notranslate"><span class="pre">dependencies</span></code> keyword. Dependencies between steps are
 automatically created when a step uses the output of another step as a parameter, but sometimes a dependency is
 needed without the presence of output. In this example, <code class="docutils literal notranslate"><span class="pre">taskGraphStep2</span></code> will always be executed after the completion of <code class="docutils literal notranslate"><span class="pre">taskGraphStep1</span></code>.</p>
@@ -990,7 +1056,7 @@ needed without the presence of output. In this example, <code class="docutils li
 </section>
 </section>
 <section id="artifact-output-graph-syntax">
-<span id="reference-entrypoints-artifact-output-graph-syntax"></span><h2><a class="toc-backref" href="#id14">Artifact Output Graph Syntax</a><a class="headerlink" href="#artifact-output-graph-syntax" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-artifact-output-graph-syntax"></span><h2><a class="toc-backref" href="#id15">Artifact Output Graph Syntax</a><a class="headerlink" href="#artifact-output-graph-syntax" title="Permalink to this headline">#</a></h2>
 <p>Upon successful completion of the Task Graph within a Job execution, the Artifact Output Graph will then execute (if it is defined) to save any designated Function Task outputs
 as Artifacts.</p>
 <p>There are many similarities between invoking artifact tasks and function tasks:</p>
@@ -1009,7 +1075,7 @@ as Artifacts.</p>
 </ul>
 </div></blockquote>
 <section id="example-artifact-task-graph-saving-a-model-and-a-dataset">
-<span id="reference-entrypoints-example-artifact-task-graph-saving-a-model-and-a-dataset"></span><h3><a class="toc-backref" href="#id15">Example Artifact Task Graph: Saving a Model and a Dataset</a><a class="headerlink" href="#example-artifact-task-graph-saving-a-model-and-a-dataset" title="Permalink to this headline">#</a></h3>
+<span id="reference-entrypoints-example-artifact-task-graph-saving-a-model-and-a-dataset"></span><h3><a class="toc-backref" href="#id16">Example Artifact Task Graph: Saving a Model and a Dataset</a><a class="headerlink" href="#example-artifact-task-graph-saving-a-model-and-a-dataset" title="Permalink to this headline">#</a></h3>
 <p>Building off the example <a class="reference internal" href="#reference-entrypoints-example-task-graph-model-training"><span class="std std-ref">Task Graph</span></a> in the previous section, the following hypothetical Artifact Task Graph saves the generated prediction dataframe and trained model to disk using two different Artifact Handlers.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-11-11-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-11-11-0" name="11-0" role="tab" tabindex="0">Positional Invocation Style</button><button aria-controls="panel-11-11-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-11-11-1" name="11-1" role="tab" tabindex="-1">Keyword Invocation Style</button><button aria-controls="panel-11-11-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-11-11-2" name="11-2" role="tab" tabindex="-1">Mixed Invocation Style</button></div><div aria-labelledby="tab-11-11-0" class="sphinx-tabs-panel" id="panel-11-11-0" name="11-0" role="tabpanel" tabindex="0"><div class="code-panel yaml admonition">
@@ -1061,7 +1127,7 @@ as Artifacts.</p>
 </div></div>
 </section>
 <section id="generalized-syntax">
-<h3><a class="toc-backref" href="#id16">Generalized Syntax</a><a class="headerlink" href="#generalized-syntax" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id17">Generalized Syntax</a><a class="headerlink" href="#generalized-syntax" title="Permalink to this headline">#</a></h3>
 <p>The syntax below is a generalized version of the Artifact Output Graph syntax in above example:</p>
 <aside class="margin sidebar">
 <p class="sidebar-title"></p>
@@ -1075,7 +1141,7 @@ as Artifacts.</p>
 <p class="admonition-title">Artifact Output Graph</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">artifact_outputs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">artifactStep1</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$taskGraphStep1.output</span><span class="w"> </span><span class="c1"># assumes name of output from &quot;taskGraphStep1&quot; is &quot;output&quot;</span>
+<span class="w">        </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$taskGraphStep1.output</span><span class="w"> </span><span class="c1"># assumes name of output from "taskGraphStep1" is "output"</span>
 <span class="w">        </span><span class="nt">task</span><span class="p">:</span>
 <span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">artifactHandler1</span>
 <span class="w">    </span><span class="nt">artifactStep2</span><span class="p">:</span>
@@ -1088,7 +1154,7 @@ as Artifacts.</p>
 </div><div aria-labelledby="tab-12-RW50cnlwb2ludCBkZWZpbmVkIGluIHRoZSBHVUkgLyBTdGFuZGFsb25lIGNvbXBvbmVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-12-RW50cnlwb2ludCBkZWZpbmVkIGluIHRoZSBHVUkgLyBTdGFuZGFsb25lIGNvbXBvbmVudA==" name="RW50cnlwb2ludCBkZWZpbmVkIGluIHRoZSBHVUkgLyBTdGFuZGFsb25lIGNvbXBvbmVudA==" role="tabpanel" tabindex="0"><div class="code-panel yaml admonition">
 <p class="admonition-title">Artifact Output Graph</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">artifactStep1</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$taskGraphStep1.output</span><span class="w"> </span><span class="c1"># assumes name of output from &quot;taskGraphStep1&quot; is &quot;output&quot;</span>
+<span class="w">    </span><span class="nt">contents</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$taskGraphStep1.output</span><span class="w"> </span><span class="c1"># assumes name of output from "taskGraphStep1" is "output"</span>
 <span class="w">    </span><span class="nt">task</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">artifactHandler1</span>
 <span class="nt">artifactStep2</span><span class="p">:</span>
@@ -1101,7 +1167,7 @@ as Artifacts.</p>
 </div></div>
 </section>
 <section id="id1">
-<h3><a class="toc-backref" href="#id17">Invocation Styles</a><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id18">Invocation Styles</a><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p>Some artifact tasks define task inputs to customize the serialization logic (for example, specifying a file format).
 Similar to the Task Graph, the arguments for artifact tasks can be passed in in a variety of ways.
 These arguments are used in the <code class="docutils literal notranslate"><span class="pre">serialization</span></code> method of the Artifact Handler.</p>
@@ -1187,7 +1253,7 @@ These arguments are used in the <code class="docutils literal notranslate"><span
 </div></div>
 </section>
 <section id="artifact-output-graph-parameters">
-<h3><a class="toc-backref" href="#id18">Artifact Output Graph Parameters</a><a class="headerlink" href="#artifact-output-graph-parameters" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id19">Artifact Output Graph Parameters</a><a class="headerlink" href="#artifact-output-graph-parameters" title="Permalink to this headline">#</a></h3>
 <p>Similar to the Task Graph, the Artifact Output Graph also has access to global entrypoint parameters. Entrypoint parameters can be referenced in the
 Artifact Output Graph using the same syntax as the Task Graph.</p>
 <p>For example, if an entrypoint parameter was named <code class="docutils literal notranslate"><span class="pre">dataFrameFileFormat</span></code>, then it could be referenced in the following way:</p>
@@ -1220,13 +1286,13 @@ Artifact Output Graph using the same syntax as the Task Graph.</p>
 </section>
 </section>
 <section id="registration-interfaces">
-<span id="reference-entrypoints-registration-interfaces"></span><h2><a class="toc-backref" href="#id19">Registration Interfaces</a><a class="headerlink" href="#registration-interfaces" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-registration-interfaces"></span><h2><a class="toc-backref" href="#id20">Registration Interfaces</a><a class="headerlink" href="#registration-interfaces" title="Permalink to this headline">#</a></h2>
 <section id="using-python-client">
-<span id="reference-entrypoints-python-client"></span><h3><a class="toc-backref" href="#id20">Using Python Client</a><a class="headerlink" href="#using-python-client" title="Permalink to this headline">#</a></h3>
+<span id="reference-entrypoints-python-client"></span><h3><a class="toc-backref" href="#id21">Using Python Client</a><a class="headerlink" href="#using-python-client" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Creates a entrypoint.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1250,6 +1316,9 @@ defaults to None.</p></li>
 Optional, defaults to None.</p></li>
 <li><p><strong>artifact_plugins</strong> – A list of artifact plugin ids to associate with the new
 entrypoint. Optional, defaults to None.</p></li>
+<li><p><strong>validate_only</strong> – If True, run all save-time checks, then roll back without
+committing changes. The response omits generated IDs/timestamps.
+If False (the default), validate and save the entrypoint.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1258,27 +1327,27 @@ entrypoint. Optional, defaults to None.</p></li>
 <p>Create an entrypoint called “hello_world” with artifact input parameters and artifact output graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">entrypoint</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
     <span class="n">group_id</span><span class="o">=</span><span class="n">GROUP_ID</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hello_world&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"hello_world"</span><span class="p">,</span>
     <span class="n">task_graph</span><span class="o">=</span><span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
     <span class="n">artifact_graph</span><span class="o">=</span><span class="n">ARTIFACT_TASK_GRAPH_YAML_STR</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;An entrypoint to run hello world task&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"An entrypoint to run hello world task"</span><span class="p">,</span>
     <span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;greeting&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"greeting"</span><span class="p">,</span>
+            <span class="s2">"defaultValue"</span><span class="p">:</span> <span class="s2">"Hello"</span><span class="p">,</span>
+            <span class="s2">"parameterType"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
         <span class="p">},</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;World&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"name"</span><span class="p">,</span>
+            <span class="s2">"defaultValue"</span><span class="p">:</span> <span class="s2">"World"</span><span class="p">,</span>
+            <span class="s2">"parameterType"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">],</span>
     <span class="n">artifact_parameters</span><span class="o">=</span><span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;artifact_name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;outputParams&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">STRING_PARAM_TYPE_ID</span><span class="p">}</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"artifact_name"</span><span class="p">,</span>
+            <span class="s2">"outputParams"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"value"</span><span class="p">,</span> <span class="s2">"parameterType"</span><span class="p">:</span> <span class="n">STRING_PARAM_TYPE_ID</span><span class="p">}</span>
             <span class="p">],</span>
         <span class="p">}</span>
     <span class="p">],</span>
@@ -1299,14 +1368,14 @@ entrypoint. Optional, defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="using-rest-api">
-<span id="reference-entrypoints-rest-api"></span><h3><a class="toc-backref" href="#id21">Using REST API</a><a class="headerlink" href="#using-rest-api" title="Permalink to this headline">#</a></h3>
+<span id="reference-entrypoints-rest-api"></span><h3><a class="toc-backref" href="#id22">Using REST API</a><a class="headerlink" href="#using-rest-api" title="Permalink to this headline">#</a></h3>
 <p>Entrypoints can be created directly via the HTTP API.</p>
 <p><strong>Create Entrypoints</strong></p>
 <p>See the <a class="reference internal" href="../api-reference-restapi.html#post--api-v1-entrypoints-" title="POST /api/v1/entrypoints/"><code class="xref http http-post docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/entrypoints</span></code></a> endpoint documentation for payload requirements.</p>
 </section>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
-<h2><a class="toc-backref" href="#id22">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id23">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="jobs-reference.html#reference-jobs"><span class="std std-ref">Jobs Reference</span></a></p></li>
 <li><p><a class="reference internal" href="plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a></p></li>
@@ -1372,6 +1441,7 @@ entrypoint. Optional, defaults to None.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#task-graph-syntax">Task Graph Syntax</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-task-graph-model-training">Example Task Graph: Model Training</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#invocation-styles">Invocation Styles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#swaps">Swaps</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#argument-structure">Argument Structure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references-within-a-task-graph">References Within a Task Graph</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-graph-parameters">Task Graph Parameters</a></li>

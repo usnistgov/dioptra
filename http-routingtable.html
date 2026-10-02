@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTTP Routing Table &#8212; Dioptra 1.1.0 documentation</title>
+    <title>HTTP Routing Table &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -146,7 +146,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -241,6 +241,7 @@
 <li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -531,8 +532,18 @@ document.write(`
      <tr>
        <td></td>
        <td>
+       <a href="reference/api-reference-restapi.html#get--api-v1-entrypoints-id-snapshots-snapshotId-dynamicGlobalParameters"><code class="xref">GET /api/v1/entrypoints/{id}/snapshots/{snapshotId}/dynamicGlobalParameters</code></a></td><td>
+       <em>Finds the global parameters for the given entrypoint + swap choice dictionary</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
        <a href="reference/api-reference-restapi.html#get--api-v1-entrypoints-id-snapshots-snapshotId-plugins-bundle"><code class="xref">GET /api/v1/entrypoints/{id}/snapshots/{snapshotId}/plugins/bundle</code></a></td><td>
        <em>Returns a file bundle containing all of the PluginFile resources for an</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="reference/api-reference-restapi.html#get--api-v1-entrypoints-id-snapshots-snapshotId-swaps"><code class="xref">GET /api/v1/entrypoints/{id}/snapshots/{snapshotId}/swaps</code></a></td><td>
+       <em>Retrieve available swaps for a given entrypoint snapshot</em></td></tr>
      <tr>
        <td></td>
        <td>
@@ -633,6 +644,11 @@ document.write(`
        <td>
        <a href="reference/api-reference-restapi.html#get--api-v1-jobs-id-artifactParameters"><code class="xref">GET /api/v1/jobs/{id}/artifactParameters</code></a></td><td>
        <em>null</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="reference/api-reference-restapi.html#get--api-v1-jobs-id-config"><code class="xref">GET /api/v1/jobs/{id}/config</code></a></td><td>
+       <em>Return the YAML configuration dictionary for the specified Job</em></td></tr>
      <tr>
        <td></td>
        <td>
@@ -976,6 +992,11 @@ document.write(`
      <tr>
        <td></td>
        <td>
+       <a href="reference/api-reference-restapi.html#post--api-v1-entrypoints-id-lint"><code class="xref">POST /api/v1/entrypoints/{id}:lint</code></a></td><td>
+       <em>Lint proposed content using the entrypoint&#39;s saved plugin selections</em></td></tr>
+     <tr>
+       <td></td>
+       <td>
        <a href="reference/api-reference-restapi.html#post--api-v1-experiments-"><code class="xref">POST /api/v1/experiments/</code></a></td><td>
        <em>Creates an Experiment resource with a provided name</em></td></tr>
      <tr>
@@ -1168,11 +1189,6 @@ document.write(`
        <td>
        <a href="reference/api-reference-restapi.html#post--api-v1-workflows-resourceImport"><code class="xref">POST /api/v1/workflows/resourceImport</code></a></td><td>
        <em>Import resources from an external source</em></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="reference/api-reference-restapi.html#post--api-v1-workflows-validateEntrypoint"><code class="xref">POST /api/v1/workflows/validateEntrypoint</code></a></td><td>
-       <em>Validates the proposed inputs for an entrypoint</em></td></tr>
      <tr>
        <td></td>
        <td>

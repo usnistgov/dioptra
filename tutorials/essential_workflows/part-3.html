@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Building a Multi-Step Workflow &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Building a Multi-Step Workflow &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -524,7 +525,7 @@ Other than containing more functions, you will create the plugin the same way as
               <span class="n">var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
               <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
   <span class="k">if</span> <span class="n">var</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
-      <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variance </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> must be greater than 0 - defaulting to variance=1&quot;</span><span class="p">)</span>
+      <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variance </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> must be greater than 0 - defaulting to variance=1"</span><span class="p">)</span>
       <span class="n">var</span><span class="o">=</span><span class="mi">1</span>
   <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
   <span class="n">std_dev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
@@ -535,37 +536,37 @@ Other than containing more functions, you will create the plugin the same way as
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_noise</span><span class="p">(</span><span class="n">input_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
               <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-              <span class="n">noise_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="c1"># Options: normal, uniform</span>
+              <span class="n">noise_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'normal'</span><span class="p">,</span> <span class="c1"># Options: normal, uniform</span>
               <span class="n">var</span><span class="p">:</span><span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
               <span class="n">mean</span><span class="p">:</span><span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
               <span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">var</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variance </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> must be greater than 0 - defaulting to variance=1&quot;</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variance </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> must be greater than 0 - defaulting to variance=1"</span><span class="p">)</span>
         <span class="n">var</span><span class="o">=</span><span class="mi">1</span>
-    <span class="k">if</span> <span class="n">noise_type</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">noise_type</span> <span class="o">==</span> <span class="s2">"normal"</span><span class="p">:</span>
         <span class="n">std_dev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="n">noise</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">std_dev</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">input_array</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">noise_type</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">noise_type</span> <span class="o">==</span> <span class="s2">"uniform"</span><span class="p">:</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">var</span><span class="p">)</span>
         <span class="n">noise</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">a</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">input_array</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported noise_type: </span><span class="si">{</span><span class="n">noise_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported noise_type: </span><span class="si">{</span><span class="n">noise_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">input_array</span> <span class="o">+</span> <span class="n">noise</span>
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">nonlinear_transform</span><span class="p">(</span><span class="n">input_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-                        <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;square&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+                        <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"square"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 
-    <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">&quot;square&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">"square"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">input_array</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">elif</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">"log"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">input_array</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_array</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">&quot;tanh&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">transform</span> <span class="o">==</span> <span class="s2">"tanh"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">input_array</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported transform: </span><span class="si">{</span><span class="n">transform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported transform: </span><span class="si">{</span><span class="n">transform</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="nd">@pyplugs</span><span class="o">.</span><span class="n">register</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">print_stats</span><span class="p">(</span><span class="n">input_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">plugin_step_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -576,9 +577,9 @@ Other than containing more functions, you will create the plugin the same way as
     <span class="n">arr_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_array</span><span class="p">))</span>
 
     <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Plugin Task: &#39;</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">&#39; - &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;The mean value of the array after this step was </span><span class="si">{</span><span class="n">arr_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;with std=</span><span class="si">{</span><span class="n">arr_std</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, min=</span><span class="si">{</span><span class="n">arr_min</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">arr_max</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, len=</span><span class="si">{</span><span class="n">arr_len</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="sa">f</span><span class="s2">"Plugin Task: '</span><span class="si">{</span><span class="n">plugin_step_name</span><span class="si">}</span><span class="s2">' - "</span>
+        <span class="sa">f</span><span class="s2">"The mean value of the array after this step was </span><span class="si">{</span><span class="n">arr_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, "</span>
+        <span class="sa">f</span><span class="s2">"with std=</span><span class="si">{</span><span class="n">arr_std</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, min=</span><span class="si">{</span><span class="n">arr_min</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">arr_max</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, len=</span><span class="si">{</span><span class="n">arr_len</span><span class="si">}</span><span class="s2">."</span>
 
     <span class="p">)</span>
 </pre></div>
@@ -649,7 +650,7 @@ Other than containing more functions, you will create the plugin the same way as
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$draw_samples.output</span><span class="w"> </span><span class="c1"># This is the output from Task 1</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">1:</span><span class="nv"> </span><span class="s">Drawing</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">normal</span><span class="nv"> </span><span class="s">distribution&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">1:</span><span class="nv"> </span><span class="s">Drawing</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">normal</span><span class="nv"> </span><span class="s">distribution"</span>
 
 <span class="nt">add_noise_step</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add_noise</span>
@@ -666,7 +667,7 @@ Other than containing more functions, you will create the plugin the same way as
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$add_noise_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 3</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">2:</span><span class="nv"> </span><span class="s">Adding</span><span class="nv"> </span><span class="s">Noise&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">2:</span><span class="nv"> </span><span class="s">Adding</span><span class="nv"> </span><span class="s">Noise"</span>
 
 <span class="nt">transform_step</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nonlinear_transform</span>
@@ -680,7 +681,7 @@ Other than containing more functions, you will create the plugin the same way as
 <span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 <span class="w">  </span><span class="nt">kwargs</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">input_array</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$transform_step.output</span><span class="w"> </span><span class="c1"># This is the output from Task 5</span>
-<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Task</span><span class="nv"> </span><span class="s">3:</span><span class="nv"> </span><span class="s">Transforming</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">array&quot;</span>
+<span class="w">    </span><span class="nt">plugin_step_name</span><span class="p">:</span><span class="w"> </span><span class="s">"Task</span><span class="nv"> </span><span class="s">3:</span><span class="nv"> </span><span class="s">Transforming</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">array"</span>
 </pre></div>
 </div>
 </div>
@@ -742,11 +743,11 @@ Other than containing more functions, you will create the plugin the same way as
 <p>After the job finishes, check the logs to see the statistics evolve.</p>
 <div class="code-panel console admonition">
 <p class="admonition-title">Job Log Outputs</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin Task: &#39;Task 1: Drawing from normal distribution&#39; - The mean value of the array after this step was -5.1519, with std=3.0888, min=-17.3311, max=4.6957, len=1000.</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Plugin Task: 'Task 1: Drawing from normal distribution' - The mean value of the array after this step was -5.1519, with std=3.0888, min=-17.3311, max=4.6957, len=1000.</span>
 
-<span class="go">Plugin Task: &#39;Task 2: Adding Noise&#39; - The mean value of the array after this step was -5.3038, with std=6.1775, min=-29.6621, max=14.3913, len=1000.</span>
+<span class="go">Plugin Task: 'Task 2: Adding Noise' - The mean value of the array after this step was -5.3038, with std=6.1775, min=-29.6621, max=14.3913, len=1000.</span>
 
-<span class="go">Plugin Task: &#39;Task 3: Transforming the array&#39; - The mean value of the array after this step was 66.2917, with std=89.4162, min=0.0002, max=879.8407, len=1000.</span>
+<span class="go">Plugin Task: 'Task 3: Transforming the array' - The mean value of the array after this step was 66.2917, with std=89.4162, min=0.0002, max=879.8407, len=1000.</span>
 </pre></div>
 </div>
 </div>

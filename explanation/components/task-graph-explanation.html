@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Task Graph &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Task Graph &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -455,6 +456,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#global-variables">Global Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-variables">Artifact Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-dependencies-and-dag-creation">Explicit Dependencies and DAG creation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-swaps">Entrypoint Swaps</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
@@ -566,6 +568,63 @@ See <a class="reference internal" href="../../reference/dioptra-components/entry
 </figcaption>
 </figure>
 </section>
+<section id="entrypoint-swaps">
+<h3>Entrypoint Swaps<a class="headerlink" href="#entrypoint-swaps" title="Permalink to this headline">#</a></h3>
+<p>Often, the structure of a task graph may be reusable. For example in the task graph provided above,
+we may have two different ways of training the model. Since both of these produce a trained model, the graph
+would be exactly the same with the difference of one task. In such cases, we can use a swap, denoted by
+the inclusion of the <code class="docutils literal notranslate"><span class="pre">?</span></code> character at the start of the name.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Task definitions in a swap <em>must</em> have the same output type.</p>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">rng</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">configure_rng</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1234</span>
+
+<span class="nt">trained_model</span><span class="p">:</span>
+<span class="w">   </span><span class="l l-Scalar l-Scalar-Plain">?training_method</span><span class="p p-Indicator">:</span>
+<span class="w">      </span><span class="nt">training_method_A</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">train_a</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$model_artifact</span>
+<span class="w">            </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$training_ds</span>
+<span class="w">            </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$num_epochs</span>
+<span class="w">      </span><span class="nt">training_method_B</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">train_b</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$model_artifact</span>
+<span class="w">            </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$training_ds</span>
+<span class="w">            </span><span class="nt">epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$num_epochs</span>
+<span class="w">   </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rng</span><span class="p p-Indicator">]</span>
+
+<span class="nt">predictions</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">predict</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$defended_model</span>
+<span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$testing_ds</span>
+<span class="w">      </span><span class="nt">samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$num_samples</span>
+<span class="w">   </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rng</span><span class="p p-Indicator">]</span>
+
+<span class="nt">defended_model</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">adversarial_training</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$trained_model.model</span>
+<span class="w">      </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$adversarial_ds</span>
+<span class="w">      </span><span class="nt">split</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">   </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rng</span><span class="p p-Indicator">]</span>
+
+<span class="nt">metrics</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">run_metrics</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">predictions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$predictions</span>
+</pre></div>
+</div>
+<p>In this example, the swap name is <code class="docutils literal notranslate"><span class="pre">training_method</span></code>, and there are two task aliases, named <code class="docutils literal notranslate"><span class="pre">training_method_A</span></code>
+and <code class="docutils literal notranslate"><span class="pre">training_method_B</span></code>. When running a job, a mapping such as the following indicates which
+task definition should be used in place of the swap:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">training_method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">training_method_A</span>
+</pre></div>
+</div>
+<p>Every swap in the Task Graph must receive exactly one selection. See
+<a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html#reference-jobs-specifying-swaps"><span class="std std-ref">Specifying Swaps</span></a> for the Python client
+and REST API submission formats.</p>
+</section>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
@@ -632,6 +691,7 @@ See <a class="reference internal" href="../../reference/dioptra-components/entry
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#global-variables">Global Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-variables">Artifact Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-dependencies-and-dag-creation">Explicit Dependencies and DAG creation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-swaps">Entrypoint Swaps</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>

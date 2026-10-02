@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Saving Artifacts &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Saving Artifacts &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -513,7 +514,7 @@ document.write(`
 <span class="k">class</span><span class="w"> </span><span class="nc">NumpyArrayArtifactTask</span><span class="p">(</span><span class="n">ArtifactTaskInterface</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="n">working_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="p">(</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.npy&quot;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="p">(</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".npy"</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">contents</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">path</span>
 
@@ -543,6 +544,12 @@ document.write(`
 <p class="admonition-title">Learn More</p>
 <p>See <a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html#reference-plugins"><span class="std std-ref">Plugins Reference</span></a> to learn more about the syntax of artifact handlers.</p>
 </div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>All file paths must be constructed relative to</strong> <code class="docutils literal notranslate"><span class="pre">working_dir</span></code>.</p>
+<p>Dioptra passes a <code class="docutils literal notranslate"><span class="pre">working_dir:</span> <span class="pre">Path</span></code> argument into both <code class="docutils literal notranslate"><span class="pre">serialize</span></code> and <code class="docutils literal notranslate"><span class="pre">deserialize</span></code>. This is the directory where the artifact store writes files during a job and reads them back from on subsequent loads. Build every path as <code class="docutils literal notranslate"><span class="pre">working_dir</span> <span class="pre">/</span> <span class="pre">name</span></code> in <code class="docutils literal notranslate"><span class="pre">serialize</span></code> and <code class="docutils literal notranslate"><span class="pre">working_dir</span> <span class="pre">/</span> <span class="pre">path</span></code> in <code class="docutils literal notranslate"><span class="pre">deserialize</span></code>, as shown in the example above.</p>
+<p>Writing to an absolute path or any location outside <code class="docutils literal notranslate"><span class="pre">working_dir</span></code> will appear to succeed during the run, but the artifact will not be tracked by the job and <code class="docutils literal notranslate"><span class="pre">deserialize</span></code> will later fail to load it — typically with a confusing <em>file not found</em> error that surfaces far from where the path was constructed.</p>
 </div>
 </section>
 <section class="header-on-a-card header-steps" id="step-2-register-artifact-task">

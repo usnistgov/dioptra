@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Entrypoints Client Methods &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Entrypoints Client Methods &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -450,11 +451,16 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#swap-selections-in-snapshot-queries">Swap selections in snapshot queries</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoints-crud-methods">Entrypoints - CRUD methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-entrypoints">Get Entrypoints</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-one-entrypoint">Get One Entrypoint</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-entrypoint">Modify Entrypoint</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-entrypoint">Delete Entrypoint</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoints-validation-dry-runs">Entrypoints - Validation Dry Runs</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lightweight-lint-reports">Lightweight lint reports</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-plugins-methods">Entrypoint Plugins - Methods</a><ul class="nav section-nav flex-column">
@@ -500,42 +506,48 @@ document.write(`
 <p class="topic-title">Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#requirements" id="id1">Requirements</a></p></li>
-<li><p><a class="reference internal" href="#entrypoints-crud-methods" id="id2">Entrypoints - CRUD methods</a></p>
+<li><p><a class="reference internal" href="#swap-selections-in-snapshot-queries" id="id2">Swap selections in snapshot queries</a></p></li>
+<li><p><a class="reference internal" href="#entrypoints-crud-methods" id="id3">Entrypoints - CRUD methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#get-entrypoints" id="id3">Get Entrypoints</a></p></li>
-<li><p><a class="reference internal" href="#get-one-entrypoint" id="id4">Get One Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#modify-entrypoint" id="id5">Modify Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#delete-entrypoint" id="id6">Delete Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-entrypoints" id="id4">Get Entrypoints</a></p></li>
+<li><p><a class="reference internal" href="#get-one-entrypoint" id="id5">Get One Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#modify-entrypoint" id="id6">Modify Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#delete-entrypoint" id="id7">Delete Entrypoint</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#entrypoint-plugins-methods" id="id7">Entrypoint Plugins - Methods</a></p>
+<li><p><a class="reference internal" href="#entrypoints-validation-dry-runs" id="id8">Entrypoints - Validation Dry Runs</a></p>
 <ul>
-<li><p><a class="reference internal" href="#add-plugin-to-entrypoint" id="id8">Add Plugin to Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#get-plugins-for-entrypoint" id="id9">Get Plugins for Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#get-one-plugin-by-id" id="id10">Get One Plugin by ID</a></p></li>
-<li><p><a class="reference internal" href="#delete-one-plugin-by-id" id="id11">Delete One Plugin by ID</a></p></li>
+<li><p><a class="reference internal" href="#lightweight-lint-reports" id="id9">Lightweight lint reports</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#entrypoint-artifact-plugins-methods" id="id12">Entrypoint Artifact Plugins - Methods</a></p>
+<li><p><a class="reference internal" href="#entrypoint-plugins-methods" id="id10">Entrypoint Plugins - Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#add-artifact-plugin-to-entrypoint" id="id13">Add Artifact Plugin to Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#get-artifact-plugins-for-entrypoint" id="id14">Get Artifact Plugins for Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#get-one-artifact-plugin-by-id" id="id15">Get One Artifact Plugin by ID</a></p></li>
-<li><p><a class="reference internal" href="#delete-one-artifact-plugin-by-id" id="id16">Delete One Artifact Plugin by ID</a></p></li>
+<li><p><a class="reference internal" href="#add-plugin-to-entrypoint" id="id11">Add Plugin to Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-plugins-for-entrypoint" id="id12">Get Plugins for Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-one-plugin-by-id" id="id13">Get One Plugin by ID</a></p></li>
+<li><p><a class="reference internal" href="#delete-one-plugin-by-id" id="id14">Delete One Plugin by ID</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#entrypoint-queues-methods" id="id17">Entrypoint Queues - Methods</a></p>
+<li><p><a class="reference internal" href="#entrypoint-artifact-plugins-methods" id="id15">Entrypoint Artifact Plugins - Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#add-queue-to-entrypoint" id="id18">Add Queue to Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#get-queues-for-entrypoint" id="id19">Get Queues for Entrypoint</a></p></li>
-<li><p><a class="reference internal" href="#replace-attached-queues" id="id20">Replace Attached Queues</a></p></li>
-<li><p><a class="reference internal" href="#delete-all-attached-queues" id="id21">Delete All Attached Queues</a></p></li>
-<li><p><a class="reference internal" href="#delete-one-queue-by-id" id="id22">Delete One Queue by ID</a></p></li>
+<li><p><a class="reference internal" href="#add-artifact-plugin-to-entrypoint" id="id16">Add Artifact Plugin to Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-artifact-plugins-for-entrypoint" id="id17">Get Artifact Plugins for Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-one-artifact-plugin-by-id" id="id18">Get One Artifact Plugin by ID</a></p></li>
+<li><p><a class="reference internal" href="#delete-one-artifact-plugin-by-id" id="id19">Delete One Artifact Plugin by ID</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#tags-attached-to-entrypoint-methods" id="id23">Tags Attached to Entrypoint - Methods</a></p></li>
-<li><p><a class="reference internal" href="#snapshots-of-entrypoint-methods" id="id24">Snapshots of Entrypoint - Methods</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id25">See Also</a></p></li>
+<li><p><a class="reference internal" href="#entrypoint-queues-methods" id="id20">Entrypoint Queues - Methods</a></p>
+<ul>
+<li><p><a class="reference internal" href="#add-queue-to-entrypoint" id="id21">Add Queue to Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#get-queues-for-entrypoint" id="id22">Get Queues for Entrypoint</a></p></li>
+<li><p><a class="reference internal" href="#replace-attached-queues" id="id23">Replace Attached Queues</a></p></li>
+<li><p><a class="reference internal" href="#delete-all-attached-queues" id="id24">Delete All Attached Queues</a></p></li>
+<li><p><a class="reference internal" href="#delete-one-queue-by-id" id="id25">Delete One Queue by ID</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tags-attached-to-entrypoint-methods" id="id26">Tags Attached to Entrypoint - Methods</a></p></li>
+<li><p><a class="reference internal" href="#snapshots-of-entrypoint-methods" id="id27">Snapshots of Entrypoint - Methods</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id28">See Also</a></p></li>
 </ul>
 </div>
 <section id="requirements">
@@ -545,15 +557,42 @@ document.write(`
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">Set Up the Python Client</span></a> - the Python client must be configured and initialized</p></li>
 </ul>
 </section>
+<section id="swap-selections-in-snapshot-queries">
+<h2><a class="toc-backref" href="#id2">Swap selections in snapshot queries</a><a class="headerlink" href="#swap-selections-in-snapshot-queries" title="Permalink to this headline">#</a></h2>
+<p>The snapshot <code class="docutils literal notranslate"><span class="pre">config</span></code> and <code class="docutils literal notranslate"><span class="pre">dynamicGlobalParameters</span></code> GET endpoints accept
+swap selections using the OpenAPI 3 <code class="docutils literal notranslate"><span class="pre">deepObject</span></code> wire representation
+(<code class="docutils literal notranslate"><span class="pre">style:</span> <span class="pre">deepObject</span></code>, <code class="docutils literal notranslate"><span class="pre">explode:</span> <span class="pre">true</span></code>):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>?swaps[method]=attack%3Av2&amp;swaps[secondary]=attack%2Cv3
+</pre></div>
+</div>
+<p>This selects <code class="docutils literal notranslate"><span class="pre">attack:v2</span></code> for <code class="docutils literal notranslate"><span class="pre">method</span></code> and <code class="docutils literal notranslate"><span class="pre">attack,v3</span></code> for <code class="docutils literal notranslate"><span class="pre">secondary</span></code>.
+Swap names and aliases are preserved exactly. Each <code class="docutils literal notranslate"><span class="pre">swaps[name]</span></code> parameter
+must occur only once; repeated keys, including repeated identical values, return
+HTTP 400. Omit swap parameters when there are no selections. The former
+<code class="docutils literal notranslate"><span class="pre">swaps=name:alias,name2:alias2</span></code> format is no longer accepted.</p>
+<p>The Python client’s <code class="docutils literal notranslate"><span class="pre">get_config(swap_parameters=...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_task_graph_global_params(swaps=...)</span></code> methods accept dictionaries and handle
+this serialization automatically. Pass the original names and aliases without
+pre-encoding them. For direct HTTP calls, let the URL library encode both keys
+and values:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"swaps[method]"</span><span class="p">:</span> <span class="s2">"attack:v2"</span><span class="p">,</span>
+    <span class="s2">"swaps[secondary]"</span><span class="p">:</span> <span class="s2">"attack,v3"</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The current Swagger 2 documentation describes this bracketed format in the
+parameter description; Swagger 2 cannot express OpenAPI 3 <code class="docutils literal notranslate"><span class="pre">deepObject</span></code> metadata.</p>
+</section>
 <section id="entrypoints-crud-methods">
-<span id="reference-entrypoints-client-methods-crud-methods"></span><h2><a class="toc-backref" href="#id2">Entrypoints - CRUD methods</a><a class="headerlink" href="#entrypoints-crud-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-client-methods-crud-methods"></span><h2><a class="toc-backref" href="#id3">Entrypoints - CRUD methods</a><a class="headerlink" href="#entrypoints-crud-methods" title="Permalink to this headline">#</a></h2>
 <p>After <a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">importing and initializing the client</span></a>, these methods for creating, reading, updating, and deleting (CRUD) entrypoints can be executed via <code class="docutils literal notranslate"><span class="pre">client.entrypoints.METHOD_NAME()</span></code>.
 Create Entrypoint
 ~~~~~~~~~~~~~~~~~</p>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.create">
-<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.create" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates a entrypoint.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -577,6 +616,9 @@ defaults to None.</p></li>
 Optional, defaults to None.</p></li>
 <li><p><strong>artifact_plugins</strong> – A list of artifact plugin ids to associate with the new
 entrypoint. Optional, defaults to None.</p></li>
+<li><p><strong>validate_only</strong> – If True, run all save-time checks, then roll back without
+committing changes. The response omits generated IDs/timestamps.
+If False (the default), validate and save the entrypoint.</p></li>
 </ul>
 </dd>
 </dl>
@@ -585,27 +627,27 @@ entrypoint. Optional, defaults to None.</p></li>
 <p>Create an entrypoint called “hello_world” with artifact input parameters and artifact output graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">entrypoint</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
     <span class="n">group_id</span><span class="o">=</span><span class="n">GROUP_ID</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hello_world&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"hello_world"</span><span class="p">,</span>
     <span class="n">task_graph</span><span class="o">=</span><span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
     <span class="n">artifact_graph</span><span class="o">=</span><span class="n">ARTIFACT_TASK_GRAPH_YAML_STR</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;An entrypoint to run hello world task&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"An entrypoint to run hello world task"</span><span class="p">,</span>
     <span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;greeting&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"greeting"</span><span class="p">,</span>
+            <span class="s2">"defaultValue"</span><span class="p">:</span> <span class="s2">"Hello"</span><span class="p">,</span>
+            <span class="s2">"parameterType"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
         <span class="p">},</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;defaultValue&quot;</span><span class="p">:</span> <span class="s2">&quot;World&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"name"</span><span class="p">,</span>
+            <span class="s2">"defaultValue"</span><span class="p">:</span> <span class="s2">"World"</span><span class="p">,</span>
+            <span class="s2">"parameterType"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">],</span>
     <span class="n">artifact_parameters</span><span class="o">=</span><span class="p">[</span>
         <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;artifact_name&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;outputParams&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;parameterType&quot;</span><span class="p">:</span> <span class="n">STRING_PARAM_TYPE_ID</span><span class="p">}</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"artifact_name"</span><span class="p">,</span>
+            <span class="s2">"outputParams"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"value"</span><span class="p">,</span> <span class="s2">"parameterType"</span><span class="p">:</span> <span class="n">STRING_PARAM_TYPE_ID</span><span class="p">}</span>
             <span class="p">],</span>
         <span class="p">}</span>
     <span class="p">],</span>
@@ -625,11 +667,11 @@ entrypoint. Optional, defaults to None.</p></li>
 
 </div></blockquote>
 <section id="get-entrypoints">
-<h3><a class="toc-backref" href="#id3">Get Entrypoints</a><a class="headerlink" href="#get-entrypoints" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id4">Get Entrypoints</a><a class="headerlink" href="#get-entrypoints" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.get">
-<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.get" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_deleted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.get" title="Permalink to this definition">#</a></dt>
 <dd><p>Get a list of entrypoints.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -657,7 +699,7 @@ Optional, defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="get-one-entrypoint">
-<h3><a class="toc-backref" href="#id4">Get One Entrypoint</a><a class="headerlink" href="#get-one-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id5">Get One Entrypoint</a><a class="headerlink" href="#get-one-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.get_by_id">
@@ -676,11 +718,11 @@ Optional, defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="modify-entrypoint">
-<h3><a class="toc-backref" href="#id5">Modify Entrypoint</a><a class="headerlink" href="#modify-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6">Modify Entrypoint</a><a class="headerlink" href="#modify-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id">
-<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">modify_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.modify_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">EntrypointsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">modify_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entrypoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugin_snapshot_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact_plugin_snapshot_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.entrypoints.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/entrypoints.html#EntrypointsCollectionClient.modify_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Modify the entrypoint matching the provided id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -699,6 +741,15 @@ parameters, pass None.</p></li>
 To remove all artifact parameters, pass None.</p></li>
 <li><p><strong>queues</strong> – The new list of queue ids to associate with the entrypoint. To
 remove all associated queues, pass None.</p></li>
+<li><p><strong>plugin_snapshot_ids</strong> – The complete desired task-plugin snapshot list.
+Retain the currently bound snapshot or select latest independently for
+each plugin. New associations require latest; omitted plugins are removed.
+Pass an empty list to remove all task plugins, subject to graph validation.</p></li>
+<li><p><strong>artifact_plugin_snapshot_ids</strong> – The complete desired artifact-plugin snapshot
+list, with the same eligibility and removal rules for this role.</p></li>
+<li><p><strong>validate_only</strong> – If True, run all save-time checks, then roll back without
+committing changes. The response omits generated IDs/timestamps.
+If False (the default), validate and save the entrypoint.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -710,7 +761,7 @@ remove all associated queues, pass None.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-entrypoint">
-<h3><a class="toc-backref" href="#id6">Delete Entrypoint</a><a class="headerlink" href="#delete-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id7">Delete Entrypoint</a><a class="headerlink" href="#delete-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointsCollectionClient.delete_by_id">
@@ -729,8 +780,72 @@ remove all associated queues, pass None.</p></li>
 </div></blockquote>
 </section>
 </section>
+<section id="entrypoints-validation-dry-runs">
+<span id="reference-entrypoints-client-methods-validation"></span><h2><a class="toc-backref" href="#id8">Entrypoints - Validation Dry Runs</a><a class="headerlink" href="#entrypoints-validation-dry-runs" title="Permalink to this headline">#</a></h2>
+<p>Use the ordinary entrypoint create or update interface with <code class="docutils literal notranslate"><span class="pre">validateOnly=true</span></code>
+to validate a proposed entrypoint without saving it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/entrypoints/?validateOnly=true</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/api/v1/entrypoints/{id}?validateOnly=true</span></code></p></li>
+</ul>
+<p>Send the same request body as for an ordinary create or update. In the Python
+client, pass <code class="docutils literal notranslate"><span class="pre">validate_only=True</span></code> to
+<a class="reference internal" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.create" title="dioptra.client.entrypoints.EntrypointsCollectionClient.create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code></a> or
+<a class="reference internal" href="#dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id" title="dioptra.client.entrypoints.EntrypointsCollectionClient.modify_by_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">modify_by_id()</span></code></a>.
+For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">group_id</span><span class="o">=</span><span class="n">GROUP_ID</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"hello_world"</span><span class="p">,</span>
+    <span class="n">task_graph</span><span class="o">=</span><span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
+    <span class="n">plugins</span><span class="o">=</span><span class="n">PLUGIN_IDS</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="n">PARAMETERS</span><span class="p">,</span>
+    <span class="n">validate_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Dry runs perform the same permission, association, name, and full graph validation
+checks as saving, then roll back without committing changes. Database flushes may
+occur within the transaction, but resources, snapshots, and associations are not
+saved. Errors have the same status and details as the corresponding save. Successful requests
+return the proposed entrypoint representation, omitting the new snapshot ID,
+snapshot timestamp, and modification timestamp. The <code class="docutils literal notranslate"><span class="pre">latestSnapshot</span></code> and
+<code class="docutils literal notranslate"><span class="pre">deleted</span></code> fields are retained. Creation dry runs additionally omit the generated resource
+ID and creation timestamp. Update dry runs retain the existing resource ID and
+original creation timestamp.</p>
+<p>Omitting <code class="docutils literal notranslate"><span class="pre">validateOnly</span></code> or setting it to <code class="docutils literal notranslate"><span class="pre">false</span></code> (<code class="docutils literal notranslate"><span class="pre">validate_only=False</span></code> in
+the Python client) performs full validation and saves the entrypoint.</p>
+<section id="lightweight-lint-reports">
+<h3><a class="toc-backref" href="#id9">Lightweight lint reports</a><a class="headerlink" href="#lightweight-lint-reports" title="Permalink to this headline">#</a></h3>
+<p>For inexpensive editor feedback, use <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/entrypoints:lint</span></code> or
+<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/entrypoints/{id}:lint</span></code> with the corresponding create or update
+content fields. The colon is a literal part of the URL. Item lint uses the saved
+plugin associations and accepts entrypoint content without PUT’s snapshot lists. These endpoints perform schema,
+task-reference, and swap checks without full rendered-graph validation. Changes
+are rolled back on both success and failure.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">lint</span><span class="p">({</span>
+    <span class="s2">"group"</span><span class="p">:</span> <span class="n">GROUP_ID</span><span class="p">,</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"hello_world"</span><span class="p">,</span>
+    <span class="s2">"taskGraph"</span><span class="p">:</span> <span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
+    <span class="s2">"plugins"</span><span class="p">:</span> <span class="n">PLUGIN_IDS</span><span class="p">,</span>
+<span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+<span class="n">report</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">entrypoints</span><span class="o">.</span><span class="n">lint_by_id</span><span class="p">(</span><span class="n">ENTRYPOINT_ID</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"hello_world"</span><span class="p">,</span>
+    <span class="s2">"taskGraph"</span><span class="p">:</span> <span class="n">TASK_GRAPH_YAML_STR</span><span class="p">,</span>
+<span class="p">})</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>A completed check returns HTTP 200 with a report such as:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"valid"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"graph"</span><span class="p">,</span><span class="w"> </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Unknown task"</span><span class="p">}]}</span>
+</pre></div>
+</div>
+<p>Malformed requests, authorization failures, missing resources, and operational
+failures return normal API errors. A successful lint report does not replace a
+full dry run or save-time validation.</p>
+</section>
+</section>
 <section id="entrypoint-plugins-methods">
-<span id="reference-entrypoints-client-methods-plugins-methods"></span><h2><a class="toc-backref" href="#id7">Entrypoint Plugins - Methods</a><a class="headerlink" href="#entrypoint-plugins-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-client-methods-plugins-methods"></span><h2><a class="toc-backref" href="#id10">Entrypoint Plugins - Methods</a><a class="headerlink" href="#entrypoint-plugins-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods exist within the class <code class="docutils literal notranslate"><span class="pre">EntrypointPluginsSubCollectionClient</span></code>, and are accessed via the <code class="docutils literal notranslate"><span class="pre">plugins</span></code> property of the Entrypoint Client (which points to <code class="docutils literal notranslate"><span class="pre">EntrypointPluginsSubCollectionClient</span></code>).</p>
 <p><strong>Example - Attach Plugins to Entrypoint</strong></p>
 <div class="code-panel python admonition">
@@ -740,7 +855,7 @@ remove all associated queues, pass None.</p></li>
 </div>
 </div>
 <section id="add-plugin-to-entrypoint">
-<h3><a class="toc-backref" href="#id8">Add Plugin to Entrypoint</a><a class="headerlink" href="#add-plugin-to-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id11">Add Plugin to Entrypoint</a><a class="headerlink" href="#add-plugin-to-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.create">
@@ -764,7 +879,7 @@ then the entrypoint will update the plugin to the latest version.</p>
 </div></blockquote>
 </section>
 <section id="get-plugins-for-entrypoint">
-<h3><a class="toc-backref" href="#id9">Get Plugins for Entrypoint</a><a class="headerlink" href="#get-plugins-for-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id12">Get Plugins for Entrypoint</a><a class="headerlink" href="#get-plugins-for-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.get">
@@ -783,7 +898,7 @@ then the entrypoint will update the plugin to the latest version.</p>
 </div></blockquote>
 </section>
 <section id="get-one-plugin-by-id">
-<h3><a class="toc-backref" href="#id10">Get One Plugin by ID</a><a class="headerlink" href="#get-one-plugin-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id13">Get One Plugin by ID</a><a class="headerlink" href="#get-one-plugin-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.get_by_id">
@@ -805,7 +920,7 @@ then the entrypoint will update the plugin to the latest version.</p>
 </div></blockquote>
 </section>
 <section id="delete-one-plugin-by-id">
-<h3><a class="toc-backref" href="#id11">Delete One Plugin by ID</a><a class="headerlink" href="#delete-one-plugin-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id14">Delete One Plugin by ID</a><a class="headerlink" href="#delete-one-plugin-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointPluginsSubCollectionClient.delete_by_id">
@@ -828,12 +943,12 @@ then the entrypoint will update the plugin to the latest version.</p>
 </section>
 </section>
 <section id="entrypoint-artifact-plugins-methods">
-<span id="reference-entrypoints-client-methods-artifact-plugins-methods"></span><h2><a class="toc-backref" href="#id12">Entrypoint Artifact Plugins - Methods</a><a class="headerlink" href="#entrypoint-artifact-plugins-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-client-methods-artifact-plugins-methods"></span><h2><a class="toc-backref" href="#id15">Entrypoint Artifact Plugins - Methods</a><a class="headerlink" href="#entrypoint-artifact-plugins-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods exist within the class <code class="docutils literal notranslate"><span class="pre">EntrypointArtifactPluginsSubCollectionClient</span></code>, and are accessed via the <code class="docutils literal notranslate"><span class="pre">artifact_plugins</span></code> property of the Entrypoint Client.</p>
 <p><strong>Example - Attach Artifact Plugins to Entrypoint</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">client.entrypoints.artifact_plugins.create(entrypoint_id=1,</span> <span class="pre">artifact_plugin_ids=[5])</span></code></p>
 <section id="add-artifact-plugin-to-entrypoint">
-<h3><a class="toc-backref" href="#id13">Add Artifact Plugin to Entrypoint</a><a class="headerlink" href="#add-artifact-plugin-to-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id16">Add Artifact Plugin to Entrypoint</a><a class="headerlink" href="#add-artifact-plugin-to-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.create">
@@ -859,7 +974,7 @@ will be registered to the entrypoint.</p></li>
 </div></blockquote>
 </section>
 <section id="get-artifact-plugins-for-entrypoint">
-<h3><a class="toc-backref" href="#id14">Get Artifact Plugins for Entrypoint</a><a class="headerlink" href="#get-artifact-plugins-for-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id17">Get Artifact Plugins for Entrypoint</a><a class="headerlink" href="#get-artifact-plugins-for-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.get">
@@ -878,7 +993,7 @@ will be registered to the entrypoint.</p></li>
 </div></blockquote>
 </section>
 <section id="get-one-artifact-plugin-by-id">
-<h3><a class="toc-backref" href="#id15">Get One Artifact Plugin by ID</a><a class="headerlink" href="#get-one-artifact-plugin-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id18">Get One Artifact Plugin by ID</a><a class="headerlink" href="#get-one-artifact-plugin-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.get_by_id">
@@ -900,7 +1015,7 @@ will be registered to the entrypoint.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-one-artifact-plugin-by-id">
-<h3><a class="toc-backref" href="#id16">Delete One Artifact Plugin by ID</a><a class="headerlink" href="#delete-one-artifact-plugin-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id19">Delete One Artifact Plugin by ID</a><a class="headerlink" href="#delete-one-artifact-plugin-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointArtifactPluginsSubCollectionClient.delete_by_id">
@@ -923,12 +1038,12 @@ will be registered to the entrypoint.</p></li>
 </section>
 </section>
 <section id="entrypoint-queues-methods">
-<span id="reference-entrypoints-client-methods-queues-methods"></span><h2><a class="toc-backref" href="#id17">Entrypoint Queues - Methods</a><a class="headerlink" href="#entrypoint-queues-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-entrypoints-client-methods-queues-methods"></span><h2><a class="toc-backref" href="#id20">Entrypoint Queues - Methods</a><a class="headerlink" href="#entrypoint-queues-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods exist within the class <code class="docutils literal notranslate"><span class="pre">EntrypointQueuesSubCollectionClient</span></code>, and are accessed via the <code class="docutils literal notranslate"><span class="pre">queues</span></code> property of the Entrypoint Client.</p>
 <p><strong>Example - Attach Queues to Entrypoint</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">client.entrypoints.queues.create(entrypoint_id=1,</span> <span class="pre">queue_ids=[10])</span></code></p>
 <section id="add-queue-to-entrypoint">
-<h3><a class="toc-backref" href="#id18">Add Queue to Entrypoint</a><a class="headerlink" href="#add-queue-to-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id21">Add Queue to Entrypoint</a><a class="headerlink" href="#add-queue-to-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.create">
@@ -950,7 +1065,7 @@ will be registered to the entrypoint.</p></li>
 </div></blockquote>
 </section>
 <section id="get-queues-for-entrypoint">
-<h3><a class="toc-backref" href="#id19">Get Queues for Entrypoint</a><a class="headerlink" href="#get-queues-for-entrypoint" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id22">Get Queues for Entrypoint</a><a class="headerlink" href="#get-queues-for-entrypoint" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.get">
@@ -969,7 +1084,7 @@ will be registered to the entrypoint.</p></li>
 </div></blockquote>
 </section>
 <section id="replace-attached-queues">
-<h3><a class="toc-backref" href="#id20">Replace Attached Queues</a><a class="headerlink" href="#replace-attached-queues" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id23">Replace Attached Queues</a><a class="headerlink" href="#replace-attached-queues" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.modify_by_id">
@@ -994,7 +1109,7 @@ entrypoint queues.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-all-attached-queues">
-<h3><a class="toc-backref" href="#id21">Delete All Attached Queues</a><a class="headerlink" href="#delete-all-attached-queues" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id24">Delete All Attached Queues</a><a class="headerlink" href="#delete-all-attached-queues" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.delete">
@@ -1013,7 +1128,7 @@ entrypoint queues.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-one-queue-by-id">
-<h3><a class="toc-backref" href="#id22">Delete One Queue by ID</a><a class="headerlink" href="#delete-one-queue-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id25">Delete One Queue by ID</a><a class="headerlink" href="#delete-one-queue-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.entrypoints.EntrypointQueuesSubCollectionClient.delete_by_id">
@@ -1036,7 +1151,7 @@ entrypoint queues.</p></li>
 </section>
 </section>
 <section id="tags-attached-to-entrypoint-methods">
-<h2><a class="toc-backref" href="#id23">Tags Attached to Entrypoint - Methods</a><a class="headerlink" href="#tags-attached-to-entrypoint-methods" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id26">Tags Attached to Entrypoint - Methods</a><a class="headerlink" href="#tags-attached-to-entrypoint-methods" title="Permalink to this headline">#</a></h2>
 <p>Methods belonging to the <code class="docutils literal notranslate"><span class="pre">TagsSubCollectionClient</span></code> are accessed via the <code class="docutils literal notranslate"><span class="pre">tags</span></code> property of the Entrypoint Client (which points to <code class="docutils literal notranslate"><span class="pre">TagsSubCollectionClient</span></code>).</p>
 <p><strong>Example - Get tags for an Entrypoint</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">client.entrypoints.tags.get(1)</span></code></p>
@@ -1046,7 +1161,7 @@ entrypoint queues.</p></li>
 </ul>
 </section>
 <section id="snapshots-of-entrypoint-methods">
-<h2><a class="toc-backref" href="#id24">Snapshots of Entrypoint - Methods</a><a class="headerlink" href="#snapshots-of-entrypoint-methods" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id27">Snapshots of Entrypoint - Methods</a><a class="headerlink" href="#snapshots-of-entrypoint-methods" title="Permalink to this headline">#</a></h2>
 <p>Methods belonging to the <cite>EntrypointsSnapshotCollectionClient</cite> are accessed via the <cite>snapshots</cite> property of the Entrypoint Client.</p>
 <p><strong>Example - Get snapshots for an Entrypoint</strong></p>
 <div class="code-panel python admonition">
@@ -1061,7 +1176,7 @@ entrypoint queues.</p></li>
 </ul>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
-<h2><a class="toc-backref" href="#id25">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id28">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../dioptra-components/entrypoints-reference.html#reference-entrypoints"><span class="std std-ref">Entrypoints reference</span></a></p></li>
 <li><p><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">Entrypoints explanation</span></a></p></li>
@@ -1119,11 +1234,16 @@ entrypoint queues.</p></li>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#swap-selections-in-snapshot-queries">Swap selections in snapshot queries</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoints-crud-methods">Entrypoints - CRUD methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-entrypoints">Get Entrypoints</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-one-entrypoint">Get One Entrypoint</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-entrypoint">Modify Entrypoint</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-entrypoint">Delete Entrypoint</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoints-validation-dry-runs">Entrypoints - Validation Dry Runs</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lightweight-lint-reports">Lightweight lint reports</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#entrypoint-plugins-methods">Entrypoint Plugins - Methods</a><ul class="nav section-nav flex-column">

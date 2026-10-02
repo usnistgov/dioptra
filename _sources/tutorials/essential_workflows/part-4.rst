@@ -28,7 +28,7 @@ In the last tutorial, you built a multi-step workflow that transformed a numpy a
 
 Instead of printing values in the logs, you will now record them using **metrics**. This will produce time-series visualizations. This is useful for tracking a metric across various steps, both within and across plugins. Metrics are stored at the job level.
 
-You will replace your prior ``print_stats`` plugin task with a new ``log_metrics`` task.
+You will replace your prior ``print_stats`` plugin task with a new ``log_stats`` task.
 
 .. warning::
    This part of the tutorial will not work properly until new changes from DIOPTRA-OPTIC branch are merged in for metric logging.
@@ -55,7 +55,8 @@ You will now create the new plugin task that uses Dioptra's metric logging.
        :language: python
        :start-after: # [new-plugin-definition]
 
-4. Click **Import Function Tasks** again to register the new plugin task.
+4. Click **Import Function Tasks**, select ``log_stats``, and click **Import** to register the new plugin task.
+5. Click **Submit File** to save the edited code and registered task.
 
 .. note::
    Metrics are appended to a job. They are identified by the **metric name**, and they also require a **value** and a **step name**.
@@ -65,11 +66,12 @@ You will now create the new plugin task that uses Dioptra's metric logging.
 Step 2: Modify Entrypoint 3
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now edit Entrypoint 3 to use this new plugin task. You will change the task graph to utilize ``log_metrics`` instead of ``print_stats``.
+Now edit Entrypoint 3 to use this new plugin task. You will change the task graph to utilize ``log_stats`` instead of ``print_stats``.
 
 1. Navigate to **Entrypoints** and open **Entrypoint 3**.
-2. In the **Task Graph YAML** editor, find every reference to the task ``print_stats`` and replace it with ``log_metrics``.
-3. Click **Submit Entrypoint**.
+2. Under **Task Plugins**, click the **Sync to latest version** button beside **sample_and_transform** to select the plugin's latest version.
+3. In the **Task Graph** YAML editor, find every reference to the task ``print_stats`` and replace it with ``log_stats``.
+4. Click **Submit EntryPoint** to save the edited task graph and selected plugin version together.
 
 .. rst-class:: header-on-a-card header-steps
 

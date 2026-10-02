@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.jobs &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.jobs &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -426,32 +427,33 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">SnapshotsSubCollectionClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagsSubCollectionClient</span>
 
-<span class="n">METRICS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;metrics&quot;</span>
-<span class="n">MLFLOW_RUN</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mlflowRun&quot;</span>
-<span class="n">SNAPSHOTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;snapshots&quot;</span>
-<span class="n">STATUS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;status&quot;</span>
-<span class="n">LOG</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;log&quot;</span>
-<span class="n">PARAMETERS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;parameters&quot;</span>
-<span class="n">ARTIFACT_PARAMETERS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;artifactParameters&quot;</span>
+<span class="n">METRICS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"metrics"</span>
+<span class="n">MLFLOW_RUN</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"mlflowRun"</span>
+<span class="n">SNAPSHOTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"snapshots"</span>
+<span class="n">STATUS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"status"</span>
+<span class="n">LOG</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"log"</span>
+<span class="n">PARAMETERS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"parameters"</span>
+<span class="n">ARTIFACT_PARAMETERS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"artifactParameters"</span>
+<span class="n">CONFIG</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"config"</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">JobsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /jobs collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /jobs collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;jobs&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"jobs"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the JobsCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the JobsCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
@@ -460,7 +462,7 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving job resource snapshots.</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving job resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -473,12 +475,12 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/jobs/1/snapshots/2</span>
 <span class="sd">            client.jobs.snapshots.get_by_id(1, snapshot_id=2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The client for managing the tags sub-collection owned by the /jobs</span>
 <span class="sd">        collection.</span>
 
@@ -502,7 +504,7 @@ document.write(`
 
 <span class="sd">            # DELETE /api/v1/jobs/1/tags</span>
 <span class="sd">            client.jobs.tags.remove(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
 
 <div class="viewcode-block" id="JobsCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -514,7 +516,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of jobs.</span>
+<span class="w">        </span><span class="sd">"""Get a list of jobs.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group id the jobs belong to. If None, return</span>
@@ -527,28 +529,28 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for jobs using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">            search: Search for jobs using the Dioptra API's query language. Optional,</span>
 <span class="sd">                defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"groupId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -556,40 +558,40 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the job matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the job matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the job matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Delete the job matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">))</span></div>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_mlflow_run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the MLflow run id for a job.</span>
+<span class="w">        </span><span class="sd">"""Gets the MLflow run id for a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_mlflow_run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mlflow_run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the MLflow run id for a job.</span>
+<span class="w">        </span><span class="sd">"""Sets the MLflow run id for a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
@@ -597,52 +599,52 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;mlflowRunId&quot;</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
+            <span class="s2">"mlflowRunId"</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_parameters"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_parameters">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the parameters for a job.</span>
+<span class="w">        </span><span class="sd">"""Gets the parameters for a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">PARAMETERS</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_artifact_parameters"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_artifact_parameters">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_artifact_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the artifact parameters for a job.</span>
+<span class="w">        </span><span class="sd">"""Gets the artifact parameters for a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">ARTIFACT_PARAMETERS</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_status"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the status for a job.</span>
+<span class="w">        </span><span class="sd">"""Gets the status for a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">STATUS</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_metrics_by_id"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_metrics_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_metrics_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets all the latest metrics for a job.</span>
+<span class="w">        </span><span class="sd">"""Gets all the latest metrics for a job.</span>
 
 <span class="sd">        The returned metric value is either a float or a string representing the special</span>
 <span class="sd">        values of NaN, Infinity, or -Infinity. NaN values are represented as the string</span>
-<span class="sd">        &quot;nan&quot;, positive infinity as &quot;inf&quot;, and negative infinity as &quot;-inf&quot;. To convert</span>
+<span class="sd">        "nan", positive infinity as "inf", and negative infinity as "-inf". To convert</span>
 <span class="sd">        these string values back to their corresponding float representations in Python,</span>
 <span class="sd">        wrap the returned value with ``float()``.</span>
 
@@ -651,7 +653,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">METRICS</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.append_metric_by_id"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.append_metric_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">append_metric_by_id</span><span class="p">(</span>
@@ -662,14 +664,14 @@ document.write(`
         <span class="n">metric_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Posts a new metric to a job.</span>
+<span class="w">        </span><span class="sd">"""Posts a new metric to a job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            job_id: The job id, an integer.</span>
 <span class="sd">            metric_name: The name of the metric.</span>
 <span class="sd">            metric_value: The value of the metric. Can be a float, NaN, Infinity, or</span>
-<span class="sd">                -Infinity. NaN values will be converted to the string &quot;nan&quot; and infinite</span>
-<span class="sd">                values will be converted to the strings &quot;inf&quot; and &quot;-inf&quot; before sending</span>
+<span class="sd">                -Infinity. NaN values will be converted to the string "nan" and infinite</span>
+<span class="sd">                values will be converted to the strings "inf" and "-inf" before sending</span>
 <span class="sd">                to the API.</span>
 <span class="sd">            metric_step: The step value for the metric, optional. Sequentially</span>
 <span class="sd">                increasing step values are used to track how a metric changes over time.</span>
@@ -679,32 +681,32 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">str</span>
 
         <span class="c1"># Detect and standardize NaN: base Python, numpy, and pandas variants</span>
-        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">metric_value</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">metric_value</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;&lt;NA&gt;&quot;</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;nan&quot;</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">metric_value</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">metric_value</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"&lt;NA&gt;"</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s2">"nan"</span>
 
         <span class="c1"># Detect and standardize infinities</span>
         <span class="k">elif</span> <span class="n">math</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">metric_value</span><span class="p">):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;inf&quot;</span> <span class="k">if</span> <span class="n">metric_value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;-inf&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s2">"inf"</span> <span class="k">if</span> <span class="n">metric_value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">"-inf"</span>
 
         <span class="c1"># Not a special value, use float directly</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">metric_value</span>
 
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">metric_name</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">metric_name</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">metric_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_step</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_step</span>
 
         <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
-                <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="n">json_</span><span class="p">[</span><span class="s2">"timestamp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Validate string can be parsed as datetime</span>
@@ -713,12 +715,12 @@ document.write(`
 
                 <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">IllegalArgumentError</span><span class="p">(</span>
-                        <span class="s2">&quot;Illegal type for timestamp (reason: must be a &quot;</span>
-                        <span class="s2">&quot;datetime.datetime or timestamp string in ISO 8601 format): &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="s2">"Illegal type for timestamp (reason: must be a "</span>
+                        <span class="s2">"datetime.datetime or timestamp string in ISO 8601 format): "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">"</span>
                     <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
-                <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span>
+                <span class="n">json_</span><span class="p">[</span><span class="s2">"timestamp"</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
@@ -729,11 +731,11 @@ document.write(`
         <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the metric history for a job with a specific metric name.</span>
+<span class="w">        </span><span class="sd">"""Gets the metric history for a job with a specific metric name.</span>
 
 <span class="sd">        Each returned metric value is either a float or a string representing the</span>
 <span class="sd">        special values of NaN, Infinity, or -Infinity. NaN values are represented as the</span>
-<span class="sd">        string &quot;nan&quot;, positive infinity as &quot;inf&quot;, and negative infinity as &quot;-inf&quot;. To</span>
+<span class="sd">        string "nan", positive infinity as "inf", and negative infinity as "-inf". To</span>
 <span class="sd">        convert these string values back to their corresponding float representations in</span>
 <span class="sd">        Python, wrap the returned value with ``float()``.</span>
 
@@ -746,10 +748,10 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">SNAPSHOTS</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
@@ -764,7 +766,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">severity</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get log records for the given job resource. Records are returned in the order</span>
 <span class="sd">        they were added.</span>
 
@@ -780,32 +782,32 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">severity</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;severity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">severity</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"severity"</span><span class="p">]</span> <span class="o">=</span> <span class="n">severity</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">LOG</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="JobsCollectionClient.append_logs_by_id"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.append_logs_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">append_logs_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Add log records for the given job. Job records are dicts of the form::</span>
 
 <span class="sd">            {</span>
-<span class="sd">                &quot;severity&quot;: &quot;WARNING&quot;,</span>
-<span class="sd">                &quot;loggerName&quot;: &quot;hello_world.tasks&quot;,</span>
-<span class="sd">                &quot;message&quot;: &quot;Log message&quot;,</span>
+<span class="sd">                "severity": "WARNING",</span>
+<span class="sd">                "loggerName": "hello_world.tasks",</span>
+<span class="sd">                "message": "Log message",</span>
 <span class="sd">            }</span>
 
 <span class="sd">        Legal values for severity include DEBUG, INFO, WARNING, ERROR, CRITICAL. The</span>
@@ -817,11 +819,28 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">logs</span><span class="p">)}</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"data"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">logs</span><span class="p">)}</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">LOG</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Retrieve the rendered YAML for a given job.</span>
+
+<span class="sd">        Swap declarations retain their ``?outputs`` interface and selected alias,</span>
+<span class="sd">        using the original registered task names. The Dioptra worker prepares</span>
+<span class="sd">        this configuration for execution.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            job_id: The resource ID of a job.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The response from the Dioptra API.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">CONFIG</span><span class="p">)</span>
 </pre></div>
 
                 </article>

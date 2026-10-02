@@ -73,9 +73,16 @@ Just like before, you will create a new plugin, but this time you'll define **ar
 
    The serialize method should return the path to where the object is saved to disk.
 
-   .. admonition:: Learn More 
+   .. admonition:: Learn More
 
       See :ref:`Plugins Reference <reference-plugins>` to learn more about the syntax of artifact handlers.
+
+.. important::
+   **All file paths must be constructed relative to** ``working_dir``.
+
+   Dioptra passes a ``working_dir: Path`` argument into both ``serialize`` and ``deserialize``. This is the directory where the artifact store writes files during a job and reads them back from on subsequent loads. Build every path as ``working_dir / name`` in ``serialize`` and ``working_dir / path`` in ``deserialize``, as shown in the example above.
+
+   Writing to an absolute path or any location outside ``working_dir`` will appear to succeed during the run, but the artifact will not be tracked by the job and ``deserialize`` will later fail to load it — typically with a confusing *file not found* error that surfaces far from where the path was constructed.
 
 
 .. _tutorial-saving-artifacts-step-2-register-artifact-task:

@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>REST API Reference &#8212; Dioptra 1.1.0 documentation</title>
+    <title>REST API Reference &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -735,7 +736,7 @@ To access the Swagger documentation, just navigate to the web URL for the Dioptr
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the artifact resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ARTIFACT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -765,8 +766,8 @@ To access the Swagger documentation, just navigate to the web URL for the Dioptr
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the artifact resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the artifact resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.ARTIFACT resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ARTIFACT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -832,13 +833,18 @@ snapshotId: the snapshot resource id of the artifact</p>
 <span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/</span></span><a class="headerlink" href="#post--api-v1-entrypoints-" title="Permalink to this definition">#</a></dt>
 <dd><p><strong>Creates an Entrypoint resource</strong></p>
 <dl class="field-list simple">
-<dt class="field-odd">Status Codes</dt>
+<dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>validateOnly</strong> (<em>boolean</em>) – If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
 <li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
-<dt class="field-even">Request Headers</dt>
-<dd class="field-even"><ul class="simple">
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
 </ul>
 </dd>
@@ -852,6 +858,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>showDeleted</strong> (<em>boolean</em>) – Boolean indicating whether to include deleted resources in the results.</p></li>
 <li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
 <li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
@@ -924,7 +931,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the entry_point resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Entry Point resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -947,7 +954,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the entry_point resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Entry Point resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -970,7 +977,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the entry_point resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Entry Point resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -996,13 +1003,18 @@ snapshotId: the snapshot resource id of the artifact</p>
 <li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Status Codes</dt>
+<dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>validateOnly</strong> (<em>boolean</em>) – If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
 </ul>
 </dd>
-<dt class="field-odd">Request Headers</dt>
-<dd class="field-odd"><ul class="simple">
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
 <li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
 </ul>
 </dd>
@@ -1172,10 +1184,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1195,10 +1207,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1358,10 +1370,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-queues">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/queues</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-queues" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Queues to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-queues">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/queues</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-queues" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Queues from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1381,10 +1393,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-queues">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/queues</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-queues" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Queues from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-queues">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/queues</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-queues" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Queues to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1458,7 +1470,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the entry_point resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ENTRY_POINT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -1488,8 +1500,8 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the entry_point resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the entry_point resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.ENTRY_POINT resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ENTRY_POINT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -1564,9 +1576,50 @@ snapshotId: the snapshot resource id of the artifact</p>
 <li><p><strong>id</strong> (<em>integer</em>) – ID for the entrypoint resource.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Status Codes</dt>
+<dt class="field-even">Query Parameters</dt>
 <dd class="field-even"><ul class="simple">
+<li><p><strong>swaps</strong> (<em>string</em>) – Swap choices encoded as deepObject query parameters: swaps[method]=attack%3Av2&amp;swaps[secondary]=attack%2Cv3. Each swap key must occur exactly once. Omit for no selections.</p></li>
+<li><p><strong>sections</strong> (<em>string</em>) – A list of sections to include in the response.</p></li>
+<li><p><strong>partial</strong> (<em>boolean</em>) – If true, allow partial rendering of the task graph from this endpoint.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-dynamicGlobalParameters">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/dynamicGlobalParameters</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-dynamicGlobalParameters" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Finds the global parameters for the given entrypoint + swap choice dictionary</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint snapshot.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Query Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>swaps</strong> (<em>string</em>) – Swap choices encoded as deepObject query parameters: swaps[method]=attack%3Av2&amp;swaps[secondary]=attack%2Cv3. Each swap key must occur exactly once. Omit for no selections.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Status Codes</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-even">Request Headers</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
 </ul>
 </dd>
 </dl>
@@ -1597,6 +1650,30 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-entrypoints-id-snapshots-snapshotId-swaps">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/snapshots/{snapshotId}/swaps</span></span><a class="headerlink" href="#get--api-v1-entrypoints-id-snapshots-snapshotId-swaps" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Retrieve available swaps for a given entrypoint snapshot</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the Entrypoint resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Entrypoint resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="http put">
 <dt class="sig sig-object http" id="put--api-v1-entrypoints-id-tags">
 <span class="sig-name descname"><span class="pre">PUT</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/tags</span></span><a class="headerlink" href="#put--api-v1-entrypoints-id-tags" title="Permalink to this definition">#</a></dt>
@@ -1620,10 +1697,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1643,10 +1720,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-entrypoints-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-entrypoints-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1713,6 +1790,29 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-entrypoints-id-lint">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/entrypoints/{id}:lint</span></span><a class="headerlink" href="#post--api-v1-entrypoints-id-lint" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Lint proposed content using the entrypoint’s saved plugin selections</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 <section id="experiments">
@@ -1746,6 +1846,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>showDeleted</strong> (<em>boolean</em>) – Boolean indicating whether to include deleted resources in the results.</p></li>
 <li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
 <li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
@@ -1818,7 +1919,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the experiment resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Experiment resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -1841,7 +1942,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the experiment resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Experiment resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -1864,7 +1965,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the experiment resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Experiment resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -1972,10 +2073,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-experiments-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-experiments-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-experiments-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1995,10 +2096,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-experiments-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-experiments-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-experiments-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2064,10 +2165,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-experiments-id-entrypoints">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/entrypoints</span></span><a class="headerlink" href="#post--api-v1-experiments-id-entrypoints" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Entrypoints to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-experiments-id-entrypoints">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/entrypoints</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-entrypoints" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Entrypoints from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2087,10 +2188,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-experiments-id-entrypoints">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/entrypoints</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-entrypoints" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Entrypoints from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-experiments-id-entrypoints">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/entrypoints</span></span><a class="headerlink" href="#post--api-v1-experiments-id-entrypoints" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Entrypoints to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2395,7 +2496,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the experiment resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.EXPERIMENT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -2425,8 +2526,8 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the experiment resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the experiment resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.EXPERIMENT resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.EXPERIMENT resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -2465,10 +2566,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-experiments-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-experiments-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-experiments-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2488,10 +2589,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-experiments-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-experiments-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-experiments-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/experiments/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-experiments-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2713,6 +2814,29 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
+<dl class="http get">
+<dt class="sig sig-object http" id="get--api-v1-jobs-id-config">
+<span class="sig-name descname"><span class="pre">GET</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/config</span></span><a class="headerlink" href="#get--api-v1-jobs-id-config" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Return the YAML configuration dictionary for the specified Job</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Job resource.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Status Codes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Request Headers</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="http post">
 <dt class="sig sig-object http" id="post--api-v1-jobs-id-log">
 <span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/log</span></span><a class="headerlink" href="#post--api-v1-jobs-id-log" title="Permalink to this definition">#</a></dt>
@@ -2913,7 +3037,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the job resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.JOB resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -2943,8 +3067,8 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the job resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the job resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.JOB resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.JOB resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3006,10 +3130,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-jobs-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-jobs-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-jobs-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-jobs-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3029,10 +3153,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-jobs-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-jobs-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-jobs-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/jobs/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-jobs-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3204,7 +3328,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ml_model resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ML Model resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3227,7 +3351,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ml_model resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ML Model resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3250,7 +3374,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ml_model resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the ML Model resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3358,10 +3482,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-models-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-models-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-models-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-models-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3381,10 +3505,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-models-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-models-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-models-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-models-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3434,7 +3558,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the ml_model resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ML_MODEL resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -3464,8 +3588,8 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the ml_model resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the ml_model resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.ML_MODEL resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.ML_MODEL resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3504,10 +3628,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-models-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-models-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-models-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-models-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3527,10 +3651,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-models-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-models-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-models-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/models/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-models-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3731,6 +3855,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>showDeleted</strong> (<em>boolean</em>) – Boolean indicating whether to include deleted resources in the results.</p></li>
 <li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
 <li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
@@ -3803,7 +3928,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_task_parameter_type resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin Task Parameter Type resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3826,7 +3951,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_task_parameter_type resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin Task Parameter Type resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3849,7 +3974,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_task_parameter_type resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin Task Parameter Type resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -3957,10 +4082,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-pluginParameterTypes-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-pluginParameterTypes-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-pluginParameterTypes-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-pluginParameterTypes-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3980,10 +4105,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-pluginParameterTypes-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-pluginParameterTypes-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-pluginParameterTypes-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-pluginParameterTypes-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4033,7 +4158,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin_task_parameter_type resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN_TASK_PARAMETER_TYPE resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -4063,8 +4188,8 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the plugin_task_parameter_type resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin_task_parameter_type resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.PLUGIN_TASK_PARAMETER_TYPE resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN_TASK_PARAMETER_TYPE resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -4103,10 +4228,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-pluginParameterTypes-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-pluginParameterTypes-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-pluginParameterTypes-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-pluginParameterTypes-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4126,10 +4251,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-pluginParameterTypes-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-pluginParameterTypes-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-pluginParameterTypes-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/pluginParameterTypes/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-pluginParameterTypes-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4301,7 +4426,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -4324,7 +4449,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -4347,7 +4472,7 @@ snapshotId: the snapshot resource id of the artifact</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Plugin resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -4455,10 +4580,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-plugins-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-plugins-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-plugins-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4478,10 +4603,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-plugins-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-plugins-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-plugins-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4524,12 +4649,10 @@ snapshotId: the snapshot resource id of the artifact</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-plugins-id-files">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a PluginFile resource associated with a Plugin resource</strong></p>
-<p>If type is plugin then blah
-If type is artifact then blah</p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes all PluginFile resources associated with a Plugin resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4549,10 +4672,12 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes all PluginFile resources associated with a Plugin resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-plugins-id-files">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a PluginFile resource associated with a Plugin resource</strong></p>
+<p>If type is plugin then blah
+If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4665,7 +4790,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_file resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the EntityType.PLUGIN_FILE resource.</p></li>
 <li><p><strong>id</strong> (<em>integer</em>) – </p></li>
 </ul>
 </dd>
@@ -4689,7 +4814,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_file resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the EntityType.PLUGIN_FILE resource.</p></li>
 <li><p><strong>id</strong> (<em>integer</em>) – </p></li>
 </ul>
 </dd>
@@ -4713,7 +4838,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the plugin_file resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the EntityType.PLUGIN_FILE resource.</p></li>
 <li><p><strong>id</strong> (<em>integer</em>) – </p></li>
 </ul>
 </dd>
@@ -4826,10 +4951,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-plugins-id-files-fileId-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/draft</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files-fileId-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files-fileId-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/draft</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files-fileId-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4850,10 +4975,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files-fileId-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/draft</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files-fileId-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-plugins-id-files-fileId-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/draft</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files-fileId-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4905,8 +5030,8 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fileId</strong> (<em>integer</em>) – ID for the plugin_file.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin_file.</p></li>
+<li><p><strong>fileId</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN_FILE.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN_FILE.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -4937,8 +5062,8 @@ If type is artifact then blah</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>snapshotId</strong> (<em>integer</em>) – ID for the Snapshot.</p></li>
-<li><p><strong>fileId</strong> (<em>integer</em>) – ID for the plugin_file.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin_file.</p></li>
+<li><p><strong>fileId</strong> (<em>integer</em>) – ID for the Plugin File.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the Plugin File.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -4978,10 +5103,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-plugins-id-files-fileId-tags-">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/tags/</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files-fileId-tags-" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files-fileId-tags-">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/tags/</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files-fileId-tags-" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5002,10 +5127,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-plugins-id-files-fileId-tags-">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/tags/</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-files-fileId-tags-" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-plugins-id-files-fileId-tags-">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/files/{fileId}/tags/</span></span><a class="headerlink" href="#post--api-v1-plugins-id-files-fileId-tags-" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5082,7 +5207,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -5112,8 +5237,8 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the plugin resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the plugin resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.PLUGIN resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.PLUGIN resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -5177,10 +5302,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-plugins-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-plugins-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-plugins-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5200,10 +5325,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-plugins-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-plugins-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-plugins-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/plugins/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-plugins-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5303,6 +5428,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Query Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>showDeleted</strong> (<em>boolean</em>) – Boolean indicating whether to include deleted resources in the results.</p></li>
 <li><p><strong>sortBy</strong> (<em>string</em>) – The name of the column to sort.</p></li>
 <li><p><strong>descending</strong> (<em>boolean</em>) – Boolean indicating whether to sort by descending or not.</p></li>
 <li><p><strong>search</strong> (<em>string</em>) – Search terms for the query (* and ? wildcards).</p></li>
@@ -5375,7 +5501,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the queue resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Queue resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -5398,7 +5524,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the queue resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Queue resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -5421,7 +5547,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the queue resource.</p></li>
+<li><p><strong>draftId</strong> (<em>integer</em>) – ID for the Draft of the Queue resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -5529,10 +5655,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-queues-id-draft">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-queues-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Creates a Draft for this resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-queues-id-draft">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-queues-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Deletes the Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5552,10 +5678,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-queues-id-draft">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/draft</span></span><a class="headerlink" href="#delete--api-v1-queues-id-draft" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Deletes the Draft for this resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-queues-id-draft">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/draft</span></span><a class="headerlink" href="#post--api-v1-queues-id-draft" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Creates a Draft for this resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5605,7 +5731,7 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the queue resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.QUEUE resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Query Parameters</dt>
@@ -5635,8 +5761,8 @@ If type is artifact then blah</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the queue resource.</p></li>
-<li><p><strong>id</strong> (<em>integer</em>) – ID for the queue resource.</p></li>
+<li><p><strong>snapshotId</strong> (<em>integer</em>) – Snapshot ID for the EntityType.QUEUE resource.</p></li>
+<li><p><strong>id</strong> (<em>integer</em>) – ID for the EntityType.QUEUE resource.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Status Codes</dt>
@@ -5675,10 +5801,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-queues-id-tags">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-queues-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Appends one or more Tags to the resource</strong></p>
+<dl class="http delete">
+<dt class="sig sig-object http" id="delete--api-v1-queues-id-tags">
+<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-queues-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Removes all Tags from the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -5698,10 +5824,10 @@ If type is artifact then blah</p>
 </dl>
 </dd></dl>
 
-<dl class="http delete">
-<dt class="sig sig-object http" id="delete--api-v1-queues-id-tags">
-<span class="sig-name descname"><span class="pre">DELETE</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/tags</span></span><a class="headerlink" href="#delete--api-v1-queues-id-tags" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Removes all Tags from the resource</strong></p>
+<dl class="http post">
+<dt class="sig sig-object http" id="post--api-v1-queues-id-tags">
+<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/queues/{id}/tags</span></span><a class="headerlink" href="#post--api-v1-queues-id-tags" title="Permalink to this definition">#</a></dt>
+<dd><p><strong>Appends one or more Tags to the resource</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -6147,24 +6273,6 @@ If type is artifact then blah</p>
 <dt class="field-odd">Status Codes</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="http post">
-<dt class="sig sig-object http" id="post--api-v1-workflows-validateEntrypoint">
-<span class="sig-name descname"><span class="pre">POST</span> </span><span class="sig-name descname"><span class="pre">/api/v1/workflows/validateEntrypoint</span></span><a class="headerlink" href="#post--api-v1-workflows-validateEntrypoint" title="Permalink to this definition">#</a></dt>
-<dd><p><strong>Validates the proposed inputs for an entrypoint</strong></p>
-<dl class="field-list simple">
-<dt class="field-odd">Status Codes</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><span><a class="reference external" href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a></span> – Success</p></li>
-</ul>
-</dd>
-<dt class="field-even">Request Headers</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>X-Fields</strong> – An optional fields mask</p></li>
 </ul>
 </dd>
 </dl>

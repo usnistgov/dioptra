@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.users &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.users &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -421,40 +422,40 @@ document.write(`
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionClient</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">UsersCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for interacting with the Dioptra API&#39;s /users collection.</span>
+<span class="w">    </span><span class="sd">"""The client for interacting with the Dioptra API's /users collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;users&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"users"</span>
 
 <div class="viewcode-block" id="UsersCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">page_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of Dioptra users.</span>
+<span class="w">        </span><span class="sd">"""Get a list of Dioptra users.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            index: The paging index. Optional, defaults to 0.</span>
 <span class="sd">            page_length: The maximum number of users to return in the paged response.</span>
 <span class="sd">                Optional, defaults to 10.</span>
-<span class="sd">            search: Search for users using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">            search: Search for users using the Dioptra API's query language. Optional,</span>
 <span class="sd">                defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -462,7 +463,7 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a Dioptra user.</span>
+<span class="w">        </span><span class="sd">"""Creates a Dioptra user.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            username: The username of the new user.</span>
@@ -471,67 +472,67 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
             <span class="n">json_</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span>
-                <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
-                <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
-                <span class="s2">&quot;confirmPassword&quot;</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
+                <span class="s2">"username"</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span>
+                <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
+                <span class="s2">"password"</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
+                <span class="s2">"confirmPassword"</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the user matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the user matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            user_id: The user id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.change_password_by_id"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.change_password_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">change_password_by_id</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">old_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_password</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Change the password of the user matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Change the password of the user matching the provided id.</span>
 
 <span class="sd">        This primary use case for using this over `change_current_user_password` is if</span>
 <span class="sd">        your password has expired and you need to update it before you can log in.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            user_id: The user id, an integer.</span>
-<span class="sd">            old_password: The user&#39;s current password. The password change will fail if</span>
+<span class="sd">            old_password: The user's current password. The password change will fail if</span>
 <span class="sd">                this is incorrect.</span>
 <span class="sd">            new_password: The new password to set for the user.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
-            <span class="s2">&quot;password&quot;</span><span class="p">,</span>
+            <span class="s2">"password"</span><span class="p">,</span>
             <span class="n">json_</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;oldPassword&quot;</span><span class="p">:</span> <span class="n">old_password</span><span class="p">,</span>
-                <span class="s2">&quot;newPassword&quot;</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
-                <span class="s2">&quot;confirmNewPassword&quot;</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
+                <span class="s2">"oldPassword"</span><span class="p">:</span> <span class="n">old_password</span><span class="p">,</span>
+                <span class="s2">"newPassword"</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
+                <span class="s2">"confirmNewPassword"</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.get_current"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.get_current">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_current</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get details about the currently logged-in user.</span>
+<span class="w">        </span><span class="sd">"""Get details about the currently logged-in user.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">&quot;current&quot;</span><span class="p">)</span></div>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">"current"</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.delete_current_user"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.delete_current_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the currently logged-in user.</span>
+<span class="w">        </span><span class="sd">"""Delete the currently logged-in user.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            password: The password of the currently logged-in user. The deletion will</span>
@@ -539,11 +540,11 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">&quot;current&quot;</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">password</span><span class="p">})</span></div>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">"current"</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">"password"</span><span class="p">:</span> <span class="n">password</span><span class="p">})</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.modify_current_user"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.modify_current_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify details about the currently logged-in user.</span>
+<span class="w">        </span><span class="sd">"""Modify details about the currently logged-in user.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            username: The new username for the currently logged-in user.</span>
@@ -551,32 +552,32 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-            <span class="s2">&quot;current&quot;</span><span class="p">,</span>
-            <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="n">email</span><span class="p">},</span>
+            <span class="s2">"current"</span><span class="p">,</span>
+            <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span> <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">},</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.change_current_user_password"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.change_current_user_password">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">change_current_user_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Change the currently logged-in user&#39;s password.</span>
+<span class="w">        </span><span class="sd">"""Change the currently logged-in user's password.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            old_password: The currently logged-in user&#39;s current password. The password</span>
+<span class="sd">            old_password: The currently logged-in user's current password. The password</span>
 <span class="sd">                change will fail if this is incorrect.</span>
 <span class="sd">            new_password: The new password to set for the currently logged-in user.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-            <span class="s2">&quot;current&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;password&quot;</span><span class="p">,</span>
+            <span class="s2">"current"</span><span class="p">,</span>
+            <span class="s2">"password"</span><span class="p">,</span>
             <span class="n">json_</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;oldPassword&quot;</span><span class="p">:</span> <span class="n">old_password</span><span class="p">,</span>
-                <span class="s2">&quot;newPassword&quot;</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
-                <span class="s2">&quot;confirmNewPassword&quot;</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
+                <span class="s2">"oldPassword"</span><span class="p">:</span> <span class="n">old_password</span><span class="p">,</span>
+                <span class="s2">"newPassword"</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
+                <span class="s2">"confirmNewPassword"</span><span class="p">:</span> <span class="n">new_password</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span></div>
 </pre></div>

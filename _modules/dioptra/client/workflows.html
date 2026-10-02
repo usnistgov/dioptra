@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.workflows &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.workflows &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -425,25 +426,24 @@ document.write(`
     <span class="n">IllegalArgumentError</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
-<span class="n">VALIDATE_ENTRYPOINT</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;validateEntrypoint&quot;</span>
-<span class="n">SIGNATURE_ANALYSIS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pluginTaskSignatureAnalysis&quot;</span>
-<span class="n">RESOURCE_IMPORT</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;resourceImport&quot;</span>
-<span class="n">DRAFT_COMMIT</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;draftCommit&quot;</span>
+<span class="n">SIGNATURE_ANALYSIS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pluginTaskSignatureAnalysis"</span>
+<span class="n">RESOURCE_IMPORT</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"resourceImport"</span>
+<span class="n">DRAFT_COMMIT</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"draftCommit"</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">WorkflowsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /workflows collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /workflows collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;workflows&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"workflows"</span>
 
 <div class="viewcode-block" id="WorkflowsCollectionClient.analyze_plugin_task_signatures"><a class="viewcode-back" href="../../../reference/python-client/workflows-client-methods.html#dioptra.client.workflows.WorkflowsCollectionClient.analyze_plugin_task_signatures">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">analyze_plugin_task_signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">python_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Requests signature analysis for the functions in an annotated python file.</span>
 
 <span class="sd">        Args:</span>
@@ -453,12 +453,12 @@ document.write(`
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
             <span class="n">SIGNATURE_ANALYSIS</span><span class="p">,</span>
-            <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pythonCode&quot;</span><span class="p">:</span> <span class="n">python_code</span><span class="p">},</span>
+            <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">"pythonCode"</span><span class="p">:</span> <span class="n">python_code</span><span class="p">},</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="WorkflowsCollectionClient.import_resources"><a class="viewcode-back" href="../../../reference/python-client/workflows-client-methods.html#dioptra.client.workflows.WorkflowsCollectionClient.import_resources">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">import_resources</span><span class="p">(</span>
@@ -466,10 +466,10 @@ document.write(`
         <span class="n">group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">DioptraFile</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">DioptraFile</span><span class="p">],</span>
         <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">resolve_name_conflicts_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">]</span>
+        <span class="n">resolve_name_conflicts_strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">,</span> <span class="s2">"overwrite"</span><span class="p">]</span>
         <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Import resources from a archive file or git repository</span>
 
 <span class="sd">        Args:</span>
@@ -478,23 +478,23 @@ document.write(`
 <span class="sd">                DioptraFile containing an archive file or a list[DioptraFile]</span>
 <span class="sd">                containing resource files.</span>
 <span class="sd">            config_path: The path to the toml configuration file in the import source.</span>
-<span class="sd">                If None, the API will use &quot;dioptra.toml&quot; as the default. Defaults to</span>
+<span class="sd">                If None, the API will use "dioptra.toml" as the default. Defaults to</span>
 <span class="sd">                None.</span>
 <span class="sd">            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.</span>
-<span class="sd">                Either &quot;fail&quot;, &quot;update&quot;, or &quot;overwrite&quot;. If None, the API will use &quot;fail&quot; as the</span>
+<span class="sd">                Either "fail", "update", or "overwrite". If None, the API will use "fail" as the</span>
 <span class="sd">                default. Defaults to None.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            IllegalArgumentError: If more than one import source is provided or if no</span>
 <span class="sd">                import source is provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">group_id</span><span class="p">)}</span>
+<span class="sd">        """</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"group"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">group_id</span><span class="p">)}</span>
         <span class="n">files_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DioptraFile</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">DioptraFile</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">DioptraFile</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">IllegalArgumentError</span><span class="p">(</span>
-                <span class="s2">&quot;Illegal type for source (reason: must be one of str, DioptraFile, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;or list[DioptraFile]): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"Illegal type for source (reason: must be one of str, DioptraFile, "</span>
+                <span class="sa">f</span><span class="s2">"or list[DioptraFile]): </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -503,26 +503,26 @@ document.write(`
                     <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">source</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DioptraFile</span><span class="p">)</span>
                 <span class="p">}</span>
                 <span class="k">raise</span> <span class="n">IllegalArgumentError</span><span class="p">(</span>
-                    <span class="s2">&quot;Illegal type for source (reason: list contains type(s) other &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;than DioptraFile): </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">illegal_types</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="s2">"Illegal type for source (reason: list contains type(s) other "</span>
+                    <span class="sa">f</span><span class="s2">"than DioptraFile): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">illegal_types</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span>
 
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sourceType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;upload_files&quot;</span>
-            <span class="n">files_</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"sourceType"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"upload_files"</span>
+            <span class="n">files_</span><span class="p">[</span><span class="s2">"files"</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sourceType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;git&quot;</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gitUrl&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"sourceType"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"git"</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"gitUrl"</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">DioptraFile</span><span class="p">):</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sourceType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;upload_archive&quot;</span>
-            <span class="n">files_</span><span class="p">[</span><span class="s2">&quot;archiveFile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"sourceType"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"upload_archive"</span>
+            <span class="n">files_</span><span class="p">[</span><span class="s2">"archiveFile"</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
 
         <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;configPath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_path</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"configPath"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_path</span>
 
         <span class="k">if</span> <span class="n">resolve_name_conflicts_strategy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;resolveNameConflictsStrategy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolve_name_conflicts_strategy</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"resolveNameConflictsStrategy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolve_name_conflicts_strategy</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">RESOURCE_IMPORT</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="n">files_</span> <span class="ow">or</span> <span class="kc">None</span>
@@ -532,7 +532,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">draft_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Commit a draft as a new resource snapshot.</span>
 
 <span class="sd">        The draft can be a draft of a new resource or a draft modifications to an</span>
@@ -543,38 +543,9 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A dictionary containing the contents of the new resource.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">DRAFT_COMMIT</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">draft_id</span><span class="p">))</span></div>
-
-<div class="viewcode-block" id="WorkflowsCollectionClient.validate_entrypoint"><a class="viewcode-back" href="../../../reference/python-client/workflows-client-methods.html#dioptra.client.workflows.WorkflowsCollectionClient.validate_entrypoint">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">validate_entrypoint</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">task_graph</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">plugin_snapshots</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">entrypoint_parameters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate a set of proposed inputs for an entrypoint resource.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            group_id: The ID of the group validating the entrypoint resource.</span>
-<span class="sd">            task_graph: The proposed task graph for the entrypoint resource.</span>
-<span class="sd">            plugin_snapshots: A list of identifiers for the plugin snapshots that will</span>
-<span class="sd">                be attached to the Entrypoint resource.</span>
-<span class="sd">            entrypoint_parameters: The proposed list of parameters for the entrypoint</span>
-<span class="sd">                resource.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
-            <span class="s2">&quot;taskGraph&quot;</span><span class="p">:</span> <span class="n">task_graph</span><span class="p">,</span>
-            <span class="s2">&quot;pluginSnapshots&quot;</span><span class="p">:</span> <span class="n">plugin_snapshots</span><span class="p">,</span>
-            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">entrypoint_parameters</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">VALIDATE_ENTRYPOINT</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 </pre></div>
 
                 </article>

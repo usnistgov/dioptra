@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Use Docker Compose Override Files &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Use Docker Compose Override Files &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -514,7 +515,7 @@ To modify a service, specify the service name and only the properties you want t
 <span class="w">  </span><span class="nt">service-name</span><span class="p">:</span>
 <span class="w">    </span><span class="c1"># Properties here are merged with docker-compose.yml</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/host/path:/container/path:ro&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"/host/path:/container/path:ro"</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">NEW_VAR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
 
@@ -524,8 +525,8 @@ To modify a service, specify the service name and only the properties you want t
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs</span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;addr=&lt;nfs-server-ip&gt;,nfsvers=4&quot;</span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&lt;exported-directory&gt;&quot;</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">"addr=&lt;nfs-server-ip&gt;,nfsvers=4"</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">":&lt;exported-directory&gt;"</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -550,7 +551,7 @@ To modify a service, specify the service name and only the properties you want t
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">&lt;deployment-name&gt;-tfcpu-01</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&lt;host-data-path&gt;:/dioptra/data:ro&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"&lt;host-data-path&gt;:/dioptra/data:ro"</span>
 </pre></div>
 </div>
 <p><strong>Example: Setting environment variables</strong></p>
@@ -580,14 +581,14 @@ See <a class="reference internal" href="../get-container-images/index.html#how-t
 <span class="w">  </span><span class="c1"># Mount data directory to CPU worker</span>
 <span class="w">  </span><span class="nt">&lt;deployment-name&gt;-tfcpu-01</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&lt;host-data-path&gt;:/dioptra/data:ro&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"&lt;host-data-path&gt;:/dioptra/data:ro"</span>
 
 <span class="w">  </span><span class="c1"># Configure GPU assignment for GPU worker</span>
 <span class="w">  </span><span class="nt">&lt;deployment-name&gt;-tfgpu-01</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;&lt;host-data-path&gt;:/dioptra/data:ro&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"&lt;host-data-path&gt;:/dioptra/data:ro"</span>
 
 <span class="c1"># Define an NFS volume</span>
 <span class="nt">volumes</span><span class="p">:</span>
@@ -595,8 +596,8 @@ See <a class="reference internal" href="../get-container-images/index.html#how-t
 <span class="w">    </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nfs</span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;addr=&lt;nfs-server-ip&gt;,auto,rw,bg,nfsvers=4,intr,actimeo=1800&quot;</span>
-<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&lt;exported-directory&gt;&quot;</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">"addr=&lt;nfs-server-ip&gt;,auto,rw,bg,nfsvers=4,intr,actimeo=1800"</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="s">":&lt;exported-directory&gt;"</span>
 </pre></div>
 </div>
 </section>

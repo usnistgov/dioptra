@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Experiments and Jobs &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Experiments and Jobs &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -474,14 +475,17 @@ groups, and reduce the number of entrypoints to sift through at job creation.</p
 </section>
 <section id="summary-what-is-a-job">
 <h2>Summary: What is a Job?<a class="headerlink" href="#summary-what-is-a-job" title="Permalink to this headline">#</a></h2>
-<p>A <strong>job</strong> in Dioptra is essentially an execution of an entrypoint with specified parameter values. When creating a job, a user provides parameters
-and artifact parameters that are required by an entrypoint. The set of workflow instructions (the <a class="reference internal" href="entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">entrypoint</span></a>),
-parameter values, and any artifact parameters are sent to the queue selected by the user at job creation.</p>
+<p>A <strong>job</strong> in Dioptra is an execution of an entrypoint with a specific configuration. When creating a job, a user provides the parameters,
+artifact parameters, and swap selections required by the entrypoint. The set of workflow instructions (the <a class="reference internal" href="entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">entrypoint</span></a>),
+parameter values, artifact parameters, and swap selections are sent to the queue selected by the user at job creation.</p>
+<p>If the entrypoint’s task graph contains swaps, the user must select exactly one task alias for each swap. These selections allow the same
+entrypoint structure to execute different task implementations. Dioptra applies the selections to produce a rendered task graph without swaps
+before passing it to the task engine. See <a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html#reference-jobs-specifying-swaps"><span class="std std-ref">Specifying Swaps</span></a> for the supported Python client and REST API formats.</p>
 <p>When a worker listening to that queue claims the job, it attempts to execute the provided entrypoint using the
-given parameter and artifact parameter values within the worker environment.</p>
+given parameter values, artifact parameter values, and rendered task graph within the worker environment.</p>
 <p>Any logs generated during the lifetime of the job, along with any metrics or created artifacts are uploaded to the Dioptra RESTAPI and associated with the job (and are viewable from the <strong>Job
 Dashboard</strong> page.)</p>
-<p>Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, logs, metrics
+<p>Dioptra maintains a job history by recording the experiment, entrypoint, parameters, artifact parameters, swap selections, logs, metrics
 and generated artifacts for all jobs. Even if a user deletes or changes an entrypoint or plugin associated with a job,
 Dioptra retains the executed version as a snapshot.</p>
 </section>
@@ -491,6 +495,7 @@ Dioptra retains the executed version as a snapshot.</p>
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html#how-to-create-experiments"><span class="std std-ref">Create Experiments</span></a> - Step-by-step guide on creating an experiment.</p></li>
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html#how-to-running-jobs"><span class="std std-ref">Running Jobs</span></a> - Step-by-step guide on running a job.</p></li>
 <li><p><a class="reference internal" href="../../reference/dioptra-components/experiments-reference.html#reference-experiments"><span class="std std-ref">Experiments Reference</span></a> - Reference page for experiments.</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html#reference-jobs"><span class="std std-ref">Jobs Reference</span></a> - Reference page for jobs and their configuration.</p></li>
 <li><p><a class="reference internal" href="entrypoints-explanation.html#explanation-entrypoints"><span class="std std-ref">Entrypoints Explanation</span></a> - Explanation of entrypoints.</p></li>
 </ul>
 </section>

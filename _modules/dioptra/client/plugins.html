@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.plugins &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.plugins &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -435,46 +436,46 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagsSubCollectionClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileTypes</span>
 
-<span class="n">PLUGINS_DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">}</span>
+<span class="n">PLUGINS_DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">}</span>
 <span class="n">PLUGIN_FILES_DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;filename&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;contents&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;tasks&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">,</span>
+    <span class="s2">"filename"</span><span class="p">,</span>
+    <span class="s2">"contents"</span><span class="p">,</span>
+    <span class="s2">"tasks"</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="n">FILES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;files&quot;</span>
-<span class="n">BUNDLE</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bundle&quot;</span>
+<span class="n">FILES</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"files"</span>
+<span class="n">BUNDLE</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"bundle"</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">PluginFilesSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /plugins collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /plugins collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the sub-collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;files&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"files"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
         <span class="n">root_collection</span><span class="p">:</span> <span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
-        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;SubCollectionClient[T]&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"SubCollectionClient[T]"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the PluginFilesSubCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the PluginFilesSubCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
 <span class="sd">            root_collection: The client for the root collection that owns this</span>
 <span class="sd">                sub-collection.</span>
 <span class="sd">            parent_sub_collections: Unused in this client, must be None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">parent_sub_collections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">DioptraClientError</span><span class="p">(</span>
-                <span class="s2">&quot;The parent_sub_collections argument must be None for this client.&quot;</span>
+                <span class="s2">"The parent_sub_collections argument must be None for this client."</span>
             <span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -486,7 +487,7 @@ document.write(`
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
             <span class="n">validate_fields_fn</span><span class="o">=</span><span class="n">make_draft_fields_validator</span><span class="p">(</span>
                 <span class="n">draft_fields</span><span class="o">=</span><span class="n">PLUGIN_FILES_DRAFT_FIELDS</span><span class="p">,</span>
-                <span class="n">resource_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;plugin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">resource_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"plugin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">root_collection</span><span class="o">=</span><span class="n">root_collection</span><span class="p">,</span>
             <span class="n">parent_sub_collections</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="p">],</span>
@@ -495,7 +496,7 @@ document.write(`
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
             <span class="n">validate_fields_fn</span><span class="o">=</span><span class="n">make_draft_fields_validator</span><span class="p">(</span>
                 <span class="n">draft_fields</span><span class="o">=</span><span class="n">PLUGIN_FILES_DRAFT_FIELDS</span><span class="p">,</span>
-                <span class="n">resource_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;plugin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">resource_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"plugin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">root_collection</span><span class="o">=</span><span class="n">root_collection</span><span class="p">,</span>
             <span class="n">parent_sub_collections</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="p">],</span>
@@ -513,7 +514,7 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the new plugin file drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the new plugin file drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -531,25 +532,25 @@ document.write(`
 <span class="sd">            client.plugins.files.new_resource_drafts.modify(</span>
 <span class="sd">                1,</span>
 <span class="sd">                draft_id=1,</span>
-<span class="sd">                filename=&quot;new_name.py&quot;,</span>
-<span class="sd">                contents=&quot;&quot;,</span>
+<span class="sd">                filename="new_name.py",</span>
+<span class="sd">                contents="",</span>
 <span class="sd">                tasks=[],</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/plugins/1/files/drafts</span>
 <span class="sd">            client.plugins.files.new_resource_drafts.create(</span>
-<span class="sd">                1, filename=&quot;name.py&quot;, contents=&quot;&quot;, tasks=[], description=&quot;description&quot;</span>
+<span class="sd">                1, filename="name.py", contents="", tasks=[], description="description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/plugins/1/files/drafts/1</span>
 <span class="sd">            client.plugins.files.new_resource_drafts.delete(1, draft_id=1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">modify_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the plugin file modification drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the plugin file modification drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -565,30 +566,30 @@ document.write(`
 <span class="sd">                1,</span>
 <span class="sd">                2,</span>
 <span class="sd">                resource_snapshot_id=1,</span>
-<span class="sd">                filename=&quot;new_name.py&quot;,</span>
-<span class="sd">                contents=&quot;&quot;,</span>
+<span class="sd">                filename="new_name.py",</span>
+<span class="sd">                contents="",</span>
 <span class="sd">                tasks=[],</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/plugins/1/files/2/draft</span>
 <span class="sd">            client.plugins.files.modify_resource_drafts.create(</span>
 <span class="sd">                1,</span>
 <span class="sd">                2,</span>
-<span class="sd">                filename=&quot;name.py&quot;,</span>
-<span class="sd">                contents=&quot;&quot;,</span>
+<span class="sd">                filename="name.py",</span>
+<span class="sd">                contents="",</span>
 <span class="sd">                tasks=[],</span>
-<span class="sd">                description=&quot;description&quot;,</span>
+<span class="sd">                description="description",</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/plugins/1/files/2/draft</span>
 <span class="sd">            client.plugins.files.modify_resource_drafts.delete(1, 2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving plugin file resource snapshots.</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving plugin file resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -601,12 +602,12 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/plugins/1/files/2/snapshots/3</span>
 <span class="sd">            client.plugins.files.snapshots.get_by_id(1, 2, snapshot_id=3)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the plugin file tags sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the plugin file tags sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -628,7 +629,7 @@ document.write(`
 
 <span class="sd">            # DELETE /api/v1/plugins/1/files/2/tags</span>
 <span class="sd">            client.plugins.files.tags.remove(1, 2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
 
 <div class="viewcode-block" id="PluginFilesSubCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginFilesSubCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -640,7 +641,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of plugin files for a specific plugin.</span>
+<span class="w">        </span><span class="sd">"""Get a list of plugin files for a specific plugin.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The id for the plugin that owns the plugin files.</span>
@@ -651,25 +652,25 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for plugins using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">            search: Search for plugins using the Dioptra API's query language. Optional,</span>
 <span class="sd">                defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span>
@@ -677,7 +678,7 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginFilesSubCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginFilesSubCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">plugin_file_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the plugin file matching the provided ids.</span>
+<span class="w">        </span><span class="sd">"""Get the plugin file matching the provided ids.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The id for the plugin that owns the plugin file.</span>
@@ -685,7 +686,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">plugin_file_id</span><span class="p">),</span>
@@ -700,7 +701,7 @@ document.write(`
         <span class="n">artifact_tasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a plugin file.</span>
+<span class="w">        </span><span class="sd">"""Creates a plugin file.</span>
 
 <span class="sd">        Either function_tasks or artifact_tasks should be provided. Mixing the two</span>
 <span class="sd">        types of tasks is not recommended.</span>
@@ -724,28 +725,28 @@ document.write(`
 <span class="sd">            .. code-block:: python</span>
 
 <span class="sd">                file = client.plugins.files.create(</span>
-<span class="sd">                    plugin_id=plugin[&quot;id&quot;],</span>
-<span class="sd">                    filename=&quot;hello.py&quot;,</span>
+<span class="sd">                    plugin_id=plugin["id"],</span>
+<span class="sd">                    filename="hello.py",</span>
 <span class="sd">                    content=PYTHON_CONTENTS,</span>
 <span class="sd">                    tasks=[</span>
 <span class="sd">                        {</span>
-<span class="sd">                            &quot;name&quot;: &quot;hello_world&quot;,</span>
-<span class="sd">                            &quot;inputParams&quot;: [</span>
+<span class="sd">                            "name": "hello_world",</span>
+<span class="sd">                            "inputParams": [</span>
 <span class="sd">                                {</span>
-<span class="sd">                                    &quot;name&quot;: &quot;greeting&quot;,</span>
-<span class="sd">                                    &quot;parameterType&quot;: string_param_type_id,</span>
-<span class="sd">                                    &quot;required&quot;: True,</span>
+<span class="sd">                                    "name": "greeting",</span>
+<span class="sd">                                    "parameterType": string_param_type_id,</span>
+<span class="sd">                                    "required": True,</span>
 <span class="sd">                                },</span>
 <span class="sd">                                {</span>
-<span class="sd">                                    &quot;name&quot;: &quot;name&quot;,</span>
-<span class="sd">                                    &quot;parameterType&quot;: string_param_type_id,</span>
-<span class="sd">                                    &quot;required&quot;: True,</span>
+<span class="sd">                                    "name": "name",</span>
+<span class="sd">                                    "parameterType": string_param_type_id,</span>
+<span class="sd">                                    "required": True,</span>
 <span class="sd">                                },</span>
 <span class="sd">                            ],</span>
-<span class="sd">                            &quot;outputParams&quot;: [</span>
+<span class="sd">                            "outputParams": [</span>
 <span class="sd">                                {</span>
-<span class="sd">                                    &quot;name&quot;: &quot;message&quot;,</span>
-<span class="sd">                                    &quot;parameterType&quot;: string_param_type_id,</span>
+<span class="sd">                                    "name": "message",</span>
+<span class="sd">                                    "parameterType": string_param_type_id,</span>
 <span class="sd">                                }</span>
 <span class="sd">                            ],</span>
 <span class="sd">                        }</span>
@@ -754,22 +755,22 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">tasks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
-            <span class="s2">&quot;contents&quot;</span><span class="p">:</span> <span class="n">contents</span><span class="p">,</span>
-            <span class="s2">&quot;tasks&quot;</span><span class="p">:</span> <span class="n">tasks</span><span class="p">,</span>
+            <span class="s2">"filename"</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
+            <span class="s2">"contents"</span><span class="p">:</span> <span class="n">contents</span><span class="p">,</span>
+            <span class="s2">"tasks"</span><span class="p">:</span> <span class="n">tasks</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">function_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tasks</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">function_tasks</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s2">"functions"</span><span class="p">]</span> <span class="o">=</span> <span class="n">function_tasks</span>
 
         <span class="k">if</span> <span class="n">artifact_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tasks</span><span class="p">[</span><span class="s2">&quot;artifacts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_tasks</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s2">"artifacts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_tasks</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
@@ -783,7 +784,7 @@ document.write(`
         <span class="n">artifact_tasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify a plugin file matching the provided ids.</span>
+<span class="w">        </span><span class="sd">"""Modify a plugin file matching the provided ids.</span>
 
 <span class="sd">        Either function_tasks or artifact_tasks should be provided. Mixing the two</span>
 <span class="sd">        types of tasks is not recommended.</span>
@@ -802,29 +803,29 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">tasks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
-            <span class="s2">&quot;contents&quot;</span><span class="p">:</span> <span class="n">contents</span><span class="p">,</span>
-            <span class="s2">&quot;tasks&quot;</span><span class="p">:</span> <span class="n">tasks</span><span class="p">,</span>
+            <span class="s2">"filename"</span><span class="p">:</span> <span class="n">filename</span><span class="p">,</span>
+            <span class="s2">"contents"</span><span class="p">:</span> <span class="n">contents</span><span class="p">,</span>
+            <span class="s2">"tasks"</span><span class="p">:</span> <span class="n">tasks</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">function_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tasks</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">function_tasks</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s2">"functions"</span><span class="p">]</span> <span class="o">=</span> <span class="n">function_tasks</span>
 
         <span class="k">if</span> <span class="n">artifact_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">tasks</span><span class="p">[</span><span class="s2">&quot;artifacts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_tasks</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="s2">"artifacts"</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_tasks</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_file_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginFilesSubCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginFilesSubCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">plugin_file_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a plugin file.</span>
+<span class="w">        </span><span class="sd">"""Delete a plugin file.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The id for the plugin that owns the plugin file to be deleted.</span>
@@ -832,20 +833,20 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_file_id</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginFilesSubCollectionClient.delete_all"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginFilesSubCollectionClient.delete_all">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete all plugin files owned by the plugin matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Delete all plugin files owned by the plugin matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The id for the plugin that owns the plugin files to be deleted.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">))</span></div>
 
 
@@ -853,7 +854,7 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
-        <span class="n">root_collection</span><span class="p">:</span> <span class="s2">&quot;PluginsCollectionClient[T]&quot;</span><span class="p">,</span>
+        <span class="n">root_collection</span><span class="p">:</span> <span class="s2">"PluginsCollectionClient[T]"</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="n">root_collection</span><span class="p">)</span>
 
@@ -863,9 +864,9 @@ document.write(`
         <span class="n">plugin_snapshot_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">file_type</span><span class="p">:</span> <span class="n">FileTypes</span> <span class="o">=</span> <span class="n">FileTypes</span><span class="o">.</span><span class="n">TAR_GZ</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;task-plugins&quot;</span><span class="p">,</span>
+        <span class="n">file_stem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"task-plugins"</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the task plugins bundle for the entrypoint matching the provided</span>
+<span class="w">        </span><span class="sd">"""Get the task plugins bundle for the entrypoint matching the provided</span>
 <span class="sd">            snapshot id.</span>
 
 <span class="sd">        Args:</span>
@@ -877,16 +878,16 @@ document.write(`
 <span class="sd">                defaults to None. If None, then the current working directory will be</span>
 <span class="sd">                used.</span>
 <span class="sd">            file_stem: the file prefix or stem to use for the name of the</span>
-<span class="sd">                downloaded file. Defaults to the value of &quot;task-plugins&quot;.</span>
+<span class="sd">                downloaded file. Defaults to the value of "task-plugins".</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">bundle_path</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">file_stem</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">file_type</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">file_stem</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">file_type</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fileType&quot;</span><span class="p">:</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"fileType"</span><span class="p">:</span> <span class="n">file_type</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">download</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span>
@@ -899,20 +900,20 @@ document.write(`
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">PluginsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /plugins collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /plugins collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;plugins&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"plugins"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the PluginsCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the PluginsCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="n">PluginFilesSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
@@ -940,12 +941,12 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginFilesSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the plugin files sub-collection.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The client for managing the plugin files sub-collection."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the new plugin drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the new plugin drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -961,22 +962,22 @@ document.write(`
 
 <span class="sd">            # PUT /api/v1/plugins/drafts/1</span>
 <span class="sd">            client.plugins.new_resource_drafts.modify(</span>
-<span class="sd">                draft_id=1, name=&quot;new-name&quot;, description=&quot;new-description&quot;</span>
+<span class="sd">                draft_id=1, name="new-name", description="new-description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/plugins/drafts</span>
 <span class="sd">            client.plugins.new_resource_drafts.create(</span>
-<span class="sd">                group_id=1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">                group_id=1, name="name", description="description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/plugins/drafts/1</span>
 <span class="sd">            client.plugins.new_resource_drafts.delete(draft_id=1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">modify_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the plugin modification drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the plugin modification drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -991,23 +992,23 @@ document.write(`
 <span class="sd">            client.plugins.modify_resource_drafts.modify(</span>
 <span class="sd">                1,</span>
 <span class="sd">                resource_snapshot_id=1,</span>
-<span class="sd">                name=&quot;new-name&quot;,</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                name="new-name",</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/plugins/1/draft</span>
 <span class="sd">            client.plugins.modify_resource_drafts.create(</span>
-<span class="sd">                1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">                1, name="name", description="description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/plugins/1/draft</span>
 <span class="sd">            client.plugins.modify_resource_drafts.delete(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginsSnapshotCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving plugin resource snapshots.</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving plugin resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -1023,12 +1024,12 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/plugins/1/snapshots/2/files/bundle?fileType=tar_gz</span>
 <span class="sd">            client.plugins.snapshots.get_files_bundle(1, snapshot_id=2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the plugin tags sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the plugin tags sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -1050,7 +1051,7 @@ document.write(`
 
 <span class="sd">            # DELETE /api/v1/plugins/1/tags</span>
 <span class="sd">            client.plugins.tags.remove(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
 
 <div class="viewcode-block" id="PluginsCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginsCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -1062,7 +1063,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of plugins.</span>
+<span class="w">        </span><span class="sd">"""Get a list of plugins.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group id the plugins belong to. If None, return plugins from</span>
@@ -1074,28 +1075,28 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for plugins using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">            search: Search for plugins using the Dioptra API's query language. Optional,</span>
 <span class="sd">                defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"groupId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -1103,18 +1104,18 @@ document.write(`
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginsCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginsCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the plugin matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the plugin matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The plugin id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="PluginsCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginsCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a plugin.</span>
+<span class="w">        </span><span class="sd">"""Creates a plugin.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The id of the group that will own the plugin.</span>
@@ -1122,31 +1123,31 @@ document.write(`
 <span class="sd">            description: The description of the new plugin. Optional, defaults to None.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">            Create a plugin called &quot;hello&quot; with a description.</span>
+<span class="sd">            Create a plugin called "hello" with a description.</span>
 
 <span class="sd">            .. code-block:: python</span>
 
 <span class="sd">                plugin = client.plugins.create(</span>
-<span class="sd">                    group_id, &quot;hello&quot;, &quot;This is a Hello World Plugin&quot;</span>
+<span class="sd">                    group_id, "hello", "This is a Hello World Plugin"</span>
 <span class="sd">                )</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"group"</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginsCollectionClient.modify_by_id"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginsCollectionClient.modify_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_by_id</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify the plugin matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Modify the plugin matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The plugin id, an integer.</span>
@@ -1156,23 +1157,23 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PluginsCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/plugin-client-methods.html#dioptra.client.plugins.PluginsCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the plugin matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Delete the plugin matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            plugin_id: The plugin id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">plugin_id</span><span class="p">))</span></div>
 </pre></div>
 

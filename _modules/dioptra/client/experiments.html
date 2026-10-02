@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.experiments &#8212; Dioptra 1.1.0 documentation</title>
+    <title>dioptra.client.experiments &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -234,6 +234,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -433,42 +434,42 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">SnapshotsSubCollectionClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagsSubCollectionClient</span>
 
-<span class="n">ARTIFACTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;artifacts&quot;</span>
-<span class="n">METRICS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;metrics&quot;</span>
-<span class="n">MLFLOW_RUN</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mlflowRun&quot;</span>
-<span class="n">STATUS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;status&quot;</span>
+<span class="n">ARTIFACTS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"artifacts"</span>
+<span class="n">METRICS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"metrics"</span>
+<span class="n">MLFLOW_RUN</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"mlflowRun"</span>
+<span class="n">STATUS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"status"</span>
 
-<span class="n">DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;entrypoints&quot;</span><span class="p">}</span>
+<span class="n">DRAFT_FIELDS</span><span class="p">:</span> <span class="n">Final</span><span class="p">[</span><span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">,</span> <span class="s2">"entrypoints"</span><span class="p">}</span>
 
-<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ExperimentEntrypointsSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments/{id}/entrypoints sub-collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /experiments/{id}/entrypoints sub-collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the sub-collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;entrypoints&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"entrypoints"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
         <span class="n">root_collection</span><span class="p">:</span> <span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
-        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;SubCollectionClient[T]&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"SubCollectionClient[T]"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentEntrypointsSubCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the ExperimentEntrypointsSubCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
 <span class="sd">            root_collection: The client for the root collection that owns this</span>
 <span class="sd">                sub-collection.</span>
 <span class="sd">            parent_sub_collections: Unused in this client, must be None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">parent_sub_collections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">DioptraClientError</span><span class="p">(</span>
-                <span class="s2">&quot;The parent_sub_collections argument must be None for this client.&quot;</span>
+                <span class="s2">"The parent_sub_collections argument must be None for this client."</span>
             <span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -478,14 +479,14 @@ document.write(`
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of entrypoints added to the experiment.</span>
+<span class="w">        </span><span class="sd">"""Get a list of entrypoints added to the experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
@@ -493,7 +494,7 @@ document.write(`
         <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">entrypoint_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds one or more entrypoints to the experiment.</span>
+<span class="w">        </span><span class="sd">"""Adds one or more entrypoints to the experiment.</span>
 
 <span class="sd">        If an entrypoint id matches an entrypoint that is already attached to the</span>
 <span class="sd">        experiment, then the experiment will update the entrypoint to the latest</span>
@@ -506,21 +507,21 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ids"</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.delete"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all entrypoints from the experiment.</span>
+<span class="w">        </span><span class="sd">"""Remove all entrypoints from the experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.modify_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.modify_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_by_id</span><span class="p">(</span>
@@ -528,7 +529,7 @@ document.write(`
         <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">entrypoint_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replaces the experiment&#39;s full list of entrypoints.</span>
+<span class="w">        </span><span class="sd">"""Replaces the experiment's full list of entrypoints.</span>
 
 <span class="sd">        If an entrypoint id matches an entrypoint that is already attached to the</span>
 <span class="sd">        experiment, then the experiment will update the entrypoint to the latest</span>
@@ -542,14 +543,14 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ids"</span><span class="p">:</span> <span class="n">entrypoint_ids</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentEntrypointsSubCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentEntrypointsSubCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">entrypoint_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove an entrypoint from the experiment.</span>
+<span class="w">        </span><span class="sd">"""Remove an entrypoint from the experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -557,38 +558,38 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">entrypoint_id</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ExperimentJobsSubCollectionClient</span><span class="p">(</span><span class="n">SubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments/{id}/jobs sub-collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /experiments/{id}/jobs sub-collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the sub-collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;jobs&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"jobs"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
         <span class="n">root_collection</span><span class="p">:</span> <span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">],</span>
-        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;SubCollectionClient[T]&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">parent_sub_collections</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">"SubCollectionClient[T]"</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentJobsSubCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the ExperimentJobsSubCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
 <span class="sd">            root_collection: The client for the root collection that owns this</span>
 <span class="sd">                sub-collection.</span>
 <span class="sd">            parent_sub_collections: Unused in this client, must be None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">parent_sub_collections</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">DioptraClientError</span><span class="p">(</span>
-                <span class="s2">&quot;The parent_sub_collections argument must be None for this client.&quot;</span>
+                <span class="s2">"The parent_sub_collections argument must be None for this client."</span>
             <span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -606,7 +607,7 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an experiment&#39;s jobs.</span>
+<span class="w">        </span><span class="sd">"""Get an experiment's jobs.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -617,32 +618,32 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for models using the Dioptra API&#39;s query language. Optional,</span>
+<span class="sd">            search: Search for models using the Dioptra API's query language. Optional,</span>
 <span class="sd">                defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentJobsSubCollectionClient.get_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a specific job from an experiment.</span>
+<span class="w">        </span><span class="sd">"""Get a specific job from an experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -650,7 +651,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
@@ -666,8 +667,9 @@ document.write(`
         <span class="n">artifact_values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">swaps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a job for an experiment.</span>
+<span class="w">        </span><span class="sd">"""Creates a job for an experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -680,40 +682,51 @@ document.write(`
 <span class="sd">            values: A dictionary of keyword arguments to pass to the entrypoint that</span>
 <span class="sd">                parameterize the job. Default to None.</span>
 <span class="sd">            artifact_values: A dictionary of artifact input names associated with a</span>
-<span class="sd">                value that is also a dictionary that contains the keys &quot;id&quot; and</span>
-<span class="sd">                &quot;snapshotId&quot; whose values are the artifact resource id and the artifact</span>
+<span class="sd">                value that is also a dictionary that contains the keys "id" and</span>
+<span class="sd">                "snapshotId" whose values are the artifact resource id and the artifact</span>
 <span class="sd">                resource snapshot id respectively. Defaults to None.</span>
 <span class="sd">            timeout: The maximum alloted time for a job before it times out and is</span>
 <span class="sd">                stopped. If omitted, the job timeout will use the default set in the</span>
 <span class="sd">                API.</span>
 <span class="sd">            description: The description for the job. Optional, defaults to None.</span>
-
+<span class="sd">            swaps: A list of swap choices. Each swap choice should contain two keys - the</span>
+<span class="sd">                "swap_name" and the "task_alias" chosen for that swap name. Alternatively, if</span>
+<span class="sd">                a single dictionary is provided, it will be assumed to be a mapping between swap names</span>
+<span class="sd">                and choices and will be reformatted as a list.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;entrypoint&quot;</span><span class="p">:</span> <span class="n">entrypoint_id</span><span class="p">,</span> <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="n">queue_id</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"entrypoint"</span><span class="p">:</span> <span class="n">entrypoint_id</span><span class="p">,</span> <span class="s2">"queue"</span><span class="p">:</span> <span class="n">queue_id</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">entrypoint_snapshot_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypointSnapshot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoint_snapshot_id</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"entrypointSnapshot"</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoint_snapshot_id</span>
 
         <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"values"</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
 
         <span class="k">if</span> <span class="n">artifact_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;artifactValues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_values</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"artifactValues"</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact_values</span>
 
         <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;timeout&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeout</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"timeout"</span><span class="p">]</span> <span class="o">=</span> <span class="n">timeout</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+
+        <span class="k">if</span> <span class="n">swaps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">swaps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">json_</span><span class="p">[</span><span class="s2">"swaps"</span><span class="p">]</span> <span class="o">=</span> <span class="n">swaps</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">swaps</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">json_</span><span class="p">[</span><span class="s2">"swaps"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s2">"swap_name"</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">"task_alias"</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">swaps</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">]</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentJobsSubCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a job from the experiment.</span>
+<span class="w">        </span><span class="sd">"""Delete a job from the experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -721,7 +734,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
         <span class="p">)</span></div>
@@ -733,7 +746,7 @@ document.write(`
         <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a job artifact for an experiment.</span>
+<span class="w">        </span><span class="sd">"""Creates a job artifact for an experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -744,11 +757,11 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"uri"</span><span class="p">:</span> <span class="n">uri</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
@@ -758,7 +771,7 @@ document.write(`
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_mlflow_run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the MLflow run id for an experiment&#39;s job.</span>
+<span class="w">        </span><span class="sd">"""Gets the MLflow run id for an experiment's job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -766,7 +779,7 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span>
         <span class="p">)</span>
@@ -774,7 +787,7 @@ document.write(`
     <span class="k">def</span><span class="w"> </span><span class="nf">set_mlflow_run_id</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mlflow_run_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the MLflow run id for an experiment&#39;s job.</span>
+<span class="w">        </span><span class="sd">"""Sets the MLflow run id for an experiment's job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -783,9 +796,9 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;mlflowRunId&quot;</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
+            <span class="s2">"mlflowRunId"</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
@@ -795,7 +808,7 @@ document.write(`
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ExperimentJobsSubCollectionClient.get_status"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.get_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the status for an experiment&#39;s job.</span>
+<span class="w">        </span><span class="sd">"""Gets the status for an experiment's job.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -803,13 +816,13 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">STATUS</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentJobsSubCollectionClient.set_status"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the status for an experiment&#39;s job.</span>
+<span class="w">        </span><span class="sd">"""Sets the status for an experiment's job.</span>
 
 <span class="sd">            Primarily used for testing or to reset a job that has failed, whose cause</span>
 <span class="sd">            has been remedied, in order to re-run the job.</span>
@@ -822,8 +835,8 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">status</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="n">status</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_sub_collection_url</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span>
@@ -833,20 +846,20 @@ document.write(`
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ExperimentsCollectionClient</span><span class="p">(</span><span class="n">CollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The client for managing Dioptra&#39;s /experiments collection.</span>
+<span class="w">    </span><span class="sd">"""The client for managing Dioptra's /experiments collection.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        name: The name of the collection.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;experiments&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"experiments"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">DioptraSession</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ExperimentsCollectionClient instance.</span>
+<span class="w">        </span><span class="sd">"""Initialize the ExperimentsCollectionClient instance.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            session: The Dioptra API session object.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_entrypoints</span> <span class="o">=</span> <span class="n">ExperimentEntrypointsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">](</span>
             <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span> <span class="n">root_collection</span><span class="o">=</span><span class="bp">self</span>
@@ -877,17 +890,17 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">entrypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExperimentEntrypointsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the entrypoints sub-collection.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The client for managing the entrypoints sub-collection."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_entrypoints</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExperimentJobsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the jobs sub-collection.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The client for managing the jobs sub-collection."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">new_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NewResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the new experiment drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the new experiment drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -903,22 +916,22 @@ document.write(`
 
 <span class="sd">            # PUT /api/v1/experiments/drafts/1</span>
 <span class="sd">            client.experiments.new_resource_drafts.modify(</span>
-<span class="sd">                draft_id=1, name=&quot;new-name&quot;, description=&quot;new-description&quot;</span>
+<span class="sd">                draft_id=1, name="new-name", description="new-description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/experiments/drafts</span>
 <span class="sd">            client.experiments.new_resource_drafts.create(</span>
-<span class="sd">                group_id=1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">                group_id=1, name="name", description="description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/experiments/drafts/1</span>
 <span class="sd">            client.experiments.new_resource_drafts.delete(draft_id=1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">modify_resource_drafts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModifyResourceDraftsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for managing the experiment modification drafts sub-collection.</span>
+<span class="w">        </span><span class="sd">"""The client for managing the experiment modification drafts sub-collection.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -933,23 +946,23 @@ document.write(`
 <span class="sd">            client.experiments.modify_resource_drafts.modify(</span>
 <span class="sd">                1,</span>
 <span class="sd">                resource_snapshot_id=1,</span>
-<span class="sd">                name=&quot;new-name&quot;,</span>
-<span class="sd">                description=&quot;new-description&quot;,</span>
+<span class="sd">                name="new-name",</span>
+<span class="sd">                description="new-description",</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # POST /api/v1/experiments/1/draft</span>
 <span class="sd">            client.experiments.modify_resource_drafts.create(</span>
-<span class="sd">                1, name=&quot;name&quot;, description=&quot;description&quot;</span>
+<span class="sd">                1, name="name", description="description"</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # DELETE /api/v1/experiments/1/draft</span>
 <span class="sd">            client.experiments.modify_resource_drafts.delete(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_resource_drafts</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The client for retrieving experiment resource snapshots.</span>
+<span class="w">        </span><span class="sd">"""The client for retrieving experiment resource snapshots.</span>
 
 <span class="sd">        Each client method in the sub-collection accepts an arbitrary number of</span>
 <span class="sd">        positional arguments called ``*resource_ids``. These are the parent resource ids</span>
@@ -962,12 +975,12 @@ document.write(`
 
 <span class="sd">            # GET /api/v1/experiments/1/snapshots/2</span>
 <span class="sd">            client.experiments.snapshots.get_by_id(1, snapshot_id=2)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TagsSubCollectionClient</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The client for managing the tags sub-collection owned by the /experiments</span>
 <span class="sd">        collection.</span>
 
@@ -991,7 +1004,7 @@ document.write(`
 
 <span class="sd">            # DELETE /api/v1/experiments/1/tags</span>
 <span class="sd">            client.experiments.tags.remove(1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span>
 
 <div class="viewcode-block" id="ExperimentsCollectionClient.get"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.get">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span>
@@ -1002,8 +1015,9 @@ document.write(`
         <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_deleted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of experiments.</span>
+<span class="w">        </span><span class="sd">"""Get a list of experiments.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group id the experiments belong to. If None, return</span>
@@ -1016,28 +1030,31 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for experiments using the Dioptra API&#39;s query language.</span>
+<span class="sd">            search: Search for experiments using the Dioptra API's query language.</span>
 <span class="sd">                Optional, defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">if</span> <span class="n">group_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;groupId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"groupId"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_id</span>
+
+        <span class="k">if</span> <span class="n">show_deleted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"showDeleted"</span><span class="p">]</span> <span class="o">=</span> <span class="n">show_deleted</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
@@ -1045,14 +1062,14 @@ document.write(`
         <span class="p">)</span></div>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the experiment matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Get the experiment matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span>
 
 <div class="viewcode-block" id="ExperimentsCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
@@ -1062,7 +1079,7 @@ document.write(`
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">entrypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates an experiment.</span>
+<span class="w">        </span><span class="sd">"""Creates an experiment.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The id of the group that will own the experiment.</span>
@@ -1074,17 +1091,17 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"group"</span><span class="p">:</span> <span class="n">group_id</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">if</span> <span class="n">entrypoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypoints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"entrypoints"</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
@@ -1095,7 +1112,7 @@ document.write(`
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">entrypoints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modify the experiment matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Modify the experiment matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
@@ -1107,26 +1124,26 @@ document.write(`
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
+<span class="sd">        """</span>
+        <span class="n">json_</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
 
         <span class="k">if</span> <span class="n">entrypoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">json_</span><span class="p">[</span><span class="s2">&quot;entrypoints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
+            <span class="n">json_</span><span class="p">[</span><span class="s2">"entrypoints"</span><span class="p">]</span> <span class="o">=</span> <span class="n">entrypoints</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExperimentsCollectionClient.delete_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.delete_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete the experiment matching the provided id.</span>
+<span class="w">        </span><span class="sd">"""Delete the experiment matching the provided id.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            experiment_id: The experiment id, an integer.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="ExperimentsCollectionClient.get_metrics_by_id"><a class="viewcode-back" href="../../../reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentsCollectionClient.get_metrics_by_id">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_metrics_by_id</span><span class="p">(</span>
@@ -1138,11 +1155,11 @@ document.write(`
         <span class="n">descending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">search</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the metrics for the jobs in this experiment.</span>
+<span class="w">        </span><span class="sd">"""Get the metrics for the jobs in this experiment.</span>
 
 <span class="sd">        Each returned metric value is either a float or a string representing the</span>
 <span class="sd">        special values of NaN, Infinity, or -Infinity. NaN values are represented as the</span>
-<span class="sd">        string &quot;nan&quot;, positive infinity as &quot;inf&quot;, and negative infinity as &quot;-inf&quot;. To</span>
+<span class="sd">        string "nan", positive infinity as "inf", and negative infinity as "-inf". To</span>
 <span class="sd">        convert these string values back to their corresponding float representations in</span>
 <span class="sd">        Python, wrap the returned value with ``float()``.</span>
 
@@ -1155,27 +1172,27 @@ document.write(`
 <span class="sd">                None.</span>
 <span class="sd">            descending: Sort the returned list in descending order. Optional, defaults</span>
 <span class="sd">                to None.</span>
-<span class="sd">            search: Search for jobs using the Dioptra API&#39;s query language.</span>
+<span class="sd">            search: Search for jobs using the Dioptra API's query language.</span>
 <span class="sd">                Optional, defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;experiment_id&quot;</span><span class="p">:</span> <span class="n">experiment_id</span><span class="p">,</span>
-            <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
-            <span class="s2">&quot;pageLength&quot;</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
+            <span class="s2">"experiment_id"</span><span class="p">:</span> <span class="n">experiment_id</span><span class="p">,</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">index</span><span class="p">,</span>
+            <span class="s2">"pageLength"</span><span class="p">:</span> <span class="n">page_length</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;sortBy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"sortBy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sort_by</span>
 
         <span class="k">if</span> <span class="n">descending</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;descending&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"descending"</span><span class="p">]</span> <span class="o">=</span> <span class="n">descending</span>
 
         <span class="k">if</span> <span class="n">search</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"search"</span><span class="p">]</span> <span class="o">=</span> <span class="n">search</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment_id</span><span class="p">),</span> <span class="n">METRICS</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 </pre></div>

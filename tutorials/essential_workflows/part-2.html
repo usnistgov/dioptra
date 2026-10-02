@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Adding Inputs and Outputs &#8212; Dioptra 1.1.0 documentation</title>
+    <title>Adding Inputs and Outputs &#8212; Dioptra 1.2.0 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.1.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -237,6 +237,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
 </ul>
@@ -558,14 +559,14 @@ you will compare outputs and observe how different <strong>sample sizes</strong>
   <span class="n">pct</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">diff</span><span class="o">/</span><span class="n">mean</span>
 
   <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-      <span class="s2">&quot;Plugin 2 - &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). &quot;</span>
-      <span class="s2">&quot;[Passed-in Parameters]&quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;&quot;</span>
+      <span class="s2">"Plugin 2 - "</span>
+      <span class="sa">f</span><span class="s2">"The mean value of the draws was </span><span class="si">{</span><span class="n">draws_mean</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, "</span>
+      <span class="sa">f</span><span class="s2">"which was </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> different from the passed-in mean (</span><span class="si">{</span><span class="n">pct</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%). "</span>
+      <span class="s2">"[Passed-in Parameters]"</span>
+      <span class="sa">f</span><span class="s2">"Seed: </span><span class="si">{</span><span class="n">random_seed</span><span class="si">}</span><span class="s2">; "</span>
+      <span class="sa">f</span><span class="s2">"Mean: </span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">; "</span>
+      <span class="sa">f</span><span class="s2">"Variance: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">; "</span>
+      <span class="sa">f</span><span class="s2">"Sample Size: </span><span class="si">{</span><span class="n">sample_size</span><span class="si">}</span><span class="s2">;"</span>
       <span class="p">)</span>
 
   <span class="k">return</span> <span class="n">draws</span>
