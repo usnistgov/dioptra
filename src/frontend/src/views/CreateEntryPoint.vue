@@ -972,7 +972,7 @@ function prepareEntrypointPayload(candidate = entryPoint.value) {
         parameterType: oParam.parameterType.id,
       })),
     })),
-    queues: candidate.queues.map((queue) => queue.id),
+    queues: (candidate.queues ?? []).map((queue) => queue.id),
   };
   if (route.params.id === "new") {
     payload.group = candidate.group;
