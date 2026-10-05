@@ -26,6 +26,14 @@
     "
     @create="router.push('/queues/new')"
   >
+    <template #name-suffix="cellProps">
+      <QueueWorkerIndicator
+        v-if="!showDrafts && !cellProps.row.deleted"
+        :queueName="cellProps.row.name"
+        :count="workerCounts.get(cellProps.row.name)"
+        :loading="workersLoading"
+      />
+    </template>
     <template #body-cell-hasDraft="cellProps">
       <q-btn
         v-show="!cellProps.row.deleted"
@@ -60,6 +68,8 @@ import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import PageTitle from "@/components/PageTitle.vue";
 import { useRouter } from "vue-router";
 import { useTableUtils } from "@/services/useTableUtils";
+import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
+import { useQueueWorkers } from "@/services/useQueueWorkers";
 
 const router = useRouter();
 
@@ -87,6 +97,10 @@ const showDrafts = ref(false);
 
 const { rows, isLoading, showDeleted, tableRef, selected, showDeleteDialog, getData, deleteRow } =
   useTableUtils("queues");
+
+const { workerCounts, workersLoading } = useQueueWorkers(() =>
+  showDrafts.value ? [] : rows.value.filter((queue) => !queue.deleted).map((queue) => queue.name),
+);
 
 const editObjTags = ref({});
 

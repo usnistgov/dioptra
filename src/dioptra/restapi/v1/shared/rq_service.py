@@ -19,6 +19,7 @@ from typing import Final
 import structlog
 from redis import Redis
 from rq.queue import Queue as RQQueue
+from rq.worker import Worker as RQWorker
 from structlog.stdlib import BoundLogger
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -53,10 +54,21 @@ class RQServiceV1(object):
             timeout=timeout,
         )
 
-        q = RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
+        q = self.redis_queue(queue)
+
         q.enqueue(
             RUN_V1_DIOPTRA_JOB_FUNC,
             kwargs=cmd_kwargs,
             job_id=str(job_id),
             job_timeout=timeout if timeout else TIMEOUT_24_HOURS,
         )
+
+    def redis_queue(self, queue: str) -> RQQueue:
+        return RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
+
+    def workers_per_queue(self, queue_list: list[str]) -> dict[str, int]:
+        workers = {
+            queue: len(RQWorker.all(queue=self.redis_queue(queue)))
+            for queue in queue_list
+        }
+        return workers
