@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
 
-from dioptra.task_engine.issues import IssueSeverity
+from dioptra.task_engine.issues import IssueSeverity, IssueType
 from dioptra.task_engine.validation import is_valid, schema_validate, validate
 
 
@@ -395,6 +395,84 @@ def test_valid_step_references(graph) -> None:
     }
 
     assert is_valid(experiment_desc)
+
+
+@pytest.mark.parametrize(
+    "outputs, reference, reason",
+    [
+        ([], "$artifact", "produces no output"),
+        ([], "$artifact.value", "unrecognized artifact output"),
+        (
+            [{"first": "string"}, {"second": "string"}],
+            "$artifact",
+            "an output name must be given",
+        ),
+    ],
+)
+def test_invalid_artifact_input_references(outputs, reference, reason) -> None:
+    experiment_desc = {
+        "tasks": {
+            "consume": {
+                "plugin": "org.example.consume",
+                "inputs": [{"value": "string"}],
+            }
+        },
+        "graph": {"step1": {"consume": reference}},
+        "artifact_inputs": {"artifact": outputs},
+    }
+
+    issues = validate(experiment_desc)
+
+    assert len(issues) == 1
+    assert issues[0].type is IssueType.SEMANTIC
+    assert issues[0].severity is IssueSeverity.ERROR
+    assert "artifact" in issues[0].message
+    assert reason in issues[0].message
+
+
+@pytest.mark.parametrize(
+    "outputs, argument",
+    [
+        ({"value": "string"}, "$artifact"),
+        ([{"value": "string"}], "$artifact"),
+        ({"value": "string"}, "$artifact.value"),
+        ([{"value": "string"}], "$artifact.value"),
+        ([{"first": "string"}, {"second": "string"}], "$artifact.second"),
+        ([], "literal"),
+    ],
+)
+def test_valid_artifact_input_references(outputs, argument) -> None:
+    experiment_desc = {
+        "tasks": {
+            "consume": {
+                "plugin": "org.example.consume",
+                "inputs": [{"value": "string"}],
+            }
+        },
+        "graph": {"step1": {"consume": argument}},
+        "artifact_inputs": {"artifact": outputs},
+    }
+
+    assert validate(experiment_desc) == []
+
+
+def test_artifact_output_references_empty_artifact_input() -> None:
+    experiment_desc = {
+        "tasks": {"task1": {"plugin": "org.example.task1"}},
+        "graph": {"step1": {"task1": []}},
+        "artifact_inputs": {"artifact": []},
+        "artifact_outputs": {
+            "saved": {"contents": "$artifact", "task": {"name": "org.example.save"}}
+        },
+    }
+
+    issues = validate(experiment_desc)
+
+    assert len(issues) == 1
+    assert issues[0].type is IssueType.SEMANTIC
+    assert issues[0].severity is IssueSeverity.ERROR
+    assert 'In artifact output "saved"' in issues[0].message
+    assert "produces no output" in issues[0].message
 
 
 def test_output_named_name():
