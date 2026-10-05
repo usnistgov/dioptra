@@ -26,7 +26,7 @@ networks:
 {% endif -%}
 services:
   minio:
-    image: minio/minio:latest
+    image: {{ container_image(cookiecutter.__containers.minio) }}
     restart: always
     hostname: {{ cookiecutter.__project_slug }}-minio
     command:

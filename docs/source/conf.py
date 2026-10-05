@@ -75,9 +75,13 @@ master_doc = "index"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", 
-                    # "dev-guide", 
-                    "getting-started/installation.rst"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    # "dev-guide",
+    "getting-started/installation.rst",
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -104,14 +108,16 @@ html_theme = "sphinx_book_theme"
 html_static_path = ["_static"]
 
 
-html_css_files = ["dioptra.css",]
+html_css_files = [
+    "dioptra.css",
+]
 
 html_js_files = [
     "jquery.visible.js",
     "jquery.leaveNotice-nist.js",
     "applyLeaveNotice.js",
     "smoothNavScroll.js",
-    "image_modals.js"
+    "image_modals.js",
 ]
 
 html_theme_options = {
@@ -163,7 +169,10 @@ intersphinx_mapping = {
     "flask": ("https://flask.palletsprojects.com/en/stable/", None),
     "flask_migrate": ("https://flask-migrate.readthedocs.io/en/latest/", None),
     "flask_restx": ("https://flask-restx.readthedocs.io/en/latest/", None),
-    "flask_sqlalchemy": ("https://flask-sqlalchemy.palletsprojects.com/en/stable/", None),
+    "flask_sqlalchemy": (
+        "https://flask-sqlalchemy.palletsprojects.com/en/stable/",
+        None,
+    ),
     "injector": ("https://injector.readthedocs.io/en/latest/", None),
     "marshmallow": ("https://marshmallow.readthedocs.io/en/stable/", None),
     "mlflow": ("https://mlflow.org/docs/latest/api_reference/", None),
@@ -191,4 +200,3 @@ napoleon_use_param = True
 napoleon_use_rtype = True
 
 # -- Options for panels extension --------------------------------------------
-
