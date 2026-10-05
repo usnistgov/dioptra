@@ -26,6 +26,7 @@ from .snapshots import SnapshotsSubCollectionClient
 from .tags import TagsSubCollectionClient
 
 DRAFT_FIELDS: Final[set[str]] = {"name", "description"}
+WORKERS: Final[str] = "workers"
 
 T = TypeVar("T")
 
@@ -291,3 +292,16 @@ class QueuesCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, str(queue_id))
+
+    def get_workers(self, queues: list[str]) -> T:
+        """Get the number of workers for each queue.
+
+        Args:
+            queues: A list of queue names.
+
+        Returns:
+            The response from the Dioptra API.
+        """
+        return self._session.get(
+            self.url, WORKERS, params={"queueNames": ",".join(queues)}
+        )
