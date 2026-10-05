@@ -718,7 +718,11 @@ def _check_reference(  # noqa: C901
             artifact_output = [artifact_output]
         artifact_output_names = [next(iter(output)) for output in artifact_output]
         if ref_output is None:
-            if len(artifact_output) > 1:
+            if not artifact_output:
+                message = (
+                    'reference "{}": referenced artifact produces no output'.format(ref)
+                )
+            elif len(artifact_output) > 1:
                 message = (
                     'reference "{}": an output name must be given if the artifact task '
                     "produces more than one output."
