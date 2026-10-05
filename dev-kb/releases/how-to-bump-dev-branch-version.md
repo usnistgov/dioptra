@@ -24,50 +24,57 @@ Before bumping the version, ensure you have:
 - [uv](https://docs.astral.sh/uv/) installed and available on your PATH
 - `sed` installed and available on your PATH
 
+Run the commands from the root of the Dioptra clone. Install tox with `uv tool install --python 3.11 tox --with tox-uv` if needed. Bumpver creates a local commit automatically; it does not create a tag or push changes.
+
 ## Scenario 1: After a Minor or Major Release to Main
 
 Use this workflow when a minor or major version has been released to `main` and you need to bump `dev` to stay one minor version ahead.
 
 ### Step 1: Run the bumpver command
 
-For a minor release:
+Check the current version with `uvx tox run -e bumpver -- show`. If dev still targets the major and minor version just released on main, increment its minor version:
 
 ```sh
 uvx tox run -e bumpver -- update -m -t dev
 ```
 
-For a major release:
+This applies after either a minor or major release. For example, `1.2.0-dev` becomes `1.3.0-dev`, and `2.0.0-dev3` becomes `2.1.0-dev`. If dev targets a different version, select the intended next minor version explicitly:
 
 ```sh
-uvx tox run -e bumpver -- update --major -t dev
+# Example after main releases 2.0.0
+uvx tox run -e bumpver -- update --set-version 2.1.0-dev
 ```
 
-This command:
+Confirm the target before running the command; do not bump again if dev already has the intended version.
 
-- Increments the minor version (`-m`) or major version (`--major`)
-- Resets the dev tag to zero (`-t dev`)
-- Updates version strings in all configured files
-- Creates a release commit
+The command updates the configured version files, resets the dev tag to zero, and creates a release commit.
 
 ### Step 2: Update uv.lock
 
 The `uv.lock` file needs its version updated to match the new version.
 
-> 📝 NOTE: Running `uv lock` by itself would update the `dioptra-platform` package version, but it also rewrites dependency markers throughout the file in ways that cause issues with this repository's optional dependency groups. This problem does not occur with `uv lock --upgrade`, which is used when upgrading dependencies. For version bumps where we only want to update the package version, we run `uv lock` to capture the correctly-formatted version string, then revert, then update only the appropriate line with the version change.
+> 📝 NOTE: `uv lock` can also rewrite dependency markers and other lockfile content. For a version-only release, capture the formatted local package version, revert the lockfile, and apply only that version change. Dependency upgrades are a separate task.
 
 ```sh
-# Run uv lock to get the correctly-formatted version string
 uv lock
-
-# Capture the version from uv.lock before reverting
 NEW_VERSION=$(sed -n '/^name = "dioptra-platform"$/{ n; s/^version = "\(.*\)"$/\1/p; }' uv.lock)
-
-# Revert all changes to uv.lock
-git checkout -- uv.lock
-
-# Apply only the version change
-sed -i '' '/^name = "dioptra-platform"$/{ n; s/^version = ".*"$/version = "'"$NEW_VERSION"'"/; }' uv.lock
+printf '%s\n' "$NEW_VERSION"
 ```
+
+Confirm the captured value is nonempty and matches the intended version. For example, `1.3.0dev0` is normalized to `1.3.0.dev0` in the lockfile. Then restore the lockfile:
+
+```sh
+git checkout -- uv.lock
+```
+
+Apply only the local package version change:
+
+```sh
+sed -i.bak '/^name = "dioptra-platform"$/{ n; s/^version = ".*"$/version = "'"$NEW_VERSION"'"/; }' uv.lock
+rm uv.lock.bak
+```
+
+The backup suffix works with macOS and GNU sed. Remove the temporary backup after the edit.
 
 ### Step 3: Amend the release commit
 
@@ -89,7 +96,7 @@ uvx tox run -e bumpver -- show
 Check that `uv.lock` shows only the version change:
 
 ```sh
-git diff HEAD~1 uv.lock
+git diff HEAD~1 -- uv.lock
 ```
 
 ## Scenario 2: Incrementing the Dev Tag
@@ -113,21 +120,7 @@ This command:
 
 ### Step 2: Update uv.lock
 
-Follow the same process as Scenario 1:
-
-```sh
-# Run uv lock to get the correctly-formatted version string
-uv lock
-
-# Capture the version from uv.lock before reverting
-NEW_VERSION=$(sed -n '/^name = "dioptra-platform"$/{ n; s/^version = "\(.*\)"$/\1/p; }' uv.lock)
-
-# Revert all changes to uv.lock
-git checkout -- uv.lock
-
-# Apply only the version change
-sed -i '' '/^name = "dioptra-platform"$/{ n; s/^version = ".*"$/version = "'"$NEW_VERSION"'"/; }' uv.lock
-```
+Follow [Step 2 of Scenario 1](#step-2-update-uvlock) to capture the normalized version, restore the lockfile, and change only the local package version.
 
 ### Step 3: Amend the release commit
 
@@ -140,14 +133,15 @@ git commit --amend --no-edit
 
 ```sh
 uvx tox run -e bumpver -- show
-git diff HEAD~1 uv.lock
+git diff HEAD~1 -- uv.lock
 ```
 
 ## After Bumping the Version
 
 Once the version bump is complete and verified:
 
-1. Push the release commit to the remote `dev` branch
-2. Create a git tag for the new version to trigger the release process
+1. Adopt the version commit on remote `dev` using the permitted branch workflow. Maintainers with direct push permission can use `git push origin dev`; otherwise, use a pull request.
+2. Wait for the applicable dev branch CI checks to pass on that exact commit.
+3. Follow [How to Create a Release](how-to-create-a-release.md) to create and push the annotated version tag.
 
-The tag creation will trigger automated builds for [PyPI](https://pypi.org/project/dioptra-platform) and the [container images](https://github.com/orgs/usnistgov/packages?repo_name=dioptra).
+The tag push triggers automated publishing to [TestPyPI](https://test.pypi.org/project/dioptra-platform) and [GitHub Container Registry](https://github.com/orgs/usnistgov/packages?repo_name=dioptra). Keep development deployment defaults at `dev` and the example platform requirement unbounded. Stable installation references in the README continue to follow the published main release.

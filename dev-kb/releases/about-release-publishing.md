@@ -1,6 +1,6 @@
 # About Release Publishing
 
-This document explains the design decisions and infrastructure behind Dioptra's automated release publishing process. For background on versioning philosophy and when releases happen, see [About Versioned Releases](about-versioned-releases.md). For step-by-step instructions on triggering a release, see [How to Create a Release](how-to-create-a-release.md).
+This document explains the design decisions and infrastructure behind Dioptra's automated release publishing process. For background on versioning philosophy and when releases happen, see [About Versioned Releases](about-versioned-releases.md). For stable preparation, see [How to Merge Dev into Main](how-to-merge-dev-into-main.md). For step-by-step instructions on triggering a release, see [How to Create a Release](how-to-create-a-release.md).
 
 - [Published Artifacts](#published-artifacts)
 - [PyPI Publishing](#pypi-publishing)
@@ -11,6 +11,7 @@ This document explains the design decisions and infrastructure behind Dioptra's 
   - [Image Signing](#image-signing)
 - [Version Validation](#version-validation)
 - [Workflow Triggers](#workflow-triggers)
+- [Release Review and Main Adoption](#release-review-and-main-adoption)
 - [Failure Scenarios](#failure-scenarios)
 
 ## Published Artifacts
@@ -61,7 +62,7 @@ Dioptra builds Docker images for multiple CPU architectures:
 | pytorch-gpu     |      Yes      |      No       |
 | tensorflow2-gpu |      Yes      |      No       |
 
-GPU images are only built for `amd64` because the NVIDIA CUDA base images do not support ARM architectures.
+The GPU worker images are currently configured to build for `amd64` only.
 
 The build process:
 
@@ -82,15 +83,15 @@ Docker images are cryptographically signed to satisfy compliance requirements. T
 4. **Transparency logging**: The signature is recorded in the [Rekor](https://docs.sigstore.dev/logging/overview/) transparency log, creating an immutable audit trail
 5. **Verification**: Both the Rekor entry and the attached signature are verified before the workflow completes
 
-Any verification failure causes the entire build to fail, ensuring that only properly signed images are published.
+A signing or verification failure causes the workflow to fail. Images are uploaded before signing, so registry visibility alone does not establish that signing and verification finished successfully.
 
 ## Version Validation
 
-Before any publishing occurs, the workflow validates that the git tag matches the version declared in `pyproject.toml`. This validation:
+Before Python package publication, `release.yml` validates that the git tag matches the version declared in `pyproject.toml`. This validation:
 
 - Prevents accidental mismatches between tag and package version
 - Ensures the published package version matches what users expect from the tag
-- Catches errors early before any artifacts are published
+- Catches errors before the Python package is uploaded
 
 The validation is performed by a reusable GitHub Action (`.github/actions/validate-release-tag/`) that:
 
@@ -98,6 +99,10 @@ The validation is performed by a reusable GitHub Action (`.github/actions/valida
 2. Compares it against the triggering tag
 3. Determines if the version is a prerelease (for routing decisions)
 4. Fails the workflow if there's a mismatch
+
+The Docker workflow runs independently and does not use this package-version validation action. A package version mismatch can therefore coexist with published images.
+
+Release tags use the project version without a `v` prefix. The validator currently permits stripping a leading `v`, but this does not change the naming convention; Docker version tags also use the raw Git tag.
 
 ## Workflow Triggers
 
@@ -113,6 +118,18 @@ The Docker images workflow also triggers on:
 - **Pushes to `main` or `dev` branches**: Builds images tagged with the branch name
 - **Pull requests to `main` or `dev`**: Builds images for validation (tagged with PR number)
 - **Weekly schedule**: Rebuilds images to incorporate base image updates
+
+Tox and Sphinx also run on version tag pushes. Branch pushes and PR checks validate release preparation but do not publish a Python package to PyPI or TestPyPI; tag publication is a separate step.
+
+## Release Review and Main Adoption
+
+Stable preparation creates one merge commit with current main as its first parent and the prepared dev changes as its second parent. The resolved commit is published on the release branch for PR review and CI while main remains unchanged. A release branch push runs Tox and Sphinx; a mergeable PR runs Docker images and Frontend Playwright e2e, plus Frontend checks when their path filters match. GitHub does not run `pull_request` workflows while merge conflicts remain.
+
+PR workflows can check out a temporary test merge at `refs/pull/<number>/merge`. Its commit ID differs from the prepared release commit, but its tree should match when main has not changed. This temporary commit is CI input and does not become another merge in main's history.
+
+After checks pass and the main base is rechecked, a maintainer with permission to update protected main directly fast-forwards it to the prepared commit and pushes normally. GitHub marks the PR merged because its head commit is now reachable from main. This method preserves one integration merge and differs from the ordinary squash workflow in `CONTRIBUTING.md`. Using a GitHub merge button would change the selected history. If main advances, the candidate and its checks must be revised before adoption.
+
+Main pushes run branch CI, publish branch-tagged images, and deploy Sphinx documentation. Successful main checks precede the version tag and its publication workflows. See [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for the commands.
 
 ## Failure Scenarios
 
