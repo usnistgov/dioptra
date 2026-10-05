@@ -1,12 +1,13 @@
 <template>
   <span
-    class="row inline items-center q-ml-xs"
+    class="queue-worker-indicator q-ml-xs"
     :class="count === 0 ? 'text-negative' : 'text-grey-7'"
     tabindex="0"
     role="img"
     :aria-label="message"
   >
     <q-icon
+      class="worker-icon"
       :name="count === 0 ? 'sym_o_warning' : 'sym_o_dns'"
       size="18px"
     />
@@ -31,3 +32,13 @@ const message = computed(() => {
   return `${props.count} known ${props.count === 1 ? "worker" : "workers"} listening to queue "${props.queueName}"`;
 });
 </script>
+
+<style scoped>
+.queue-worker-indicator {
+  white-space: nowrap;
+}
+
+.worker-icon {
+  vertical-align: text-bottom;
+}
+</style>
