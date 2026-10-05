@@ -109,6 +109,12 @@
           </template>
           <template #status="{ status = '' }">
             <JobStatus :status="status" />
+            <QueueWorkerIndicator
+              v-if="status === 'queued'"
+              :queueName="job?.queue?.name"
+              :count="workerCounts.get(job?.queue?.name)"
+              :loading="workersLoading"
+            />
           </template>
         </KeyValueTable>
         <q-btn
@@ -349,6 +355,8 @@ import { useRoute, useRouter } from "vue-router";
 import KeyValueTable from "@/components/KeyValueTable.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import JobStatus from "@/components/JobStatus.vue";
+import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
+import { useQueueWorkers } from "@/services/useQueueWorkers";
 import TableComponent from "@/components/TableComponent.vue";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import * as notify from "../notify";
@@ -370,6 +378,10 @@ const isMedium = inject("isMedium");
 const isMobile = inject("isMobile");
 
 const job = ref();
+const { workerCounts, workersLoading } = useQueueWorkers(() =>
+  job.value?.status === "queued" ? [job.value.queue?.name] : [],
+);
+
 const showTagsDialog = ref(false);
 const showDeleteDialog = ref(false);
 const selectedParam = ref([]);
