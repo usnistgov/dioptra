@@ -67,6 +67,7 @@ class RQServiceV1(object):
         return RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
 
     def workers_per_queue(self, queue_list: list[str]) -> dict[str, int]:
+        """Count known RQ workers per queue, including workers running jobs."""
         workers = {
             queue: len(RQWorker.all(queue=self.redis_queue(queue)))
             for queue in queue_list
