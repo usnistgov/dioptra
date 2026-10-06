@@ -11,7 +11,7 @@
       :name="count === 0 ? 'sym_o_warning' : 'sym_o_dns'"
       size="18px"
     />
-    <span class="q-ml-xs">{{ count ?? '?' }}</span>
+    <span class="q-ml-xs">{{ count ?? "?" }}</span>
     <q-tooltip>{{ message }}</q-tooltip>
   </span>
 </template>
