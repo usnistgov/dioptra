@@ -83,8 +83,6 @@ compatible tasks, then click **Confirm**.
 
    Selecting a task from the swappable task selection dialog
 
-   
-
 .. rst-class:: header-on-a-card header-steps
 
 Step 3: Create a new swap step or extend an existing one

@@ -22,18 +22,18 @@ Task Graph
 
 Summary: What is a Task Graph?
 ------------------------------
-The **task graph** is the component of an entrypoint description that describes the steps of a 
+The **task graph** is the component of an entrypoint description that describes the steps of a
 workflow between plugin function tasks and the parameter inputs to
-each of those tasks. A directed acyclic graph (DAG) representing the dependencies between the 
+each of those tasks. A directed acyclic graph (DAG) representing the dependencies between the
 various steps is constructed to ensure that the steps are executed in the correct order.
 
 
 .. figure:: /images/task-graph-function.png
    :alt: Task graph purpose.
-   :figclass: border-image clickable-image 
+   :figclass: border-image clickable-image
 
    The primary function of the task graph is to describe the relationship between variables and plugins within an entrypoint.
-   It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts are 
+   It describes dependencies between the various steps, as well as how the outputs, global variables, and artifacts are
    input to the invoked plugins.
 
 
@@ -53,7 +53,7 @@ a single member named ``seed`` that is being passed a value of ``1234``.
 
 
 .. code:: yaml
-   
+
    rng:
       configure_rng:
          seed: 1234
@@ -79,7 +79,7 @@ a single member named ``seed`` that is being passed a value of ``1234``.
          split: 0.5
       dependencies: [rng]
 
-   metrics: 
+   metrics:
       run_metrics:
          predictions: $predictions
 
@@ -89,9 +89,9 @@ Variables
 
 Step outputs can be referenced by the step name. This is useful for passing the
 output of one step as a parameter to another. For example: ``$trained_model`` will take the output stored in the
-step with the name ``trained_model``. 
+step with the name ``trained_model``.
 
-Alternatively, if the plugin task has named output (perhaps named ``model``, it can be accessed with 
+Alternatively, if the plugin task has named output (perhaps named ``model``, it can be accessed with
 ``$trained_model.model``). The names of these outputs are defined at plugin task registration, and the number
 of outputs of the registered task should match the number of outputs of its associated function.
 
@@ -107,7 +107,7 @@ Artifact Variables
 
 Entrypoints can also have artifact parameters, which are referenced in the same way. ``$training_ds`` could reference
 the output of an artifact deserialization plugin task, and the entire artifact can then be used as input to a plugin
-task. 
+task.
 
 Explicit Dependencies and DAG creation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,7 +117,7 @@ desirable to have a step always run after another step. For example, system conf
 or designating the worker as GPU enabled may not produce an output, but may still be required for multiple other steps
 in the task graph.
 
-Consider the following example task graph as a candidate for the DAG - explicit dependencies are declared for the ``defended_model``, 
+Consider the following example task graph as a candidate for the DAG - explicit dependencies are declared for the ``defended_model``,
 ``predictions`` and ``trained_model`` steps on the ``configure_rng`` step. Additionally, the ``defended_model`` step has an implicit
 dependency on the ``trained_model`` step, and the ``predictions`` step has an implicit dependency on the ``defended_model`` step (by using
 the output of those steps).
@@ -125,7 +125,7 @@ the output of those steps).
 
 .. figure:: /images/DAG.png
    :alt: Generated directed acyclic graph based on dependencies within the task graph.
-   :figclass: border-image clickable-image 
+   :figclass: border-image clickable-image
 
    The DAG generated from the above task graph. Dioptra creates dependencies in the DAG only based off the input/output
    chaining of plugin tasks. If a user wants to add additional explicit dependencies in the task graph, this can be done.
@@ -135,17 +135,17 @@ the output of those steps).
 Entrypoint Swaps
 ~~~~~~~~~~~~~~~~
 
-Often, the structure of a task graph may be reusable. For example in the task graph provided above, 
+Often, the structure of a task graph may be reusable. For example in the task graph provided above,
 we may have two different ways of training the model. Since both of these produce a trained model, the graph
 would be exactly the same with the difference of one task. In such cases, we can use a swap, denoted by
-the inclusion of the ``?`` character at the start of the name. 
+the inclusion of the ``?`` character at the start of the name.
 
 .. important::
 
-   Task definitions in a swap *must* have the same output type. 
+   Task definitions in a swap *must* have the same output type.
 
 .. code:: yaml
-   
+
    rng:
       configure_rng:
          seed: 1234
@@ -178,7 +178,7 @@ the inclusion of the ``?`` character at the start of the name.
          split: 0.5
       dependencies: [rng]
 
-   metrics: 
+   metrics:
       run_metrics:
          predictions: $predictions
 
@@ -197,8 +197,8 @@ and REST API submission formats.
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
----------
+See Also
+--------
 
 * :ref:`Task Graph Syntax <reference-entrypoints-task-graph-syntax>` - Reference for task graph construction
 * :ref:`Entrypoint Explanation <explanation-entrypoints>` - Entrypoints explanation, of which task graphs are a component
