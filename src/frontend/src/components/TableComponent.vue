@@ -129,6 +129,10 @@
                 :color="`${darkMode ? 'grey-4' : 'red'}`"
                 dense
               />
+              <slot
+                name="name-suffix"
+                v-bind="bodyProps"
+              />
             </div>
             <div v-else-if="col.name === 'description'">
               {{ truncateString(bodyProps.row.description, 40) }}
