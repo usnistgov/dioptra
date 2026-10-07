@@ -1,7 +1,7 @@
 """Add public groups and personal groups for existing users
 
 Revision ID: 9e2b1d0f4c3a
-Revises: ad4f89b2288d
+Revises: 30e74c5564b3
 Create Date: 2026-05-12 12:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "9e2b1d0f4c3a"
-down_revision = "ad4f89b2288d"
+down_revision = "30e74c5564b3"
 branch_labels = None
 depends_on = None
 
