@@ -81,6 +81,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
 
    how-to/setup-dioptra/install-dioptra-explanation.rst
    how-to/setup-dioptra/configure-setup/index.rst
+   how-to/setup-dioptra/uninstall-dioptra.rst
    how-to/setup-dioptra/reference/index.rst
 
 .. toctree::

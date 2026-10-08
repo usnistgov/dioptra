@@ -70,7 +70,7 @@ A deployment's status will be one of the following:
     Some, but not all, containers are running.
 
 ``missing``
-    The deployment is registered as having been installed, but its directory does not exist on disk. See :doc:`uninstall-clean-a-deployment` for supported removal methods.
+    The deployment is registered as having been installed, but its directory does not exist on disk. See :ref:`how-to-cli-uninstall-clean-deployments` for supported removal methods.
 
 ``unmanaged`` / ``partial`` / ``broken``
     The deployment directory exists but is incomplete or not created properly. Likely to be an interrupted install.
