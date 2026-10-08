@@ -15,9 +15,18 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.orm.session import Session as DBSession
 
-from dioptra.restapi.db.models import Group, GroupMember, User
+from dioptra.restapi.db.models import (
+    Group,
+    GroupLock,
+    GroupMember,
+    Resource,
+    ResourceLock,
+    User,
+)
+from dioptra.restapi.db.models.constants import resource_lock_types
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDeletedError,
@@ -25,10 +34,39 @@ from dioptra.restapi.errors import (
     EntityExistsError,
     GroupNeedsAManagerError,
     GroupNeedsAUserError,
+    UserDoesNotOwnGroupError,
     UserIsManagerError,
     UserNeedsAGroupError,
+    UserNeedsAnOwnedGroupError,
     UserNotInGroupError,
 )
+
+
+def test_group_delete_cascades_idempotently(group_repo, account, db_session):
+    group = Group("cascade_group", account.user)
+    group_repo.create(group)
+    active = Resource("queue", group)
+    deleted = Resource("queue", group)
+    unrelated = Resource("queue", account.group)
+    existing_lock = ResourceLock(resource_lock_types.DELETE, deleted)
+    db_session.add_all([active, deleted, unrelated, existing_lock])
+    db_session.commit()
+
+    group_repo.delete(group)
+    group_repo.delete(group)
+    db_session.commit()
+    group_repo.delete(group)
+    db_session.commit()
+    db_session.expire_all()
+
+    assert group.is_deleted
+    assert active.is_deleted
+    assert deleted.is_deleted
+    assert not unrelated.is_deleted
+    assert len(db_session.scalars(sa.select(GroupLock)).all()) == 1
+    locks = db_session.scalars(sa.select(ResourceLock)).all()
+    assert len(locks) == 2
+    assert existing_lock in locks
 
 
 def test_group_create_with_existing_user(group_repo, account, db_session: DBSession):
@@ -107,6 +145,117 @@ def test_group_create_name_collision(group_repo, account):
 
     with pytest.raises(EntityExistsError):
         group_repo.create(g2)
+
+
+def test_group_create_name_collision_is_user_scoped(
+    group_repo, account, db_session: DBSession
+):
+    other_user = User("other_user", "password2", "other_user@example.org")
+    other_group = Group(account.group.name, other_user)
+
+    group_repo.create(other_group)
+    db_session.commit()
+
+    assert other_group.group_id is not None
+
+
+def test_group_get_by_name_and_user(group_repo, account):
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert group == account.group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.ANY
+    )
+    assert group == account.group
+
+
+def test_group_get_by_name_and_user_deleted(group_repo, account, db_session: DBSession):
+    group_repo.delete(account.group)
+    db_session.commit()
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert group == account.group
+
+    group = group_repo.get_by_name_and_user(
+        account.group.name, account.user.user_id, DeletionPolicy.ANY
+    )
+    assert group == account.group
+
+
+def test_group_get_by_name_and_user_not_exist(group_repo, account):
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert not group
+
+    group = group_repo.get_by_name_and_user(
+        "foo", account.user.user_id, DeletionPolicy.ANY
+    )
+    assert not group
+
+
+def test_group_get_all_for_user_membership_and_public(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    other_user = User("other_user", "password", "other_user@example.org")
+    user_repo.create(other_user, account.group)
+    db_session.commit()
+
+    public_group = Group("public_group", other_user, public=True)
+    private_group = Group("private_group", other_user, public=False)
+    member_group = Group("member_group", other_user, public=False)
+    group_repo.create(public_group)
+    group_repo.create(private_group)
+    group_repo.create(member_group)
+    db_session.commit()
+
+    group_repo.add_member(member_group, account.user)
+    db_session.commit()
+
+    groups = group_repo.get_all_for_user(account.user.user_id)
+    group_ids = {group.group_id for group in groups}
+
+    assert groups[0] == account.group
+    assert account.group.group_id in group_ids
+    assert public_group.group_id in group_ids
+    assert member_group.group_id in group_ids
+    assert private_group.group_id not in group_ids
+
+
+def test_group_get_all_for_user_deletion_policy(
+    group_repo, account, db_session: DBSession
+):
+    group_repo.delete(account.group)
+    db_session.commit()
+
+    groups_not_deleted = group_repo.get_all_for_user(
+        account.user.user_id, DeletionPolicy.NOT_DELETED
+    )
+    assert account.group not in groups_not_deleted
+
+    groups_deleted = group_repo.get_all_for_user(
+        account.user.user_id, DeletionPolicy.DELETED
+    )
+    assert account.group in groups_deleted
 
 
 def test_group_create_creator_collision(group_repo, account):
@@ -329,6 +478,61 @@ def test_group_num_managers_not_exist(group_repo, account):
 
     with pytest.raises(EntityDoesNotExistError):
         group_repo.num_managers(g2)
+
+
+def test_group_assert_group_owner_creator(group_repo, account):
+    group_repo.assert_group_owner(account.group, account.user)
+
+
+def test_group_assert_group_owner_admin_only(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("admin", "password", "admin@example.org")
+    user_repo.create(user, account.group)
+    group_repo.add_manager(account.group, user, admin=True)
+    db_session.commit()
+
+    with pytest.raises(UserDoesNotOwnGroupError):
+        group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_group_owner_non_manager(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("member", "password", "member@example.org")
+    user_repo.create(user, account.group)
+    db_session.commit()
+
+    with pytest.raises(UserDoesNotOwnGroupError):
+        group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_group_owner_non_creator(
+    group_repo, user_repo, account, db_session: DBSession
+):
+    user = User("owner", "password", "owner@example.org")
+    user_repo.create(user, account.group)
+    group_repo.add_manager(account.group, user, owner=True)
+    db_session.commit()
+
+    group_repo.assert_group_owner(account.group, user)
+
+
+def test_group_assert_user_owns_multiple_groups_fails_for_last_group(
+    group_repo, account
+):
+    with pytest.raises(UserNeedsAnOwnedGroupError):
+        group_repo.assert_user_owns_multiple_groups(account.user)
+
+
+def test_group_assert_user_owns_multiple_groups(
+    group_repo, account, db_session: DBSession
+):
+    second_group = Group("second_group", account.user)
+    group_repo.create(second_group)
+    db_session.commit()
+
+    group_repo.assert_user_owns_multiple_groups(account.user)
 
 
 def test_group_add_manager(group_repo, user_repo, account, db_session: DBSession):

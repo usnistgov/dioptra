@@ -28,12 +28,18 @@ be assigned to any number of queues for which they are compatible.
 
 When submitting a job, the user selects a queue for that job. Any worker listening to that queue can claim the job and then begin execution in its environment.
 
+Each Queue resource belongs to a group, and its name must be unique within that group. Different groups can create
+queues with the same name. However, job routing uses only the Queue name, without a group ID prefix, to select an RQ queue
+in Redis. For example, two groups with a queue named ``tensorflow-cpu`` share the same worker pool when using the same
+Redis database. Groups therefore do not isolate worker pools. Use distinct queue names and matching worker subscriptions
+when groups need separate worker pools. See :ref:`reference-workers` for worker configuration details.
+
 Summary: What is a Worker?
 --------------------------
 
-A **worker** is an environment for executing jobs. 
+A **worker** is an environment for executing jobs.
 
-A worker should contain all of the requirements needed for a given entrypoint, such as any local files, 
+A worker should contain all of the requirements needed for a given entrypoint, such as any local files,
 python packages, or executables. Each worker listens to a single named
 queue, and multiple workers can listen to the same queue.
 
@@ -52,10 +58,9 @@ See :ref:`how-to-creating-custom-workers` for more information.
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
+See Also
 ---------
-   
+
 * :ref:`how-to-creating-custom-workers` - Guide for creating custom workers
 * :ref:`how-to-create-queues` - Step-by-step guide on creating queues
 * :ref:`Queues Reference <reference-queues>` - Queues reference page.
-

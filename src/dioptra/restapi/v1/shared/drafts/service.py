@@ -66,6 +66,7 @@ class ResourceDraftsService(object):
         base_resource_id: int | None,
         page_index: int,
         page_length: int,
+        show_deleted: bool = False,
         **kwargs,
     ) -> Any:
         """Fetch a list of drafts
@@ -104,6 +105,7 @@ class ResourceDraftsService(object):
             base_resource_id,
             page_index,
             page_length,
+            show_deleted=show_deleted,
         )
 
         return drafts, total_num_drafts

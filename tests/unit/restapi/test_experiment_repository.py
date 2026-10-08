@@ -288,12 +288,29 @@ def test_experiment_create_user_not_member(
 
     user2 = models.User("user2", "pass2", "user2@example.org")
     group2 = models.Group("group2", user2)
+    group2.public = False
     db_session.add(group2)
     db_session.commit()
 
     experiment.resource.owner = group2
     with pytest.raises(errors.UserNotInGroupError):
         experiment_repo.create(experiment)
+
+
+def test_experiment_create_user_not_member_public_group(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
+    experiment = fake_data.experiment(account.user, account.group)
+
+    user2 = models.User("user2", "pass2", "user2@example.org")
+    group2 = models.Group("group2", user2)
+    group2.public = True
+    db_session.add_all((user2, group2))
+    db_session.commit()
+
+    experiment.resource.owner = group2
+    experiment_repo.create(experiment)
+    db_session.commit()
 
 
 def test_experiment_create_name_collision(
@@ -307,6 +324,34 @@ def test_experiment_create_name_collision(
     exp2.name = experiment.name
     with pytest.raises(errors.EntityExistsError):
         experiment_repo.create(exp2)
+
+
+def test_experiment_create_cross_group_entrypoint_association(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
+    experiment = fake_data.experiment(account.user, account.group)
+
+    user2 = models.User("user2", "pass2", "user2@example.org")
+    group2 = models.Group("group2", user2)
+    entrypoint_resource = models.Resource("entry_point", group2)
+    entrypoint = models.EntryPoint(
+        "",
+        entrypoint_resource,
+        user2,
+        "entrypoint2",
+        "graph:",
+        "artifact_output:",
+        [],
+        [],
+    )
+
+    db_session.add_all((user2, group2, entrypoint))
+    db_session.commit()
+
+    experiment.children.append(entrypoint.resource)
+
+    with pytest.raises(errors.CrossGroupResourceAssociationError):
+        experiment_repo.create(experiment)
 
 
 def test_experiment_create_name_reuse(
@@ -443,10 +488,12 @@ def test_experiment_create_snapshot_user_not_member(
 ):
 
     exp_snap1 = fake_data.experiment(account.user, account.group)
+    exp_snap1.resource.owner.public = False
     db_session.add(exp_snap1)
     db_session.commit()
 
     acct2 = fake_data.account()
+    acct2.group.public = False
     db_session.add_all((acct2.user, acct2.group))
     db_session.commit()
 
@@ -454,6 +501,25 @@ def test_experiment_create_snapshot_user_not_member(
 
     with pytest.raises(errors.UserNotInGroupError):
         experiment_repo.create_snapshot(exp_snap2)
+
+
+def test_experiment_create_snapshot_user_not_member_public_group(
+    db_session: DBSession, fake_data, account, experiment_repo
+):
+    exp_snap1 = fake_data.experiment(account.user, account.group)
+    db_session.add(exp_snap1)
+    db_session.commit()
+
+    acct2 = fake_data.account()
+    acct2.group.public = True
+    db_session.add_all((acct2.user, acct2.group))
+    db_session.commit()
+
+    exp_snap1.resource.owner = acct2.group
+    exp_snap2 = models.Experiment("", exp_snap1.resource, account.user, "exp_snap2")
+
+    experiment_repo.create_snapshot(exp_snap2)
+    db_session.commit()
 
 
 def test_experiment_create_snapshot_name_collision(

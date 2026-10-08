@@ -1,28 +1,139 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
+const GROUP_STORAGE_KEY = "dioptra_group_id";
+
+type UserRef = {
+  id: number;
+  username: string;
+  url: string;
+};
+
+type GroupRef = {
+  id: number;
+  name: string;
+  user: UserRef;
+  url: string;
+};
+
+type LoggedInUser = {
+  id: number;
+  groups: GroupRef[];
+  [key: string]: unknown;
+};
+
+function createEmptySavedForms() {
+  return {
+    jobs: {},
+    files: {},
+  };
+}
+
+function getGroupStorageKey(userId: number) {
+  return `${GROUP_STORAGE_KEY}:${userId}`;
+}
+
+function readStoredGroupId(userId: number): number | null {
+  const raw = sessionStorage.getItem(getGroupStorageKey(userId));
+  if (!raw) {
+    return null;
+  }
+
+  const groupId = Number(raw);
+  return Number.isNaN(groupId) ? null : groupId;
+}
+
+function writeStoredGroupId(userId: number, groupId: number) {
+  sessionStorage.setItem(getGroupStorageKey(userId), String(groupId));
+}
+
+function clearStoredGroupId(userId: number) {
+  sessionStorage.removeItem(getGroupStorageKey(userId));
+}
+
 export const useLoginStore = defineStore("login", () => {
   // ref()'s are state properties
-  const loggedInUser = ref({});
+  const loggedInUser = ref<LoggedInUser | "">("");
 
-  const groups = ref([]);
+  const groups = ref<GroupRef[]>([]);
+  const selectedGroupId = ref<number | null>(null);
+  const groupContextLocked = ref(false);
+  const groupContextResolving = ref(false);
+  const sessionGeneration = ref(0);
 
-  const loggedInGroup = computed(() => {
-    if (groups.value.length === 1) {
-      return groups.value[0];
-    }
-    return "";
+  const createdGroups = computed(() => {
+    const userId = getLoggedInUserId();
+    return userId === null ? [] : groups.value.filter((group) => Number(group.user.id) === userId);
   });
 
+  function getLoggedInUserId(): number | null {
+    const userId = Number((loggedInUser.value as { id?: number }).id);
+    return Number.isNaN(userId) ? null : userId;
+  }
+
+  const loggedInGroup = computed(() => {
+    if (groups.value.length === 0) {
+      return "";
+    }
+
+    if (selectedGroupId.value !== null) {
+      const selectedGroup = groups.value.find((group) => group.id === selectedGroupId.value);
+      if (selectedGroup) {
+        return selectedGroup;
+      }
+    }
+
+    selectedGroupId.value = groups.value[0].id;
+    const userId = getLoggedInUserId();
+    if (userId !== null) {
+      writeStoredGroupId(userId, groups.value[0].id);
+    }
+    return groups.value[0];
+  });
+
+  function setGroups(newGroups: GroupRef[]) {
+    groups.value = newGroups;
+    const userId = getLoggedInUserId();
+    selectedGroupId.value = userId === null ? null : readStoredGroupId(userId);
+
+    if (groups.value.length === 0) {
+      selectedGroupId.value = null;
+      if (userId !== null) {
+        clearStoredGroupId(userId);
+      }
+      return;
+    }
+
+    const selected = groups.value.find((group) => group.id === selectedGroupId.value);
+    if (!selected) {
+      selectedGroupId.value = groups.value[0].id;
+      if (userId !== null) {
+        writeStoredGroupId(userId, groups.value[0].id);
+      }
+    }
+  }
+
+  function setLoggedInGroup(groupId: number): boolean {
+    const group = groups.value.find((g) => g.id === groupId);
+    if (!group) {
+      return false;
+    }
+
+    selectedGroupId.value = groupId;
+    const userId = getLoggedInUserId();
+    if (userId !== null) {
+      writeStoredGroupId(userId, groupId);
+    }
+    return true;
+  }
+
   const users = ref([
-    { name: "Tatum", id: "1", read: true, write: true, shareRead: true, shareWrite: true, admin: true, owner: true },
+    { name: "Tatum", id: "1", read: true, write: true, admin: true, owner: true },
     {
       name: "Jaylen",
       id: "2",
       read: false,
       write: false,
-      shareRead: true,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
@@ -31,19 +142,15 @@ export const useLoginStore = defineStore("login", () => {
       id: "3",
       read: false,
       write: false,
-      shareRead: false,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
-    { name: "Jrue", id: "4", read: true, write: false, shareRead: false, shareWrite: true, admin: false, owner: false },
+    { name: "Jrue", id: "4", read: true, write: false, admin: false, owner: false },
     {
       name: "Derrick",
       id: "5",
       read: true,
       write: true,
-      shareRead: false,
-      shareWrite: true,
       admin: false,
       owner: false,
     },
@@ -52,33 +159,27 @@ export const useLoginStore = defineStore("login", () => {
       id: "6",
       read: false,
       write: true,
-      shareRead: false,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
-    { name: "Sam", id: "7", read: true, write: true, shareRead: true, shareWrite: true, admin: true, owner: true },
-    { name: "Al", id: "8", read: false, write: false, shareRead: true, shareWrite: true, admin: false, owner: false },
-    { name: "Luke", id: "9", read: true, write: true, shareRead: false, shareWrite: false, admin: false, owner: false },
-    { name: "Paul", id: "10", read: true, write: true, shareRead: true, shareWrite: true, admin: false, owner: false },
+    { name: "Sam", id: "7", read: true, write: true, admin: true, owner: true },
+    { name: "Al", id: "8", read: false, write: false, admin: false, owner: false },
+    { name: "Luke", id: "9", read: true, write: true, admin: false, owner: false },
+    { name: "Paul", id: "10", read: true, write: true, admin: false, owner: false },
     {
       name: "Kevin",
       id: "11",
       read: false,
       write: false,
-      shareRead: false,
-      shareWrite: true,
       admin: false,
       owner: false,
     },
-    { name: "Ray", id: "12", read: true, write: false, shareRead: false, shareWrite: true, admin: false, owner: false },
+    { name: "Ray", id: "12", read: true, write: false, admin: false, owner: false },
     {
       name: "Antoine",
       id: "13",
       read: false,
       write: false,
-      shareRead: true,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
@@ -87,19 +188,15 @@ export const useLoginStore = defineStore("login", () => {
       id: "14",
       read: false,
       write: true,
-      shareRead: false,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
-    { name: "Larry", id: "15", read: true, write: true, shareRead: true, shareWrite: true, admin: true, owner: true },
+    { name: "Larry", id: "15", read: true, write: true, admin: true, owner: true },
     {
       name: "Isiah",
       id: "16",
       read: true,
       write: false,
-      shareRead: true,
-      shareWrite: true,
       admin: false,
       owner: false,
     },
@@ -108,8 +205,6 @@ export const useLoginStore = defineStore("login", () => {
       id: "17",
       read: false,
       write: false,
-      shareRead: false,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
@@ -118,8 +213,6 @@ export const useLoginStore = defineStore("login", () => {
       id: "18",
       read: true,
       write: false,
-      shareRead: true,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
@@ -128,18 +221,13 @@ export const useLoginStore = defineStore("login", () => {
       id: "19",
       read: true,
       write: true,
-      shareRead: true,
-      shareWrite: false,
       admin: false,
       owner: false,
     },
-    { name: "Mila", id: "20", read: true, write: false, shareRead: true, shareWrite: true, admin: false, owner: false },
+    { name: "Mila", id: "20", read: true, write: false, admin: false, owner: false },
   ]);
 
-  const savedForms = ref({
-    jobs: {},
-    files: {},
-  });
+  const savedForms = ref(createEmptySavedForms());
 
   const triggerPopup = ref(false);
 
@@ -157,11 +245,40 @@ export const useLoginStore = defineStore("login", () => {
         rowsPerPage: number;
         sortBy?: string;
         descending?: boolean;
+        showDeleted?: boolean;
         lastScrollPosition?: number;
         search?: string;
       }
     >
   >({});
+
+  function resetUserScopedState() {
+    sessionGeneration.value++;
+    groups.value = [];
+    selectedGroupId.value = null;
+    groupContextLocked.value = false;
+    groupContextResolving.value = false;
+    savedForms.value = createEmptySavedForms();
+    triggerPopup.value = false;
+    showRightDrawer.value = false;
+    selectedSnapshot.value = undefined;
+    tablePaginationCache.value = {};
+  }
+
+  function setSession(user: LoggedInUser) {
+    const currentUserId = getLoggedInUserId();
+    if (currentUserId !== Number(user.id)) {
+      resetUserScopedState();
+    }
+
+    loggedInUser.value = user;
+    setGroups(Array.isArray(user.groups) ? user.groups : []);
+  }
+
+  function clearSession() {
+    resetUserScopedState();
+    loggedInUser.value = "";
+  }
 
   // computed()'s are getters
 
@@ -171,6 +288,10 @@ export const useLoginStore = defineStore("login", () => {
     loggedInUser,
     loggedInGroup,
     groups,
+    createdGroups,
+    groupContextLocked,
+    groupContextResolving,
+    sessionGeneration,
     users,
     savedForms,
     showRightDrawer,
@@ -178,5 +299,9 @@ export const useLoginStore = defineStore("login", () => {
     triggerPopup,
     initialPage,
     tablePaginationCache,
+    setSession,
+    clearSession,
+    setGroups,
+    setLoggedInGroup,
   };
 });
