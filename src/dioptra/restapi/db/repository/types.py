@@ -150,6 +150,31 @@ class TypeRepository:
             self.session, PluginTaskParameterType, resource_ids, deletion_policy
         )
 
+    def get_exact(
+        self,
+        resource_ids: Sequence[int],
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[PluginTaskParameterType]:
+        """
+        Get the latest snapshots of the given type resource IDs.
+
+        Args:
+            resource_ids: An or iterable of type resource IDs
+            deletion_policy: Whether to look at deleted types,
+                non-deleted types, or all types
+
+        Returns:
+            A list of PluginTaskParameterType objects matching the given IDs
+
+        Raises:
+            EntityDoesNotExistError: if any of the types do not exist in the
+                database (according to deletion policy)
+        """
+
+        return utils.get_exact_latest_snapshots(
+            self.session, PluginTaskParameterType, resource_ids, deletion_policy
+        )
+
     def get_one(
         self,
         resource_id: int,
@@ -289,4 +314,6 @@ class TypeRepository:
         Raises:
             EntityDoesNotExistError: if the type does not exist
         """
-        utils.delete_resource(self.session, type_)
+        utils.delete_resource(
+            self.session, type_, EntityType.PLUGIN_TASK_PARAMETER_TYPE
+        )

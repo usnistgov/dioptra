@@ -326,6 +326,7 @@ def generate_resource_id_draft_endpoint(
 def generate_nested_resource_drafts_endpoint(
     api: Namespace,
     resource_type: EntityType,
+    base_resource_type: EntityType,
     resource_route: str,
     base_resource_route: str,
     request_schema: Type[Schema],
@@ -363,7 +364,10 @@ def generate_nested_resource_drafts_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._draft_service = draft_service.build(resource_type=resource_type)
+            self._draft_service = draft_service.build(
+                resource_type=resource_type,
+                base_resource_type=base_resource_type,
+            )
             super().__init__(*args, **kwargs)
 
         @login_required
@@ -506,6 +510,7 @@ def generate_nested_resource_drafts_id_endpoint(
 def generate_nested_resource_id_draft_endpoint(
     api: Namespace,
     resource_type: EntityType,
+    base_resource_type: EntityType,
     resource_route: str,
     request_schema: Type[Schema],
 ) -> Resource:
@@ -552,7 +557,10 @@ def generate_nested_resource_id_draft_endpoint(
             *args,
             **kwargs,
         ) -> None:
-            self._id_draft_service = id_draft_service.build(resource_type=resource_type)
+            self._id_draft_service = id_draft_service.build(
+                resource_type=resource_type,
+                base_resource_type=base_resource_type,
+            )
             super().__init__(*args, **kwargs)
 
         @login_required

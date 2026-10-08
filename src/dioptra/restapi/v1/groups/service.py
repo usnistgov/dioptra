@@ -73,7 +73,6 @@ class GroupService(object):
         self,
         name: str,
         creator: models.User,
-        commit: bool = True,
         **kwargs,
     ) -> models.Group:
         """Create a new group.
@@ -81,7 +80,6 @@ class GroupService(object):
         Args:
             name: The name requested by the user.
             creator: The user who created the group.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The new group object.
@@ -92,11 +90,11 @@ class GroupService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         new_group = models.Group(name=name, creator=creator)
-        self._uow.group_repo.create(new_group)
 
-        if commit:
-            self._uow.commit()
-            log.debug("Group creation successful", group_id=new_group.group_id)
+        with self._uow():
+            self._uow.group_repo.create(new_group)
+
+        log.debug("Group creation successful", group_id=new_group.group_id)
 
         return new_group
 
@@ -186,7 +184,6 @@ class GroupIdService(object):
         group_id: int,
         name: str,
         error_if_not_found: bool = False,
-        commit: bool = True,
         **kwargs,
     ) -> models.Group | None:
         """Modifies the specified group.
@@ -196,7 +193,6 @@ class GroupIdService(object):
             name: The new name for the group.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The group object.
@@ -220,12 +216,10 @@ class GroupIdService(object):
         if duplicate is not None:
             raise EntityExistsError(EntityType.GROUP, duplicate.group_id, name=name)
 
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        group.last_modified_on = current_timestamp
-        group.name = name
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            group.last_modified_on = current_timestamp
+            group.name = name
 
         return group
 
@@ -244,7 +238,7 @@ class GroupIdService(object):
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
 
-        with self._uow:
+        with self._uow():
             self._uow.group_repo.delete(group)
 
         log.debug("Group deleted", group_id=group.group_id)
@@ -264,7 +258,6 @@ class GroupMemberService(object):
         group: models.Group,
         user: models.User,
         permissions: dict[str, bool] | None = None,
-        commit: bool = True,
         **kwargs,
     ) -> models.GroupMember:
         """Add a user to a group.
@@ -282,7 +275,6 @@ class GroupMemberService(object):
             group: The group to which the user is being added.
             user: The user being added to the group.
             permissions: The permissions for the user in the group. Defaults to None.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The new group member object.
@@ -291,10 +283,8 @@ class GroupMemberService(object):
         permissions = permissions or DEFAULT_GROUP_MEMBER_PERMISSIONS
         log.debug("Add group member", group_id=group.group_id, user_id=user.user_id)
 
-        group_member = self._uow.group_repo.add_member(group, user, **permissions)
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            group_member = self._uow.group_repo.add_member(group, user, **permissions)
 
         return group_member
 
@@ -311,7 +301,6 @@ class GroupManagerService(object):
         group: models.Group,
         user: models.User,
         permissions: dict[str, bool] | None = None,
-        commit: bool = True,
         **kwargs,
     ) -> models.GroupManager:
         """Assign an existing group member to be a manager of a group.
@@ -328,7 +317,6 @@ class GroupManagerService(object):
             user: The user being assigned as a manager of the group. The user must
                 already be a member of the group.
             permissions: The permissions for the user in the group. Defaults to None.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The new group manager object.
@@ -337,9 +325,7 @@ class GroupManagerService(object):
         permissions = permissions or DEFAULT_GROUP_MANAGER_PERMISSIONS
         log.debug("Add group manager", group_id=group.group_id, user_id=user.user_id)
 
-        group_manager = self._uow.group_repo.add_manager(group, user, **permissions)
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            group_manager = self._uow.group_repo.add_manager(group, user, **permissions)
 
         return group_manager

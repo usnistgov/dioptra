@@ -273,6 +273,7 @@
         icon="add"
         label="Create"
         class="q-mr-lg"
+        :disable="disableCreateBtn"
         @click="$emit('create')"
       />
       <q-toggle
@@ -337,6 +338,7 @@ const props = defineProps({
   title: String,
   showExpand: Boolean,
   hideCreateBtn: Boolean,
+  disableCreateBtn: Boolean,
   showToggleDraft: Boolean,
   hideSearch: Boolean,
   disableSelect: Boolean,

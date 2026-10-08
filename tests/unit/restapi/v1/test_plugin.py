@@ -831,7 +831,6 @@ def test_unchanged_plugin_put_creates_snapshots(
         for key, plugin_file in registered_plugin_with_files.items()
         if key != "plugin"
     }
-    file_ids = {plugin_file["id"] for plugin_file in original["files"]}
     tested_snapshot_ids = {original["snapshot"]}
 
     for additional_snapshot_count in (1, 2):
@@ -868,7 +867,7 @@ def test_unchanged_plugin_put_creates_snapshots(
         assert len(persisted_ids) == initial_snapshot_count + additional_snapshot_count
         resource = db_session.get(models.Resource, plugin_id)
         assert resource.latest_snapshot_id == modified["snapshot"]
-        assert {child.resource_id for child in resource.children} == file_ids
+        assert resource.children == []
         file_binding_stmt = select(
             models.PluginPluginFile.plugin_file_resource_snapshot_id
         )
@@ -1341,6 +1340,31 @@ def test_rename_plugin_file(
     )
 
 
+def test_modify_plugin_file_without_renaming(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Test that a plugin file can be modified without changing its filename."""
+    registered_plugin = registered_plugin_with_files["plugin"]
+    plugin_file_to_modify = registered_plugin_with_files["plugin_file1"]
+    updated_contents = "# Updated contents"
+
+    response = dioptra_client.plugins.files.modify_by_id(
+        plugin_id=registered_plugin["id"],
+        plugin_file_id=plugin_file_to_modify["id"],
+        filename=plugin_file_to_modify["filename"],
+        contents=updated_contents,
+        function_tasks=[],
+        description=plugin_file_to_modify["description"],
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    modified_plugin_file = response.json()
+    assert modified_plugin_file["filename"] == plugin_file_to_modify["filename"]
+    assert modified_plugin_file["contents"] == updated_contents
+
+
 def test_delete_plugin_file_by_id(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -1372,6 +1396,93 @@ def test_delete_plugin_file_by_id(
         dioptra_client.plugins.files.snapshots,
         registered_plugin["id"],
         plugin_file_to_delete["id"],
+    )
+
+
+def test_plugin_file_get_by_id_is_scoped_to_parent_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    plugin1 = registered_plugins["plugin1"]
+    plugin2 = registered_plugins["plugin2"]
+    plugin2_file = dioptra_client.plugins.files.create(
+        plugin_id=plugin2["id"],
+        filename="plugin2_file.py",
+        contents="# Plugin 2 file",
+        function_tasks=[],
+    ).json()
+
+    assert_plugin_file_is_not_found(
+        dioptra_client,
+        plugin_id=plugin1["id"],
+        plugin_file_id=plugin2_file["id"],
+    )
+    assert_retrieving_plugin_file_by_id_works(
+        dioptra_client,
+        plugin_id=plugin2["id"],
+        plugin_file_id=plugin2_file["id"],
+        expected=plugin2_file,
+    )
+
+
+def test_plugin_file_modify_by_id_is_scoped_to_parent_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    plugin1 = registered_plugins["plugin1"]
+    plugin2 = registered_plugins["plugin2"]
+    plugin2_file = dioptra_client.plugins.files.create(
+        plugin_id=plugin2["id"],
+        filename="plugin2_file.py",
+        contents="# Plugin 2 file",
+        function_tasks=[],
+    ).json()
+
+    response = dioptra_client.plugins.files.modify_by_id(
+        plugin_id=plugin1["id"],
+        plugin_file_id=plugin2_file["id"],
+        filename="updated_plugin2_file.py",
+        contents="# Updated through wrong plugin",
+        function_tasks=[],
+        description=plugin2_file["description"],
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert_retrieving_plugin_file_by_id_works(
+        dioptra_client,
+        plugin_id=plugin2["id"],
+        plugin_file_id=plugin2_file["id"],
+        expected=plugin2_file,
+    )
+
+
+def test_plugin_file_delete_by_id_is_scoped_to_parent_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+) -> None:
+    plugin1 = registered_plugins["plugin1"]
+    plugin2 = registered_plugins["plugin2"]
+    plugin2_file = dioptra_client.plugins.files.create(
+        plugin_id=plugin2["id"],
+        filename="plugin2_file.py",
+        contents="# Plugin 2 file",
+        function_tasks=[],
+    ).json()
+
+    response = dioptra_client.plugins.files.delete_by_id(
+        plugin_id=plugin1["id"],
+        plugin_file_id=plugin2_file["id"],
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert_retrieving_plugin_file_by_id_works(
+        dioptra_client,
+        plugin_id=plugin2["id"],
+        plugin_file_id=plugin2_file["id"],
+        expected=plugin2_file,
     )
 
 
@@ -1647,6 +1758,25 @@ def test_manage_new_plugin_file_drafts(
         draft2_expected=draft2_expected,
         draft1_mod_expected=draft1_mod_expected,
     )
+
+
+def test_plugin_file_drafts_reject_wrong_resource_types(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugins: dict[str, Any],
+    registered_queues: dict[str, Any],
+) -> None:
+    plugin_id = registered_plugins["plugin1"]["id"]
+    queue_id = registered_queues["queue1"]["id"]
+
+    responses = (
+        dioptra_client.plugins.files.new_resource_drafts.get(queue_id),
+        dioptra_client.plugins.files.modify_resource_drafts.get_by_id(
+            plugin_id, plugin_id
+        ),
+    )
+
+    assert all(response.status_code == HTTPStatus.NOT_FOUND for response in responses)
 
 
 def test_manage_plugin_snapshots(
