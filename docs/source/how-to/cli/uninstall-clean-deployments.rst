@@ -20,7 +20,9 @@
 Uninstall and Clean Up
 ======================
 
-This guide shows how to remove deployments and how to clean up resources from previous or incomplete installs.
+This guide shows how to use the CLI to remove deployments and clean up resources from previous or incomplete installs.
+
+If the CLI is not available, refer to :ref:`how-to-uninstall-dioptra` for the manual uninstallation process.
 
 Uninstall a Deployment
 ----------------------
