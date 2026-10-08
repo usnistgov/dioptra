@@ -1,7 +1,7 @@
 """remove unneeded resource dependency relationships
 
 Revision ID: c587fd9d0aff
-Revises: ad4f89b2288d
+Revises: 30e74c5564b3
 Create Date: 2026-04-14 13:40:15.520745
 
 """
@@ -21,7 +21,7 @@ from sqlalchemy.orm import (
 
 # revision identifiers, used by Alembic.
 revision = "c587fd9d0aff"
-down_revision = "ad4f89b2288d"
+down_revision = "30e74c5564b3"
 branch_labels = None
 depends_on = None
 
