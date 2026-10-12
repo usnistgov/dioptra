@@ -147,9 +147,8 @@ class ResourceImportSchema(Schema):
     gitUrl = fields.String(
         attribute="git_url",
         metadata={
-            "description": "The URL of the git repository containing resources to import. "
-            "A git branch can optionally be specified by appending #BRANCH_NAME. "
-            "Used when sourceType is 'git'."
+            "description": "The HTTPS URL of a public github.com or gitlab.com repository. "
+            "Append #REF to select a branch, tag, or commit; otherwise use the default branch. "
         },
         required=False,
     )
@@ -175,7 +174,9 @@ class ResourceImportSchema(Schema):
     )
     configPath = fields.String(
         attribute="config_path",
-        metadata={"description": "The path to the toml configuration file."},
+        metadata={
+            "description": "The path to the TOML configuration file, relative to the import root."
+        },
         load_default="dioptra.toml",
     )
     resolveNameConflictsStrategy = fields.Enum(
