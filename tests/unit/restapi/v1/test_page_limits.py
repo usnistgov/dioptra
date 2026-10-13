@@ -23,6 +23,7 @@ from dioptra.restapi.v1.schemas import PagingQueryParametersSchema
 @pytest.mark.parametrize(
     "page",
     [
+        {"index": 0, "pageLength": 1},
         {"index": 10, "pageLength": 20},
         {"index": 500, "pageLength": 1000},
         {"index": 999999, "pageLength": 1000},
@@ -36,6 +37,8 @@ def test_page_limits_valid(page, client):
     "page",
     [
         {"index": -1, "pageLength": 10},
+        {"index": 0, "pageLength": 0},
+        {"index": 0, "pageLength": -1},
         {"index": 0, "pageLength": 999999},
     ],
 )

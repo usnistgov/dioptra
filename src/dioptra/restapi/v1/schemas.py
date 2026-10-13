@@ -208,6 +208,7 @@ class PagingQueryParametersSchema(Schema):
         attribute="page_length",
         metadata={"description": "Number of results to return per page."},
         load_default=10,
+        validate=Range(min=1),
     )
 
     @validates("pageLength")
