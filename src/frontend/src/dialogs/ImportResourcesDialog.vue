@@ -47,7 +47,8 @@
             v-if="sourceType === 'git'"
             v-model="gitUrl"
             outlined
-            label="git repository URL"
+            label="GitHub / GitLab repository URL"
+            hint="Public HTTPS repository URL; optionally append #branch, #tag, or #commit"
           />
           <q-file
             v-if="sourceType === 'upload_archive'"

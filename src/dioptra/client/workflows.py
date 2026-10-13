@@ -70,12 +70,17 @@ class WorkflowsCollectionClient(CollectionClient[T]):
 
         Args:
             group_id: The group to import resources into
-            source: The source to import from. Can be a str containing a git url, a
-                DioptraFile containing an archive file or a list[DioptraFile]
-                containing resource files.
+            source: A public github.com or gitlab.com HTTPS repository URL, a
+                DioptraFile containing an archive file, or a list[DioptraFile]
+                containing resource files. Repository URLs accept an optional .git
+                suffix and #REF for a branch, tag, or commit. Omitting #REF selects
+                the default branch. Repository imports download a tar snapshot;
+                semicolon path selections are not supported.
             config_path: The path to the toml configuration file in the import source.
                 If None, the API will use "dioptra.toml" as the default. Defaults to
-                None.
+                None. This path is relative to the import root. Plugin and entrypoint
+                paths are relative to the config directory and must stay inside the
+                import root.
             resolve_name_conflicts_strategy: The strategy for resolving name conflicts.
                 Either "fail", "update", or "overwrite". If None, the API will use "fail" as the
                 default. Defaults to None.

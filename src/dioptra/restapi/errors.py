@@ -728,6 +728,13 @@ class ImportFailedError(DioptraError):
         self._reason = reason
 
 
+class UnexpectedImportError(DioptraError):
+    """An unexpected failure while importing resources or rolling back an import."""
+
+    def __init__(self) -> None:
+        super().__init__("Resource import failed unexpectedly.")
+
+
 class EntrypointValidationError(DioptraError):
     """Entrypoint validation failed Error."""
 
@@ -1122,6 +1129,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             http.HTTPStatus.BAD_REQUEST,
             {"reason": error._reason} if error._reason else {},
         )
+
+    @api.errorhandler(UnexpectedImportError)
+    def handle_unexpected_import_error(error: UnexpectedImportError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, {})
 
     @api.errorhandler(EntrypointSwapsRenderError)
     def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):

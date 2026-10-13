@@ -38,7 +38,6 @@ RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
     curl \
-    git \
     gnupg \
     libbz2-1.0 \
     libgl1 \

@@ -76,15 +76,46 @@ Import resources from a Git repository.
 
          - For a **Git repository**:
          
-            Enter the URL to the branch of the Git repository containing the resources to import. (For example - ``https://github.com/usnistgov/dioptra.git#main``)
+            Enter the HTTPS URL of a public repository on **github.com** or **gitlab.com**.
+            For example: ``https://github.com/usnistgov/dioptra.git#main`` or
+            ``https://gitlab.com/group/subgroup/project#main``.
+            The ``.git`` suffix is optional. Append ``#REF`` to select a branch, tag,
+            or commit; omit it to use the repository's default branch.
+
+            Dioptra resolves the ref to a commit and downloads that commit's tar
+            snapshot over HTTPS. The response's ``hash`` is the resolved commit ID.
+            The provider's wrapper directory is removed, so the config path remains
+            relative to the repository root.
+
+            Downloads use 5-second connection and 30-second read timeouts to detect
+            stalled connections, with no overall download-duration limit.
 
          - For uploading an **Archive**:
          
             Click **Archive File Upload** and select a tar file containing the files.
+            Uploaded archives retain their directory layout; their top-level
+            directory is not stripped. Plain tar and gzip, bzip2, and xz-compressed
+            tar archives use the same validation and extraction as repository imports.
 
          - For uploading a **Directory**:
          
             Click **Directory Upload** and select the directory containing the files.
+
+The common limits are 50 MiB per file, 500 MiB total file contents, and 10,000
+explicit entries (files and archive directories). Downloaded and uploaded
+archives are limited to 100 MiB before decompression. The content limits apply
+to extracted files, not tar metadata or padding. Multipart files are subject to
+the same file/content limits. Both downloaded and uploaded archives receive a
+120-second extraction budget
+
+``configPath`` is relative to the import root. Plugin and entrypoint paths in the
+config are relative to the config's directory and must resolve within that same
+import root. For example, ``configs/dioptra.toml`` can refer to ``../plugins``.
+References that escape the import root are rejected.
+
+The response's ``hash`` remains the resolved commit ID for repository imports,
+the SHA-256 of the uploaded archive bytes for archive uploads, or the SHA-256 of
+file contents concatenated in path-sorted order for multipart uploads.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -121,4 +152,3 @@ See Also
 * :ref:`Resource Import Reference <reference-resource-import-syntax>` - More information on syntax requirements for the Resource Import file
 * :ref:`Plugins Reference <reference-plugins>` - More information on syntax requirements for Plugins
 * :ref:`Entrypoints Reference <reference-entrypoints>` - More information on syntax requirements for Entrypoints
-
