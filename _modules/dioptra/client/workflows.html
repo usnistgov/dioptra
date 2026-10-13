@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.workflows &#8212; Dioptra 1.2.0 documentation</title>
+    <title>dioptra.client.workflows &#8212; Dioptra 1.2.1 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -474,12 +474,17 @@ document.write(`
 
 <span class="sd">        Args:</span>
 <span class="sd">            group_id: The group to import resources into</span>
-<span class="sd">            source: The source to import from. Can be a str containing a git url, a</span>
-<span class="sd">                DioptraFile containing an archive file or a list[DioptraFile]</span>
-<span class="sd">                containing resource files.</span>
+<span class="sd">            source: A public github.com or gitlab.com HTTPS repository URL, a</span>
+<span class="sd">                DioptraFile containing an archive file, or a list[DioptraFile]</span>
+<span class="sd">                containing resource files. Repository URLs accept an optional .git</span>
+<span class="sd">                suffix and #REF for a branch, tag, or commit. Omitting #REF selects</span>
+<span class="sd">                the default branch. Repository imports download a tar snapshot;</span>
+<span class="sd">                semicolon path selections are not supported.</span>
 <span class="sd">            config_path: The path to the toml configuration file in the import source.</span>
 <span class="sd">                If None, the API will use "dioptra.toml" as the default. Defaults to</span>
-<span class="sd">                None.</span>
+<span class="sd">                None. This path is relative to the import root. Plugin and entrypoint</span>
+<span class="sd">                paths are relative to the config directory and must stay inside the</span>
+<span class="sd">                import root.</span>
 <span class="sd">            resolve_name_conflicts_strategy: The strategy for resolving name conflicts.</span>
 <span class="sd">                Either "fail", "update", or "overwrite". If None, the API will use "fail" as the</span>
 <span class="sd">                default. Defaults to None.</span>

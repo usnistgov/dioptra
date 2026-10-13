@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Import Resources &#8212; Dioptra 1.2.0 documentation</title>
+    <title>Import Resources &#8212; Dioptra 1.2.1 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.0 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -510,12 +510,25 @@ via an externally provided <a class="reference internal" href="../../reference/r
 <ul>
 <li><p>For a <strong>Git repository</strong>:</p>
 <blockquote>
-<div><p>Enter the URL to the branch of the Git repository containing the resources to import. (For example - <code class="docutils literal notranslate"><span class="pre">https://github.com/usnistgov/dioptra.git#main</span></code>)</p>
+<div><p>Enter the HTTPS URL of a public repository on <strong>github.com</strong> or <strong>gitlab.com</strong>.
+For example: <code class="docutils literal notranslate"><span class="pre">https://github.com/usnistgov/dioptra.git#main</span></code> or
+<code class="docutils literal notranslate"><span class="pre">https://gitlab.com/group/subgroup/project#main</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">.git</span></code> suffix is optional. Append <code class="docutils literal notranslate"><span class="pre">#REF</span></code> to select a branch, tag,
+or commit; omit it to use the repository’s default branch.</p>
+<p>Dioptra resolves the ref to a commit and downloads that commit’s tar
+snapshot over HTTPS. The response’s <code class="docutils literal notranslate"><span class="pre">hash</span></code> is the resolved commit ID.
+The provider’s wrapper directory is removed, so the config path remains
+relative to the repository root.</p>
+<p>Downloads use 5-second connection and 30-second read timeouts to detect
+stalled connections, with no overall download-duration limit.</p>
 </div></blockquote>
 </li>
 <li><p>For uploading an <strong>Archive</strong>:</p>
 <blockquote>
-<div><p>Click <strong>Archive File Upload</strong> and select a tar file containing the files.</p>
+<div><p>Click <strong>Archive File Upload</strong> and select a tar file containing the files.
+Uploaded archives retain their directory layout; their top-level
+directory is not stripped. Plain tar and gzip, bzip2, and xz-compressed
+tar archives use the same validation and extraction as repository imports.</p>
 </div></blockquote>
 </li>
 <li><p>For uploading a <strong>Directory</strong>:</p>
@@ -527,6 +540,19 @@ via an externally provided <a class="reference internal" href="../../reference/r
 </li>
 </ol>
 </div></div>
+<p>The common limits are 50 MiB per file, 500 MiB total file contents, and 10,000
+explicit entries (files and archive directories). Downloaded and uploaded
+archives are limited to 100 MiB before decompression. The content limits apply
+to extracted files, not tar metadata or padding. Multipart files are subject to
+the same file/content limits. Both downloaded and uploaded archives receive a
+120-second extraction budget</p>
+<p><code class="docutils literal notranslate"><span class="pre">configPath</span></code> is relative to the import root. Plugin and entrypoint paths in the
+config are relative to the config’s directory and must resolve within that same
+import root. For example, <code class="docutils literal notranslate"><span class="pre">configs/dioptra.toml</span></code> can refer to <code class="docutils literal notranslate"><span class="pre">../plugins</span></code>.
+References that escape the import root are rejected.</p>
+<p>The response’s <code class="docutils literal notranslate"><span class="pre">hash</span></code> remains the resolved commit ID for repository imports,
+the SHA-256 of the uploaded archive bytes for archive uploads, or the SHA-256 of
+file contents concatenated in path-sorted order for multipart uploads.</p>
 </section>
 <section class="header-on-a-card header-steps" id="step-2-import-the-resources">
 <h3>Step 2: Import the Resources.<a class="headerlink" href="#step-2-import-the-resources" title="Permalink to this headline">#</a></h3>
@@ -547,18 +573,23 @@ via an externally provided <a class="reference internal" href="../../reference/r
 <p>Use the client to import the resources.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">WorkflowsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">import_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dioptra.client.base.DioptraFile</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">dioptra.client.base.DioptraFile</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_name_conflicts_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'update'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'overwrite'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dioptra/client/workflows.html#WorkflowsCollectionClient.import_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">WorkflowsCollectionClient.</span></span><span class="sig-name descname"><span class="pre">import_resources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dioptra.client.base.DioptraFile</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><span class="pre">dioptra.client.base.DioptraFile</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_name_conflicts_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'fail'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'update'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'overwrite'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/dioptra/client/workflows.html#WorkflowsCollectionClient.import_resources"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Import resources from a archive file or git repository</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>group_id</strong> – The group to import resources into</p></li>
-<li><p><strong>source</strong> – The source to import from. Can be a str containing a git url, a
-DioptraFile containing an archive file or a list[DioptraFile]
-containing resource files.</p></li>
+<li><p><strong>source</strong> – A public github.com or gitlab.com HTTPS repository URL, a
+DioptraFile containing an archive file, or a list[DioptraFile]
+containing resource files. Repository URLs accept an optional .git
+suffix and #REF for a branch, tag, or commit. Omitting #REF selects
+the default branch. Repository imports download a tar snapshot;
+semicolon path selections are not supported.</p></li>
 <li><p><strong>config_path</strong> – The path to the toml configuration file in the import source.
 If None, the API will use “dioptra.toml” as the default. Defaults to
-None.</p></li>
+None. This path is relative to the import root. Plugin and entrypoint
+paths are relative to the config directory and must stay inside the
+import root.</p></li>
 <li><p><strong>resolve_name_conflicts_strategy</strong> – The strategy for resolving name conflicts.
 Either “fail”, “update”, or “overwrite”. If None, the API will use “fail” as the
 default. Defaults to None.</p></li>
