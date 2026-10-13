@@ -1961,23 +1961,7 @@ def test_get_logs_zero_page_length(
         1,
         0,
     )
-    returned_page = resp.json()
-
-    # Validate that createdOn timestamps are present in the logs, then remove them for a
-    # predictable comparison.
-    for log in returned_page["data"]:
-        assert "createdOn" in log
-        del log["createdOn"]
-
-    assert returned_page == {
-        "index": 1,
-        "isComplete": False,
-        "totalNumResults": 5,
-        "first": f"/api/v1/jobs/{job_resource_id}/log?index=0&pageLength=0",
-        "next": f"/api/v1/jobs/{job_resource_id}/log?index=1&pageLength=0",
-        "prev": f"/api/v1/jobs/{job_resource_id}/log?index=1&pageLength=0",
-        "data": [],
-    }
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.json()
 
 
 def test_get_logs_bad_job_id(dioptra_client, registered_jobs, registered_job_logs):
