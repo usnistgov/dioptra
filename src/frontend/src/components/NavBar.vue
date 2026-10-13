@@ -20,56 +20,56 @@
           <q-item
             v-close-popup
             clickable
-            to="/experiments"
+            :to="withGroupContext('/experiments')"
           >
             <q-item-section>Experiments</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/jobs"
+            :to="withGroupContext('/jobs')"
           >
             <q-item-section>Jobs</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/artifacts"
+            :to="withGroupContext('/artifacts')"
           >
             <q-item-section>Artifacts</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/entrypoints"
+            :to="withGroupContext('/entrypoints')"
           >
             <q-item-section>Entrypoints</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/plugins"
+            :to="withGroupContext('/plugins')"
           >
             <q-item-section>Plugins</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/pluginParams"
+            :to="withGroupContext('/pluginParams')"
           >
             <q-item-section>Plugin Parameters</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/queues"
+            :to="withGroupContext('/queues')"
           >
             <q-item-section>Queues</q-item-section>
           </q-item>
           <q-item
             v-close-popup
             clickable
-            to="/tags"
+            :to="withGroupContext('/tags')"
           >
             <q-item-section>Tags</q-item-section>
           </q-item>
@@ -97,31 +97,31 @@
         />
         <q-route-tab
           label="Experiments"
-          to="/experiments"
+          :to="withGroupContext('/experiments')"
         />
         <q-route-tab
           label="Jobs"
-          to="/jobs"
+          :to="withGroupContext('/jobs')"
         />
         <q-route-tab
           label="Artifacts"
-          to="/artifacts"
+          :to="withGroupContext('/artifacts')"
         />
         <q-route-tab
           label="Entrypoints"
-          to="/entrypoints"
+          :to="withGroupContext('/entrypoints')"
         />
         <q-route-tab
           label="Plugins"
-          to="/plugins"
+          :to="withGroupContext('/plugins')"
         />
         <q-route-tab
           label="Plugin Parameters"
-          to="/pluginParams"
+          :to="withGroupContext('/pluginParams')"
         />
         <q-route-tab
           label="Queues"
-          to="/queues"
+          :to="withGroupContext('/queues')"
         />
       </q-tabs>
     </nav>
@@ -160,7 +160,7 @@
           </q-item>
           <q-item
             v-close-popup
-            to="/tags"
+            :to="withGroupContext('/tags')"
             exact
             clickable
           >
@@ -386,6 +386,7 @@ import { watch, inject, ref, onMounted } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
 import * as api from "@/services/dataApi";
 import { useRoute, useRouter } from "vue-router";
+import { useGroupContextLink } from "@/services/useGroupContextLink";
 
 import ImportResourcesDialog from "../dialogs/ImportResourcesDialog.vue";
 const showImportDialog = defineModel();
@@ -393,6 +394,7 @@ const showImportDialog = defineModel();
 const store = useLoginStore();
 const route = useRoute();
 const router = useRouter();
+const { withGroupContext } = useGroupContextLink();
 
 const $q = useQuasar();
 

@@ -53,7 +53,7 @@
           :key="`${crumb.label}-${index}`"
           :label="crumb.label"
           :icon="crumb.icon"
-          :to="crumb.to"
+          :to="withGroupContext(crumb.to)"
           :aria-current="crumb.current ? 'page' : 'false'"
           :aria-disabled="crumb.disabled ? 'true' : 'false'"
           :class="crumb.class"
@@ -68,6 +68,7 @@ import { computed, inject, ref } from "vue";
 import { useRoute } from "vue-router";
 import * as api from "@/services/dataApi";
 import { getResourceStyle } from "@/services/resourceStyles";
+import { useGroupContextLink } from "@/services/useGroupContextLink";
 
 const props = defineProps({
   title: {
@@ -92,6 +93,7 @@ const props = defineProps({
 
 const darkMode = inject("darkMode");
 const route = useRoute();
+const { withGroupContext } = useGroupContextLink();
 const objName = ref("");
 
 const styles = computed(() => {
