@@ -16,20 +16,25 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Fixtures representing resources needed for test suites"""
 
+import importlib
+import json
 import os
-import shutil
-import subprocess
 import tarfile
 import textwrap
 import uuid
+from contextlib import ExitStack
+from hashlib import sha256
 from http import HTTPStatus
+from io import BytesIO
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile
 from typing import Any, cast
+from unittest.mock import Mock
 
 import mlflow
 import mlflow.artifacts
 import pytest
+import requests
 import tomli as toml
 from flask.testing import FlaskClient
 from freezegun import freeze_time
@@ -38,12 +43,17 @@ from pytest import MonkeyPatch
 
 from dioptra.client import (
     DioptraFile,
-    select_files_in_directory,
     select_one_or_more_files,
 )
+from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.sdk.utilities.paths import set_cwd
 
 from ..lib import actions, mock_mlflow, mock_rq
+
+
+@pytest.fixture
+def io_file_service(dependency_injector) -> IOFileService:
+    return dependency_injector.get(IOFileService)
 
 
 @pytest.fixture
@@ -887,29 +897,91 @@ def resources_tar_file() -> DioptraFile:
 
 
 @pytest.fixture
-def resources_repo() -> str:
-    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-
-    git = shutil.which("git")
-
-    with TemporaryDirectory() as tmp_dir:
-        repo_dir = Path(tmp_dir) / "repo.git"
-        shutil.copytree(path, repo_dir)
-        with set_cwd(repo_dir):
-            subprocess.run([git, "init", "."])
-            subprocess.run([git, "add", "."])
-            subprocess.run(
-                [git, "-c", "user.name=test", "-c", "user.email=test", "commit", "-m."]
-            )
-
-            yield str(repo_dir)
+def repository_http(monkeypatch):
+    downloader = importlib.import_module(
+        "dioptra.restapi.v1.workflows.lib.download_repository_archive"
+    )
+    with requests.Session() as session:
+        monkeypatch.setattr(session, "get", Mock())
+        monkeypatch.setattr(downloader, "Session", lambda: session)
+        yield session
 
 
 @pytest.fixture
-def resources_files() -> DioptraFile:
-    path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-    with set_cwd(path):
-        return select_files_in_directory(".", recursive=True)
+def repository_response():
+    def make_response(body=b"", *, status=200, headers=None):
+        response = requests.Response()
+        response.status_code = status
+        response.headers.update(headers or {})
+        response.raw = BytesIO(
+            body if isinstance(body, bytes) else json.dumps(body).encode()
+        )
+        return response
+
+    return make_response
+
+
+@pytest.fixture
+def resource_import_source(request, repository_http, repository_response):
+    """Encode content for the explicitly requested source and return its hash."""
+    with ExitStack() as stack:
+
+        def build(contents):
+            source = request.param
+            if source == "files":
+                files = [
+                    DioptraFile(name, stack.enter_context(BytesIO(data)), None)
+                    for name, data in contents.items()
+                ]
+                hash = sha256()
+                for name in sorted(contents, key=Path):
+                    hash.update(contents[name])
+                return files, hash.hexdigest()
+
+            prefix = "snapshot/" if source in {"github", "gitlab"} else ""
+            output = stack.enter_context(BytesIO())
+            with tarfile.open(fileobj=output, mode="w:gz") as archive:
+                for name, data in contents.items():
+                    member = tarfile.TarInfo(prefix + name)
+                    member.size = len(data)
+                    archive.addfile(member, BytesIO(data))
+            archive_bytes = output.getvalue()
+            output.seek(0)
+            if source == "tar.gz":
+                return DioptraFile("resources.tar.gz", output, None), sha256(
+                    archive_bytes
+                ).hexdigest()
+
+            commit = "a" * 40
+            if source == "github":
+                url = "https://github.com/owner/project.git#feature/import"
+                base = "https://api.github.com/repos/owner/project"
+                responses = {
+                    base: repository_response({"private": False}),
+                    base + "/commits/feature%2Fimport": repository_response(
+                        {"sha": commit}
+                    ),
+                    base + "/tarball/" + commit: repository_response(archive_bytes),
+                }
+            else:
+                url = "https://gitlab.com/group/subgroup/project"
+                base = "https://gitlab.com/api/v4/projects/group%2Fsubgroup%2Fproject"
+                responses = {
+                    base: repository_response(
+                        {"visibility": "public", "default_branch": "main"}
+                    ),
+                    base + "/repository/commits/main": repository_response(
+                        {"id": commit}
+                    ),
+                    base
+                    + "/repository/archive.tar.gz?sha="
+                    + commit
+                    + "&include_lfs_blobs=false": repository_response(archive_bytes),
+                }
+            repository_http.get.side_effect = lambda url, **kwargs: responses[url]
+            return url, commit
+
+        yield build
 
 
 @pytest.fixture
