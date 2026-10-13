@@ -106,6 +106,10 @@ class IOFileService(object):
         size = 0
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
+            if target.is_dir():
+                raise ValueError(
+                    "Import contains a duplicate file or file/directory conflict."
+                )
             with target.open("xb") as output:
                 while chunk := source.read(CHUNK_SIZE):
                     check_deadline(deadline)
