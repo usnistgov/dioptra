@@ -18,9 +18,8 @@
 
 from collections import defaultdict
 from hashlib import sha256
-from io import BytesIO
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, TemporaryFile
 from typing import Any, Final, cast
 
 import jsonschema
@@ -40,8 +39,9 @@ from dioptra.restapi.errors import (
     EntityDoesNotExistError,
     GitError,
     ImportFailedError,
+    UnexpectedImportError,
 )
-from dioptra.restapi.utils import read_json_file, verify_filename_is_safe
+from dioptra.restapi.utils import read_json_file
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
@@ -63,16 +63,21 @@ from dioptra.restapi.v1.plugins.service import (
     PluginService,
 )
 from dioptra.restapi.v1.shared import views
-from dioptra.restapi.v1.shared.io_file_service import IOFileService
+from dioptra.restapi.v1.shared.io_file_service import (
+    CHUNK_SIZE,
+    MAX_ARCHIVE_BYTES,
+    MAX_ENTRIES,
+    MAX_TOTAL_BYTES,
+    IOFileService,
+)
 from dioptra.restapi.v1.shared.resource_service import (
     ResourceIdService,
     ResourceService,
 )
 from dioptra.restapi.v1.shared.signature_analysis import get_plugin_signatures
 from dioptra.restapi.v1.utils import PluginParameterTypeDict, PluginWithFilesDict
-from dioptra.sdk.utilities.paths import set_cwd
 
-from .lib.clone_git_repository import clone_git_repository
+from .lib.download_repository_archive import download_repository_archive
 from .schema import (
     ResourceImportResolveNameConflictsStrategy,
     ResourceImportSourceTypes,
@@ -143,7 +148,7 @@ def _create_endpoint_analysis_dict(
 
 
 class ResourceImportService(object):
-    """The service methods for packaging job files for download."""
+    """Import resource definitions from a safely populated temporary directory."""
 
     @inject
     def __init__(
@@ -198,6 +203,16 @@ class ResourceImportService(object):
         self._entrypoint_name_service = entrypoint_name_service
         self._io_file_service = io_file_service
 
+    def _resolve_resource_path(
+        self, root: Path, name: str, *, base: Path | None = None
+    ) -> Path:
+        try:
+            return self._io_file_service.resolve_import_path(root, name, base=base)
+        except (ValueError, OSError, RuntimeError) as error:
+            raise ImportFailedError(
+                "Invalid import resource path", reason=str(error)
+            ) from error
+
     def import_resources(
         self,
         group_id: int,
@@ -232,7 +247,7 @@ class ResourceImportService(object):
         # The import owns the transaction: nested services must defer all commits,
         # including overwrite deletes, so a later failure restores the whole batch.
         try:
-            with TemporaryDirectory() as tmp_dir, set_cwd(tmp_dir):
+            with TemporaryDirectory() as tmp_dir:
                 working_dir = Path(tmp_dir)
 
                 if source_type == ResourceImportSourceTypes.UPLOAD_ARCHIVE:
@@ -242,31 +257,35 @@ class ResourceImportService(object):
                 elif source_type == ResourceImportSourceTypes.GIT:
                     hash = self._read_from_git(git_url, working_dir)
 
-                config = self._load_config_file(working_dir / config_path)
+                config_file = self._resolve_resource_path(working_dir, config_path)
+                config = self._load_config_file(config_file)
 
-                # all resources are relative to the config file directory
-                with set_cwd((working_dir / config_path).parent):
-                    param_types = self._register_plugin_param_types(
-                        group_id,
-                        config.get("plugin_param_types", []),
-                        conflict_strat,
-                        log=log,
-                    )
-                    plugins = self._register_plugins(
-                        group_id,
-                        config.get("plugins", []),
-                        param_types,
-                        conflict_strat,
-                        log=log,
-                    )
-                    entrypoints = self._register_entrypoints(
-                        group_id,
-                        config.get("entrypoints", []),
-                        plugins,
-                        param_types,
-                        conflict_strat,
-                        log=log,
-                    )
+                # Resource references are relative to the config, not process cwd.
+                param_types = self._register_plugin_param_types(
+                    group_id,
+                    config.get("plugin_param_types", []),
+                    conflict_strat,
+                    log=log,
+                )
+                plugins = self._register_plugins(
+                    group_id,
+                    config.get("plugins", []),
+                    param_types,
+                    conflict_strat,
+                    log=log,
+                    import_root=working_dir,
+                    config_dir=config_file.parent,
+                )
+                entrypoints = self._register_entrypoints(
+                    group_id,
+                    config.get("entrypoints", []),
+                    plugins,
+                    param_types,
+                    conflict_strat,
+                    log=log,
+                    import_root=working_dir,
+                    config_dir=config_file.parent,
+                )
 
             result = {
                 "message": "successfully imported",
@@ -286,9 +305,18 @@ class ResourceImportService(object):
                 },
             }
             db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        except Exception as error:
+            try:
+                db.session.rollback()
+            except Exception as rollback_error:
+                log.exception("Resource import rollback failed")
+                raise UnexpectedImportError() from rollback_error
+
+            if isinstance(error, DioptraError):
+                raise
+
+            log.exception("Unexpected resource import failure")
+            raise UnexpectedImportError() from error
 
         return result
 
@@ -307,15 +335,28 @@ class ResourceImportService(object):
             ImportFailedError: If the archive cannot be read and unpacked for any reason
         """
 
-        bytes = archive_file.stream.read()
+        hash = sha256()
         try:
-            self._io_file_service.safe_extract_archive(
-                destination, archive_fileobj=BytesIO(bytes), preserve_paths=True
-            )
+            with TemporaryFile() as archive:
+                size = 0
+                while chunk := archive_file.stream.read(CHUNK_SIZE):
+                    size += len(chunk)
+                    if size > MAX_ARCHIVE_BYTES:
+                        raise ValueError(
+                            "Import archive exceeds the download/upload size limit."
+                        )
+                    archive.write(chunk)
+                    hash.update(chunk)
+                archive.seek(0)
+                self._io_file_service.safe_extract_archive(
+                    destination, archive_fileobj=archive, preserve_paths=True
+                )
         except Exception as e:
-            raise ImportFailedError("Failed to read uploaded tarfile") from e
+            raise ImportFailedError(
+                "Failed to read uploaded tarfile", reason=str(e)
+            ) from e
 
-        return str(sha256(bytes).hexdigest())
+        return hash.hexdigest()
 
     def _read_from_files(self, files: list[FileStorage], destination: Path) -> str:
         """
@@ -332,53 +373,59 @@ class ResourceImportService(object):
             ImportFailedError: If the archive cannot be read and unpacked for any reason
         """
 
-        def _sort_by_filename(x: FileStorage) -> Path:
-            if (filename := x.filename) is None:
-                raise DioptraError(
-                    f"Malformed multi-file upload, filename not found: {x.name}"
-                )
-
-            return Path(filename).resolve()
-
         hash = sha256()
-        for file in sorted(files, key=_sort_by_filename):
-            # The _sort_by_filename sorting key already checks whether filename is None,
-            # so here we can just assert that it's not None to make mypy happy.
-            assert file.filename is not None
-            try:
-                verify_filename_is_safe(file.filename)
-            except ValueError as e:
-                raise ImportFailedError(
-                    "Failed to read uploaded files", reason=str(e)
-                ) from e
-            Path(file.filename).parent.mkdir(parents=True, exist_ok=True)
-
-            bytes = file.stream.read()
-            with open(destination / file.filename, "wb") as f:
-                f.write(bytes)
-            hash.update(bytes)
-
-        return str(hash.hexdigest())
+        total_bytes = 0
+        try:
+            if len(files) > MAX_ENTRIES:
+                raise ValueError("Import contains too many entries.")
+            # Preserve content hashing order without resolving against process cwd.
+            ordered = sorted(
+                files,
+                key=lambda file: self._io_file_service.relative_import_path(
+                    file.filename or ""
+                ),
+            )
+            for file in ordered:
+                total_bytes += self._io_file_service.write_file(
+                    destination,
+                    file.filename or "",
+                    file.stream,
+                    remaining_bytes=MAX_TOTAL_BYTES - total_bytes,
+                    on_chunk=hash.update,
+                )
+        except Exception as e:
+            raise ImportFailedError(
+                "Failed to read uploaded files", reason=str(e)
+            ) from e
+        return hash.hexdigest()
 
     def _read_from_git(self, git_url: str, destination: Path) -> str:
         """
-        Reads resources from a git repo.
+        Downloads a public GitHub/GitLab repository snapshot over HTTPS.
 
         Args:
             git_url: A url to the git repository
-            destination: The path to clone the repo to.
+            destination: The path to extract the repository snapshot into.
 
         Returns:
-            The latest git commit hash.
+            The resolved commit ID of the imported snapshot.
 
         Raises:
-            ImportFailedError: If the archive cannot be read and unpacked for any reason
+            GitError: If the repository archive cannot be downloaded or extracted.
         """
 
         try:
-            return clone_git_repository(git_url, destination)
+            with TemporaryFile() as archive:
+                commit = download_repository_archive(git_url, archive)
+                self._io_file_service.safe_extract_archive(
+                    destination,
+                    archive_fileobj=archive,
+                    preserve_paths=True,
+                    strip_root=True,
+                )
+                return commit
         except Exception as e:
-            raise GitError(f"Failed to clone repository: {git_url}") from e
+            raise GitError(f"Failed to download repository archive: {e}") from e
 
     def _load_config_file(self, config_path: Path) -> dict[str, Any]:
         """
@@ -513,6 +560,9 @@ class ResourceImportService(object):
         param_types: dict[str, models.PluginTaskParameterType],
         conflict_strat: ResourceImportResolveNameConflictsStrategy,
         log: BoundLogger,
+        *,
+        import_root: Path,
+        config_dir: Path,
     ) -> dict[str, models.PluginTaskParameterType]:
         """
         Registers a list of Plugins and their PluginFiles.
@@ -522,6 +572,8 @@ class ResourceImportService(object):
             plugins_config: A list of dictionaries describing a plugin and its tasks
             param_types: A dictionary mapping param type name to the ORM object
             conflict_strat: The strategy for resolving name conflicts.
+            import_root: The temporary directory containing the imported files.
+            config_dir: The directory containing the import configuration.
 
         Returns:
             A dictionary mapping newly registered Plugin names to the ORM objects
@@ -540,6 +592,13 @@ class ResourceImportService(object):
 
         plugins = {}
         for plugin in plugins_config:
+            plugin_root = self._resolve_resource_path(
+                import_root, plugin["path"], base=config_dir
+            )
+            if not plugin_root.is_dir():
+                raise ImportFailedError(
+                    "Plugin path must refer to an imported directory."
+                )
             existing_files = {}
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 plugin_dict = self._plugin_service.create(
@@ -624,8 +683,8 @@ class ResourceImportService(object):
                 param_types=param_types,
                 is_function_task=False,
             )
-            for plugin_file_path in Path(plugin["path"]).rglob("[!.]*.py"):
-                filename = str(plugin_file_path.relative_to(plugin["path"]))
+            for plugin_file_path in plugin_root.rglob("[!.]*.py"):
+                filename = plugin_file_path.relative_to(plugin_root).as_posix()
                 if not ALLOWED_PLUGIN_FILENAME_REGEX.fullmatch(filename):
                     raise ImportFailedError(
                         f"Failed to read plugin file from {filename}",
@@ -633,7 +692,9 @@ class ResourceImportService(object):
                     )
 
                 try:
-                    contents = plugin_file_path.read_text()
+                    contents = self._resolve_resource_path(
+                        import_root, filename, base=plugin_root
+                    ).read_text()
                 except FileNotFoundError as e:
                     raise ImportFailedError(
                         f"Failed to read plugin file from {plugin_file_path}",
@@ -732,6 +793,9 @@ class ResourceImportService(object):
         param_types,
         conflict_strat: ResourceImportResolveNameConflictsStrategy,
         log: BoundLogger,
+        *,
+        import_root: Path,
+        config_dir: Path,
     ) -> dict[str, models.EntryPoint]:
         """
         Registers a list of Entrypoints
@@ -762,7 +826,10 @@ class ResourceImportService(object):
 
         for entrypoint in entrypoints_config:
             try:
-                contents = yaml.safe_load(Path(entrypoint["path"]).read_text())
+                entrypoint_path = self._resolve_resource_path(
+                    import_root, entrypoint["path"], base=config_dir
+                )
+                contents = yaml.safe_load(entrypoint_path.read_text())
                 task_graph = contents.get("graph", "")
                 task_graph = (
                     yaml.dump(task_graph, sort_keys=False, default_flow_style=False)

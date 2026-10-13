@@ -14,8 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .clone_git_repository import clone_git_repository
+from .download_repository_archive import download_repository_archive
 
 __all__ = [
-    "clone_git_repository",
+    "download_repository_archive",
 ]

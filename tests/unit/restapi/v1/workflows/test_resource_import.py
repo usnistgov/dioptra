@@ -21,18 +21,24 @@ functionalities for the queue entity. The tests ensure that the queues can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
-import shutil
+import json
+import os
 import textwrap
 from http import HTTPStatus
+from io import BytesIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
+from freezegun import freeze_time
 
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.utils import select_one_or_more_files
+from dioptra.restapi.v1.shared import io_file_service as file_io
+from dioptra.restapi.v1.workflows import service as workflow_service
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -42,23 +48,23 @@ def assert_imported_resources_match_expected(
     expected: dict[str, Any],
 ):
     response = dioptra_client.plugins.get()
-    response_plugins = set(plugin["name"] for plugin in response.json()["data"])
-    expected_plugins = set(Path(plugin["path"]).stem for plugin in expected["plugins"])
+    response_plugins = {plugin["name"] for plugin in response.json()["data"]}
+    expected_plugins = {Path(plugin["path"]).stem for plugin in expected["plugins"]}
     assert (
         response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
     )
 
     response = dioptra_client.plugin_parameter_types.get()
-    response_types = set(param["name"] for param in response.json()["data"])
-    expected_types = set(param["name"] for param in expected["plugin_param_types"])
+    response_types = {param["name"] for param in response.json()["data"]}
+    expected_types = {param["name"] for param in expected["plugin_param_types"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_types & expected_types == expected_types
     )
 
     response = dioptra_client.entrypoints.get()
-    response_entrypoints = set(ep["name"] for ep in response.json()["data"])
-    expected_entrypoints = set(ep["name"] for ep in expected["entrypoints"])
+    response_entrypoints = {ep["name"] for ep in response.json()["data"]}
+    expected_entrypoints = {ep["name"] for ep in expected["entrypoints"]}
     assert (
         response.status_code == HTTPStatus.OK
         and response_entrypoints == expected_entrypoints
@@ -228,41 +234,232 @@ def test_resource_import_rejects_missing_global(
     )
 
 
-def test_resource_import_from_archive_file(
+@pytest.mark.parametrize(
+    ("resource_import_source", "config_path"),
+    [
+        ("files", "dioptra.toml"),
+        ("tar.gz", "dioptra.toml"),
+        ("github", "dioptra.toml"),
+        ("gitlab", "dioptra.toml"),
+        ("files", "configs/dioptra.toml"),
+    ],
+    indirect=["resource_import_source"],
+)
+def test_resource_import_sources_use_same_pipeline(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    resources_import_config: dict[str, Any],
+    resource_import_source,
+    config_path: str,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root = Path(__file__).parent / "resource_import_files"
+    contents = {
+        path.relative_to(root).as_posix(): path.read_bytes()
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+    config = contents.pop("dioptra.toml")
+    if config_path != "dioptra.toml":
+        config = config.replace(b'path = "plugins/', b'path = "../plugins/').replace(
+            b'path = "entrypoints/', b'path = "../entrypoints/'
+        )
+    contents[config_path] = config
+    source, expected_hash = resource_import_source(contents)
+    cwd = Path.cwd()
+    chdir = Mock(side_effect=AssertionError("Resource imports must not change cwd"))
+    monkeypatch.setattr(os, "chdir", chdir)
+    group_id = auth_account["groups"][0]["id"]
+    response = dioptra_client.workflows.import_resources(
+        group_id, source=source, config_path=config_path
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+    assert response.json()["hash"] == expected_hash
+    assert Path.cwd() == cwd
+    chdir.assert_not_called()
+    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+
+
+@pytest.mark.parametrize("resource_import_source", ["files"], indirect=True)
+@pytest.mark.parametrize(
+    ("field", "path"),
+    [
+        ("config", "../dioptra.toml"),
+        ("config", "/outside/dioptra.toml"),
+        ("plugin", "../outside"),
+        ("plugin", "/outside"),
+        ("entrypoint", "../outside.yml"),
+        ("entrypoint", "/outside.yml"),
+    ],
+)
+def test_resource_import_confines_reads_and_rolls_back(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    resource_import_source,
+    field: str,
+    path: str,
+):
+    group_id = auth_account["groups"][0]["id"]
+    original = dioptra_client.plugins.create(group_id=group_id, name="inside").json()
+    config = '[[plugins]]\npath = "inside"\n'
+    if field == "plugin":
+        config += f"[[plugins]]\npath = {json.dumps(path)}\n"
+    elif field == "entrypoint":
+        config += f'[[entrypoints]]\nname = "outside"\npath = {json.dumps(path)}\n'
+    source, _ = resource_import_source(
+        {"dioptra.toml": config.encode(), "inside/tasks.py": b"def task(): pass\n"}
+    )
+    response = dioptra_client.workflows.import_resources(
+        group_id,
+        source=source,
+        config_path=path if field == "config" else "dioptra.toml",
+        resolve_name_conflicts_strategy="overwrite",
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    assert response.json()["error"] == "ImportFailedError"
+    assert "path" in response.json()["detail"]["reason"].lower()
+    plugins = dioptra_client.plugins.get().json()["data"]
+    assert [(plugin["id"], plugin["name"]) for plugin in plugins] == [
+        (original["id"], "inside")
+    ]
+
+
+def test_resource_import_rejects_oversized_uploaded_archive(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     resources_tar_file: DioptraFile,
-    resources_import_config: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
 ):
-    group_id = auth_account["groups"][0]["id"]
-    dioptra_client.workflows.import_resources(group_id, source=resources_tar_file)
+    monkeypatch.setattr(workflow_service, "MAX_ARCHIVE_BYTES", 4)
+    response = dioptra_client.workflows.import_resources(
+        auth_account["groups"][0]["id"], source=resources_tar_file
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "download/upload size limit" in response.json()["detail"]["reason"]
+    assert dioptra_client.plugins.get().json()["data"] == []
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
 
-
-def test_resource_import_from_files(
+@pytest.mark.parametrize(
+    ("setting", "limit", "message"),
+    [("MAX_ENTRIES", 1, "too many entries"), ("MAX_TOTAL_BYTES", 5, "total content")],
+)
+def test_resource_import_limits_multipart_uploads(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
-    resources_files: list[DioptraFile],
-    resources_import_config: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+    setting: str,
+    limit: int,
+    message: str,
 ):
-    group_id = auth_account["groups"][0]["id"]
-    dioptra_client.workflows.import_resources(group_id, source=resources_files)
+    monkeypatch.setattr(workflow_service, setting, limit)
+    with BytesIO(b"123") as first, BytesIO(b"456") as second:
+        response = dioptra_client.workflows.import_resources(
+            auth_account["groups"][0]["id"],
+            source=[DioptraFile("a", first, None), DioptraFile("b", second, None)],
+        )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert message in response.json()["detail"]["reason"]
+    assert dioptra_client.plugins.get().json()["data"] == []
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+
+@pytest.mark.parametrize("resource_import_source", ["github"], indirect=True)
+def test_repository_import_gets_fresh_extraction_budget_after_slow_download(
+    dioptra_client, auth_account, resource_import_source, repository_http, monkeypatch
+):
+    source, expected_hash = resource_import_source({"dioptra.toml": b""})
+    get_response = repository_http.get.side_effect
+    with freeze_time("2025-01-01") as clock:
+
+        def slow_response(url, **kwargs):
+            response = get_response(url, **kwargs)
+            chunks = response.iter_content
+
+            def slow_chunks(chunk_size):
+                clock.tick(180)
+                yield from chunks(chunk_size)
+
+            monkeypatch.setattr(response, "iter_content", slow_chunks)
+            return response
+
+        repository_http.get.side_effect = slow_response
+        response = dioptra_client.workflows.import_resources(
+            auth_account["groups"][0]["id"], source=source
+        )
+
+    assert response.status_code == HTTPStatus.OK, response.text
+    assert response.json()["hash"] == expected_hash
 
 
-@pytest.mark.skipif(shutil.which("git") is None, reason="git was not found.")
-def test_resource_import_from_repo(
+@pytest.mark.parametrize("resource_import_source", ["tar.gz", "github"], indirect=True)
+def test_archive_extraction_timeout_is_handled(
+    dioptra_client, auth_account, resource_import_source, monkeypatch
+):
+    source, _ = resource_import_source({"dioptra.toml": b"", "extra.txt": b""})
+    now = [1000.0]
+    monkeypatch.setattr(file_io, "monotonic", lambda: now[0])
+    write_file = file_io.IOFileService.write_file
+
+    def slow_write(*args, **kwargs):
+        now[0] += 61
+        return write_file(*args, **kwargs)
+
+    # Two individually short writes must share one 120-second extraction budget.
+    monkeypatch.setattr(file_io.IOFileService, "write_file", staticmethod(slow_write))
+    response = dioptra_client.workflows.import_resources(
+        auth_account["groups"][0]["id"], source=source
+    )
+    expected_status = (
+        HTTPStatus.INTERNAL_SERVER_ERROR
+        if isinstance(source, str)
+        else HTTPStatus.BAD_REQUEST
+    )
+    assert response.status_code == expected_status, response.text
+    assert "Import archive extraction timed out." in response.text
+    assert dioptra_client.plugins.get().json()["data"] == []
+
+
+@pytest.mark.parametrize("rollback_fails", [False, True])
+def test_unexpected_import_error_is_handled(
+    dioptra_client, auth_account, resources_tar_file, monkeypatch, rollback_fails
+):
+    monkeypatch.setattr(
+        workflow_service,
+        "TemporaryDirectory",
+        Mock(side_effect=OSError("internal setup detail")),
+    )
+    with monkeypatch.context() as patch:
+        rollback = Mock(wraps=workflow_service.db.session.rollback)
+        if rollback_fails:
+            rollback.side_effect = RuntimeError("internal rollback detail")
+        patch.setattr(workflow_service.db.session, "rollback", rollback)
+        response = dioptra_client.workflows.import_resources(
+            auth_account["groups"][0]["id"], source=resources_tar_file
+        )
+        rollback.assert_called_once()
+
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert response.json()["error"] == "UnexpectedImportError"
+    assert "Resource import failed unexpectedly." in response.json()["message"]
+    assert "internal setup detail" not in response.text
+    assert "internal rollback detail" not in response.text
+
+
+def test_resource_import_handles_repository_download_failure(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
-    resources_repo: str,
-    resources_import_config: dict[str, Any],
+    repository_http,
+    repository_response,
 ):
+    repository_http.get.return_value = repository_response(status=404)
     group_id = auth_account["groups"][0]["id"]
-    dioptra_client.workflows.import_resources(group_id, source=resources_repo)
+    response = dioptra_client.workflows.import_resources(
+        group_id, source="https://github.com/owner/missing"
+    )
 
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert response.json()["error"] == "GitError"
+    assert "HTTP 404" in response.json()["message"]
+    assert dioptra_client.plugins.get().json()["data"] == []
 
 
 def test_resource_import_fails_from_name_clash(
