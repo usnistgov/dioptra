@@ -37,6 +37,49 @@ const test = base.extend<{ otherGroup: OtherGroup }>({
   },
 });
 
+for (const source of ["desktop navbar", "mobile navbar", "breadcrumb"]) {
+  test(`${source} links preserve group context in an independent new tab`, async ({ page, otherGroup }) => {
+    await page.setViewportSize({ width: source === "mobile navbar" ? 800 : 1600, height: 1000 });
+    await ensureLoggedInAsTestUser(page);
+    await page.goto("/experiments");
+    await expect(page).toHaveURL((url) => url.pathname === "/experiments" && url.searchParams.has("groupId"));
+    const defaultGroupId = new URL(page.url()).searchParams.get("groupId");
+    expect(defaultGroupId).not.toBeNull();
+
+    await page.goto(`/experiments/new?groupId=${otherGroup.id}`);
+    await expect(page.getByRole("button", { name: new RegExp(otherGroup.name) })).toBeEnabled();
+
+    if (source === "mobile navbar") {
+      await page.getByRole("button", { name: "Navigation Menu" }).click();
+    }
+    const container =
+      source === "breadcrumb"
+        ? page.getByRole("navigation", { name: "Breadcrumb" })
+        : source === "mobile navbar"
+          ? page.locator(".q-menu:visible")
+          : page.locator("nav.gt-md");
+    const link = container.locator('a[href^="/experiments"]');
+    await expect(link).toHaveAttribute("href", `/experiments?groupId=${otherGroup.id}`);
+
+    const popupPromise = page.waitForEvent("popup");
+    await link.click({ button: "middle" });
+    const popup = await popupPromise;
+    try {
+      await expect(popup).toHaveURL(`/experiments?groupId=${otherGroup.id}`);
+      await expect(popup.getByRole("button", { name: new RegExp(otherGroup.name) })).toBeEnabled();
+      await popup.goto(`/experiments?groupId=${defaultGroupId}`);
+      await expect(popup.locator('nav.gt-md a[href^="/experiments"]')).toHaveAttribute(
+        "href",
+        `/experiments?groupId=${defaultGroupId}`,
+      );
+      await expect(page).toHaveURL(`/experiments/new?groupId=${otherGroup.id}`);
+      await expect(page.getByRole("button", { name: new RegExp(otherGroup.name) })).toBeEnabled();
+    } finally {
+      await popup.close();
+    }
+  });
+}
+
 test("focus refresh recovers a remotely deleted active group", async ({ page }) => {
   await ensureLoggedInAsTestUser(page);
   const response = await page.request.post("/api/v1/groups/", {
