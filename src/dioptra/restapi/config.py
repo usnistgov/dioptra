@@ -93,10 +93,7 @@ class BaseConfig(object):
     USE_MOCK_EQUIVALENCY = False
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SESSION_COOKIE_NAME = os.getenv("DIOPTRA_SESSION_COOKIE_NAME", "session")
-    REMEMBER_COOKIE_NAME = os.getenv(
-        "DIOPTRA_REMEMBER_COOKIE_NAME", "dioptra_remember_token"
-    )
+    REMEMBER_COOKIE_NAME = "dioptra_remember_token"
     REMEMBER_COOKIE_DURATION = int(
         os.getenv("DIOPTRA_REMEMBER_COOKIE_DURATION", f"{14 * 86400}")
     )
