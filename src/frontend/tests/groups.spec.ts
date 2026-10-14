@@ -38,7 +38,7 @@ const test = base.extend<{ otherGroup: OtherGroup }>({
 });
 
 for (const source of ["desktop navbar", "mobile navbar", "breadcrumb"]) {
-  test(`${source} links preserve group context in an independent new tab`, async ({ page, otherGroup }) => {
+  test(`${source} links preserve group context in an independent new tab`, async ({ page, context, otherGroup }) => {
     await page.setViewportSize({ width: source === "mobile navbar" ? 800 : 1600, height: 1000 });
     await ensureLoggedInAsTestUser(page);
     await page.goto("/experiments");
@@ -61,7 +61,7 @@ for (const source of ["desktop navbar", "mobile navbar", "breadcrumb"]) {
     const link = container.locator('a[href^="/experiments"]');
     await expect(link).toHaveAttribute("href", `/experiments?groupId=${otherGroup.id}`);
 
-    const popupPromise = page.waitForEvent("popup");
+    const popupPromise = context.waitForEvent("page");
     await link.click({ button: "middle" });
     const popup = await popupPromise;
     try {
