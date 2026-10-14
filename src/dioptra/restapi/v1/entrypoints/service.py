@@ -427,6 +427,7 @@ class EntrypointIdService(ServiceContextService):
         plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
         context: ServiceContext,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
@@ -435,6 +436,7 @@ class EntrypointIdService(ServiceContextService):
         Args:
         """
         super().__init__(context)
+        self._uow = uow
         self._plugin_ids_service = plugin_ids_service
         self._swaps_validation_service = swaps_validation_service
 
@@ -1570,15 +1572,15 @@ class EntrypointNameService(ServiceContextService):
         )
 
 
-class EntrypointConfigService(ServiceContextService):
+class EntrypointConfigService(object):
     """Service to retrieve a rendered YAML configuration for an Entrypoint."""
 
     @inject
     def __init__(
         self,
-        context: ServiceContext,
+        uow: UnitOfWork,
     ):
-        super().__init__(context)
+        self._uow = uow
 
     def get_config(
         self,
@@ -1677,18 +1679,18 @@ class EntrypointConfigService(ServiceContextService):
         return config
 
 
-class DynamicGlobalParametersService(ServiceContextService):
+class DynamicGlobalParametersService(object):
     @inject
     def __init__(
         self,
-        context: ServiceContext,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
 
         All arguments are provided via dependency injection.
 
         """
-        super().__init__(context)
+        self._uow = uow
 
     def get_params(
         self,
@@ -1765,7 +1767,7 @@ class DynamicGlobalParametersService(ServiceContextService):
         }
 
 
-class SwapsValidationService(ServiceContextService):
+class SwapsValidationService(object):
     """Validate proposed entrypoint graphs, including swap definitions.
 
     All arguments are provided via dependency injection.
@@ -1773,6 +1775,10 @@ class SwapsValidationService(ServiceContextService):
     Args:
         uow: A UnitOfWork instance.
     """
+
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        self._uow = uow
 
     def swaps_graph_validation(
         self,
@@ -2295,7 +2301,7 @@ class SwapsValidationService(ServiceContextService):
         return validation_results
 
 
-class SwapsRetrievalService(ServiceContextService):
+class SwapsRetrievalService(object):
     """Service for retrieving available swaps for an entrypoint snapshot.
 
     Currently this implementation returns an empty mapping. It can be extended to
@@ -2306,9 +2312,9 @@ class SwapsRetrievalService(ServiceContextService):
     @inject
     def __init__(
         self,
-        context: ServiceContext,
+        uow: UnitOfWork,
     ) -> None:
-        super().__init__(context)
+        self._uow = uow
 
     def get_swaps(
         self,
