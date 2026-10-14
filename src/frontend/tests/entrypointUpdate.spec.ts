@@ -178,7 +178,7 @@ test("validate unchanged bindings and save an independent task plugin update in 
   await validateEntrypoint(page, 101);
   expectMutations(mutations, [true, true]);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   expectMutations(mutations, [true, true, false]);
   expect(mutations[1].body).toEqual(mutations[2].body);
   expect(mutations[2].body.pluginSnapshotIds).toEqual([12, 21]);
@@ -203,7 +203,7 @@ test("artifact synchronization retains task-role pins including the same plugin"
   const { mutations } = await mockEditor(page);
   await syncEntrypointPlugin(page, artifactInfo(page), 1, "plugin-1");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   expectMutations(mutations, [false]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([11, 21]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([12, 31]);
@@ -231,7 +231,7 @@ test("stage additions and removals in both roles with complete latest selections
   await validateEntrypoint(page, 101);
   expectMutations(mutations, [true]);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   expectMutations(mutations, [true, false]);
   expect(mutations[0].body).toEqual(mutations[1].body);
   expect(mutations[1].body.pluginSnapshotIds).toEqual([21, 42]);
@@ -247,7 +247,7 @@ test("send explicit empty association lists as transport-only evidence", async (
   await taskInfo(page).getByRole("textbox").fill("{}");
   // The mock accepts this body; a native entrypoint still requires a valid task graph.
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   expectMutations(mutations, [false]);
   expect(mutations[0].body.pluginSnapshotIds).toEqual([]);
   expect(mutations[0].body.artifactPluginSnapshotIds).toEqual([]);
@@ -300,7 +300,7 @@ for (const action of ["Validate", "Submit EntryPoint"]) {
     }
     await synchronization;
     await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-    await expect(page).toHaveURL(/\/entrypoints$/);
+    await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
     expectMutations(mutations, [rejectedDryRun, true, false]);
     expect(mutations[2].body).toEqual({ ...mutations[1].body, pluginSnapshotIds: [13, 21] });
     expect(mutations[2].body).toMatchObject({
@@ -331,7 +331,7 @@ test("a rejected graph save keeps the navigation warning and permits graph corre
   await taskInfo(page).getByRole("textbox").fill(correctedGraph);
   await expect(taskInfo(page).getByRole("textbox")).toHaveText(correctedGraph);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   expectMutations(mutations, [false, false]);
   expect(mutations[1].body.pluginSnapshotIds).toEqual([12, 21]);
   expect(mutations[1].body.taskGraph).toEqual(correctedGraph);
@@ -372,7 +372,7 @@ test("latest bindings stay unchanged through reverted content and association ed
     await expect(submit).toBeDisabled();
   }
   await navigateToEntrypoints(page);
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(mutations).toHaveLength(0);
 });
@@ -391,7 +391,7 @@ test("same-snapshot refresh changes display metadata without enabling a save", a
     await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
   }
   await navigateToEntrypoints(page);
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL((url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === "1");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(mutations).toHaveLength(0);
 });
