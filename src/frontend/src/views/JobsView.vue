@@ -31,6 +31,12 @@
   >
     <template #body-cell-status="cellProps">
       <JobStatus :status="cellProps.row.status" />
+      <QueueWorkerIndicator
+        v-if="cellProps.row.status === 'queued'"
+        :queueName="cellProps.row.queue?.name"
+        :count="workerCounts.get(cellProps.row.queue?.name)"
+        :loading="workersLoading"
+      />
     </template>
   </TableComponent>
 
@@ -58,7 +64,7 @@
 
 <script setup>
 import TableComponent from "@/components/TableComponent.vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageTitle from "@/components/PageTitle.vue";
 import * as api from "@/services/dataApi";
@@ -67,6 +73,8 @@ import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import ArtifactsDialog from "@/dialogs/ArtifactsDialog.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import JobStatus from "@/components/JobStatus.vue";
+import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
+import { refreshWorkerCounts } from "@/services/refreshWorkerCounts";
 import { useTableUtils } from "@/services/useTableUtils";
 
 const openWindow = window;
@@ -128,6 +136,14 @@ async function getExperiment() {
 }
 
 const { rows, isLoading, tableRef, selected, showDeleteDialog, getData, deleteRow } = useTableUtils("jobs");
+
+const workerCounts = ref(new Map());
+const workersLoading = ref(false);
+
+watch(rows, (currentRows, _previousRows, onCleanup) => {
+  const queueNames = currentRows.filter((job) => job.status === "queued").map((job) => job.queue?.name);
+  return refreshWorkerCounts(queueNames, workerCounts, workersLoading, onCleanup);
+});
 
 async function getJobs(pagination, showDrafts) {
   try {
