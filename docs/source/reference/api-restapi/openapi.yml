@@ -141,36 +141,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Artifact-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Gets an Artifact resource",
-                "operationId": "get_artifact_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Artifact"
-                ]
-            },
             "put": {
                 "responses": {
                     "200": {
@@ -207,6 +177,36 @@
                     },
                     "required": true
                 },
+                "tags": [
+                    "Artifact"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Artifact-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Gets an Artifact resource",
+                "operationId": "get_artifact_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
                 "tags": [
                     "Artifact"
                 ]
@@ -615,7 +615,7 @@
                     {
                         "name": "validateOnly",
                         "in": "query",
-                        "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint.",
+                        "description": "If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps.",
                         "schema": {
                             "type": "boolean"
                         }
@@ -631,14 +631,7 @@
                     }
                 ],
                 "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Entrypoint-load"
-                            }
-                        }
-                    },
-                    "required": true
+                    "$ref": "#/components/requestBodies/Entrypoint-load"
                 },
                 "tags": [
                     "Entrypoints"
@@ -789,6 +782,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -847,6 +848,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Entrypoints"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -916,36 +947,6 @@
                 "tags": [
                     "Entrypoints"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
             }
         },
         "/api/v1/entrypoints/{id}": {
@@ -960,6 +961,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes an Entrypoint resource by its unique ID",
+                "operationId": "delete_entrypoint_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Entrypoints"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -979,7 +1010,7 @@
                     {
                         "name": "validateOnly",
                         "in": "query",
-                        "description": "Flag indicating whether to perform a full validation and save the entrypoint, or perform a lighter validation and not save the entrypoint.",
+                        "description": "If true, perform the same checks as saving, then roll back without committing changes. Return the entrypoint representation, omitting generated IDs and timestamps.",
                         "schema": {
                             "type": "boolean"
                         }
@@ -998,7 +1029,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/EntrypointMutableFields-load"
+                                "$ref": "#/components/schemas/EntrypointUpdate-load"
                             }
                         }
                     },
@@ -1023,36 +1054,6 @@
                 },
                 "summary": "Gets an Entrypoint resource by its unique ID",
                 "operationId": "get_entrypoint_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes an Entrypoint resource by its unique ID",
-                "operationId": "delete_entrypoint_id_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -1179,36 +1180,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EntrypointPlugin"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Retrieves a artifact plugin snapshot for an entrypoint resource",
-                "operationId": "get_entrypoint_id_artifact_plugin_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
             "delete": {
                 "responses": {
                     "200": {
@@ -1238,6 +1209,36 @@
                 "tags": [
                     "Entrypoints"
                 ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EntrypointPlugin"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves a artifact plugin snapshot for an entrypoint resource",
+                "operationId": "get_entrypoint_id_artifact_plugin_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Entrypoints"
+                ]
             }
         },
         "/api/v1/entrypoints/{id}/draft": {
@@ -1252,21 +1253,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -1278,16 +1279,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftEntrypointDraft"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Entrypoints"
                 ]
@@ -1332,6 +1323,46 @@
                     "Entrypoints"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftEntrypointDraft"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Entrypoints"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -1347,36 +1378,6 @@
                 },
                 "summary": "Gets the Draft for this resource",
                 "operationId": "get_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -1503,36 +1504,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EntrypointPlugin"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Retrieves a plugin snapshot for an entrypoint resource",
-                "operationId": "get_entrypoint_id_plugins_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
             "delete": {
                 "responses": {
                     "200": {
@@ -1562,6 +1533,36 @@
                 "tags": [
                     "Entrypoints"
                 ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EntrypointPlugin"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Retrieves a plugin snapshot for an entrypoint resource",
+                "operationId": "get_entrypoint_id_plugins_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Entrypoints"
+                ]
             }
         },
         "/api/v1/entrypoints/{id}/queues": {
@@ -1576,24 +1577,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/QueueRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Queues to the resource",
-                "operationId": "put_entrypoint_id_queues_endpoint",
+                "summary": "Removes all Queues from the resource",
+                "operationId": "delete_entrypoint_id_queues_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -1605,9 +1603,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Entrypoints"
                 ]
@@ -1648,6 +1643,42 @@
                     "Entrypoints"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/QueueRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Queues to the resource",
+                "operationId": "put_entrypoint_id_queues_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Entrypoints"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -1666,36 +1697,6 @@
                 },
                 "summary": "Gets the list of Queues for the resource",
                 "operationId": "get_entrypoint_id_queues_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Queues from the resource",
-                "operationId": "delete_entrypoint_id_queues_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -2022,7 +2023,7 @@
                     {
                         "name": "swaps",
                         "in": "query",
-                        "description": "A list of swap choices to be applied to the entrypoint task graph.",
+                        "description": "Swap choices encoded as deepObject query parameters: swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3. Each swap key must occur exactly once. Omit for no selections.",
                         "schema": {
                             "type": "string"
                         }
@@ -2098,7 +2099,7 @@
                     {
                         "name": "swaps",
                         "in": "query",
-                        "description": "A list of swap choices to be applied to the entrypoint task graph.",
+                        "description": "Swap choices encoded as deepObject query parameters: swaps[method]=attack%3Av2&swaps[secondary]=attack%2Cv3. Each swap key must occur exactly once. Omit for no selections.",
                         "schema": {
                             "type": "string"
                         }
@@ -2230,24 +2231,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -2259,9 +2257,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Entrypoints"
                 ]
@@ -2302,6 +2297,42 @@
                     "Entrypoints"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Entrypoints"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -2320,36 +2351,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Entrypoints"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -2413,6 +2414,93 @@
                         }
                     }
                 ],
+                "tags": [
+                    "Entrypoints"
+                ]
+            }
+        },
+        "/api/v1/entrypoints/{id}:lint": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EntrypointLintResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lint proposed content using the entrypoint's saved plugin selections",
+                "operationId": "post_entrypoint_id_lint_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EntrypointMutableFields-load"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Entrypoints"
+                ]
+            }
+        },
+        "/api/v1/entrypoints:lint": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EntrypointLintResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Lint a proposed entrypoint without full rendering or persistence",
+                "operationId": "post_entrypoint_lint_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/Entrypoint-load"
+                },
                 "tags": [
                     "Entrypoints"
                 ]
@@ -2604,6 +2692,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -2662,6 +2758,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Experiments"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -2731,36 +2857,6 @@
                 "tags": [
                     "Experiments"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
             }
         },
         "/api/v1/experiments/{id}": {
@@ -2775,6 +2871,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes an experiment by its unique identifier",
+                "operationId": "delete_experiment_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Experiments"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -2844,36 +2970,6 @@
                 "tags": [
                     "Experiments"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes an experiment by its unique identifier",
-                "operationId": "delete_experiment_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
             }
         },
         "/api/v1/experiments/{id}/draft": {
@@ -2888,21 +2984,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -2914,16 +3010,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftExperimentDraft"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Experiments"
                 ]
@@ -2968,6 +3054,46 @@
                     "Experiments"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftExperimentDraft"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Experiments"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -2997,36 +3123,6 @@
                 "tags": [
                     "Experiments"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
             }
         },
         "/api/v1/experiments/{id}/entrypoints": {
@@ -3041,24 +3137,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EntrypointRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Entrypoints to the resource",
-                "operationId": "put_experiment_id_entrypoints_endpoint",
+                "summary": "Removes all Entrypoints from the resource",
+                "operationId": "delete_experiment_id_entrypoints_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -3070,9 +3163,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Experiments"
                 ]
@@ -3113,6 +3203,42 @@
                     "Experiments"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EntrypointRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Entrypoints to the resource",
+                "operationId": "put_experiment_id_entrypoints_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Experiments"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -3131,36 +3257,6 @@
                 },
                 "summary": "Gets the list of Entrypoints for the resource",
                 "operationId": "get_experiment_id_entrypoints_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Entrypoints from the resource",
-                "operationId": "delete_experiment_id_entrypoints_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -3373,36 +3469,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Job-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Gets a Job resource",
-                "operationId": "get_experiment_id_job_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
-            },
             "delete": {
                 "responses": {
                     "200": {
@@ -3418,6 +3484,36 @@
                 },
                 "summary": "Deletes a Job resource",
                 "operationId": "delete_experiment_id_job_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Experiments"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Job-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Gets a Job resource",
+                "operationId": "get_experiment_id_job_id_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -3540,36 +3636,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/JobStatus-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Gets a Job resource's status",
-                "operationId": "get_experiment_id_job_id_status_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
-            },
             "put": {
                 "responses": {
                     "200": {
@@ -3606,6 +3672,36 @@
                     },
                     "required": true
                 },
+                "tags": [
+                    "Experiments"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/JobStatus-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Gets a Job resource's status",
+                "operationId": "get_experiment_id_job_id_status_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
                 "tags": [
                     "Experiments"
                 ]
@@ -3825,24 +3921,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -3854,9 +3947,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Experiments"
                 ]
@@ -3897,6 +3987,42 @@
                     "Experiments"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Experiments"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -3915,36 +4041,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Experiments"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -4014,6 +4110,46 @@
             }
         },
         "/api/v1/groups/": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Group-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Creates a Group resource",
+                "operationId": "post_group_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GroupCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Groups"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -4030,6 +4166,14 @@
                 "summary": "Gets a list of all Group resources",
                 "operationId": "get_group_endpoint",
                 "parameters": [
+                    {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
                     {
                         "name": "search",
                         "in": "query",
@@ -4081,6 +4225,76 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Group resource",
+                "operationId": "delete_group_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Groups"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Group-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies a Group resource",
+                "operationId": "put_group_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GroupMutableFields"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Groups"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -4097,6 +4311,14 @@
                 "summary": "Gets a Group resource",
                 "operationId": "get_group_id_endpoint",
                 "parameters": [
+                    {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
                     {
                         "name": "X-Fields",
                         "in": "header",
@@ -4204,36 +4426,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Job-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Gets a Job resource",
-                "operationId": "get_job_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Job"
-                ]
-            },
             "delete": {
                 "responses": {
                     "200": {
@@ -4249,6 +4441,36 @@
                 },
                 "summary": "Deletes a Job resource",
                 "operationId": "delete_job_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Job"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Job-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Gets a Job resource",
+                "operationId": "get_job_id_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -4896,24 +5118,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -4925,9 +5144,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Job"
                 ]
@@ -4968,6 +5184,42 @@
                     "Job"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Job"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -4986,36 +5238,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Job"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -5262,6 +5484,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -5320,6 +5550,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Models"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -5389,36 +5649,6 @@
                 "tags": [
                     "Models"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Models"
-                ]
             }
         },
         "/api/v1/models/{id}": {
@@ -5433,6 +5663,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Model resource",
+                "operationId": "delete_model_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Models"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -5502,36 +5762,6 @@
                 "tags": [
                     "Models"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Model resource",
-                "operationId": "delete_model_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Models"
-                ]
             }
         },
         "/api/v1/models/{id}/draft": {
@@ -5546,21 +5776,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -5572,16 +5802,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftModel"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Models"
                 ]
@@ -5626,6 +5846,46 @@
                     "Models"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Models"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -5641,36 +5901,6 @@
                 },
                 "summary": "Gets the Draft for this resource",
                 "operationId": "get_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Models"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -5818,24 +6048,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -5847,9 +6074,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Models"
                 ]
@@ -5890,6 +6114,42 @@
                     "Models"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Models"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -5908,36 +6168,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Models"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -6134,36 +6364,6 @@
                     }
                 }
             ],
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ModelVersion-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Gets a specific version of a model by version number",
-                "operationId": "get_model_id_versions_number_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Models"
-                ]
-            },
             "put": {
                 "responses": {
                     "200": {
@@ -6200,6 +6400,36 @@
                     },
                     "required": true
                 },
+                "tags": [
+                    "Models"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ModelVersion-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Gets a specific version of a model by version number",
+                "operationId": "get_model_id_versions_number_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
                 "tags": [
                     "Models"
                 ]
@@ -6391,6 +6621,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -6449,6 +6687,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "PluginParameterTypes"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -6518,36 +6786,6 @@
                 "tags": [
                     "PluginParameterTypes"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "PluginParameterTypes"
-                ]
             }
         },
         "/api/v1/pluginParameterTypes/{id}": {
@@ -6562,6 +6800,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a PluginParameterType resource",
+                "operationId": "delete_plugin_parameter_type_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "PluginParameterTypes"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -6631,36 +6899,6 @@
                 "tags": [
                     "PluginParameterTypes"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a PluginParameterType resource",
-                "operationId": "delete_plugin_parameter_type_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "PluginParameterTypes"
-                ]
             }
         },
         "/api/v1/pluginParameterTypes/{id}/draft": {
@@ -6675,21 +6913,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -6701,16 +6939,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftPluginParameterTypeMutableFields"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "PluginParameterTypes"
                 ]
@@ -6755,6 +6983,46 @@
                     "PluginParameterTypes"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftPluginParameterTypeMutableFields"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "PluginParameterTypes"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -6770,36 +7038,6 @@
                 },
                 "summary": "Gets the Draft for this resource",
                 "operationId": "get_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "PluginParameterTypes"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -6947,24 +7185,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -6976,9 +7211,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "PluginParameterTypes"
                 ]
@@ -7019,6 +7251,42 @@
                     "PluginParameterTypes"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "PluginParameterTypes"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -7037,36 +7305,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "PluginParameterTypes"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -7313,6 +7551,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -7371,6 +7617,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -7440,36 +7716,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}": {
@@ -7484,6 +7730,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Plugin resource",
+                "operationId": "delete_plugin_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -7553,36 +7829,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Plugin resource",
-                "operationId": "delete_plugin_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}/draft": {
@@ -7597,21 +7843,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -7623,16 +7869,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftPluginMutableFields"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Plugins"
                 ]
@@ -7677,6 +7913,46 @@
                     "Plugins"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftPluginMutableFields"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -7706,36 +7982,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}/files": {
@@ -7750,6 +7996,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes all PluginFile resources associated with a Plugin resource",
+                "operationId": "delete_plugin_id_files_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "post": {
                 "responses": {
                     "200": {
@@ -7860,36 +8136,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes all PluginFile resources associated with a Plugin resource",
-                "operationId": "delete_plugin_id_files_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}/files/drafts/": {
@@ -7960,6 +8206,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -8026,6 +8280,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -8095,36 +8379,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}/files/{fileId}": {
@@ -8148,6 +8402,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a PluginFile resource",
+                "operationId": "delete_plugin_id_file_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -8217,36 +8501,6 @@
                 "tags": [
                     "Plugins"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a PluginFile resource",
-                "operationId": "delete_plugin_id_file_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
             }
         },
         "/api/v1/plugins/{id}/files/{fileId}/draft": {
@@ -8269,21 +8523,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -8295,16 +8549,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyNestedDraftPluginFile"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Plugins"
                 ]
@@ -8349,6 +8593,46 @@
                     "Plugins"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyNestedDraftPluginFile"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -8364,36 +8648,6 @@
                 },
                 "summary": "Gets the Draft for this resource",
                 "operationId": "get_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -8568,24 +8822,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -8597,9 +8848,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Plugins"
                 ]
@@ -8640,6 +8888,42 @@
                     "Plugins"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -8658,36 +8942,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -8941,24 +9195,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -8970,9 +9221,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Plugins"
                 ]
@@ -9013,6 +9261,42 @@
                     "Plugins"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Plugins"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -9031,36 +9315,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Plugins"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -9315,6 +9569,14 @@
                 "operationId": "get_resource_drafts_endpoint",
                 "parameters": [
                     {
+                        "name": "showDeleted",
+                        "in": "query",
+                        "description": "Boolean indicating whether to include deleted resources in the results.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "draftType",
                         "in": "query",
                         "description": "The type of drafts to return: all, existing, or new.",
@@ -9373,6 +9635,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Draft for the resource",
+                "operationId": "delete_resources_drafts_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Queues"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -9442,36 +9734,6 @@
                 "tags": [
                     "Queues"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Draft for the resource",
-                "operationId": "delete_resources_drafts_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Queues"
-                ]
             }
         },
         "/api/v1/queues/{id}": {
@@ -9486,6 +9748,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Queue resource",
+                "operationId": "delete_queue_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Queues"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -9555,36 +9847,6 @@
                 "tags": [
                     "Queues"
                 ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Queue resource",
-                "operationId": "delete_queue_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Queues"
-                ]
             }
         },
         "/api/v1/queues/{id}/draft": {
@@ -9599,21 +9861,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Draft-dump"
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Modifies the Draft for this resource",
-                "operationId": "put_resources_id_draft_endpoint",
+                "summary": "Deletes the Draft for this resource",
+                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -9625,16 +9887,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ModifyDraftQueueMutableFields"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Queues"
                 ]
@@ -9679,6 +9931,46 @@
                     "Queues"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Draft-dump"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Modifies the Draft for this resource",
+                "operationId": "put_resources_id_draft_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ModifyDraftQueueMutableFields"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Queues"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -9694,36 +9986,6 @@
                 },
                 "summary": "Gets the Draft for this resource",
                 "operationId": "get_resources_id_draft_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Queues"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes the Draft for this resource",
-                "operationId": "delete_resources_id_draft_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -9871,24 +10133,21 @@
                     }
                 }
             ],
-            "put": {
+            "delete": {
                 "responses": {
                     "200": {
                         "description": "Success",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TagRef-dump"
-                                    }
+                                    "$ref": "#/components/schemas/IdStatusResponse"
                                 }
                             }
                         }
                     }
                 },
-                "summary": "Replaces one or more Tags to the resource",
-                "operationId": "put_resources_tags_endpoint",
+                "summary": "Removes all Tags from the resource",
+                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -9900,9 +10159,6 @@
                         }
                     }
                 ],
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/IdList"
-                },
                 "tags": [
                     "Queues"
                 ]
@@ -9943,6 +10199,42 @@
                     "Queues"
                 ]
             },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TagRef-dump"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Replaces one or more Tags to the resource",
+                "operationId": "put_resources_tags_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/IdList"
+                },
+                "tags": [
+                    "Queues"
+                ]
+            },
             "get": {
                 "responses": {
                     "200": {
@@ -9961,36 +10253,6 @@
                 },
                 "summary": "Gets the list of Tags for the resource",
                 "operationId": "get_resources_tags_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Queues"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Removes all Tags from the resource",
-                "operationId": "delete_resources_tags_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -10191,6 +10453,36 @@
                     }
                 }
             ],
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Tag",
+                "operationId": "delete_tag_id_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Tags"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -10246,36 +10538,6 @@
                 },
                 "summary": "Gets a Tag",
                 "operationId": "get_tag_id_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "tags": [
-                    "Tags"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Tag",
-                "operationId": "delete_tag_id_endpoint",
                 "parameters": [
                     {
                         "name": "X-Fields",
@@ -10456,6 +10718,46 @@
             }
         },
         "/api/v1/users/current": {
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IdStatusResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Deletes a Current User",
+                "operationId": "delete_user_current_endpoint",
+                "parameters": [
+                    {
+                        "name": "X-Fields",
+                        "in": "header",
+                        "description": "An optional fields mask",
+                        "schema": {
+                            "type": "string",
+                            "format": "mask"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserDelete"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Users"
+                ]
+            },
             "put": {
                 "responses": {
                     "200": {
@@ -10522,46 +10824,6 @@
                         }
                     }
                 ],
-                "tags": [
-                    "Users"
-                ]
-            },
-            "delete": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/IdStatusResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Deletes a Current User",
-                "operationId": "delete_user_current_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserDelete"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "tags": [
                     "Users"
                 ]
@@ -10843,7 +11105,7 @@
     },
     "info": {
         "title": "Dioptra REST API",
-        "version": "1.2.0dev0"
+        "version": "1.3.0dev0"
     },
     "tags": [
         {
@@ -10969,6 +11231,12 @@
             "UserPasswordError": {
                 "description": ""
             },
+            "UserDoesNotOwnGroupError": {
+                "description": ""
+            },
+            "UserNeedsAnOwnedGroupError": {
+                "description": ""
+            },
             "MlflowRunNotFoundError": {
                 "description": ""
             },
@@ -10997,6 +11265,16 @@
                     "application/json": {
                         "schema": {
                             "$ref": "#/components/schemas/IdList"
+                        }
+                    }
+                },
+                "required": true
+            },
+            "Entrypoint-load": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Entrypoint-load"
                         }
                     }
                 },
@@ -11223,6 +11501,14 @@
                     "name": {
                         "type": "string",
                         "description": "Name of the Group resource."
+                    },
+                    "user": {
+                        "description": "User that created the Group resource.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UserRef-dump"
+                            }
+                        ]
                     },
                     "url": {
                         "type": "string",
@@ -12125,6 +12411,128 @@
                 },
                 "type": "object"
             },
+            "EntrypointUpdate-load": {
+                "required": [
+                    "artifactPluginSnapshotIds",
+                    "name",
+                    "pluginSnapshotIds",
+                    "taskGraph"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Entrypoint resource."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the Entrypoint resource."
+                    },
+                    "taskGraph": {
+                        "type": "string",
+                        "description": "Task graph of the Entrypoint resource."
+                    },
+                    "artifactGraph": {
+                        "type": "string",
+                        "description": "Artifact graph of the Entrypoint resource."
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "items": {
+                            "description": "List of parameters for the entrypoint.",
+                            "default": [],
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/EntrypointParameter"
+                                }
+                            ]
+                        }
+                    },
+                    "artifactParameters": {
+                        "type": "array",
+                        "items": {
+                            "description": "List of artifacts for the entrypoint.",
+                            "default": [],
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/EntrypointArtifact"
+                                }
+                            ]
+                        }
+                    },
+                    "queues": {
+                        "type": "array",
+                        "description": "The queue for the entrypoint.",
+                        "default": [],
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "pluginSnapshotIds": {
+                        "type": "array",
+                        "description": "Complete list of task-plugin resource snapshot IDs. Select each plugin's currently bound or latest snapshot; new associations require latest. Omitted plugins are removed; an empty list removes all task plugins, subject to graph validation.",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "artifactPluginSnapshotIds": {
+                        "type": "array",
+                        "description": "Complete list of artifact-plugin resource snapshot IDs. Select each plugin's currently bound or latest snapshot; new associations require latest. Omitted plugins are removed; an empty list removes all artifact plugins, subject to graph validation.",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "IdStatusResponse": {
+                "properties": {
+                    "id": {
+                        "type": "array",
+                        "description": "A list of integers identifying the affected resource(s).",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The status of the request."
+                    }
+                },
+                "type": "object"
+            },
+            "EntrypointLintResponse": {
+                "required": [
+                    "issues",
+                    "valid"
+                ],
+                "properties": {
+                    "valid": {
+                        "type": "boolean"
+                    },
+                    "issues": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EntrypointLintIssue"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "EntrypointLintIssue": {
+                "required": [
+                    "message",
+                    "path"
+                ],
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "EntrypointMutableFields-load": {
                 "required": [
                     "name",
@@ -12182,22 +12590,6 @@
                 },
                 "type": "object"
             },
-            "IdStatusResponse": {
-                "properties": {
-                    "id": {
-                        "type": "array",
-                        "description": "A list of integers identifying the affected resource(s).",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "The status of the request."
-                    }
-                },
-                "type": "object"
-            },
             "EntrypointPluginMutableFields-load": {
                 "properties": {
                     "plugins": {
@@ -12230,7 +12622,7 @@
                     },
                     "graph": {
                         "type": "object",
-                        "description": "A dictionary representing the task graph for this experiment.",
+                        "description": "The task graph using registered task names. Selected swaps retain their ?outputs interface and only the selected alias; unresolved partial swaps retain all aliases.",
                         "default": {}
                     },
                     "artifact_outputs": {
@@ -12274,9 +12666,13 @@
                 "properties": {
                     "entrypointParams": {
                         "type": "array",
-                        "description": "A list of global parameters used in the entrypoint task graph.",
                         "items": {
-                            "type": "string"
+                            "description": "A list of global parameters used in the entrypoint task graph.",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/EntrypointParameter"
+                                }
+                            ]
                         }
                     },
                     "topologicalSort": {
@@ -12609,24 +13005,7 @@
                 },
                 "type": "object"
             },
-            "ModifyDraftEntrypointDraft": {
-                "properties": {
-                    "resourceSnapshot": {
-                        "type": "integer",
-                        "description": "ID of the resource snapshot this draft modifies."
-                    },
-                    "resourceData": {
-                        "description": "Draft resource data.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/EntrypointDraft-load"
-                            }
-                        ]
-                    }
-                },
-                "type": "object"
-            },
-            "EntrypointDraft-load": {
+            "CreateDraftEntrypointDraft-load": {
                 "required": [
                     "name",
                     "taskGraph"
@@ -12689,7 +13068,24 @@
                 },
                 "type": "object"
             },
-            "CreateDraftEntrypointDraft-load": {
+            "ModifyDraftEntrypointDraft": {
+                "properties": {
+                    "resourceSnapshot": {
+                        "type": "integer",
+                        "description": "ID of the resource snapshot this draft modifies."
+                    },
+                    "resourceData": {
+                        "description": "Draft resource data.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EntrypointDraft-load"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "EntrypointDraft-load": {
                 "required": [
                     "name",
                     "taskGraph"
@@ -13484,6 +13880,10 @@
                         "type": "string",
                         "description": "Alias of the chosen task."
                     },
+                    "taskName": {
+                        "type": "string",
+                        "description": "Name of the chosen task."
+                    },
                     "pluginFileResourceSnapshotId": {
                         "type": "integer",
                         "description": "Resource snapshot ID of the plugin file containing the chosen task."
@@ -13692,24 +14092,7 @@
                 },
                 "type": "object"
             },
-            "ModifyDraftExperimentDraft": {
-                "properties": {
-                    "resourceSnapshot": {
-                        "type": "integer",
-                        "description": "ID of the resource snapshot this draft modifies."
-                    },
-                    "resourceData": {
-                        "description": "Draft resource data.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ExperimentDraft-load"
-                            }
-                        ]
-                    }
-                },
-                "type": "object"
-            },
-            "ExperimentDraft-load": {
+            "CreateDraftExperimentDraft-load": {
                 "required": [
                     "name"
                 ],
@@ -13733,7 +14116,24 @@
                 },
                 "type": "object"
             },
-            "CreateDraftExperimentDraft-load": {
+            "ModifyDraftExperimentDraft": {
+                "properties": {
+                    "resourceSnapshot": {
+                        "type": "integer",
+                        "description": "ID of the resource snapshot this draft modifies."
+                    },
+                    "resourceData": {
+                        "description": "Draft resource data.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExperimentDraft-load"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "ExperimentDraft-load": {
                 "required": [
                     "name"
                 ],
@@ -13887,42 +14287,19 @@
                 },
                 "type": "object"
             },
-            "GroupPage": {
+            "GroupCreate": {
+                "required": [
+                    "name"
+                ],
                 "properties": {
-                    "index": {
-                        "type": "integer",
-                        "description": "Starting index of the current page."
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Group."
                     },
-                    "isComplete": {
+                    "public": {
                         "type": "boolean",
-                        "description": "Boolean indicating if more data is available."
-                    },
-                    "totalNumResults": {
-                        "type": "integer",
-                        "description": "Total number of results."
-                    },
-                    "first": {
-                        "type": "string",
-                        "description": "URL to first page in results set."
-                    },
-                    "next": {
-                        "type": "string",
-                        "description": "URL to next page in results set."
-                    },
-                    "prev": {
-                        "type": "string",
-                        "description": "URL to last page in results set."
-                    },
-                    "data": {
-                        "type": "array",
-                        "items": {
-                            "description": "List of Group resources in the current page.",
-                            "allOf": [
-                                {
-                                    "$ref": "#/components/schemas/Group-dump"
-                                }
-                            ]
-                        }
+                        "description": "Groups must be public in this phase.",
+                        "default": true
                     }
                 },
                 "type": "object"
@@ -13947,6 +14324,14 @@
                                 "$ref": "#/components/schemas/UserRef-dump"
                             }
                         ]
+                    },
+                    "public": {
+                        "type": "boolean",
+                        "description": "Whether the Group is public."
+                    },
+                    "deleted": {
+                        "type": "boolean",
+                        "description": "Whether the Group resource has been deleted."
                     },
                     "members": {
                         "type": "array",
@@ -14030,6 +14415,58 @@
                 },
                 "type": "object"
             },
+            "GroupPage": {
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "description": "Starting index of the current page."
+                    },
+                    "isComplete": {
+                        "type": "boolean",
+                        "description": "Boolean indicating if more data is available."
+                    },
+                    "totalNumResults": {
+                        "type": "integer",
+                        "description": "Total number of results."
+                    },
+                    "first": {
+                        "type": "string",
+                        "description": "URL to first page in results set."
+                    },
+                    "next": {
+                        "type": "string",
+                        "description": "URL to next page in results set."
+                    },
+                    "prev": {
+                        "type": "string",
+                        "description": "URL to last page in results set."
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "description": "List of Group resources in the current page.",
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/Group-dump"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GroupMutableFields": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Group."
+                    }
+                },
+                "type": "object"
+            },
             "JobConfig": {
                 "properties": {
                     "types": {
@@ -14049,7 +14486,7 @@
                     },
                     "graph": {
                         "type": "object",
-                        "description": "A dictionary representing the task graph for this experiment.",
+                        "description": "The task graph using registered task names. Selected swaps retain their ?outputs interface and only the selected alias; unresolved partial swaps retain all aliases.",
                         "default": {}
                     },
                     "artifact_outputs": {
@@ -14763,6 +15200,22 @@
                 },
                 "type": "object"
             },
+            "CreateDraftModel-load": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Model resource."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the Model resource."
+                    }
+                },
+                "type": "object"
+            },
             "ModifyDraftModel": {
                 "properties": {
                     "resourceSnapshot": {
@@ -14776,22 +15229,6 @@
                                 "$ref": "#/components/schemas/Model-load"
                             }
                         ]
-                    }
-                },
-                "type": "object"
-            },
-            "CreateDraftModel-load": {
-                "required": [
-                    "name"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name of the Model resource."
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Description of the Model resource."
                     }
                 },
                 "type": "object"
@@ -15147,23 +15584,6 @@
                 },
                 "type": "object"
             },
-            "ModifyDraftPluginParameterTypeMutableFields": {
-                "properties": {
-                    "resourceSnapshot": {
-                        "type": "integer",
-                        "description": "ID of the resource snapshot this draft modifies."
-                    },
-                    "resourceData": {
-                        "description": "Draft resource data.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/PluginParameterTypeMutableFields"
-                            }
-                        ]
-                    }
-                },
-                "type": "object"
-            },
             "CreateDraftPluginParameterTypeMutableFields": {
                 "required": [
                     "name"
@@ -15180,6 +15600,23 @@
                     "structure": {
                         "type": "object",
                         "description": "Structure of the PluginParameterType resource."
+                    }
+                },
+                "type": "object"
+            },
+            "ModifyDraftPluginParameterTypeMutableFields": {
+                "properties": {
+                    "resourceSnapshot": {
+                        "type": "integer",
+                        "description": "ID of the resource snapshot this draft modifies."
+                    },
+                    "resourceData": {
+                        "description": "Draft resource data.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PluginParameterTypeMutableFields"
+                            }
+                        ]
                     }
                 },
                 "type": "object"
@@ -15921,6 +16358,22 @@
                 },
                 "type": "object"
             },
+            "CreateDraftPluginMutableFields": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Plugin resource."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the Plugin resource."
+                    }
+                },
+                "type": "object"
+            },
             "ModifyDraftPluginMutableFields": {
                 "properties": {
                     "resourceSnapshot": {
@@ -15934,22 +16387,6 @@
                                 "$ref": "#/components/schemas/PluginMutableFields"
                             }
                         ]
-                    }
-                },
-                "type": "object"
-            },
-            "CreateDraftPluginMutableFields": {
-                "required": [
-                    "name"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name of the Plugin resource."
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Description of the Plugin resource."
                     }
                 },
                 "type": "object"
@@ -16012,23 +16449,6 @@
                 },
                 "type": "object"
             },
-            "ModifyNestedDraftPluginFile": {
-                "properties": {
-                    "resourceSnapshot": {
-                        "type": "integer",
-                        "description": "ID of the resource snapshot this draft modifies."
-                    },
-                    "resourceData": {
-                        "description": "Draft resource data.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/PluginFile-load"
-                            }
-                        ]
-                    }
-                },
-                "type": "object"
-            },
             "CreateNestedDraftPluginFile-load": {
                 "required": [
                     "contents",
@@ -16054,6 +16474,23 @@
                     "description": {
                         "type": "string",
                         "description": "Description of the PluginFile resource."
+                    }
+                },
+                "type": "object"
+            },
+            "ModifyNestedDraftPluginFile": {
+                "properties": {
+                    "resourceSnapshot": {
+                        "type": "integer",
+                        "description": "ID of the resource snapshot this draft modifies."
+                    },
+                    "resourceData": {
+                        "description": "Draft resource data.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PluginFile-load"
+                            }
+                        ]
                     }
                 },
                 "type": "object"
@@ -16381,6 +16818,22 @@
                 },
                 "type": "object"
             },
+            "CreateDraftQueueMutableFields": {
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the Queue resource."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the Queue resource."
+                    }
+                },
+                "type": "object"
+            },
             "ModifyDraftQueueMutableFields": {
                 "properties": {
                     "resourceSnapshot": {
@@ -16394,22 +16847,6 @@
                                 "$ref": "#/components/schemas/QueueMutableFields"
                             }
                         ]
-                    }
-                },
-                "type": "object"
-            },
-            "CreateDraftQueueMutableFields": {
-                "required": [
-                    "name"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name of the Queue resource."
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Description of the Queue resource."
                     }
                 },
                 "type": "object"
@@ -16716,7 +17153,7 @@
                     "groups": {
                         "type": "array",
                         "items": {
-                            "description": "A list of Groups the User is a part of.",
+                            "description": "A list of Groups accessible to the User.",
                             "allOf": [
                                 {
                                     "$ref": "#/components/schemas/GroupRef"
@@ -16825,6 +17262,15 @@
                 },
                 "type": "object"
             },
+            "UserDelete": {
+                "properties": {
+                    "password": {
+                        "type": "string",
+                        "description": "The users current password."
+                    }
+                },
+                "type": "object"
+            },
             "UserMutableFields": {
                 "required": [
                     "email",
@@ -16838,15 +17284,6 @@
                     "email": {
                         "type": "string",
                         "description": "Email of the User."
-                    }
-                },
-                "type": "object"
-            },
-            "UserDelete": {
-                "properties": {
-                    "password": {
-                        "type": "string",
-                        "description": "The users current password."
                     }
                 },
                 "type": "object"

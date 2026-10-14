@@ -338,13 +338,13 @@ def test_dry_run_and_lint_require_group_membership(
     dioptra_client, proposed_entrypoint, auth_account, modifying, db_session
 ):
     """Authorization failures remain errors, including for invalid lint content."""
-    user = db_session.get(models.User, auth_account["id"])
-    group = models.Group(name="private", creator=user)
-    member = models.GroupMember(
-        user=user, read=True, write=True, share_read=True, share_write=True
+    # Keep the entrypoint and its plugin in the same group so setup respects
+    # resource association rules before testing the loss of membership.
+    group = db_session.get(models.Group, proposed_entrypoint["group"])
+    group.public = False
+    member = next(
+        member for member in group.members if member.user.user_id == auth_account["id"]
     )
-    group.members.append(member)
-    db_session.add(group)
     db_session.commit()
     payload = {**proposed_entrypoint, "group": group.group_id}
     entrypoint_id, payload = _prepare_entrypoint_request(

@@ -20,18 +20,24 @@ export function useTableUtils(resourceType: ResourceType) {
   const tableRef = ref<TableRef | null>(null);
   const showDeleted = ref(false);
   const showDeleteDialog = ref(false);
+  let latestRequest = 0;
 
   async function getData(pagination: Pagination, showDrafts = false) {
+    const requestId = ++latestRequest;
     isLoading.value = true;
     try {
       const res = await api.getData(resourceType, pagination, showDrafts, showDeleted.value);
+      if (requestId !== latestRequest) return;
       rows.value = res.data.data;
       tableRef.value?.updateTotalRows(res.data.totalNumResults);
     } catch (err: any) {
+      if (requestId !== latestRequest) return;
       console.log("err = ", err);
       notify.error(err.response?.data?.message ?? "Something went wrong");
     } finally {
-      isLoading.value = false;
+      if (requestId === latestRequest) {
+        isLoading.value = false;
+      }
     }
   }
 

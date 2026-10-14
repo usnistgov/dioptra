@@ -45,6 +45,11 @@ from dioptra.client import (
     DioptraFile,
     select_one_or_more_files,
 )
+from dioptra.restapi.routes import (
+    V1_GROUPS_ROUTE,
+    V1_PLUGIN_PARAMETER_TYPES_ROUTE,
+    V1_ROOT,
+)
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -77,7 +82,12 @@ def registered_users(client: FlaskClient) -> dict[str, Any]:
 
     for _, user_info in users_info.items():
         user_info["password"] = password
-        user_info["default_group_id"] = user_info["groups"][0]["id"]
+        personal_group = next(
+            group
+            for group in user_info["groups"]
+            if group["name"] == user_info["username"]
+        )
+        user_info["default_group_id"] = personal_group["id"]
 
     return users_info
 
@@ -581,25 +591,8 @@ def registered_queues(
 def registered_groups(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
-    public_response = actions.get_public_group(client).get_json()
-    # group1_response = actions.register_group(
-    # client,
-    #  name="group_one",
-    # ).get_json()
-    # group2_response = actions.register_group(
-    # client,
-    # name="group_two",
-    # ).get_json()
-    # group3_response = actions.register_group(
-    # client,
-    # name="group_three",
-    # ).get_json()
-    return {
-        "public": public_response,
-        # "group1": group1_response,
-        # "group2": group2_response,
-        # "group3": group3_response,
-    }
+    response = client.get(f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/").get_json()
+    return {group["name"]: group for group in response["data"]}
 
 
 @pytest.fixture
@@ -608,7 +601,14 @@ def registered_plugin_parameter_types(
     client: FlaskClient, auth_account: dict[str, Any]
 ) -> dict[str, Any]:
     built_in_types = {"any", "number", "integer", "string", "boolean", "null"}
-    response = actions.get_plugin_parameter_types(client).get_json()
+    response = client.get(
+        f"/{V1_ROOT}/{V1_PLUGIN_PARAMETER_TYPES_ROUTE}",
+        follow_redirects=True,
+        query_string={
+            "groupId": auth_account["default_group_id"],
+            "pageLength": 0,
+        },
+    ).get_json()
     built_in_types_dict = {
         param_type["name"]: param_type
         for param_type in response["data"]
@@ -625,14 +625,14 @@ def registered_plugin_parameter_types(
         client,
         name="model_output",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict({"list": "number"}),
+        structure={"list": "number"},
         description="The softmax scores from a model",
     ).get_json()
     plugin_param_type3_response = actions.register_plugin_parameter_type(
         client,
         name="model",
         group_id=auth_account["groups"][0]["id"],
-        structure=dict(),
+        structure={},
         description="Opaque type for an ml model",
     ).get_json()
     return {
@@ -725,7 +725,7 @@ def registered_entrypoints(
         },
         {
             "name": "entrypoint_param_5",
-            "defaultValue": "[\"a\", \"b\", {\"c\": 1}]",
+            "defaultValue": '["a", "b", {"c": 1}]',
             "parameterType": "list",
         },
     ]

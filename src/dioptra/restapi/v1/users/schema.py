@@ -26,25 +26,6 @@ from dioptra.restapi.v1.schemas import (
 )
 
 
-class UserRefSchema(Schema):
-    """The reference schema for the data stored in a User resource."""
-
-    id = fields.Integer(
-        attribute="id",
-        metadata={"description": "ID for the User resource."},
-        dump_only=True,
-    )
-    username = fields.String(
-        attribute="username",
-        metadata={"description": "Username of the User resource."},
-    )
-    url = fields.Url(
-        attribute="url",
-        metadata={"description": "URL for accessing the full User resource."},
-        relative=True,
-    )
-
-
 class UserMutableFieldsSchema(Schema):
     """The schema for the mutable data fields in a User resource."""
 
@@ -88,7 +69,7 @@ class UserCurrentSchema(UserSchema):
     groups = fields.Nested(
         GroupRefSchema,
         attribute="groups",
-        metadata={"description": "A list of Groups the User is a part of."},
+        metadata={"description": "A list of Groups accessible to the User."},
         many=True,
         dump_only=True,
     )

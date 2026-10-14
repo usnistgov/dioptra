@@ -147,7 +147,7 @@ class TagService(object):
         filters = []
 
         if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
+            filters.append(models.Tag.group_id == group_id)
 
         if search_string:
             filters.append(

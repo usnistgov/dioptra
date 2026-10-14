@@ -82,7 +82,7 @@
           <q-item
             v-close-popup
             clickable
-            @click.stop="openInNewTab"
+            @click.stop="openResourceInNewTab"
           >
             <q-item-section>Open In New Tab</q-item-section>
           </q-item>
@@ -96,6 +96,7 @@
 import { computed, inject, ref } from "vue";
 import { getResourceStyle } from "@/services/resourceStyles";
 import { useRouter } from "vue-router";
+import { openInNewTab } from "@/services/navigation";
 
 defineEmits(["sync", "remove"]);
 const router = useRouter();
@@ -132,14 +133,14 @@ const formattedUrl = computed(() => {
   return url;
 });
 
-function openInNewTab() {
+function openResourceInNewTab() {
   if (!formattedUrl.value) return;
-  window.open(formattedUrl.value, "_blank");
+  openInNewTab(router.resolve(formattedUrl.value).href);
 }
 
 function onAuxClick(event) {
   if (event.button === 1) {
-    openInNewTab();
+    openResourceInNewTab();
   }
 }
 
@@ -148,7 +149,7 @@ function openResource(event) {
 
   // ⌘ on macOS or Ctrl on Windows/Linux opens in a new tab
   if (event?.metaKey || event?.ctrlKey) {
-    openInNewTab();
+    openResourceInNewTab();
     return;
   }
 

@@ -102,7 +102,9 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   await validateEntrypoint(page, saved.id);
   expect(await get(`entrypoints/${saved.id}`)).toEqual(baseline);
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === String(group),
+  );
   const after = await get(`entrypoints/${saved.id}`);
   expect(mutations).toHaveLength(2);
   expect(mutations.map(({ method, path, dryRun, status }) => [method, path, dryRun, status])).toEqual([
@@ -135,7 +137,9 @@ test("save a one-to-two-output swap change with its exact plugin snapshots", asy
   await expect(page.getByRole("button", { name: "Submit EntryPoint" })).toBeDisabled();
   await page.getByRole("textbox", { name: "Description:" }).fill("subsequent complete save");
   await page.getByRole("button", { name: "Submit EntryPoint" }).click();
-  await expect(page).toHaveURL(/\/entrypoints$/);
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/entrypoints" && url.searchParams.get("groupId") === String(group),
+  );
   expect(mutations).toHaveLength(3);
   expect(mutations[2]).toMatchObject({
     method: "PUT",
