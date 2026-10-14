@@ -65,15 +65,23 @@ def get_latest_plugin_files(
         A list of the latest plugin file resource snapshots associated with the given
         plugin.
     """
-    textual_sql = (
-        text(LATEST_PLUGIN_FILES_SQL_PATH.read_text())
-        .columns(
-            models.PluginFile.plugin_id.label("plugin_resource_id"),
-            models.PluginFile.resource_snapshot_id,
-            models.PluginFile.resource_id,
-            models.PluginFile.resource_type,
+    textual_sql = text(LATEST_PLUGIN_FILES_SQL_PATH.read_text())
+    result = session.execute(textual_sql, {"plugin_resource_id": plugin_resource_id})
+    rows = result.fetchall()
+
+    if not rows:
+        return []
+
+    resource_ids = [row[1] for row in rows]
+    resource_snapshots = (
+        session.query(models.ResourceSnapshot)
+        .filter(
+            models.ResourceSnapshot.resource_id.in_(resource_ids),
+            models.ResourceSnapshot.resource_type == "plugin_file",
         )
-        .bindparams(plugin_resource_id=plugin_resource_id)
+        .all()
     )
-    stmt = select(models.PluginFile).from_statement(textual_sql)
-    return list(session.execute(stmt).scalars())
+
+    snapshot_map = {rs.resource_id: rs for rs in resource_snapshots}
+
+    return [snapshot_map[row[1]] for row in rows if row[1] in snapshot_map]

@@ -24,12 +24,16 @@ from typing import Any, Final, overload
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     EntryPoint,
+    EntryPointArtifactPlugin,
+    EntryPointPlugin,
     Group,
     Plugin,
+    PluginPluginFile,
     Queue,
     Resource,
     Tag,
 )
+from dioptra.restapi.errors import EntityRelationshipDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityType
 
 
@@ -292,6 +296,7 @@ class EntrypointRepository:
             Queue,
             entrypoint,
             deletion_policy,
+            parent_resource_type=EntityType.ENTRY_POINT,
         )
 
     def create_queues(
@@ -335,7 +340,13 @@ class EntrypointRepository:
             EntityDoesNotExistError: if parent or any new child does not exist
             EntityDeletedError: if parent or any new child is deleted
         """
-        snaps = utils.append_resource_children(self.session, Queue, entrypoint, queues)
+        snaps = utils.append_resource_children(
+            self.session,
+            Queue,
+            entrypoint,
+            queues,
+            parent_resource_type=EntityType.ENTRY_POINT,
+        )
         return [snap for snap in snaps if isinstance(snap, Queue)]
 
     def set_queues(
@@ -403,129 +414,222 @@ class EntrypointRepository:
         """
         return utils.unlink_children(self.session, entrypoint, EntityType.QUEUE)
 
-    def get_plugins(
+    def get_plugin_files(
         self,
-        entrypoint: EntryPoint | int,
-        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
-    ) -> Sequence[Plugin]:
-        """
-        Get the child plugins of the given entrypoint as their latest
-        snapshots.  If an EntryPoint object is given, the returned sequence
-        may be shorter than len(entrypoint.children) if any of the children
-        don't exist, or were filtered out due to deletion policy.
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> list[PluginPluginFile]:
+        """Get plugin file associations for an entrypoint snapshot's plugins.
 
         Args:
-            entrypoint: An EntryPoint object or resource_id integer primary key value
-            deletion_policy: Whether to look at deleted, non-deleted, or all plugins
+            entrypoint_id: The entrypoint resource ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+            deletion_policy: Whether to look at deleted entrypoints,
+                non-deleted entrypoints, or all entrypoints.
 
         Returns:
-            The plugins
+            Plugin-plugin-file associations for the entrypoint's plugins.
 
         Raises:
-            EntityDoesNotExistError: if parent does not exist
-            EntityDeletedError: if parent is deleted
+            EntityDoesNotExistError: if the entrypoint does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the entrypoint exists and is not deleted, but
+                policy was to find a deleted entrypoint
+            EntityDeletedError: if the entrypoint is deleted, but policy was to
+                find a non-deleted entrypoint
         """
-
-        return utils.get_latest_child_snapshots(
-            self.session,
-            Plugin,
-            entrypoint,
+        entrypoint = self.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
             deletion_policy,
         )
 
-    def create_plugins(
+        return [
+            plugin_plugin_file
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+    def get_artifact_plugin_files(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> list[PluginPluginFile]:
+        """Get plugin file associations for an entrypoint snapshot's artifact plugins.
+
+        Args:
+            entrypoint_id: The entrypoint resource ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+            deletion_policy: Whether to look at deleted entrypoints,
+                non-deleted entrypoints, or all entrypoints.
+
+        Returns:
+            Plugin-plugin-file associations for the entrypoint's artifact plugins.
+
+        Raises:
+            EntityDoesNotExistError: if the entrypoint does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the entrypoint exists and is not deleted, but
+                policy was to find a deleted entrypoint
+            EntityDeletedError: if the entrypoint is deleted, but policy was to
+                find a non-deleted entrypoint
+        """
+        entrypoint = self.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            deletion_policy,
+        )
+
+        return [
+            plugin_plugin_file
+            for artifact_plugin in entrypoint.entry_point_artifact_plugins
+            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
+        ]
+
+    def get_one_entrypoint_plugin(
+        self,
+        entrypoint_id: int,
+        plugin_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> EntryPointPlugin:
+        """Get an entrypoint task plugin relationship by plugin resource ID."""
+        entrypoint = self.get_one(entrypoint_id, deletion_policy)
+
+        for entrypoint_plugin in entrypoint.entry_point_plugins:
+            if entrypoint_plugin.plugin.resource_id == plugin_id:
+                return entrypoint_plugin
+
+        raise EntityRelationshipDoesNotExistError(
+            [EntityType.ENTRY_POINT, EntityType.PLUGIN],
+            entrypoint_id=entrypoint_id,
+            plugin_id=plugin_id,
+        )
+
+    def get_one_entrypoint_artifact_plugin(
+        self,
+        entrypoint_id: int,
+        artifact_plugin_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> EntryPointArtifactPlugin:
+        """Get an entrypoint artifact plugin relationship by plugin resource ID."""
+        entrypoint = self.get_one(entrypoint_id, deletion_policy)
+
+        for artifact_plugin in entrypoint.entry_point_artifact_plugins:
+            if artifact_plugin.plugin.resource_id == artifact_plugin_id:
+                return artifact_plugin
+
+        raise EntityRelationshipDoesNotExistError(
+            [EntityType.ENTRY_POINT, EntityType.PLUGIN],
+            entrypoint_id=entrypoint_id,
+            artifact_plugin_id=artifact_plugin_id,
+        )
+
+    def create_entrypoint_plugins(
         self,
         entrypoint: EntryPoint,
         plugins: Iterable[Plugin | Resource | int],
     ) -> Sequence[Plugin]:
-        """
-        Add the plugins as children of the given entrypoint.
+        """Associate task plugins with an entrypoint snapshot."""
+        plugin_snaps = utils.get_exact_latest_snapshots(
+            self.session, Plugin, plugins, utils.DeletionPolicy.NOT_DELETED
+        )
+        for plugin in plugin_snaps:
+            self._append_entrypoint_plugin(entrypoint, plugin)
+        return plugin_snaps
 
-        Args:
-            entrypoint: An EntryPoint object
-            plugins: The plugins to add as children
+    def create_entrypoint_artifact_plugins(
+        self,
+        entrypoint: EntryPoint,
+        plugins: Iterable[Plugin | Resource | int],
+    ) -> Sequence[Plugin]:
+        """Associate artifact plugins with an entrypoint snapshot."""
+        plugin_snaps = utils.get_exact_latest_snapshots(
+            self.session, Plugin, plugins, utils.DeletionPolicy.NOT_DELETED
+        )
+        for plugin in plugin_snaps:
+            self._append_entrypoint_artifact_plugin(entrypoint, plugin)
+        return plugin_snaps
 
-        Returns:
-            The list of newly created plugin children, as latest snapshots.
-
-        Raises:
-            EntityDoesNotExistError: if parent or any new child does not exist
-            EntityDeletedError: if parent or any new child is deleted
-        """
-        return utils.create_resource_children(self.session, Plugin, entrypoint, plugins)
-
-    def add_plugins(
+    def set_entrypoint_plugins(
         self,
         entrypoint: EntryPoint | int,
         plugins: Iterable[Plugin | Resource | int],
-    ) -> Sequence[Plugin]:
-        """
-        Add the plugins as children of the given entrypoint.
-
-        Args:
-            entrypoint: An EntryPoint object or resource_id integer primary key value
-            plugins: The plugins to add as children
-
-        Returns:
-            The complete list of plugin children, as latest snapshots (including both
-            pre-existing and new children).
-
-        Raises:
-            EntityDoesNotExistError: if parent or any new child does not exist
-            EntityDeletedError: if parent or any new child is deleted
-        """
-        snaps = utils.append_resource_children(
-            self.session, Plugin, entrypoint, plugins
+        artifact_plugins: Iterable[Plugin | Resource | int],
+    ) -> tuple[Sequence[Plugin], Sequence[Plugin]]:
+        """Set task and artifact plugin associations for an entrypoint snapshot."""
+        entrypoint = self.get_one(entrypoint, utils.DeletionPolicy.NOT_DELETED)
+        plugin_snaps = utils.get_exact_latest_snapshots(
+            self.session, Plugin, plugins, utils.DeletionPolicy.NOT_DELETED
         )
-        return [snap for snap in snaps if isinstance(snap, Plugin)]
-
-    def set_plugins(
-        self,
-        entrypoint: EntryPoint | int,
-        plugins: Iterable[Plugin | Resource | int],
-    ) -> Sequence[Plugin]:
-        """
-        Set the child plugins of the given entrypoint.
-        This replaces all existing plugins with the given resources.
-
-        Args:
-            entrypoint: An EntryPoint object or resource_id integer primary key value
-            plugins: The plugins to set as children
-
-        Returns:
-            The child plugins, as their latest snapshots
-
-        Raises:
-            EntityDoesNotExistError: if entrypoint or any plugin not exist
-            EntityDeletedError: if entrypoint or any plugin is deleted
-        """
-
-        return utils.set_resource_children(
-            self.session,
-            Plugin,
-            entrypoint,
-            plugins,
-            EntityType.PLUGIN,
+        artifact_plugin_snaps = utils.get_exact_latest_snapshots(
+            self.session, Plugin, artifact_plugins, utils.DeletionPolicy.NOT_DELETED
         )
 
-    def unlink_plugin(
+        entrypoint.entry_point_plugins = []
+        entrypoint.entry_point_artifact_plugins = []
+        for plugin in plugin_snaps:
+            self._append_entrypoint_plugin(entrypoint, plugin)
+
+        for plugin in artifact_plugin_snaps:
+            self._append_entrypoint_artifact_plugin(entrypoint, plugin)
+
+        return plugin_snaps, artifact_plugin_snaps
+
+    def copy_entrypoint_plugins(
         self,
-        entrypoint: EntryPoint | int,
-        plugin: Plugin | int,
-    ):
-        """
-        "Unlink" the given plugin resource from the given entrypoint.  This
-        only severs the relationship; it does not delete either resource.  If
-        there is no parent/child relationship, this is a no-op.
+        source_entrypoint: EntryPoint,
+        target_entrypoint: EntryPoint,
+        exclude_plugin_ids: set[int] | None = None,
+    ) -> Sequence[Plugin]:
+        """Copy task plugin relationships from one entrypoint snapshot to another."""
+        exclude_plugin_ids = exclude_plugin_ids or set()
+        plugins = [
+            entrypoint_plugin.plugin
+            for entrypoint_plugin in source_entrypoint.entry_point_plugins
+            if entrypoint_plugin.plugin.resource_id not in exclude_plugin_ids
+        ]
 
-        Args:
-            entrypoint: An entrypoint or resource_id integer primary key value
-            plugin: A queue or plugin or resource_id integer primary key value
+        for plugin in plugins:
+            self._append_entrypoint_plugin(target_entrypoint, plugin)
 
-        Raises:
-            EntityDoesNotExistError: if parent or child do not exist
-        """
-        utils.unlink_child(self.session, entrypoint, plugin, EntityType.PLUGIN)
+        return _unique_plugins(plugins)
+
+    def copy_entrypoint_artifact_plugins(
+        self,
+        source_entrypoint: EntryPoint,
+        target_entrypoint: EntryPoint,
+        exclude_plugin_ids: set[int] | None = None,
+    ) -> Sequence[Plugin]:
+        """Copy artifact plugin relationships from one entrypoint snapshot to another."""
+        exclude_plugin_ids = exclude_plugin_ids or set()
+        plugins = [
+            artifact_plugin.plugin
+            for artifact_plugin in source_entrypoint.entry_point_artifact_plugins
+            if artifact_plugin.plugin.resource_id not in exclude_plugin_ids
+        ]
+
+        for plugin in plugins:
+            self._append_entrypoint_artifact_plugin(target_entrypoint, plugin)
+
+        return _unique_plugins(plugins)
+
+    def _append_entrypoint_plugin(self, entrypoint: EntryPoint, plugin: Plugin) -> None:
+        entrypoint_plugin = EntryPointPlugin(entry_point=entrypoint, plugin=plugin)
+        if entrypoint_plugin not in entrypoint.entry_point_plugins:
+            entrypoint.entry_point_plugins.append(entrypoint_plugin)
+        self.session.add(entrypoint_plugin)
+
+    def _append_entrypoint_artifact_plugin(
+        self, entrypoint: EntryPoint, plugin: Plugin
+    ) -> None:
+        artifact_plugin = EntryPointArtifactPlugin(
+            entry_point=entrypoint, plugin=plugin
+        )
+        if artifact_plugin not in entrypoint.entry_point_artifact_plugins:
+            entrypoint.entry_point_artifact_plugins.append(artifact_plugin)
+        self.session.add(artifact_plugin)
 
     def delete(self, entrypoint: EntryPoint | int) -> None:
         """
@@ -539,7 +643,7 @@ class EntrypointRepository:
             EntityDoesNotExistError: if the entrypoint does not exist
         """
 
-        utils.delete_resource(self.session, entrypoint)
+        utils.delete_resource(self.session, entrypoint, EntityType.ENTRY_POINT)
 
     def get_by_filters_paged(
         self,
@@ -592,3 +696,7 @@ class EntrypointRepository:
             descending,
             deletion_policy,
         )
+
+
+def _unique_plugins(plugins: Iterable[Plugin]) -> list[Plugin]:
+    return list({plugin.resource_id: plugin for plugin in plugins}.values())

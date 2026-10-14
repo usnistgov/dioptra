@@ -8,6 +8,7 @@
   <TableComponent
     ref="tableRef"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
     :rows="rows"
     :columns="columns"
     title="Jobs"
@@ -15,6 +16,7 @@
     :loading="isLoading"
     :hideCreateBtn="route.name === 'experimentJobs' && experiment?.deleted"
     :defaultSort="{ sortBy: 'id', descending: true }"
+    :showDeletedToggle="true"
     @request="getJobs"
     @delete="showDeleteDialog = true"
     @editTags="
@@ -127,13 +129,14 @@ async function getExperiment() {
   }
 }
 
-const { rows, isLoading, tableRef, selected, showDeleteDialog, getData, deleteRow } = useTableUtils("jobs");
+const { rows, isLoading, tableRef, selected, showDeleted, showDeleteDialog, getData, deleteRow } =
+  useTableUtils("jobs");
 
 async function getJobs(pagination, showDrafts) {
   try {
     if (route.name === "experimentJobs") {
       isLoading.value = true;
-      const res = await api.getJobs(route.params.id, pagination, showDrafts);
+      const res = await api.getJobs(route.params.id, pagination, showDeleted.value);
       rows.value = res.data.data;
       tableRef.value?.updateTotalRows(res.data.totalNumResults);
       isLoading.value = false;

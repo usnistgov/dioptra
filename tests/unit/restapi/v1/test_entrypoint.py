@@ -806,6 +806,18 @@ def assert_retrieving_plugin_snapshots_by_id_for_entrypoint_works(
     )
     assert response.status_code == HTTPStatus.OK and response.json()["id"] == expected
 
+def assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    entrypoint_id: int,
+    expected: list[int],
+) -> None:
+    response = dioptra_client.entrypoints.artifact_plugins.get(entrypoint_id)
+    assert (
+        response.status_code == HTTPStatus.OK
+        and [plugin_snapshot["id"] for plugin_snapshot in response.json()] == expected
+    )
+
+
 def assert_registering_entrypoint_with_no_queues_succeeds(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     entry_point: dict[str, Any],
@@ -1896,6 +1908,36 @@ def test_append_plugins_to_entrypoint(
         expected=expected_plugin_ids,
     )
 
+
+def test_append_same_plugin_as_task_and_artifact_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+    registered_entrypoints: dict[str, Any],
+) -> None:
+    """Test that a plugin can be sequentially appended in both entrypoint roles."""
+    entrypoint_id = registered_entrypoints["entrypoint3"]["id"]
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+
+    plugin_response = dioptra_client.entrypoints.plugins.create(
+        entrypoint_id=entrypoint_id,
+        plugin_ids=[plugin_id],
+    )
+    artifact_plugin_response = dioptra_client.entrypoints.artifact_plugins.create(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_ids=[plugin_id],
+    )
+
+    assert plugin_response.status_code == HTTPStatus.OK
+    assert artifact_plugin_response.status_code == HTTPStatus.OK
+    assert [plugin_snapshot["id"] for plugin_snapshot in plugin_response.json()] == [
+        plugin_id
+    ]
+    assert [
+        plugin_snapshot["id"] for plugin_snapshot in artifact_plugin_response.json()
+    ] == [plugin_id]
+
+
 def test_get_plugin_snapshot_by_id_for_entrypoint(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -2219,7 +2261,7 @@ def entrypoint_binding_selection(
 
 
 def _entrypoint_lifecycle_state(db_session, entrypoint_id):
-    """Read all saved graphs, exact bindings, dependencies, and related row counts."""
+    """Read all saved graphs, exact bindings, queue links, and related row counts."""
     # Flush after a rejection so later commits cannot conceal partial changes.
     db_session.commit()
     db_session.expire_all()
@@ -2893,14 +2935,14 @@ def test_put_empty_task_list_requires_valid_complete_graph(
 
 @pytest.mark.parametrize("remaining_role", ["task", "artifact", "neither"])
 @pytest.mark.parametrize("advanced_role", ["task", "artifact"])
-def test_put_dual_roles_replace_bindings_and_dependencies(
+def test_put_dual_roles_replace_bindings_and_associations(
     dioptra_client,
     entrypoint_binding_selection,
     db_session,
     remaining_role,
     advanced_role,
 ):
-    """Maintain independent role pins and remove a dependency only after both roles."""
+    """Maintain independent role pins and remove each omitted role association."""
     case = entrypoint_binding_selection
     entrypoint = case["entrypoint"]
     a, b = case["plugins"]
@@ -2926,7 +2968,7 @@ def test_put_dual_roles_replace_bindings_and_dependencies(
         "plugins": {a: task_pin, b: case["pins"][b]},
         "artifact_plugins": {a: artifact_pin},
     }
-    assert {row[1] for row in state["dependencies"]} == {a, b}
+    assert state["dependencies"] == []
     assert state["snapshots"][old["snapshot"]] == {
         "graph": case["old_graph"],
         "plugins": case["pins"],
@@ -2952,8 +2994,7 @@ def test_put_dual_roles_replace_bindings_and_dependencies(
     assert selected["artifact_plugins"] == (
         {a: artifact_pin} if remaining_role == "artifact" else {}
     )
-    dependencies = {row[1] for row in after["dependencies"]}
-    assert dependencies == ({a, b} if remaining_role != "neither" else {b})
+    assert after["dependencies"] == []
     for snapshot_id in (entrypoint["snapshot"], old["snapshot"], both["snapshot"]):
         assert after["snapshots"][snapshot_id] == state["snapshots"][snapshot_id]
 
@@ -3124,10 +3165,10 @@ def test_put_eligibility_uses_current_database_latest_with_cached_resource(
     assert _entrypoint_lifecycle_state(db_session, case["entrypoint"]["id"]) == before
 
 
-def test_put_removes_omitted_deleted_bindings_from_candidate_dependencies(
+def test_put_removes_omitted_deleted_bindings_from_candidate_associations(
     dioptra_client, entrypoint_binding_selection, db_session
 ):
-    """Preview then remove deleted old bindings using the replacement dependencies."""
+    """Preview then remove deleted old bindings using replacement associations."""
     case = entrypoint_binding_selection
     a, b = case["plugins"]
     entrypoint_id = case["entrypoint"]["id"]
@@ -3155,7 +3196,7 @@ def test_put_removes_omitted_deleted_bindings_from_candidate_dependencies(
         if validate_only:
             assert after == before
         else:
-            assert {row[1] for row in after["dependencies"]} == {b}
+            assert after["dependencies"] == before["dependencies"]
             assert len(after["snapshots"]) == len(before["snapshots"]) + 1
             for snapshot_id, snapshot in before["snapshots"].items():
                 assert after["snapshots"][snapshot_id] == snapshot
@@ -3166,7 +3207,7 @@ def test_put_removes_omitted_deleted_bindings_from_candidate_dependencies(
     }
 
 
-def test_put_name_conflict_rolls_back_replaced_dependencies(
+def test_put_name_conflict_rolls_back_replaced_associations(
     dioptra_client,
     entrypoint_binding_selection,
     registered_queues,
@@ -3211,7 +3252,7 @@ def test_put_name_conflict_rolls_back_replaced_dependencies(
             )
         ).all()
         replaced.append({row[1] for row in dependencies})
-        assert replaced[-1] == {b, queue}
+        assert replaced[-1] == {queue}
         assert candidate.resource.latest_snapshot_id == original["snapshot"]
         return persist(self, candidate)
 
@@ -3226,15 +3267,105 @@ def test_put_name_conflict_rolls_back_replaced_dependencies(
         )
         assert response.status_code == HTTPStatus.CONFLICT, response.text
         assert response.json()["error"] == "EntityExistsError"
-        assert replaced[calls_before:] == [{b, queue}]
+        assert replaced[calls_before:] == [{queue}]
         assert _entrypoint_lifecycle_state(db_session, entrypoint["id"]) == before
         assert dioptra_client.entrypoints.get_by_id(entrypoint["id"]).json() == original
         results.append(response.json())
-    assert replaced == [{b, queue}, {b, queue}]
+    assert replaced == [{queue}, {queue}]
     assert {k: v for k, v in results[0].items() if k != "originating_path"} == {
         k: v for k, v in results[1].items() if k != "originating_path"
     }
 
+
+def test_delete_task_plugin_preserves_shared_artifact_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    entrypoint_binding_selection: dict[str, Any],
+) -> None:
+    """Deleting a task plugin keeps the same plugin's artifact role attached."""
+    plugin_id, graph_plugin_id = entrypoint_binding_selection["plugins"]
+    response = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="shared_plugin_delete_task",
+        task_graph="only:\n  task_b: []\n",
+        artifact_graph="",
+        description="Entrypoint with shared task and artifact plugin.",
+        parameters=[],
+        artifact_parameters=[],
+        queues=[],
+        plugins=[plugin_id, graph_plugin_id],
+        artifact_plugins=[plugin_id],
+    )
+    assert response.status_code == HTTPStatus.OK
+    entrypoint_id = response.json()["id"]
+
+    response = dioptra_client.entrypoints.plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[graph_plugin_id],
+    )
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[plugin_id],
+    )
+
+    response = dioptra_client.entrypoints.artifact_plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+
+
+def test_delete_artifact_plugin_preserves_shared_task_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    """Deleting an artifact plugin keeps the same plugin's task role attached."""
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    response = dioptra_client.entrypoints.create(
+        group_id=auth_account["groups"][0]["id"],
+        name="shared_plugin_delete_artifact",
+        task_graph="message:\n  hello_world: world\n",
+        artifact_graph="",
+        description="Entrypoint with shared task and artifact plugin.",
+        parameters=[],
+        artifact_parameters=[],
+        queues=[],
+        plugins=[plugin_id],
+        artifact_plugins=[plugin_id],
+    )
+    assert response.status_code == HTTPStatus.OK
+    entrypoint_id = response.json()["id"]
+
+    response = dioptra_client.entrypoints.artifact_plugins.delete_by_id(
+        entrypoint_id=entrypoint_id,
+        artifact_plugin_id=plugin_id,
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    assert_retrieving_all_artifact_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[],
+    )
+    assert_retrieving_all_plugin_snapshots_for_entrypoint_works(
+        dioptra_client,
+        entrypoint_id=entrypoint_id,
+        expected=[plugin_id],
+    )
 
 def test_append_plugins_to_deleted_entrypoint_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
