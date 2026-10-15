@@ -105,11 +105,15 @@ class TensorflowBoundingBoxCoordinates(BoundingBoxCoordinates):
     def find_bbox_cell_ij(self, x_center: Tensor, y_center: Tensor) -> Tensor:
         cell_h = tf.cast(self.cell_height, tf.float32)
         cell_w = tf.cast(self.cell_width, tf.float32)
+        # The largest valid cell index is one less than the number of cells
+        # along each axis.  Clamping to cell_nrow/cell_ncol (the counts) would
+        # allow an out-of-range index for boxes whose center lands on the far
+        # image edge (a normalized coordinate >= 1.0).
         max_i = tf.cast(
-            tf.fill(dims=tf.shape(y_center), value=self.cell_nrow), tf.int32
+            tf.fill(dims=tf.shape(y_center), value=self.cell_nrow - 1), tf.int32
         )
         max_j = tf.cast(
-            tf.fill(dims=tf.shape(x_center), value=self.cell_ncol), tf.int32
+            tf.fill(dims=tf.shape(x_center), value=self.cell_ncol - 1), tf.int32
         )
 
         i = tf.reduce_min(
