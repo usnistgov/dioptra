@@ -25,7 +25,7 @@ Before creating a release, ensure:
 - The version in `pyproject.toml` has been bumped to the desired release version
 - All CI checks have passed on the release commit
 
-For stable preparation, follow [How to Merge Dev into Main](how-to-merge-dev-into-main.md). For a development version, follow [How to Bump the Dev Branch Version](how-to-bump-dev-branch-version.md). Run the commands below from the root of the Dioptra clone.
+For stable preparation, follow [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for a full release or [How to Create a Patch Release](how-to-create-a-patch-release.md) for selected fixes. For a development version, follow [How to Bump the Dev Branch Version](how-to-bump-dev-branch-version.md). Run the commands below from the root of the Dioptra clone.
 
 ## Step 1: Verify Readiness
 

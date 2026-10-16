@@ -13,6 +13,7 @@ This guide provides step-by-step instructions for creating a version release on 
   - [Step 2: Update uv.lock](#step-2-update-uvlock-1)
   - [Step 3: Amend the release commit](#step-3-amend-the-release-commit-1)
   - [Step 4: Verify the result](#step-4-verify-the-result-1)
+-   [README Installation Image Tags](#readme-installation-image-tags)
 - [After Bumping the Version](#after-bumping-the-version)
 
 ## Prerequisites
@@ -78,10 +79,10 @@ The backup suffix works with macOS and GNU sed. Remove the temporary backup afte
 
 ### Step 3: Amend the release commit
 
-Add the `uv.lock` change to the release commit:
+If a stable release has been published, update the [README installation image tags](#readme-installation-image-tags) before amending. Include those changes with the local package version in the release commit:
 
 ```sh
-git add uv.lock
+git add README.md uv.lock
 git commit --amend --no-edit
 ```
 
@@ -93,20 +94,24 @@ Confirm the version was bumped correctly:
 uvx tox run -e bumpver -- show
 ```
 
-Check that `uv.lock` shows only the version change:
+Check that `uv.lock` shows only the local package version change and any README image tags match the published stable release:
 
 ```sh
-git diff HEAD~1 -- uv.lock
+git diff HEAD~1 -- uv.lock README.md
 ```
 
 ## Scenario 2: Incrementing the Dev Tag
 
 Use this workflow when you need to increment the dev tag number without changing the minor or major version. This applies when:
 
-- A patch release to `main` has corresponding cherry-picks on `dev`
+- A patch release to `main` has the same fixes present on `dev`, regardless of which branch received them first
 - Substantial new content on `dev` warrants a new development release
 
+For a collected patch release, increment the counter once after stable publication is verified. Do not reapply fixes already present on dev or merge stable version metadata into it. See [How to Create a Patch Release](how-to-create-a-patch-release.md) for the complete sequence.
+
 ### Step 1: Run the bumpver command
+
+Check the current version with `uvx tox run -e bumpver -- show` and the latest development release tag before incrementing. If another maintainer has already released the corresponding development version, do not increment it again.
 
 ```sh
 uvx tox run -e bumpver -- update --tag-num
@@ -124,8 +129,10 @@ Follow [Step 2 of Scenario 1](#step-2-update-uvlock) to capture the normalized v
 
 ### Step 3: Amend the release commit
 
+After a stable patch release, update the [README installation image tags](#readme-installation-image-tags) before amending. For a development release without a new stable release, leave those tags unchanged.
+
 ```sh
-git add uv.lock
+git add README.md uv.lock
 git commit --amend --no-edit
 ```
 
@@ -133,8 +140,24 @@ git commit --amend --no-edit
 
 ```sh
 uvx tox run -e bumpver -- show
-git diff HEAD~1 -- uv.lock
+git diff HEAD~1 -- uv.lock README.md
 ```
+
+## README Installation Image Tags
+
+The README installation commands use the latest published stable images, even on dev. When preparing a development release after stable publication, update these tags to the version just published. This is separate from the development version that bumpver writes in the README's release heading.
+
+Set `RELEASE_VERSION` to the published stable version and run:
+
+```sh
+RELEASE_VERSION=1.2.1
+sed -i.bak -E \
+    's|^(docker pull ghcr[.]io/usnistgov/dioptra/[^:[:space:]]+:)[^[:space:]]+$|\1'"$RELEASE_VERSION"'|' \
+    README.md
+rm README.md.bak
+```
+
+Keep deployment defaults at `dev` and the example platform requirement unbounded. Include any README changes when amending the development release commit in Step 3 of the selected scenario.
 
 ## After Bumping the Version
 
