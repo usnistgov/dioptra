@@ -1,6 +1,6 @@
 # About Release Publishing
 
-This document explains the design decisions and infrastructure behind Dioptra's automated release publishing process. For background on versioning philosophy and when releases happen, see [About Versioned Releases](about-versioned-releases.md). For stable preparation, see [How to Merge Dev into Main](how-to-merge-dev-into-main.md). For step-by-step instructions on triggering a release, see [How to Create a Release](how-to-create-a-release.md).
+This document explains the design decisions and infrastructure behind Dioptra's automated release publishing process. For background on versioning philosophy and when releases happen, see [About Versioned Releases](about-versioned-releases.md). For stable preparation, see [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for a full release or [How to Create a Patch Release](how-to-create-a-patch-release.md) for selected fixes. For step-by-step instructions on triggering a release, see [How to Create a Release](how-to-create-a-release.md).
 
 - [Published Artifacts](#published-artifacts)
 - [PyPI Publishing](#pypi-publishing)
@@ -123,13 +123,15 @@ Tox and Sphinx also run on version tag pushes. Branch pushes and PR checks valid
 
 ## Release Review and Main Adoption
 
-Stable preparation creates one merge commit with current main as its first parent and the prepared dev changes as its second parent. The resolved commit is published on the release branch for PR review and CI while main remains unchanged. A release branch push runs Tox and Sphinx; a mergeable PR runs Docker images and Frontend Playwright e2e, plus Frontend checks when their path filters match. GitHub does not run `pull_request` workflows while merge conflicts remain.
+Stable preparation creates one merge commit with current main as its first parent and the prepared changes as its second parent. A full release prepares the development branch; a [patch release](how-to-create-a-patch-release.md) prepares an ordered set of individual fixes on a main-based branch. Both use the same local integration merge, release PR, and fast-forward main adoption.
+
+The resolved commit is published on the release branch for PR review and CI while main remains unchanged. A release branch push runs Tox and Sphinx; a mergeable PR runs Docker images and Frontend Playwright e2e, plus Frontend checks when their path filters match. GitHub does not run `pull_request` workflows while merge conflicts remain.
 
 PR workflows can check out a temporary test merge at `refs/pull/<number>/merge`. Its commit ID differs from the prepared release commit, but its tree should match when main has not changed. This temporary commit is CI input and does not become another merge in main's history.
 
 After checks pass and the main base is rechecked, a maintainer with permission to update protected main directly fast-forwards it to the prepared commit and pushes normally. GitHub marks the PR merged because its head commit is now reachable from main. This method preserves one integration merge and differs from the ordinary squash workflow in `CONTRIBUTING.md`. Using a GitHub merge button would change the selected history. If main advances, the candidate and its checks must be revised before adoption.
 
-Main pushes run branch CI, publish branch-tagged images, and deploy Sphinx documentation. Successful main checks precede the version tag and its publication workflows. See [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for the commands.
+Main pushes run branch CI, publish branch-tagged images, and deploy Sphinx documentation. Successful main checks precede the version tag and its publication workflows. The [full release guide](how-to-merge-dev-into-main.md) and [patch release guide](how-to-create-a-patch-release.md) provide the commands for their respective workflows.
 
 ## Failure Scenarios
 

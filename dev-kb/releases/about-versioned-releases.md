@@ -53,6 +53,8 @@ A stable release brings the selected dev changes into main with stable package v
 
 See [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for preparation and integration, then [How to Create a Release](how-to-create-a-release.md) for tagging and publication.
 
+A patch release can instead select an ordered set of fixes from dev. Its preparation starts from current main, retains one cherry-picked commit per fix, and adds stable metadata before the local integration merge. See [How to Create a Patch Release](how-to-create-a-patch-release.md) for that procedure.
+
 ### Dev Branch Releases
 
 Dev branch releases happen under three circumstances:
@@ -73,14 +75,14 @@ The scenarios above describe what happens *after* a release occurs on `main`. Th
 
 #### Scenario 2 - After a patch release to main with corresponding changes to dev
 
-When a bug fix is important enough to be released as a patch to `main`, it is typically also cherry-picked into `dev`. Note that not every cherry-pick or merge to `main` triggers a release, as multiple patches may be batched together before making a release.
+The fixes in a patch release must also be present on dev for the corresponding development release. They can originate on dev and be backported to main, or originate on main and be brought onto dev. Multiple fixes can be collected into one patch release.
 
 A dev tag increment happens when both of the following conditions are met:
 
 1. A patch version release occurs on `main` (i.e., a release commit is created and tagged)
-2. Corresponding cherry-picks for the same fixes were also made to `dev`
+2. The same fixes are present on `dev`, regardless of which branch received them first
 
-If patches were only applied to `main` and `dev` was left untouched, there is no new content on `dev` and therefore no reason to increment its tag. When both conditions are met, the dev tag is incremented (e.g., `1.2.0dev0` → `1.2.0dev1`) to indicate that new content is available and to trigger fresh builds.
+When both conditions are met, the dev tag increments once for the collected patch release, such as `1.3.0dev0` to `1.3.0dev1`. This applies even when dev received the fixes before main. The increment publishes the corresponding development artifacts without changing the target major or minor version. It requires neither reapplying fixes already on dev nor merging stable version metadata into it. [How to Bump the Dev Branch Version](how-to-bump-dev-branch-version.md#scenario-2-incrementing-the-dev-tag) describes the procedure.
 
 #### Scenario 3 - When substantial new content warrants a dev release
 
@@ -105,7 +107,7 @@ The dev branch version always indicates what the *next* release will be. When `d
 
 ## Branch-Specific Release References
 
-Bumpver updates the package and module versions, README version, and Sphinx release value according to the patterns in `pyproject.toml`. It does not update `uv.lock`, deployment template defaults, deployment documentation examples, README installation image tags, or the example platform requirement. Stable preparation includes those references in the same version commit, while a development bump changes only the configured versions and local package lock entry.
+Bumpver updates the package and module versions, README version, and Sphinx release value according to the patterns in `pyproject.toml`. It does not update `uv.lock`, deployment template defaults, deployment documentation examples, README installation image tags, or the example platform requirement. Stable preparation includes those references in the same version commit. A development bump updates the configured versions and local package lock entry. When it follows stable publication, the development release commit also updates README installation image tags to that published stable version.
 
 The stable release uses its version number for the deployment template's `container_tag` and pins `dioptra-platform` to that version in `examples/examples-setup-requirements.txt`. Dev retains the literal `dev` container tag and an unbounded platform requirement. README installation instructions select main, so their image tags follow the published stable release even when the README is viewed on dev. The README's package version can therefore differ from its installation image tags.
 

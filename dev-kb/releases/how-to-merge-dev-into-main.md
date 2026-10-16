@@ -2,6 +2,8 @@
 
 This guide provides step-by-step instructions for bringing changes from `dev` into `main` for a stable release. For background on branch versions, see [About Versioned Releases](about-versioned-releases.md). Tagging and publication are covered in [How to Create a Release](how-to-create-a-release.md).
 
+For a patch containing only selected fixes, use [How to Create a Patch Release](how-to-create-a-patch-release.md). That procedure starts from current main and preserves individual fix commits without merging the full development branch.
+
 - [Prerequisites](#prerequisites)
 - [Step 1: Create the Release Branch](#step-1-create-the-release-branch)
 - [Step 2: Prepare the Stable Version](#step-2-prepare-the-stable-version)
