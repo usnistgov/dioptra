@@ -120,6 +120,45 @@ def _prepare_entrypoint_request(dioptra_client, payload, modifying):
 
 
 @pytest.mark.parametrize("modifying", [False, True])
+def test_zero_output_artifact_reference_matches_preview_and_save(
+    dioptra_client, proposed_entrypoint, modifying, db_session
+):
+    """Reject an empty artifact reference without saving the proposed entrypoint."""
+    proposed_entrypoint["artifactParameters"] = [
+        {"name": "artifact", "outputParams": []}
+    ]
+    entrypoint_id, payload = _prepare_entrypoint_request(
+        dioptra_client, proposed_entrypoint, modifying
+    )
+    before = (
+        dioptra_client.entrypoints.get_by_id(entrypoint_id).json()
+        if modifying
+        else None
+    )
+    payload["taskGraph"] = "selected:\n  task1:\n    input_param: $artifact\n"
+    counts_before = _entrypoint_row_counts(db_session)
+
+    preview = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=True
+    )
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    saved = _request_entrypoint_candidate(dioptra_client, payload, entrypoint_id)
+
+    assert preview.status_code == saved.status_code == HTTPStatus.BAD_REQUEST
+    assert preview.json()["detail"] == saved.json()["detail"]
+    errors = preview.json()["detail"]["reason"]["rendered_validation_errors"]
+    assert any(
+        'reference "artifact"' in error and "produces no output" in error
+        for error in errors
+    )
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert dioptra_client.entrypoints.get_by_id(entrypoint_id).json() == before
+
+
+@pytest.mark.parametrize("modifying", [False, True])
 @pytest.mark.parametrize("cyclic", [False, True])
 def test_full_validation_checks_all_swap_dependencies(
     dioptra_client, proposed_entrypoint, modifying, cyclic, db_session
