@@ -318,6 +318,57 @@ def test_queue_get_all(
     assert_retrieving_queues_works(dioptra_client, expected=queue_expected_list)
 
 
+def test_queue_get_workers(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_queues: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Get live worker counts for multiple queues through the client and API."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    first_name = registered_queues["queue1"]["name"]
+    second_name = registered_queues["queue2"]["name"]
+
+    class MockRQWorker:
+        @staticmethod
+        def all(queue):
+            return [object(), object()] if queue.name == first_name else []
+
+    monkeypatch.setattr(rq_service, "RQWorker", MockRQWorker)
+
+    response = dioptra_client.queues.get_workers([first_name, second_name])
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"workers": {first_name: 2, second_name: 0}}
+
+
+def test_queue_get_workers_for_unregistered_queue(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unregistered queue name with no RQ workers has a count of zero."""
+    import dioptra.restapi.v1.shared.rq_service as rq_service
+
+    queue_name = "unregistered-worker-test-queue"
+    checked_names = []
+
+    class MockRQWorker:
+        @staticmethod
+        def all(queue):
+            checked_names.append(queue.name)
+            return []
+
+    monkeypatch.setattr(rq_service, "RQWorker", MockRQWorker)
+
+    response = dioptra_client.queues.get_workers([queue_name])
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"workers": {queue_name: 0}}
+    assert checked_names == [queue_name]
+
+
 @pytest.mark.parametrize(
     "sort_by,descending,expected",
     [

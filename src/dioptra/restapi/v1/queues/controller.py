@@ -39,6 +39,7 @@ from dioptra.restapi.v1.shared.drafts.controller import (
     generate_resource_drafts_id_endpoint,
     generate_resource_id_draft_endpoint,
 )
+from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.snapshots.controller import (
     generate_resource_snapshots_endpoint,
     generate_resource_snapshots_id_endpoint,
@@ -50,9 +51,11 @@ from dioptra.restapi.v1.shared.tags.controller import (
 
 from .schema import (
     QueueGetQueryParameters,
+    QueueListSchema,
     QueueMutableFieldsSchema,
     QueuePageSchema,
     QueueSchema,
+    QueueWorkerStatusSchema,
 )
 from .service import QueueIdService, QueueService
 
@@ -194,6 +197,29 @@ class QueueIdEndpoint(Resource):
             ),
         )
         return utils.build_queue(queue)
+
+
+@api.route("/workers")
+class QueueWorkerEndpoint(Resource):
+    @inject
+    def __init__(self, rq_service: RQServiceV1, *args, **kwargs) -> None:
+        """Initialize the queue resource.
+
+        All arguments are provided via dependency injection.
+
+        Args:
+            rq_service: A RQServiceV1 object.
+        """
+        self._rq_service = rq_service
+        super().__init__(*args, **kwargs)
+
+    @login_required
+    @accepts(query_params_schema=QueueListSchema, api=api)
+    @responds(schema=QueueWorkerStatusSchema, api=api)
+    def get(self):
+        parsed_query_params = request.parsed_query_params  # noqa: F841
+        queue_names = parsed_query_params.get("queue_names", [])
+        return {"workers": self._rq_service.workers_per_queue(queue_list=queue_names)}
 
 
 QueueDraftResource = generate_resource_drafts_endpoint(

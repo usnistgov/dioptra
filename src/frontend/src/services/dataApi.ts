@@ -225,6 +225,12 @@ export async function getJobMetricHistory(id: string, name: string) {
   return res;
 }
 
+export async function getQueueWorkers(queueNames: string[]) {
+  return await axios.get<{ workers: Record<string, number> }>("/api/queues/workers", {
+    params: { queueNames: queueNames.join(",") },
+  });
+}
+
 export async function getJobs(id: number, pagination: Pagination) {
   const res = await axios.get(`/api/experiments/${id}/jobs`, {
     params: {
