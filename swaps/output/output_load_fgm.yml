@@ -1,0 +1,63 @@
+load:
+  load_artifacts_for_job:
+    job_id: $job_id
+    extract_files: [$adv_tar_name]
+
+dataset:
+  load_dataset:
+    ep_seed: $seed
+    testing_dir: $input_dir
+    batch_size: $batch_size
+    subsets: [testing]
+    image_size: $image_size
+    rescale: $rescale
+    shuffle: False
+  dependencies:
+    - load
+
+model:
+  load_model:
+    model_name: $model_name
+    model_version: $model_version
+    art: true
+    classifier_kwargs:
+      clip_values: $clip_values
+
+transformed:
+  attack_fgm:
+    dataset: $dataset.testing
+    adv_data_dir: $output_dir
+    classifier: $model
+    batch_size: $batch_size
+    eps: $eps
+    eps_step: $eps_step
+    minimal: $minimal
+    norm: $norm
+    distance_metrics:
+      - name: l_infinity_norm
+        func: l_inf_norm
+      - name: l_1_norm
+        func: l_1_norm
+      - name: l_2_norm
+        func: l_2_norm
+      - name: cosine_similarity
+        func: paired_cosine_similarities
+      - name: euclidean_distance
+        func: paired_euclidean_distances
+      - name: manhattan_distance
+        func: paired_manhattan_distances
+      - name: wasserstein_distance
+        func: paired_wasserstein_distances
+
+save:
+  save_artifacts_and_models:
+    artifacts:
+      - type: tarball
+        adv_data_dir: $def_data_dir
+        adv_tar_name: $def_tar_name
+      - type: dataframe
+        data_frame: $transformed
+        file_name: $distance_metrics_filename
+        file_format: csv.gz
+        file_format_kwargs:
+          index: false

@@ -1,0 +1,39 @@
+load:
+  passthrough:
+
+dataset:
+  load_dataset:
+    ep_seed: $seed
+    testing_dir: $input_dir
+    batch_size: $batch_size
+    subsets: [testing]
+    image_size: $image_size
+    rescale: $rescale
+    shuffle: False
+  dependencies:
+    - load
+
+model:
+  load_model:
+    model_name: $model_name
+    model_version: $model_version
+    art: true
+    classifier_kwargs:
+      clip_values: $clip_values
+
+transformed:
+  passthrough_dataset:
+    dataset: $dataset
+
+save:
+  save_artifacts_and_models:
+    artifacts:
+      - type: tarball
+        adv_data_dir: $def_data_dir
+        adv_tar_name: $def_tar_name
+      - type: dataframe
+        data_frame: $transformed
+        file_name: $distance_metrics_filename
+        file_format: csv.gz
+        file_format_kwargs:
+          index: false
