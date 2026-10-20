@@ -33,6 +33,7 @@ from dioptra.restapi.db import models
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import ResourceGetQueryParameters
+from dioptra.restapi.v1.artifacts.schema import ArtifactGetQueryParameters
 
 from .service import ResourceSnapshotsIdService, ResourceSnapshotsService
 
@@ -91,7 +92,12 @@ def generate_resource_snapshots_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @accepts(query_params_schema=ResourceGetQueryParameters, api=api)
+        @accepts(
+            query_params_schema=ArtifactGetQueryParameters
+            if resource_name == "artifact"
+            else ResourceGetQueryParameters,
+            api=api,
+        )
         @responds(schema=page_schema, model_name=model_name, api=api)
         def get(self, id: int):
             """Gets the Snapshots for the resource."""
@@ -103,6 +109,7 @@ def generate_resource_snapshots_endpoint(
             search_string = unquote(parsed_query_params["search"])
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
+            output_params = parsed_query_params.get("output_params")
 
             snapshots, total_num_snapshots = cast(
                 tuple[list[dict[str, Any]], int],
@@ -111,6 +118,7 @@ def generate_resource_snapshots_endpoint(
                     search_string=search_string,
                     page_index=page_index,
                     page_length=page_length,
+                    output_params=output_params,
                     error_if_not_found=True,
                     log=log,
                 ),
@@ -260,7 +268,12 @@ def generate_nested_resource_snapshots_endpoint(
             super().__init__(*args, **kwargs)
 
         @login_required
-        @accepts(query_params_schema=ResourceGetQueryParameters, api=api)
+        @accepts(
+            query_params_schema=ArtifactGetQueryParameters
+            if resource_name == "artifact"
+            else ResourceGetQueryParameters,
+            api=api,
+        )
         @responds(schema=page_schema, model_name=model_name, api=api)
         def get(self, id: int, **kwargs):
             """Gets the Snapshots for the resource."""
@@ -281,6 +294,7 @@ def generate_nested_resource_snapshots_endpoint(
             search_string = unquote(parsed_query_params["search"])
             page_index = parsed_query_params["index"]
             page_length = parsed_query_params["page_length"]
+            output_params = parsed_query_params.get("output_params")
 
             snapshots, total_num_snapshots = cast(
                 tuple[list[models.ResourceSnapshot], int],
@@ -289,6 +303,7 @@ def generate_nested_resource_snapshots_endpoint(
                     search_string=search_string,
                     page_index=page_index,
                     page_length=page_length,
+                    output_params=output_params,
                     error_if_not_found=True,
                     log=log,
                 ),
