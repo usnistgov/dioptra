@@ -90,3 +90,4 @@ Follow the steps detailed in the guides below to install Dioptra.
        get-container-images/index
        prepare-deployment
        update-deployment
+       recover-deployment-credentials

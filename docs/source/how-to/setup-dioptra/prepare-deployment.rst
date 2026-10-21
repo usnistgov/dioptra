@@ -30,6 +30,7 @@ Prerequisites
 * `Docker Engine <https://docs.docker.com/engine/install/>`__ and `Docker Compose <https://docs.docker.com/compose/install/>`__ installed
 * :ref:`how-to-get-container-images` - Container images available (downloaded or built)
 * A terminal with access to the deployment target directory
+* A POSIX deployment environment with the :ref:`required filesystem support <reference-init-deployment-credentials>`
 
 Deployment Setup
 ----------------
@@ -129,6 +130,9 @@ Run the initialization script to generate passwords, copy configuration files, a
    Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
 
 The script automates password generation, certificate bundling, volume preparation, Minio account setup, and built-in plugin syncing.
+
+Run initialization as the user who owns the deployment files.
+If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.
 
 .. admonition:: Learn More
 
