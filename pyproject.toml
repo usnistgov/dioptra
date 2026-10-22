@@ -166,7 +166,7 @@ docs = [
     "pydata-sphinx-theme>=0.13.3",
     "pymdown-extensions>=9.4",
     "recommonmark>=0.7.1",
-    "setuptools<81.0.0",  # Needed for pkg_resources used by sphinxcontrib-openapi
+    "setuptools<84.0.0",  # Needed for pkg_resources used by sphinxcontrib-openapi
     "sphinx-autobuild>=2024.10.3",
     "sphinx-autodoc-typehints>=1.19.1",
     "sphinx-book-theme>=0.3.3",
