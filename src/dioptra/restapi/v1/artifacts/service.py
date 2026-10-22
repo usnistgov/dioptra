@@ -416,5 +416,5 @@ class ArtifactSnapshotIdService(ServiceContextService):
         )
 
         return self._uow.artifact_repo.get_one_snapshot(
-            artifact_id, artifact_snapshot_id, DeletionPolicy.NOT_DELETED
+            artifact_id, artifact_snapshot_id, DeletionPolicy.ANY
         )
