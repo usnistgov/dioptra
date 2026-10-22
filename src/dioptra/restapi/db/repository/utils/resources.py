@@ -443,7 +443,10 @@ def get_one_latest_child_snapshot(
     deletion_policy: DeletionPolicy,
 ) -> ResourceT:
     """
-    Get the latest child snapshot scoped to the latest parent snapshot.
+    Get the latest child snapshot scoped to its parent.
+
+    Active children must belong to the latest parent snapshot. Deleted children
+    may belong to an earlier parent snapshot when the deletion policy allows it.
 
     This supports resources whose parent/child membership is represented by a
     snapshot association table instead of the resource_dependencies table.
@@ -467,8 +470,9 @@ def get_one_latest_child_snapshot(
     Raises:
         EntityDoesNotExistError: if the parent resource does not exist, or if the
             child resource does not exist in the database or is not associated with
-            the parent's latest snapshot
-        EntityDeletedError: if the parent is deleted, or if the child is deleted
+            the parent under the requested deletion policy
+        EntityDeletedError: if the parent is deleted and policy is NOT_DELETED,
+            or if the child is deleted
             but policy was to find a non-deleted child
         EntityExistsError: if the child exists and is not deleted, but policy was
             to find a deleted child
@@ -477,7 +481,11 @@ def get_one_latest_child_snapshot(
     assert_resource_exists(
         session,
         parent_resource_id,
-        deletion_policy=DeletionPolicy.NOT_DELETED,
+        deletion_policy=(
+            DeletionPolicy.NOT_DELETED
+            if deletion_policy is DeletionPolicy.NOT_DELETED
+            else DeletionPolicy.ANY
+        ),
     )
 
     parent_resource = sao.aliased(m.Resource)
@@ -506,9 +514,15 @@ def get_one_latest_child_snapshot(
             child_class.resource_id == child_resource_id,
             child_class.resource_snapshot_id == child_resource.latest_snapshot_id,
             parent_snapshot.resource_id == parent_resource_id,
-            parent_snapshot.resource_snapshot_id == parent_resource.latest_snapshot_id,
         )
     )
+
+    membership = (
+        parent_snapshot.resource_snapshot_id == parent_resource.latest_snapshot_id
+    )
+    if deletion_policy is not DeletionPolicy.NOT_DELETED:
+        membership = sa.or_(membership, child_resource.is_deleted)
+    stmt = stmt.where(membership)
 
     child = session.scalars(stmt).unique().one_or_none()
 

@@ -901,12 +901,17 @@ def test_delete_plugin_by_id(
     following sequence of actions:
 
     - The user deletes a plugin by referencing its id.
-    - The user attempts to retrieve information about the deleted plugin.
-    - The request fails with an appropriate error message and response code.
+    - The user retrieves the deleted plugin and its snapshots successfully.
     """
     plugin_to_delete = registered_plugins["plugin1"]
     dioptra_client.plugins.delete_by_id(plugin_id=plugin_to_delete["id"])
-    assert_plugin_is_not_found(dioptra_client, plugin_id=plugin_to_delete["id"])
+    response = dioptra_client.plugins.get_by_id(plugin_to_delete["id"])
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["deleted"] is True
+    response = dioptra_client.plugins.snapshots.get_by_id(
+        plugin_to_delete["id"], snapshot_id=plugin_to_delete["snapshot"]
+    )
+    assert response.status_code == HTTPStatus.OK
 
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.plugins.snapshots,
@@ -1377,8 +1382,7 @@ def test_delete_plugin_file_by_id(
     test validates the following sequence of actions:
 
     - The user deletes a plugin file by referencing its id.
-    - The user attempts to retrieve information about the deleted plugin file.
-    - The request fails with an appropriate error message and response code.
+    - The user retrieves the deleted file despite its removal from the latest plugin.
     """
     registered_plugin = registered_plugin_with_files["plugin"]
     plugin_file_to_delete = registered_plugin_with_files["plugin_file1"]
@@ -1387,11 +1391,12 @@ def test_delete_plugin_file_by_id(
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
     )
-    assert_plugin_file_is_not_found(
-        dioptra_client,
+    response = dioptra_client.plugins.files.get_by_id(
         plugin_id=registered_plugin["id"],
         plugin_file_id=plugin_file_to_delete["id"],
     )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["deleted"] is True
 
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.plugins.files.snapshots,
@@ -1436,6 +1441,21 @@ def test_plugin_file_rejects_duplicate_task_names_across_kinds(
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json()["error"] == "InputParameterNotUniqueError"
+
+
+def test_read_files_of_deleted_plugin(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    registered_plugin_with_files: dict[str, Any],
+) -> None:
+    plugin_id = registered_plugin_with_files["plugin"]["id"]
+    file_id = registered_plugin_with_files["plugin_file1"]["id"]
+    response = dioptra_client.plugins.delete_by_id(plugin_id)
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.plugins.files.get_by_id(plugin_id, file_id)
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["deleted"] is True
 
 
 def test_plugin_file_get_by_id_is_scoped_to_parent_plugin(
