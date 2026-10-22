@@ -20,6 +20,7 @@ import re
 
 from marshmallow import Schema, fields, validate
 
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.plugin_parameter_types.schema import (
     PluginParameterTypeRefSchema,
 )
@@ -27,13 +28,13 @@ from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
 )
 
-ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
 ALLOWED_PLUGIN_FILENAME_REGEX = re.compile(r"^(?!.*/_)(?!_/)([a-zA-Z][a-zA-Z0-9_]*/)*[a-zA-Z_][a-zA-Z0-9_]*\.py$")  # fmt: skip
 ALLOWED_PLUGIN_TASK_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
 ALLOWED_PLUGIN_TASK_PARAMETER_REGEX = re.compile(r"^([A-Z]|[A-Z_][A-Z0-9_]+)$", flags=re.IGNORECASE)  # fmt: skip
@@ -218,23 +219,11 @@ class PluginFileRefSchema(PluginFileRefBaseSchema):  # type: ignore
 PluginBaseSchema = generate_base_resource_schema("Plugin", snapshot=True)
 
 
-class PluginMutableFieldsSchema(Schema):
+class PluginMutableFieldsSchema(ResourceNameSchema):
     """The schema for the mutable data fields in a Plugin resource."""
 
-    name = fields.String(
-        attribute="name",
-        metadata={"description": "Name of the Plugin resource."},
-        required=True,
-        validate=validate.Regexp(
-            ALLOWED_PLUGIN_NAME_REGEX,
-            error=(
-                "'{input}' is not a compatible name for Python module. A Python "
-                "module must start with a letter or underscore, followed by letters, "
-                "numbers, or underscores. In addition, a Python module name cannot "
-                "be named '_' with no other characters."
-            ),
-        ),
-    )
+    resource_type = EntityType.PLUGIN
+
     description = fields.String(
         attribute="description",
         metadata={"description": "Description of the Plugin resource."},

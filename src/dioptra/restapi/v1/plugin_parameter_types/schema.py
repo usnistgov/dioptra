@@ -16,12 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing PluginParameterType resources."""
 
-from marshmallow import Schema, fields
+from marshmallow import fields
 
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     SearchQueryParametersSchema,
     ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
@@ -43,14 +45,11 @@ class PluginParameterTypeRefSchema(PluginParameterTypeRefBaseSchema):  # type: i
     )
 
 
-class PluginParameterTypeMutableFieldsSchema(Schema):
+class PluginParameterTypeMutableFieldsSchema(ResourceNameSchema):
     """The fields schema for the mutable data in a PluginParameterType resource."""
 
-    name = fields.String(
-        attribute="name",
-        metadata={"description": "Name of the PluginParameterType resource."},
-        required=True,
-    )
+    resource_type = EntityType.PLUGIN_TASK_PARAMETER_TYPE
+
     description = fields.String(
         attribute="description",
         metadata={"description": "Description of the PluginParameterType resource."},

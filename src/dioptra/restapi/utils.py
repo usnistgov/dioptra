@@ -43,11 +43,15 @@ from marshmallow.schema import SchemaMeta
 from typing_extensions import TypedDict
 from werkzeug.datastructures import FileStorage
 
+from dioptra.restapi.errors import ResourceNameError
 from dioptra.restapi.request_scope import set_request_scope_callbacks
+from dioptra.restapi.v1.entity_types import EntityType
 
 from .custom_schema_fields import FileUpload, MultiFileUpload
 
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
+ALLOWED_RESOURCE_NAME_REGEX = re.compile(r"\A(?! +\Z)[A-Za-z0-9_. -]+\Z")
+ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"\A(?:[A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\Z")
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -461,3 +465,23 @@ def find_non_unique(name: str, parameters: Iterable[dict[str, Any]]) -> list[str
     name_count.update([parameter[name] for parameter in parameters])
     # create a list of all name values that appear more than once
     return [key for key in name_count.keys() if name_count[key] > 1]
+
+
+def validate_resource_name(name: str, resource_type: "EntityType") -> None:
+    name_regex = (
+        ALLOWED_PLUGIN_NAME_REGEX
+        if resource_type is EntityType.PLUGIN
+        else ALLOWED_RESOURCE_NAME_REGEX
+    )
+
+    if not name_regex.fullmatch(name):
+        if resource_type is EntityType.PLUGIN:
+            raise ResourceNameError(
+                f"'{name}' is not a compatible name for Python module. A Python "
+                "module must start with a letter or underscore, followed by letters, "
+                "numbers, or underscores. In addition, a Python module name cannot "
+                "be named '_' with no other characters."
+            )
+        raise ResourceNameError(
+            f"{resource_type.display_name} name contained disallowed characters."
+        )
