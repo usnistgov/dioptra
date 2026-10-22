@@ -120,6 +120,33 @@ def _prepare_entrypoint_request(dioptra_client, payload, modifying):
 
 
 @pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize(
+    "name",
+    ["../escape", "nested/name", "/tmp/escape", r"..\escape", r"C:\temp\escape"],
+)
+def test_entrypoint_rejects_path_traversal_names(
+    dioptra_client, proposed_entrypoint, modifying, name, db_session
+):
+    entrypoint_id, payload = _prepare_entrypoint_request(
+        dioptra_client, proposed_entrypoint, modifying
+    )
+    counts_before = _entrypoint_row_counts(db_session)
+    payload = {**payload, "name": name}
+
+    response = _request_entrypoint_candidate(dioptra_client, payload, entrypoint_id)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json()
+    assert response.json()["error"] == "ResourceNameError"
+    db_session.commit()
+    assert _entrypoint_row_counts(db_session) == counts_before
+    if modifying:
+        assert (
+            dioptra_client.entrypoints.get_by_id(entrypoint_id).json()["name"]
+            == proposed_entrypoint["name"]
+        )
+
+
+@pytest.mark.parametrize("modifying", [False, True])
 @pytest.mark.parametrize("cyclic", [False, True])
 def test_full_validation_checks_all_swap_dependencies(
     dioptra_client, proposed_entrypoint, modifying, cyclic, db_session

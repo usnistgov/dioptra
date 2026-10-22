@@ -18,11 +18,13 @@
 
 from marshmallow import Schema, fields
 
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.groups.schema import GroupRefSchema
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     ResourceTypeQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
@@ -51,8 +53,10 @@ class TagRefSchema(Schema):
     )
 
 
-class TagMutableFieldsSchema(Schema):
+class TagMutableFieldsSchema(ResourceNameSchema):
     """The fields schema for the mutable data in a Tag resource."""
+
+    resource_type = EntityType.TAG
 
     name = fields.String(
         attribute="name", metadata={"description": "Name of the Tag resource."}

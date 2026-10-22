@@ -16,12 +16,14 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Queue resources."""
 
-from marshmallow import Schema, fields
+from marshmallow import fields
 
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     SearchQueryParametersSchema,
     ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
@@ -53,14 +55,11 @@ class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
     )
 
 
-class QueueMutableFieldsSchema(Schema):
+class QueueMutableFieldsSchema(ResourceNameSchema):
     """The fields schema for the mutable data in a Queue resource."""
 
-    name = fields.String(
-        attribute="name",
-        metadata={"description": "Name of the Queue resource."},
-        required=True,
-    )
+    resource_type = EntityType.QUEUE
+
     description = fields.String(
         attribute="description",
         metadata={"description": "Description of the Queue resource."},

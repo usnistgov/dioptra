@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing the auth endpoint objects."""
 
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
 
 class LoginSchema(Schema):
@@ -32,6 +32,7 @@ class LoginSchema(Schema):
         metadata={"description": "The account password."},
         load_only=True,
         required=True,
+        validate=validate.Length(min=1),
     )
     status = fields.String(
         attribute="status",

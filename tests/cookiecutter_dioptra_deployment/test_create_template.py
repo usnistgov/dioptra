@@ -16,8 +16,10 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import os
 import re
+import runpy
 from pathlib import Path
 
+import pytest
 from binaryornot.check import is_binary
 
 PATTERN = r"{{(\s?cookiecutter)[.](.*?)}}"
@@ -70,3 +72,49 @@ def test_project_generation(context, result):
     paths = build_files_list(result.project_path)
     assert paths
     check_paths(paths)
+
+
+def test_project_generation_without_posix_credential_apis(
+    cookies, context, monkeypatch, tmp_path
+):
+    """Render the project and run both hooks without credential POSIX APIs.
+
+    Given injected missing O_NOFOLLOW and fchmod APIs in this process and
+    hook subprocesses, Cookiecutter still renders every file and runs both
+    hooks. Executing credential generation then fails with capability guidance.
+    """
+    unavailable = ("O_NOFOLLOW", "fchmod")
+    marker = tmp_path / "hook-starts.txt"
+    # Hook processes start fresh interpreters. Remove the APIs there as well as
+    # in this process, and record that both hooks ran with the restriction.
+    (tmp_path / "sitecustomize.py").write_text(
+        "import os\n"
+        f"for name in {unavailable!r}:\n"
+        "    if hasattr(os, name):\n"
+        "        delattr(os, name)\n"
+        "with open(os.environ['HOOK_STARTS'], 'a') as stream:\n"
+        "    stream.write('credential APIs unavailable\\n')\n"
+    )
+    monkeypatch.setenv("HOOK_STARTS", str(marker))
+    pythonpath = [str(tmp_path), os.environ.get("PYTHONPATH", "")]
+    monkeypatch.setenv("PYTHONPATH", os.pathsep.join(pythonpath))
+    for name in unavailable:
+        monkeypatch.delattr(os, name, raising=False)
+
+    result = cookies.bake(extra_context={**context})
+
+    assert result.exit_code == 0
+    assert result.exception is None
+    assert marker.read_text().splitlines() == ["credential APIs unavailable"] * 2
+    assert not (result.project_path / "templates").exists()
+    assert not (result.project_path / "secrets" / ".gitkeep").exists()
+    assert not (result.project_path / "systemd" / ".gitkeep").exists()
+    check_paths(build_files_list(result.project_path))
+
+    monkeypatch.chdir(result.project_path)
+    generator = runpy.run_path("scripts/generate_password_templates.py")
+    with pytest.raises(RuntimeError, match="requires POSIX no-follow"):
+        generator["render_template_files"](
+            generator["JINJA_ENV"], generator["PASSWORD_FILES"], {}
+        )
+    assert not (result.project_path / ".env").exists()

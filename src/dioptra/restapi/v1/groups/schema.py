@@ -18,9 +18,11 @@
 
 from marshmallow import Schema, fields, missing
 
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     SearchQueryParametersSchema,
 )
 
@@ -146,12 +148,10 @@ class GroupMemberSchema(GroupMemberCreateFieldsSchema, GroupMemberBaseSchema):  
     """The schema for a Group Member"""
 
 
-class GroupMutableFieldsSchema(Schema):
+class GroupMutableFieldsSchema(ResourceNameSchema):
     """The schema for the mutable data by GroupMembers in a Group."""
 
-    name = fields.String(
-        attribute="name", metadata={"description": "Name of the Group."}, required=True
-    )
+    resource_type = EntityType.GROUP
 
 
 class GroupSchema(GroupMutableFieldsSchema):

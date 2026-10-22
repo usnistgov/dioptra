@@ -40,6 +40,32 @@ The ``init-deployment.sh`` script automates the following initialization steps:
 - Syncs built-in task plugins from the Dioptra GitHub repository
 - Enables SSL/TLS in PostgreSQL (if applicable)
 
+.. _reference-init-deployment-credentials:
+
+Credential Files
+----------------
+
+Credential generation requires a POSIX environment with descriptor-relative file operations, same-directory hard links, and file and directory synchronization.
+The deployment user must be able to read the credential files, set their permissions, and create files in their containing directories.
+
+The following paths, relative to the deployment directory, form one credential set:
+
+* ``.env``
+* ``secrets/postgres-passwd.env``
+* ``secrets/<deployment-slug>-minio-accounts.env``
+
+When all three paths are absent, initialization generates the complete set with mode ``0600`` (owner read/write only).
+When all three files exist and are nonempty, initialization preserves their contents and ownership, repairs permissions to ``0600``, and reports any repairs without logging credentials.
+An incomplete or empty set, a symbolic or hard link, a nonregular file, or an inability to secure a credential path stops initialization.
+Existing credential values are not checked for consistency with each other or with running services.
+The generated systemd unit contains no credentials and is outside this permission policy.
+
+A caught generation failure attempts to remove all files created by that attempt; failures to complete cleanup are reported.
+Forced termination or power loss can leave partial credentials or protected temporary files named :literal:`.<credential-name>.<random-token>.tmp` beside the destinations.
+Those temporary files contain secrets and are not removed automatically by a later run.
+The set does not become visible atomically, and synchronization does not guarantee recovery after hardware failure.
+See :ref:`how-to-recover-deployment-credentials` for recovery instructions.
+
 Command-Line Options
 --------------------
 
