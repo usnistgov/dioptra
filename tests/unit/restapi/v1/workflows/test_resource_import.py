@@ -46,6 +46,7 @@ from dioptra.restapi.v1.workflows import service as workflow_service
 def assert_imported_resources_match_expected(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     expected: dict[str, Any],
+    group_id: int,
 ):
     response = dioptra_client.plugins.get()
     response_plugins = {plugin["name"] for plugin in response.json()["data"]}
@@ -54,7 +55,7 @@ def assert_imported_resources_match_expected(
         response.status_code == HTTPStatus.OK and response_plugins == expected_plugins
     )
 
-    response = dioptra_client.plugin_parameter_types.get()
+    response = dioptra_client.plugin_parameter_types.get(group_id=group_id)
     response_types = {param["name"] for param in response.json()["data"]}
     expected_types = {param["name"] for param in expected["plugin_param_types"]}
     assert (
@@ -277,7 +278,9 @@ def test_resource_import_sources_use_same_pipeline(
     assert response.json()["hash"] == expected_hash
     assert Path.cwd() == cwd
     chdir.assert_not_called()
-    assert_imported_resources_match_expected(dioptra_client, resources_import_config)
+    assert_imported_resources_match_expected(
+        dioptra_client, resources_import_config, group_id
+    )
 
 
 @pytest.mark.parametrize("resource_import_source", ["files"], indirect=True)

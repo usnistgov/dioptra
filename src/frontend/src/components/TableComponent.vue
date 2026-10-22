@@ -352,6 +352,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  highlightedRowKeys: {
+    type: Array,
+    default: () => [],
+  },
   rowKey: {
     type: String,
     default: "id",
@@ -369,6 +373,10 @@ const props = defineProps({
     default: () => ({ sortBy: "lastModifiedOn", descending: true }),
   },
   preserveSort: {
+    type: Boolean,
+    default: true,
+  },
+  refreshOnGroupChange: {
     type: Boolean,
     default: true,
   },
@@ -485,9 +493,10 @@ watch(
     if (!newVal) {
       await nextTick();
       // after loading, scroll to saved position
-      if (route.meta.backButton && loginStore.tablePaginationCache[route.path]) {
+      const cached = loginStore.tablePaginationCache[getCacheKey()];
+      if (route.meta.backButton && cached) {
         window.scrollTo({
-          top: loginStore.tablePaginationCache[route.path].lastScrollPosition,
+          top: cached.lastScrollPosition,
         });
       }
     }
@@ -500,28 +509,84 @@ function getSelectedColor(selected) {
   else if (selected) return "bg-blue-grey-1";
 }
 
-const pagination = ref({
-  page: 1,
-  rowsPerPage: props.showAll ? 0 : 15,
-  sortBy: props.defaultSort.sortBy,
-  descending: props.defaultSort.descending,
-});
+function getDefaultPagination() {
+  return {
+    page: 1,
+    rowsPerPage: props.showAll ? 0 : 15,
+    sortBy: props.defaultSort.sortBy,
+    descending: props.defaultSort.descending,
+  };
+}
+
+const pagination = ref(getDefaultPagination());
 
 const tableRef = ref();
+const isTableMounted = ref(false);
+const tablePath = route.path;
+
+const activeGroupId = computed(() => {
+  const group = loginStore.loggedInGroup;
+  if (!group || typeof group !== "object" || !("id" in group)) {
+    return null;
+  }
+  return group.id;
+});
+
+const displayedGroupId = ref(activeGroupId.value);
+
+function getCacheKey(groupId = displayedGroupId.value) {
+  return `${tablePath}::group:${groupId ?? "none"}`;
+}
+
+function saveTableState(groupId) {
+  if (!props.preserveSort) return;
+  loginStore.tablePaginationCache[getCacheKey(groupId)] = {
+    page: pagination.value.page,
+    rowsPerPage: pagination.value.rowsPerPage,
+    sortBy: pagination.value.sortBy,
+    descending: pagination.value.descending,
+    showDeleted: showDeleted.value,
+    search: filter.value,
+    lastScrollPosition: window.scrollY,
+  };
+}
+
+function restoreTableState(groupId) {
+  const cached = loginStore.tablePaginationCache[getCacheKey(groupId)];
+  pagination.value = cached ? { ...getDefaultPagination(), ...cached } : getDefaultPagination();
+  showDeleted.value = cached?.showDeleted ?? false;
+  filter.value = cached?.search ?? "";
+}
+
 onMounted(() => {
   // Restore cached pagination when arriving via back; otherwise use defaults
-  const key = route.path;
+  const key = getCacheKey();
   const cached = loginStore.tablePaginationCache[key];
   if (route.meta.backButton && cached) {
-    pagination.value = { ...pagination.value, ...cached };
-    showDeleted.value = cached.showDeleted;
-    filter.value = cached.search;
+    restoreTableState(displayedGroupId.value);
   } else if (cached) {
     delete loginStore.tablePaginationCache[key];
   }
+  isTableMounted.value = true;
   // get initial data from server with current pagination
   tableRef.value.requestServerInteraction();
 });
+
+watch(
+  activeGroupId,
+  (newGroupId, oldGroupId) => {
+    if (!props.refreshOnGroupChange || !isTableMounted.value || newGroupId === oldGroupId || route.path !== tablePath) {
+      return;
+    }
+
+    saveTableState(oldGroupId);
+    displayedGroupId.value = newGroupId;
+    restoreTableState(newGroupId);
+    selected.value = [];
+    refreshTable();
+  },
+  { flush: "post" },
+);
 
 defineExpose({ refreshTable, updateTotalRows });
 function refreshTable() {
@@ -592,23 +657,9 @@ function checkSearch(string) {
   return "";
 }
 
-const path = route.path;
-
 onBeforeUnmount(() => {
   invalidSearchNotification();
-
-  // cache current pagination keyed by route path
-  if (props.preserveSort) {
-    loginStore.tablePaginationCache[path] = {
-      page: pagination.value.page,
-      rowsPerPage: pagination.value.rowsPerPage,
-      sortBy: pagination.value.sortBy,
-      descending: pagination.value.descending,
-      showDeleted: props.showDeleted,
-      search: filter.value,
-      lastScrollPosition: window.scrollY,
-    };
-  }
+  saveTableState(displayedGroupId.value);
 });
 
 function updateTotalRows(totalRows) {
@@ -656,6 +707,9 @@ function highlightRow(rowProps) {
     return darkMode.value ? "bg-red-dark-soft" : "bg-red-light";
   }
   if (props.disabledRowKeys.includes(rowProps.row[props.rowKey])) return;
+  if (props.highlightedRowKeys.includes(rowProps.row[props.rowKey])) {
+    return darkMode.value ? "bg-blue-grey-9" : "bg-blue-1";
+  }
   if (!props.enableHighlightRow) return;
   if (!rowProps.expand) return;
   if (darkMode.value) {

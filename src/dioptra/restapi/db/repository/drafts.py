@@ -43,7 +43,7 @@ from dioptra.restapi.db.repository.utils import (
     assert_resource_exists,
     assert_snapshot_exists,
     assert_user_exists,
-    assert_user_in_group,
+    assert_user_in_group_or_group_public,
     draft_exists,
     get_draft_id,
     get_group_id,
@@ -106,7 +106,9 @@ class DraftsRepository:
             self._session, draft.target_owner, DeletionPolicy.NOT_DELETED
         )
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
-        assert_user_in_group(self._session, draft.creator, draft.target_owner)
+        assert_user_in_group_or_group_public(
+            self._session, draft.creator, draft.target_owner
+        )
 
         base_resource_id = draft.payload["base_resource_id"]
         if base_resource_id is not None:
@@ -195,7 +197,9 @@ class DraftsRepository:
             self._session, draft.target_owner, DeletionPolicy.NOT_DELETED
         )
         assert_user_exists(self._session, draft.creator, DeletionPolicy.NOT_DELETED)
-        assert_user_in_group(self._session, draft.creator, draft.target_owner)
+        assert_user_in_group_or_group_public(
+            self._session, draft.creator, draft.target_owner
+        )
 
         resource_id = draft.payload["resource_id"]
         resource_snapshot_id = draft.payload["resource_snapshot_id"]
@@ -452,9 +456,13 @@ class DraftsRepository:
         base_resource_id: int | None = None,
         page_start: int = 0,
         page_length: int = -1,
+        show_deleted: bool = False,
     ) -> tuple[Sequence[DraftResource], int]:
         """
         Get some drafts according to search criteria.
+
+        With show_deleted, retained drafts may be read from deleted groups.
+        Drafts remain scoped to their creator and are not individually soft-deleted.
 
         Args:
             draft_type: the type of draft to get
@@ -489,7 +497,11 @@ class DraftsRepository:
         if group is None:
             group_id = None
         else:
-            assert_group_exists(self._session, group, DeletionPolicy.NOT_DELETED)
+            assert_group_exists(
+                self._session,
+                group,
+                DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
+            )
             group_id = get_group_id(group)
 
         if base_resource_id is not None:

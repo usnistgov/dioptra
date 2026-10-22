@@ -40,7 +40,7 @@ export async function navigateToEntrypoints(page: Page) {
   const menu = page.getByRole("button", { name: "Navigation Menu", exact: true });
   if (await menu.isVisible()) {
     await menu.click();
-    await page.getByRole("link", { name: "Entrypoints", exact: true }).click();
+    await page.getByRole("menu").getByText("Entrypoints", { exact: true }).click();
   } else {
     await page.getByRole("tab", { name: "Entrypoints", exact: true }).click();
   }

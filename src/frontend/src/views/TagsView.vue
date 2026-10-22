@@ -52,6 +52,9 @@ import AddTagsDialog from "@/dialogs/AddTagsDialog.vue";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import PageTitle from "@/components/PageTitle.vue";
 import { useTableUtils } from "@/services/useTableUtils";
+import { useLoginStore } from "@/stores/LoginStore";
+
+const store = useLoginStore();
 
 const showAddDialog = ref(false);
 
@@ -64,11 +67,11 @@ const columns = [
 
 const { rows, isLoading, tableRef, selected, showDeleteDialog, getData, deleteRow } = useTableUtils("tags");
 
-async function addTag(name, group) {
+async function addTag(name) {
   try {
     await api.addItem("tags", {
       name,
-      group,
+      group: store.loggedInGroup.id,
     });
     notify.success(`Successfully created tag '${name}'`);
     showAddDialog.value = false;

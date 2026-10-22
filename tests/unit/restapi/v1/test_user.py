@@ -20,13 +20,18 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the user entity. The tests ensure that the users can be registered,
 modified, and deleted as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
+from flask.testing import FlaskClient
+from freezegun import freeze_time
+
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.routes import V1_GROUPS_ROUTE, V1_ROOT, V1_USERS_ROUTE
 
-from ..lib import helpers
+from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ----------------------------------------------------------------
@@ -89,6 +94,9 @@ def assert_user_response_contents_matches_expectations(
         # Validate the GroupRef structure
         assert isinstance(response["groups"][0]["id"], int)
         assert isinstance(response["groups"][0]["name"], str)
+        assert isinstance(response["groups"][0]["user"]["id"], int)
+        assert isinstance(response["groups"][0]["user"]["username"], str)
+        assert isinstance(response["groups"][0]["user"]["url"], str)
         assert isinstance(response["groups"][0]["url"], str)
 
 
@@ -393,7 +401,10 @@ def assert_new_password_cannot_be_existing(
 # -- Tests -------------------------------------------------------------
 
 
-def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> None:
+def test_create_user(
+    client: FlaskClient,
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+) -> None:
     """Test that we can create a user and its response is expected.
 
     This test validates the following sequence of actions:
@@ -421,8 +432,29 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
         current_user=True,
     )
 
+    personal_group = user_response["groups"][0]
+    assert personal_group["name"] == username
+    assert personal_group["user"]["id"] == user_response["id"]
+    assert personal_group["user"]["username"] == username
+
     dioptra_client.auth.login(username, password)
     assert_retrieving_current_user_works(dioptra_client, expected=user_response)
+
+    group_response = client.get(
+        f"/{V1_ROOT}/{V1_GROUPS_ROUTE}/{personal_group['id']}"
+    ).get_json()
+    assert group_response["public"] is True
+    assert group_response["user"]["id"] == user_response["id"]
+    assert len(group_response["members"]) == 1
+    creator_permissions = group_response["members"][0]["permissions"]
+    assert creator_permissions == {
+        "read": True,
+        "write": True,
+        "shareRead": True,
+        "shareWrite": True,
+        "owner": True,
+        "admin": True,
+    }
 
     # Getting a user by id returns UserSchema.
     user_expected = {
@@ -452,6 +484,38 @@ def test_user_get_all(
         for user in list(registered_users.values())
     ]
     assert_retrieving_users_works(dioptra_client, expected=user_expected_list)
+
+
+@freeze_time("Apr 1st, 2025 6:00am", auto_tick_seconds=1)
+def test_current_user_includes_other_users_public_groups(
+    client: FlaskClient,
+    auth_account: dict[str, Any],
+    registered_users: dict[str, Any],
+) -> None:
+    user2 = registered_users["user2"]
+    login_response = actions.login(client, user2["username"], user2["password"])
+    assert login_response.status_code == HTTPStatus.OK
+
+    created_group = actions.register_group(client, name="user2_public_group")
+    assert created_group.status_code == HTTPStatus.OK
+    created_group_id = created_group.get_json()["id"]
+
+    login_response = actions.login(
+        client, auth_account["username"], auth_account["password"]
+    )
+    assert login_response.status_code == HTTPStatus.OK
+
+    current_user_response = client.get(f"/{V1_ROOT}/{V1_USERS_ROUTE}/current")
+    assert current_user_response.status_code == HTTPStatus.OK
+
+    current_user_groups = current_user_response.get_json()["groups"]
+    group_ids = {group["id"] for group in current_user_groups}
+    assert created_group_id in group_ids
+    created_group_ref = next(
+        group for group in current_user_groups if group["id"] == created_group_id
+    )
+    assert created_group_ref["user"]["id"] == user2["id"]
+    assert created_group_ref["user"]["username"] == user2["username"]
 
 
 def test_user_search_query(

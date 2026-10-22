@@ -46,28 +46,17 @@
             <label :class="`field-label`">Name:</label>
           </template>
         </q-input>
-        <q-select
-          id="pluginGroup"
-          v-model="pluginParamType.group"
+        <q-input
           outlined
-          :options="store.groups"
-          option-label="name"
-          option-value="id"
-          emit-value
-          map-options
           dense
-          :rules="[requiredRule]"
+          :model-value="groupDisplayName"
+          disable
           class="q-mb-sm"
-          :disable="pluginParamType.deleted"
         >
           <template #before>
-            <label
-              for="pluginGroup"
-              class="field-label"
-              >Group:</label
-            >
+            <label class="field-label">Group:</label>
           </template>
-        </q-select>
+        </q-input>
         <q-input
           id="pluginDescription"
           v-model="pluginParamType.description"
@@ -207,11 +196,37 @@ const valuesChangedFromEditStart = computed(() => {
   return false;
 });
 
+const groupDisplayName = computed(() => {
+  if (route.params.id === "new") {
+    return store.loggedInGroup.name;
+  }
+
+  const groupValue = pluginParamType.value?.group;
+
+  if (groupValue && typeof groupValue === "object" && "name" in groupValue) {
+    return groupValue.name;
+  }
+
+  const groupId = groupValue && typeof groupValue === "object" && "id" in groupValue ? groupValue.id : groupValue;
+
+  if (typeof groupId === "number") {
+    const group = store.groups.find((g) => g.id === groupId);
+    if (group) {
+      return group.name;
+    }
+  }
+
+  return store.loggedInGroup.name;
+});
+
 onMounted(async () => {
   if (store.savedForms?.pluginParamType && route.params.id === "new") {
     copyAtEditStart.value = JSON.parse(JSON.stringify(pluginParamType.value));
     showReturnDialog.value = true;
-    pluginParamType.value = store.savedForms.pluginParamType;
+    pluginParamType.value = {
+      ...store.savedForms.pluginParamType,
+      group: store.loggedInGroup.id,
+    };
     if (pluginParamType.value.structure && Object.keys(pluginParamType.value.structure).length > 0) {
       jsonString.value = JSON.stringify(pluginParamType.value.structure, null, 2);
     }
@@ -222,6 +237,15 @@ onMounted(async () => {
     copyAtEditStart.value = JSON.parse(JSON.stringify(pluginParamType.value));
   }
 });
+
+watch(
+  () => store.loggedInGroup.id,
+  (groupId) => {
+    if (route.params.id !== "new") return;
+    pluginParamType.value.group = groupId;
+    ORIGINAL_COPY.group = groupId;
+  },
+);
 
 async function getPluginParamType() {
   try {
@@ -307,7 +331,12 @@ onBeforeRouteLeave((to) => {
 });
 
 function clearForm() {
-  pluginParamType.value = ORIGINAL_COPY;
+  pluginParamType.value = {
+    name: "",
+    group: store.loggedInGroup.id,
+    description: "",
+    structure: null,
+  };
   jsonString.value = "";
   basicInfoForm.value.reset();
   store.savedForms.pluginParamType = null;
@@ -316,18 +345,23 @@ function clearForm() {
 const basicInfoForm = ref();
 
 async function submit() {
-  const success = await basicInfoForm.value.validate();
-  if (!success || jsonError.value) return;
-  if (route.params.id === "new") {
-    createPluginParamType();
-  } else {
-    updatePluginParamType();
-  }
+  basicInfoForm.value.validate().then((success) => {
+    if (!success) return;
+    if (jsonError.value) return;
+    if (route.params.id === "new") {
+      createPluginParamType();
+    } else {
+      updatePluginParamType();
+    }
+  });
 }
 
 async function createPluginParamType() {
   try {
-    const res = await api.addItem("pluginParameterTypes", pluginParamType.value);
+    const res = await api.addItem("pluginParameterTypes", {
+      ...pluginParamType.value,
+      group: store.loggedInGroup.id,
+    });
     notify.success(`Successfully created '${res.data.name}'`);
     store.savedForms.pluginParamType = null;
     confirmLeave.value = true;

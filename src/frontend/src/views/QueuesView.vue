@@ -60,6 +60,7 @@ import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import PageTitle from "@/components/PageTitle.vue";
 import { useRouter } from "vue-router";
 import { useTableUtils } from "@/services/useTableUtils";
+import { openInNewTab } from "@/services/navigation";
 
 const router = useRouter();
 
@@ -93,7 +94,7 @@ const editObjTags = ref({});
 function openQueue(openTab) {
   const url = selected.value[0].payload ? `/queues/${selected.value[0].id}/draft` : `/queues/${selected.value[0].id}`;
 
-  if (openTab) window.open(url, "_blank", "noopener,noreferrer");
+  if (openTab) openInNewTab(router.resolve(url).href);
   else router.push(url);
 }
 </script>
