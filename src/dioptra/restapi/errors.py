@@ -642,6 +642,13 @@ class InvalidPythonError(DioptraError):
 
 
 # User Errors
+class UserAuthenticationError(DioptraError):
+    """A login failed without revealing which credential was incorrect."""
+
+    def __init__(self) -> None:
+        super().__init__("Invalid username or password.")
+
+
 class UserDoesNotExistError(DioptraError):
     """The entered username does not exist."""
 
@@ -1085,6 +1092,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
     def handle_plugin_task_does_not_exist_error(error: PluginTaskDoesNotExistError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.NOT_FOUND, {})
+
+    @api.errorhandler(UserAuthenticationError)
+    def handle_user_authentication_error(error: UserAuthenticationError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
 
     @api.errorhandler(UserDoesNotExistError)
     def handle_user_does_not_exist_error(error: UserDoesNotExistError):

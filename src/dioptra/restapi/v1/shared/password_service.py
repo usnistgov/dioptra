@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import secrets
+from functools import lru_cache
 from typing import cast
 
 import structlog
@@ -23,9 +25,19 @@ from structlog.stdlib import BoundLogger
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
+@lru_cache(maxsize=8)
+def _dummy_password_hash(configuration: str) -> str:
+    """Cache a dummy hash for each password configuration across requests."""
+    context = CryptContext.from_string(configuration)
+    return cast(str, context.hash(secrets.token_urlsafe(32)))
+
+
 class PasswordService(object):
     def __init__(self, crypt_context: CryptContext) -> None:
         self._context = crypt_context
+        # Prepare the cached dummy hash before checking whether the user exists.
+        # This avoids extra hash-generation work only for missing usernames.
+        self._dummy_hash = _dummy_password_hash(self._context.to_string())
 
     def hash(self, password: str, **kwargs) -> str:
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -40,3 +52,11 @@ class PasswordService(object):
         log.debug("Verifying password")
 
         return cast(bool, self._context.verify(password, hashed_password))
+
+    def verify_dummy(self, password: str, **kwargs: object) -> None:
+        """Perform configured password verification work for a missing user."""
+        self.verify(
+            password=password,
+            hashed_password=self._dummy_hash,
+            **kwargs,
+        )
