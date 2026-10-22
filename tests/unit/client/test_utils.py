@@ -90,6 +90,92 @@ def test_select_files_in_directory(
         assert dioptra_file.stream.readable()
 
 
+@pytest.mark.parametrize("recursive", [False, True])
+@pytest.mark.parametrize("follow_symlinks", [None, False, True])
+def test_directory_selection_contained_links(
+    tmp_path: Path, recursive: bool, follow_symlinks: bool | None
+):
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "data").mkdir()
+    (root / "data" / "file.txt").write_bytes(b"contents")
+    (root / "file.txt").symlink_to(Path("data") / "file.txt")
+    (root / "chain.txt").symlink_to(root / "file.txt")
+    (root / "alias").symlink_to("data", target_is_directory=True)
+    (root / "alias-chain").symlink_to(root / "alias", target_is_directory=True)
+    (root / "ignored.md").write_bytes(b"ignored")
+    selected_root = tmp_path / "selected"
+    selected_root.symlink_to(root, target_is_directory=True)
+
+    kwargs = {} if follow_symlinks is None else {"follow_symlinks": follow_symlinks}
+    files = select_files_in_directory(
+        selected_root, recursive=recursive, include_pattern=r".*\.txt", **kwargs
+    )
+    try:
+        expected = {"file.txt", "chain.txt"} if follow_symlinks else set()
+        if recursive:
+            expected.add("data/file.txt")
+            if follow_symlinks:
+                expected |= {"alias/file.txt", "alias-chain/file.txt"}
+        assert {file.filename for file in files} == expected
+        assert all(file.stream.read() == b"contents" for file in files)
+    finally:
+        for file in files:
+            file.stream.close()
+
+
+@pytest.mark.parametrize("kind", ["file", "directory", "broken", "cycle", "ancestor"])
+@pytest.mark.parametrize("follow_symlinks", [None, False, True])
+def test_directory_selection_unsafe_links(
+    tmp_path: Path, kind: str, follow_symlinks: bool | None
+):
+    root = tmp_path / "root"
+    root.mkdir()
+    # A sibling sharing the root's prefix must still be considered outside it.
+    outside = tmp_path / "root-other"
+    outside.mkdir()
+    (outside / "secret.txt").write_bytes(b"secret")
+    targets = {
+        "file": outside / "secret.txt",
+        "directory": outside,
+        "broken": root / "missing",
+        "cycle": root / "link",
+        "ancestor": root,
+    }
+    (root / "link").symlink_to(
+        targets[kind], target_is_directory=kind in {"directory", "ancestor"}
+    )
+
+    if follow_symlinks:
+        with pytest.raises((ValueError, OSError)):
+            select_files_in_directory(root, recursive=True, follow_symlinks=True)
+    else:
+        safe = root / "safe.txt"
+        safe.write_bytes(b"safe")
+        kwargs = {} if follow_symlinks is None else {"follow_symlinks": follow_symlinks}
+        files = select_files_in_directory(root, recursive=True, **kwargs)
+        try:
+            assert [file.filename for file in files] == ["safe.txt"]
+            assert files[0].stream.read() == b"safe"
+        finally:
+            for file in files:
+                file.stream.close()
+
+
+def test_directory_selection_closes_streams_on_failure(tmp_path: Path, monkeypatch):
+    safe = tmp_path / "safe.txt"
+    safe.write_bytes(b"safe")
+    broken = tmp_path / "broken"
+    broken.symlink_to("missing")
+    monkeypatch.setattr(Path, "iterdir", lambda self: iter([safe, broken]))
+
+    with safe.open("rb") as stream:
+        monkeypatch.setattr(Path, "open", lambda self, *args, **kwargs: stream)
+        with pytest.raises(FileNotFoundError):
+            select_files_in_directory(tmp_path, follow_symlinks=True)
+        assert stream.closed
+
+
 @pytest.mark.parametrize(
     "relative_file_paths, renames, expected_filenames",
     [
