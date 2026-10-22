@@ -522,7 +522,7 @@ class JobIdService(ServiceContextService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY)
 
         log.debug("Retrieved entrypoint parameter values", job_id=job_id)
 
@@ -543,7 +543,7 @@ class JobIdService(ServiceContextService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())  # noqa: F841
 
-        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY)
 
         log.debug("Retrieved entrypoint artifact parameter values", job_id=job_id)
 
@@ -604,7 +604,7 @@ class JobIdStatusService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -890,12 +890,10 @@ class ExperimentJobIdService(ServiceContextService):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job = self._uow.job_repo.get_one(
-            job_id, DeletionPolicy.NOT_DELETED, experiment_id
-        )
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY, experiment_id)
 
         artifacts = self._uow.artifact_repo.get_by_job(
-            job_id, deletion_policy=DeletionPolicy.NOT_DELETED
+            job_id, deletion_policy=DeletionPolicy.ANY
         )
 
         return utils.JobDict(
@@ -953,9 +951,7 @@ class ExperimentJobIdStatusService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job = self._uow.job_repo.get_one(
-            job_id, DeletionPolicy.NOT_DELETED, experiment_id
-        )
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY, experiment_id)
 
         return {"status": job.status, "id": job.resource_id}
 
@@ -1013,9 +1009,7 @@ class ExperimentJobIdMlflowrunService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job = self._uow.job_repo.get_one(
-            job_id, DeletionPolicy.NOT_DELETED, experiment_id
-        )
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY, experiment_id)
 
         mlflow_run_id = (
             job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
@@ -1087,7 +1081,7 @@ class JobIdMlflowrunService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job status by id", job_id=job_id)
 
-        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.ANY)
 
         return job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
 

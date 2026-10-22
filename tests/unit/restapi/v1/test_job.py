@@ -1835,6 +1835,22 @@ def test_delete_job(
     response = dioptra_client.jobs.get_by_id(job_id)
     assert response.status_code == HTTPStatus.OK
 
+    for get in (
+        dioptra_client.jobs.get_parameters,
+        dioptra_client.jobs.get_artifact_parameters,
+        dioptra_client.jobs.get_status,
+        dioptra_client.jobs.get_mlflow_run_id,
+    ):
+        assert get(job_id).status_code == HTTPStatus.OK
+
+    experiment_id = job_to_delete["experiment"]["id"]
+    for get in (
+        dioptra_client.experiments.jobs.get_by_id,
+        dioptra_client.experiments.jobs.get_status,
+        dioptra_client.experiments.jobs.get_mlflow_run_id,
+    ):
+        assert get(experiment_id, job_id).status_code == HTTPStatus.OK
+
     assert_retrieving_deleted_resource_snapshots_works(
         dioptra_client.jobs.snapshots,
         job_to_delete["id"],
