@@ -202,8 +202,39 @@ def get_references(input_: Any) -> Iterator[str]:
     the names.  This just makes the reference determination syntactically, and
     doesn't attempt to resolve any reference.
 
+    Only the step definition itself can be a mixed invocation, so the "task"
+    key is given its special meaning at the top level only.  Argument values
+    are searched as plain data.
+
     Args:
         input_: The arg spec structure to search for references
+
+    Yields:
+        References, as strings without the leading "$"
+    """
+
+    if isinstance(input_, dict) and "task" in input_:
+        # A mixed step definition: "task" names the task plugin, and the
+        # argument values are under "args" and "kwargs".
+        args = input_.get("args")
+        kwargs = input_.get("kwargs")
+        if args:
+            yield from _get_value_references(args)
+        if kwargs:
+            yield from _get_value_references(kwargs.values())
+
+    else:
+        yield from _get_value_references(input_)
+
+
+def _get_value_references(input_: Any) -> Iterator[str]:
+    """
+    Search for references within a task argument value.  Every mapping is
+    treated as plain data here, so a "task" key occurring inside an argument
+    value is not mistaken for the marker of a mixed step definition.
+
+    Args:
+        input_: An argument value to search for references
 
     Yields:
         References, as strings without the leading "$"
@@ -214,19 +245,11 @@ def get_references(input_: Any) -> Iterator[str]:
             yield input_[1:]  # drop the leading "$"
 
     elif isinstance(input_, dict):
-        if "task" in input_:
-            args = input_.get("args")
-            kwargs = input_.get("kwargs")
-            if args:
-                yield from get_references(args)
-            if kwargs:
-                yield from get_references(kwargs.values())
-        else:
-            yield from get_references(input_.values())
+        yield from _get_value_references(input_.values())
 
     elif is_iterable(input_):
         for elt in input_:
-            yield from get_references(elt)
+            yield from _get_value_references(elt)
 
 
 def _get_step_references(input_: Any, step_names: Container[str]) -> Iterator[str]:
