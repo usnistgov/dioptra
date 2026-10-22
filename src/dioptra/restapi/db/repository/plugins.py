@@ -481,7 +481,8 @@ class PluginRepository:
         """
         Get the latest snapshot of the given plugin file resource; require that
         exactly one is found, or raise an exception. The file must be associated
-        with the latest snapshot of the given plugin.
+        with the latest snapshot of the given plugin, or a historical snapshot
+        for deleted files when the deletion policy allows them.
 
         Args:
             plugin_id: The parent plugin resource ID

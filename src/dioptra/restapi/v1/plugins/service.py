@@ -175,7 +175,7 @@ class PluginIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get plugin by id", plugin_id=plugin_id)
 
-        plugin = self._uow.plugin_repo.get(plugin_id, DeletionPolicy.NOT_DELETED)
+        plugin = self._uow.plugin_repo.get(plugin_id, DeletionPolicy.ANY)
         if plugin is None:
             raise EntityDoesNotExistError(EntityType.PLUGIN, plugin_id=plugin_id)
 
@@ -295,9 +295,7 @@ class PluginIdsService(object):
             EntityDoesNotExistError: If any plugin is not found.
         """
 
-        plugins = self._uow.plugin_repo.get_exact(
-            plugin_ids, DeletionPolicy.NOT_DELETED
-        )
+        plugins = self._uow.plugin_repo.get_exact(plugin_ids, DeletionPolicy.ANY)
 
         resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
             plugins, current_user
@@ -561,7 +559,7 @@ class PluginIdSnapshotIdService(ServiceContextService):
         )
 
         return self._uow.plugin_repo.get_one_snapshot(
-            plugin_id, plugin_snapshot_id, DeletionPolicy.NOT_DELETED
+            plugin_id, plugin_snapshot_id, DeletionPolicy.ANY
         )
 
 

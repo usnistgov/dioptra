@@ -1036,6 +1036,54 @@ def test_plugin_get_one_file_wrong_parent(db_session: DBSession, account, plugin
         )
 
 
+@pytest.mark.parametrize("parent_deleted", [False, True])
+@pytest.mark.parametrize("file_deleted", [False, True])
+def test_plugin_get_one_file_historical_membership(
+    db_session: DBSession, account, plugin_repo, parent_deleted, file_deleted
+):
+    plugin = create_plugin_with_files(db_session, plugin_repo, account)
+    plugin_file = plugin.plugin_files[0]
+    new_plugin = make_plugin_snapshot(plugin)
+    plugin_repo.create_snapshot(new_plugin)
+    db_session.commit()
+    if file_deleted:
+        plugin_repo.delete_file(plugin_file)
+    if parent_deleted:
+        plugin_repo.delete(plugin)
+    db_session.commit()
+
+    if file_deleted:
+        for policy in (utils.DeletionPolicy.ANY, utils.DeletionPolicy.DELETED):
+            assert (
+                plugin_repo.get_one_file(
+                    plugin.resource_id, plugin_file.resource_id, policy
+                )
+                == plugin_file
+            )
+    else:
+        with pytest.raises(errors.EntityDoesNotExistError):
+            plugin_repo.get_one_file(
+                plugin.resource_id, plugin_file.resource_id, utils.DeletionPolicy.ANY
+            )
+
+    with pytest.raises(
+        errors.EntityDeletedError if parent_deleted else errors.EntityDoesNotExistError
+    ):
+        plugin_repo.get_one_file(
+            plugin.resource_id,
+            plugin_file.resource_id,
+            utils.DeletionPolicy.NOT_DELETED,
+        )
+
+    other_plugin = make_plugin(account.user, account.group, name="other")
+    plugin_repo.create(other_plugin)
+    db_session.commit()
+    with pytest.raises(errors.EntityDoesNotExistError):
+        plugin_repo.get_one_file(
+            other_plugin.resource_id, plugin_file.resource_id, utils.DeletionPolicy.ANY
+        )
+
+
 def test_plugin_get_one_file_deleted(db_session: DBSession, account, plugin_repo):
     plugin = create_plugin_with_files(db_session, plugin_repo, account)
     plugin_file = plugin.plugin_files[0]
