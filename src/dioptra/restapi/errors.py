@@ -742,6 +742,10 @@ class UnexpectedImportError(DioptraError):
         super().__init__("Resource import failed unexpectedly.")
 
 
+class ResourceNameError(DioptraError):
+    """A resource name contains disallowed characters."""
+
+
 class EntrypointValidationError(DioptraError):
     """Entrypoint validation failed Error."""
 
@@ -1149,6 +1153,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
 
     @api.errorhandler(EntrypointSwapsRenderError)
     def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(ResourceNameError)
+    def handle_resource_name_error(error: ResourceNameError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 

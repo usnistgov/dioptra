@@ -41,7 +41,7 @@ from dioptra.restapi.errors import (
     ImportFailedError,
     UnexpectedImportError,
 )
-from dioptra.restapi.utils import read_json_file
+from dioptra.restapi.utils import read_json_file, validate_resource_name
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
@@ -488,6 +488,9 @@ class ResourceImportService(object):
 
         param_types = {}
         for param_type in param_types_config:
+            validate_resource_name(
+                param_type["name"], EntityType.PLUGIN_TASK_PARAMETER_TYPE
+            )
             if conflict_strat == ResourceImportResolveNameConflictsStrategy.FAIL:
                 param_type_dict = self._plugin_parameter_type_service.create(
                     name=param_type["name"],
@@ -592,6 +595,7 @@ class ResourceImportService(object):
 
         plugins = {}
         for plugin in plugins_config:
+            validate_resource_name(Path(plugin["path"]).stem, EntityType.PLUGIN)
             plugin_root = self._resolve_resource_path(
                 import_root, plugin["path"], base=config_dir
             )
@@ -825,6 +829,10 @@ class ResourceImportService(object):
         entrypoints = {}
 
         for entrypoint in entrypoints_config:
+            validate_resource_name(
+                entrypoint.get("name", Path(entrypoint["path"]).stem),
+                EntityType.ENTRY_POINT,
+            )
             try:
                 entrypoint_path = self._resolve_resource_path(
                     import_root, entrypoint["path"], base=config_dir
