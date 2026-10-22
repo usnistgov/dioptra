@@ -127,7 +127,9 @@ def group_exists(
 
 
 def resource_exists(
-    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    resource_type: EntityType | None = None,
 ) -> ExistenceResult:
     """
     Check whether the given resource exists in the database, and if so, whether
@@ -138,6 +140,7 @@ def resource_exists(
         resource: A resource, snapshot (something with a .resource_id
             attribute we can use to identify a resource), or resource_id
             integer primary key value
+        resource_type: If provided, require that the resource has this type
 
     Returns:
         One of the ExistenceResult enum values
@@ -163,6 +166,8 @@ def resource_exists(
                 )
             )
         )
+        if resource_type is not None:
+            stmt = stmt.where(m.Resource.resource_type == resource_type.db_table_name)
 
         # This really ought to only produce at most one value
         locks = session.scalars(stmt).all()
@@ -465,6 +470,7 @@ def assert_resource_exists(
     session: CompatibleSession[S],
     resource: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
+    resource_type: EntityType | None = None,
 ) -> None:
     """
     Check whether the given resource exists in the database.  This function
@@ -483,6 +489,7 @@ def assert_resource_exists(
         resource: A resource, snapshot, or resource_id integer primary key
             value
         deletion_policy: One of the DeletionPolicy enum values
+        resource_type: If provided, require that the resource has this type
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist in the database
@@ -492,14 +499,14 @@ def assert_resource_exists(
         EntityDeletedError: if the resource is deleted, but policy was to find
             a non-deleted resource
     """
-    existence_result = resource_exists(session, resource)
+    existence_result = resource_exists(session, resource, resource_type)
 
     resource_id = get_resource_id(resource)
 
     assert_exists(
         deletion_policy,
         existence_result,
-        get_resource_type(resource),
+        resource_type or get_resource_type(resource),
         resource_id,
         resource_id=resource_id,
     )
