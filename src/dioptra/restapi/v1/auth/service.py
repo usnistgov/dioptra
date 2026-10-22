@@ -27,7 +27,12 @@ from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import UserDoesNotExistError
+from dioptra.restapi.errors import (
+    UserAuthenticationError,
+    UserDoesNotExistError,
+    UserPasswordError,
+)
+from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.users.service import UserPasswordService
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -38,7 +43,10 @@ class AuthService(object):
 
     @inject
     def __init__(
-        self, user_password_service: UserPasswordService, uow: UnitOfWork
+        self,
+        user_password_service: UserPasswordService,
+        uow: UnitOfWork,
+        password_service: PasswordService,
     ) -> None:
         """Initialize the authentication service.
 
@@ -46,9 +54,12 @@ class AuthService(object):
 
         Args:
             user_password_service: A UserPasswordService object.
+            uow: The database unit of work.
+            password_service: The password hashing and verification service.
         """
         self._user_password_service = user_password_service
         self._uow = uow
+        self._password_service = password_service
 
     def login(
         self,
@@ -66,21 +77,25 @@ class AuthService(object):
             A dictionary containing the login success message.
 
         Raises:
-            UserDoesNotExistError: If the user is not found.
+            UserAuthenticationError: If the credentials are invalid or expired.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         user = self._uow.user_repo.get_by_name(username, DeletionPolicy.NOT_DELETED)
-        if not user:
-            raise UserDoesNotExistError(username=username)
+        try:
+            if not user:
+                self._password_service.verify_dummy(password=password, log=log)
+                raise UserDoesNotExistError(username=username)
 
-        self._user_password_service.authenticate(
-            password=password,
-            user_password=str(user.password),
-            expiration_date=user.password_expire_on,
-            error_if_failed=True,
-            log=log,
-        )
+            self._user_password_service.authenticate(
+                password=password,
+                user_password=str(user.password),
+                expiration_date=user.password_expire_on,
+                error_if_failed=True,
+                log=log,
+            )
+        except (UserDoesNotExistError, UserPasswordError) as error:
+            raise UserAuthenticationError() from error
         login_user(user, remember=True)
         with self._uow:
             user.last_login_on = datetime.datetime.now(tz=datetime.timezone.utc)

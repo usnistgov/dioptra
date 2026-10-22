@@ -20,13 +20,21 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the user entity. The tests ensure that the users can be registered,
 modified, and deleted as expected through the REST API.
 """
+
+import datetime
 from http import HTTPStatus
 from typing import Any
 
+from flask.testing import FlaskClient
+from sqlalchemy.orm import Session as DBSession
+
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db.models import User
+from dioptra.restapi.db.unit_of_work import UnitOfWork
+from dioptra.restapi.routes import V1_AUTH_ROUTE, V1_ROOT
 
-from ..lib import helpers
+from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ----------------------------------------------------------------
@@ -565,6 +573,48 @@ def test_user_authorization_failure(
     username = registered_users["user2"]["username"]
     password = registered_users["user2"]["password"] + "incorrect"
     assert_login_is_unauthorized(dioptra_client, username=username, password=password)
+
+
+def test_login_failures_have_identical_responses(
+    client: FlaskClient,
+    db_session: DBSession,
+    registered_users: dict[str, Any],
+) -> None:
+    """Invalid credentials must not disclose account existence or password expiry."""
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    for name, account in registered_users.items():
+        user = db_session.get(User, account["id"])
+        assert user is not None
+        user.password_expire_on = now + datetime.timedelta(
+            days=-1 if name == "user2" else 1
+        )
+        if name == "user3":
+            UnitOfWork().user_repo.delete(user)
+    db_session.commit()
+
+    active_user = registered_users["user1"]
+    expired_user = registered_users["user2"]
+    deleted_user = registered_users["user3"]
+    credentials = {
+        "unknown user": ("unknown-login-user", "incorrect-password"),
+        "incorrect password": (
+            active_user["username"],
+            active_user["password"] + "incorrect",
+        ),
+        "expired password": (expired_user["username"], expired_user["password"]),
+        "deleted user": (deleted_user["username"], deleted_user["password"]),
+    }
+    expected_body = {
+        "error": "UserAuthenticationError",
+        "message": "Unauthorized - Invalid username or password.",
+        "detail": {},
+        "originating_path": f"/{V1_ROOT}/{V1_AUTH_ROUTE}/login?",
+    }
+
+    for case, (username, password) in credentials.items():
+        response = actions.login(client, username=username, password=password)
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, case
+        assert response.get_json() == expected_body, case
 
 
 def test_delete_current_user(
