@@ -15,8 +15,9 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import enum
-import os
 import re
+from collections.abc import Iterator
+from contextlib import ExitStack
 from pathlib import Path
 
 from .base import DioptraFile
@@ -47,8 +48,17 @@ def select_files_in_directory(
     dir_path: str | Path,
     recursive: bool = False,
     include_pattern: str | re.Pattern | None = None,
+    follow_symlinks: bool = False,
 ) -> list[DioptraFile]:
     """Select files in a directory.
+
+    File and directory symlinks are skipped by default. When enabled, symlinks
+    are followed only when their resolved targets remain inside the resolved
+    root directory. The explicitly selected root is always resolved, even if
+    it is a symlink. Upload filenames preserve the
+    original paths, including aliases. Directory links are traversed only when
+    recursive selection is enabled; links to ancestor directories are rejected.
+    Only regular files are selected. The caller owns the returned streams.
 
     Args:
         dir_path: The path to the root directory to search for files.
@@ -57,6 +67,9 @@ def select_files_in_directory(
         include_pattern: A string or compiled regular expression pattern to use to
             filter files by name. If None, then all files are included. Defaults to
             None.
+        follow_symlinks: If True, follow file and directory symlinks whose targets
+            remain inside the root directory. Directory symlinks also require
+            recursive selection. Defaults to False.
 
     Returns:
         A list of DioptraFile objects representing the selected files.
@@ -64,6 +77,7 @@ def select_files_in_directory(
     Raises:
         FileNotFoundError: If the specified `dir_path` does not exist.
         NotADirectoryError: If `dir_path` is not a directory.
+        ValueError: If a selected path escapes the root or contains a symlink cycle.
         IOError: If a file cannot be opened.
     """
     root_dir = Path(dir_path)
@@ -79,46 +93,78 @@ def select_files_in_directory(
             f"Invalid directory path (reason: dir_path is not a directory): {root_dir}"
         )
 
+    root_dir = root_dir.resolve(strict=True)
+
     # If provided, ensure that the include_pattern regular expression is compiled
-    if include_pattern is not None and not isinstance(include_pattern, re.Pattern):
+    if include_pattern is not None:
         include_pattern = re.compile(include_pattern)
 
     dioptra_files: list[DioptraFile] = []
 
-    # Walk through the directory (optionally recursively)
-    for dirpath, dirnames, filenames in os.walk(root_dir):
-        if not recursive:
-            dirnames.clear()  # Prevent descending into subdirectories if not recursive
-
-        current_dir = Path(dirpath)
-
-        for filename in filenames:
-            # Filter files based on the include_pattern, if provided
-            if include_pattern is not None and not include_pattern.match(filename):
-                continue  # Skip files that do not match the pattern
-
-            current_file = current_dir / filename
-
-            try:
-                stream = open(current_file, "rb")
-
-            except IOError as err:
-                raise IOError(
-                    f"File opening failed (reason: {err.strerror}): {current_file}"
-                ) from err
-
-            # Compute the relative path from the root directory
-            relative_file_path = current_file.relative_to(root_dir)
-
+    with ExitStack() as streams:
+        for relative_path, target in _iter_selected_files(
+            root_dir, recursive, include_pattern, follow_symlinks
+        ):
+            stream = streams.enter_context(target.open("rb"))
             dioptra_files.append(
                 DioptraFile(
-                    filename=relative_file_path.as_posix(),  # Ensure POSIX-style paths
+                    filename=relative_path.as_posix(),
                     stream=stream,
                     content_type=None,
                 )
             )
+        streams.pop_all()  # Transfer stream ownership only after complete selection.
 
     return dioptra_files
+
+
+def _iter_selected_files(
+    root: Path,
+    recursive: bool,
+    include_pattern: re.Pattern | None,
+    follow_symlinks: bool,
+) -> Iterator[tuple[Path, Path]]:
+    """Yield logical paths and contained targets, detecting cycles per ancestry."""
+
+    def visit(
+        directory: Path, relative_dir: Path, ancestors: set[Path]
+    ) -> Iterator[tuple[Path, Path]]:
+        # The root and all directory targets are already resolved.
+        if directory in ancestors:
+            raise ValueError(f"Directory symlink cycle: {relative_dir}")
+
+        ancestors = ancestors | {directory}
+
+        for entry in directory.iterdir():
+            if not follow_symlinks and entry.is_symlink():
+                continue
+
+            relative_path = relative_dir / entry.name
+
+            # Preserve filename filtering and nonrecursive directory skipping.
+            is_directory = entry.is_dir()
+            if is_directory:
+                if not recursive:
+                    continue
+            elif include_pattern is not None and not include_pattern.match(entry.name):
+                continue
+
+            try:
+                target = entry.resolve(strict=True)
+            except RuntimeError as err:
+                raise ValueError(f"Symlink cycle: {relative_path}") from err
+
+            if not target.is_relative_to(root):
+                raise ValueError(
+                    f"Selected path escapes root directory: {relative_path}"
+                )
+
+            if is_directory:
+                yield from visit(target, relative_path, ancestors)
+            elif target.is_file():
+                yield relative_path, target
+
+    yield from visit(root, Path(), set())
 
 
 def select_one_or_more_files(
