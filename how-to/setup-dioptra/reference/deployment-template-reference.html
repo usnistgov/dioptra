@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Deployment Template Reference &#8212; Dioptra 1.2.1 documentation</title>
+    <title>Deployment Template Reference &#8212; Dioptra 1.2.2 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.1 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -172,6 +172,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -512,7 +513,7 @@ If you are using locally built images instead, set this to an empty string.</p>
 </section>
 <section id="container-tag">
 <h3>container_tag<a class="headerlink" href="#container-tag" title="Permalink to this headline">#</a></h3>
-<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.2.1</span></code></p>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.2.2</span></code></p>
 <p>This should match the tags of the Dioptra container images you will be using.
 If you are using Docker, you can see the available tags by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code>.
 If you built the images manually using the build commands in the repository, the images will have the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.</p>
@@ -628,7 +629,7 @@ The values between the square brackets <code class="docutils literal notranslate
 Press Enter to accept the default, or type a new value.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>deployment_name [Dioptra deployment]: Dioptra deployment
 container_registry [ghcr.io/usnistgov]:
-container_tag [1.2.1]: 1.2.1
+container_tag [1.2.2]: 1.2.2
 docker_compose_path [docker compose]: docker compose
 systemd_required_mounts []:
 nginx_server_name [dioptra.example.org]: _
