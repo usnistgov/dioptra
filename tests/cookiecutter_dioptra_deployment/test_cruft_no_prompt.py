@@ -15,23 +15,22 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import json
 import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 import pytest
 import yaml
 
-TEMPLATE_REPO = "https://github.com/usnistgov/dioptra"
-BRANCH = "dev"
+TEMPLATE_REPO = Path(__file__).resolve().parents[2]
 TEST_DIR = "test_cruft_deploy"
 
 # Based on cookiecutter.json
 EXPECTED_DEFAULTS = {
     "deployment_name": "dioptra-deployment",  # slugified deployment name
-    "container_tag": "dev",
+    "container_tag": "1.2.2",
     "docker_compose_path": "docker compose",
     "nginx_server_name": "dioptra.example.org",
     "nginx_expose_ports_on_localhost_only": "True",
@@ -51,12 +50,11 @@ def rendered_folder():
         shutil.rmtree(TEST_DIR)
     os.makedirs(TEST_DIR)
 
+    # Cruft clones this test checkout's committed template instead of remote dev.
     cruft_command = [
         "cruft",
         "create",
-        TEMPLATE_REPO,
-        "--checkout",
-        BRANCH,
+        str(TEMPLATE_REPO),
         "--directory",
         "cookiecutter-templates/cookiecutter-dioptra-deployment",
         "--no-input",
@@ -65,13 +63,12 @@ def rendered_folder():
     try:
         subprocess.run(cruft_command, cwd=TEST_DIR, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Cruft command failed: {e}")
-        assert False
+        pytest.fail(f"Cruft command failed: {e}")
 
     rendered_folders = os.listdir(TEST_DIR)
-    assert (
-        len(rendered_folders) == 1
-    ), "The wrong number of deployment folders was generated."
+    assert len(rendered_folders) == 1, (
+        "The wrong number of deployment folders was generated."
+    )
 
     rendered_path = os.path.join(TEST_DIR, rendered_folders[0])
     yield rendered_path
@@ -122,9 +119,9 @@ def test_docker_compose_path(rendered_folder):
 
     # Ensure cookiecutter placeholder value no longer exists
     placeholder_value = " {{ cookiecutter.docker_compose_path }} "
-    assert (
-        placeholder_value not in script_content
-    ), f"Placeholder {placeholder_value} should not be in {script_path}"
+    assert placeholder_value not in script_content, (
+        f"Placeholder {placeholder_value} should not be in {script_path}"
+    )
 
     # Get the docker_compose() function contents
     compose_function_pattern = r"^docker_compose\(\) \{.*?^\}$"
@@ -138,13 +135,13 @@ def test_docker_compose_path(rendered_folder):
     expected_usage_1 = f"  if ! {expected_value} " + '"${@}"; then'
     expected_usage_2 = f'      "{expected_value}, exiting..."'
 
-    assert (
-        expected_usage_1 in function_content
-    ), f"Expected usage '{expected_usage_1} not found in docker_compose () function."
+    assert expected_usage_1 in function_content, (
+        f"Expected usage '{expected_usage_1} not found in docker_compose () function."
+    )
 
-    assert (
-        expected_usage_2 in function_content
-    ), f"Expected usage '{expected_usage_2} not found in docker_compose () function."
+    assert expected_usage_2 in function_content, (
+        f"Expected usage '{expected_usage_2} not found in docker_compose () function."
+    )
 
 
 def test_nginx_expose_ports_on_localhost_only(rendered_folder):
@@ -166,9 +163,9 @@ def test_nginx_expose_ports_on_localhost_only(rendered_folder):
         ),
         None,
     )
-    assert (
-        nginx_service_name
-    ), f"No service found with a name ending in 'nginx' in {compose_file_path}."
+    assert nginx_service_name, (
+        f"No service found with a name ending in 'nginx' in {compose_file_path}."
+    )
 
     nginx_service = compose_content["services"][nginx_service_name]
     assert nginx_service, f"Nginx service not found in {compose_file_path}"
@@ -177,9 +174,9 @@ def test_nginx_expose_ports_on_localhost_only(rendered_folder):
     assert ports, f"No ports defined for the Nginx service in {compose_file_path}"
 
     for port in ports:
-        assert port.startswith(
-            expected_prefix
-        ), f"Port '{port}' does not start with '{expected_prefix}'."
+        assert port.startswith(expected_prefix), (
+            f"Port '{port}' does not start with '{expected_prefix}'."
+        )
 
 
 def test_nginx_server_name(rendered_folder):
@@ -197,9 +194,9 @@ def test_nginx_server_name(rendered_folder):
         "https_restapi.conf",
     ]
 
-    assert os.path.exists(
-        nginx_config_dir
-    ), f"Nginx config directory not found: {nginx_config_dir}"
+    assert os.path.exists(nginx_config_dir), (
+        f"Nginx config directory not found: {nginx_config_dir}"
+    )
 
     for conf_file in conf_files:
         conf_path = os.path.join(nginx_config_dir, conf_file)
@@ -214,9 +211,9 @@ def test_nginx_server_name(rendered_folder):
 
         for server_block in server_blocks:
             server_name_search = re.search(r"server_name\s+(.+?);", server_block)
-            assert (
-                server_name_search
-            ), f"Server block without 'server_name' found in {conf_file}"
+            assert server_name_search, (
+                f"Server block without 'server_name' found in {conf_file}"
+            )
 
             found_server_name = server_name_search.group(1).strip()
             assert found_server_name == expected_name, (
@@ -237,8 +234,7 @@ def test_pgadmin_default_email(rendered_folder):
             f"PGADMIN_DEFAULT_EMAIL={EXPECTED_DEFAULTS['pgadmin_default_email']}"
         )
         assert expected_line in content, (
-            f"Expected line not found in {env_file_path}. "
-            f"Expected: '{expected_line}"
+            f"Expected line not found in {env_file_path}. Expected: '{expected_line}"
         )
 
 
@@ -255,7 +251,7 @@ def test_postgres_container_tag(rendered_folder):
     postgres_service = compose_data.get("services", {}).get("dioptra-deployment-db", {})
     image = postgres_service.get("image", "")
     assert image.endswith(f":{expected_tag}"), (
-        f"Service '{image}' has incorrect tag. " f"Expected: '{expected_tag}'"
+        f"Service '{image}' has incorrect tag. Expected: '{expected_tag}'"
     )
 
 
@@ -271,9 +267,9 @@ def test_worker_services(rendered_folder):
     deployment_name = EXPECTED_DEFAULTS["deployment_name"]
     docker_compose_path = os.path.join(rendered_folder, "docker-compose.yml")
 
-    assert (
-        docker_compose_path
-    ), f"Docker compose file not found at '{docker_compose_path}'"
+    assert docker_compose_path, (
+        f"Docker compose file not found at '{docker_compose_path}'"
+    )
 
     with open(docker_compose_path, "r") as file:
         docker_compose = yaml.safe_load(file)
@@ -286,13 +282,13 @@ def test_worker_services(rendered_folder):
         for i in range(1, expected_count + 1):
             # ':02d' to ensure that the number is expressed as 2 digits
             service_name = f"{deployment_name}-{service_suffix}-{i:02d}"
-            assert (
-                service_name in services
-            ), f"Missing service: {service_name} for {worker_type}"
+            assert service_name in services, (
+                f"Missing service: {service_name} for {worker_type}"
+            )
 
         # Check if there is a worker index above what is expected
         extra_service_name = (
-            f"{deployment_name}-{service_suffix}-{expected_count +1:02d}"
+            f"{deployment_name}-{service_suffix}-{expected_count + 1:02d}"
         )
         assert extra_service_name not in services, (
             f"Unexpected service: {extra_service_name} for {worker_type}; "

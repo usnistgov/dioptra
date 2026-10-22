@@ -109,6 +109,10 @@ After updating the template, rerun ``init-deployment.sh`` to apply the changes:
 
    Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
 
+Run initialization as the user who owns the deployment files.
+The script preserves existing credentials and automatically repairs their permissions to owner-only access (``0600``).
+If it reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before restarting services.
+
 When rerunning the script on an already-initialized deployment, it will freeze during the Minio setup step because those configurations have already been applied.
 Use the ``--skip-minio-setup`` option to skip this step:
 

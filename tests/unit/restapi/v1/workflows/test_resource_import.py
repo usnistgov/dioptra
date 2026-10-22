@@ -23,6 +23,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 
 import json
 import os
+import shutil
 import textwrap
 from http import HTTPStatus
 from io import BytesIO
@@ -36,7 +37,7 @@ from freezegun import freeze_time
 
 from dioptra.client import DioptraClient, DioptraFile
 from dioptra.client.base import DioptraResponseProtocol
-from dioptra.client.utils import select_one_or_more_files
+from dioptra.client.utils import select_files_in_directory, select_one_or_more_files
 from dioptra.restapi.v1.shared import io_file_service as file_io
 from dioptra.restapi.v1.workflows import service as workflow_service
 
@@ -337,6 +338,30 @@ def test_resource_import_rejects_oversized_uploaded_archive(
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert "download/upload size limit" in response.json()["detail"]["reason"]
     assert dioptra_client.plugins.get().json()["data"] == []
+
+
+@pytest.mark.parametrize("strategy", ["fail", "overwrite", "update"])
+def test_resource_import_rejects_unsafe_entrypoint_name(
+    dioptra_client, auth_account, tmp_path, strategy
+):
+    source = Path(__file__).parent / "resource_import_files"
+    destination = tmp_path / "resources"
+    shutil.copytree(source, destination)
+    config = destination / "dioptra.toml"
+    config.write_text(
+        config.read_text().replace('name = "Hello World"', 'name = "../escape"')
+    )
+    files = select_files_in_directory(destination, recursive=True)
+
+    response = dioptra_client.workflows.import_resources(
+        group_id=auth_account["groups"][0]["id"],
+        source=files,
+        resolve_name_conflicts_strategy=strategy,
+    )
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json()
+    assert response.json()["error"] == "ResourceNameError"
+    assert dioptra_client.entrypoints.get().json()["data"] == []
 
 
 @pytest.mark.parametrize(

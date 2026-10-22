@@ -17,10 +17,14 @@
 """Common schemas for serializing/deserializing resources."""
 
 import enum
+from typing import ClassVar
 
 import flask
 from marshmallow import Schema, ValidationError, fields, validates
 from marshmallow.validate import Range
+
+from dioptra.restapi.utils import validate_resource_name
+from dioptra.restapi.v1.entity_types import EntityType
 
 from .file_types import FileTypes
 
@@ -208,6 +212,7 @@ class PagingQueryParametersSchema(Schema):
         attribute="page_length",
         metadata={"description": "Number of results to return per page."},
         load_default=10,
+        validate=Range(min=1),
     )
 
     @validates("pageLength")
@@ -297,6 +302,22 @@ class ShowDeletedQueryParametersSchema(Schema):
         },
         load_default=False,
     )
+
+
+class ResourceNameSchema(Schema):
+    """Shared name field and validation for resource request schemas."""
+
+    resource_type: ClassVar[EntityType]
+
+    name = fields.String(
+        attribute="name",
+        metadata={"description": "Name of the resource."},
+        required=True,
+    )
+
+    @validates("name")
+    def validate_name(self, name: str) -> None:
+        validate_resource_name(name, self.resource_type)
 
 
 class ResourceGetQueryParameters(

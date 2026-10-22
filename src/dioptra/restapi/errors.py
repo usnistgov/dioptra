@@ -642,6 +642,13 @@ class InvalidPythonError(DioptraError):
 
 
 # User Errors
+class UserAuthenticationError(DioptraError):
+    """A login failed without revealing which credential was incorrect."""
+
+    def __init__(self) -> None:
+        super().__init__("Invalid username or password.")
+
+
 class UserDoesNotExistError(DioptraError):
     """The entered username does not exist."""
 
@@ -733,6 +740,10 @@ class UnexpectedImportError(DioptraError):
 
     def __init__(self) -> None:
         super().__init__("Resource import failed unexpectedly.")
+
+
+class ResourceNameError(DioptraError):
+    """A resource name contains disallowed characters."""
 
 
 class EntrypointValidationError(DioptraError):
@@ -1086,6 +1097,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.NOT_FOUND, {})
 
+    @api.errorhandler(UserAuthenticationError)
+    def handle_user_authentication_error(error: UserAuthenticationError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.UNAUTHORIZED, {})
+
     @api.errorhandler(UserDoesNotExistError)
     def handle_user_does_not_exist_error(error: UserDoesNotExistError):
         log.debug(error.to_message())
@@ -1137,6 +1153,11 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
 
     @api.errorhandler(EntrypointSwapsRenderError)
     def handle_entrypoint_swaps_error(error: EntrypointSwapsRenderError):
+        log.debug(error.to_message())
+        return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
+
+    @api.errorhandler(ResourceNameError)
+    def handle_resource_name_error(error: ResourceNameError):
         log.debug(error.to_message())
         return error_result(error, http.HTTPStatus.BAD_REQUEST, {})
 

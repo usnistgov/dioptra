@@ -24,6 +24,7 @@ from marshmallow.exceptions import ValidationError
 
 from dioptra.restapi.errors import InputParameterNotUniqueError
 from dioptra.restapi.utils import find_non_unique
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.plugins.schema import (
     ALLOWED_PLUGIN_TASK_PARAMETER_REGEX,
     PluginSnapshotRefSchema,
@@ -35,6 +36,7 @@ from dioptra.restapi.v1.schemas import (
     BasePageSchema,
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
+    ResourceNameSchema,
     SearchQueryParametersSchema,
     ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
@@ -182,14 +184,11 @@ class EntrypointSnapshotRefSchema(EntrypointSnapshotRefBaseSchema):  # type: ign
     )
 
 
-class EntrypointMutableFieldsSchema(Schema):
+class EntrypointMutableFieldsSchema(ResourceNameSchema):
     """The fields schema for the mutable data in a Entrypoint resource."""
 
-    name = fields.String(
-        attribute="name",
-        metadata={"description": "Name of the Entrypoint resource."},
-        required=True,
-    )
+    resource_type = EntityType.ENTRY_POINT
+
     description = fields.String(
         attribute="description",
         metadata={"description": "Description of the Entrypoint resource."},
