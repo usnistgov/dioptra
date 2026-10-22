@@ -22,7 +22,7 @@ Details are available in the project documentation available at <https://pages.n
 
 ## Current Release Status
 
-Release 1.2.1 -- with on-going improvements and development
+Release 1.2.2 -- with on-going improvements and development
 
 ## Use Cases
 
@@ -58,17 +58,17 @@ See the [Install Dioptra](https://pages.nist.gov/dioptra/how-to/setup-dioptra/in
 1. Pull the Dioptra docker images:
 ```sh
 # pull the core dioptra images:
-docker pull ghcr.io/usnistgov/dioptra/nginx:1.2.1
-docker pull ghcr.io/usnistgov/dioptra/mlflow-tracking:1.2.1
-docker pull ghcr.io/usnistgov/dioptra/restapi:1.2.1
+docker pull ghcr.io/usnistgov/dioptra/nginx:1.2.2
+docker pull ghcr.io/usnistgov/dioptra/mlflow-tracking:1.2.2
+docker pull ghcr.io/usnistgov/dioptra/restapi:1.2.2
 
 # pull the worker images:
-docker pull ghcr.io/usnistgov/dioptra/pytorch-cpu:1.2.1
-docker pull ghcr.io/usnistgov/dioptra/tensorflow2-cpu:1.2.1
+docker pull ghcr.io/usnistgov/dioptra/pytorch-cpu:1.2.2
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-cpu:1.2.2
 
 # optionally pull the GPU worker images:
-docker pull ghcr.io/usnistgov/dioptra/pytorch-gpu:1.2.1
-docker pull ghcr.io/usnistgov/dioptra/tensorflow2-gpu:1.2.1
+docker pull ghcr.io/usnistgov/dioptra/pytorch-gpu:1.2.2
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-gpu:1.2.2
 ```
 
 2. Prepare your Dioptra deployment:
