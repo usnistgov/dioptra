@@ -54,7 +54,7 @@ The following variables must be set for the worker to successfully register and 
 * **DIOPTRA_API**: (string) The base URL of the Dioptra API service (e.g., ``http://localhost:5000``).
 * **RQ_REDIS_URI**: (string, URI) The connection string for the Redis instance used by RQ (Redis Queue) to manage job distribution (e.g., ``redis://localhost:6379/0``).
 * **MLFLOW_TRACKING_URI**: (string, URI) The URI for the MLflow Tracking server.
-* **MLFLOW_S3_ENDPOINT_URL**: (string, URL) The endpoint for S3-compatible storage (e.g. MinIO) used by MLflow to store large artifacts.
+* **MLFLOW_S3_ENDPOINT_URL**: (string, URL) The endpoint for S3-compatible storage (e.g. RustFS) used by MLflow to store large artifacts.
 
 .. _reference-workers-optional-configuration:
 

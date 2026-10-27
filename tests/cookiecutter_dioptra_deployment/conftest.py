@@ -14,11 +14,19 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import json
+from pathlib import Path
+
 import pytest
 
 
 @pytest.fixture
 def context():
+    template = (
+        Path(__file__).resolve().parents[2]
+        / "cookiecutter-templates/cookiecutter-dioptra-deployment/cookiecutter.json"
+    )
+    storage_images = json.loads(template.read_text())["__containers"]
     return {
         "deployment_name": "Dioptra deployment",
         "__project_slug": "dioptra-deployment",
@@ -101,18 +109,8 @@ def context():
                 "tag": "latest",
                 "registry": "",
             },
-            "mc": {
-                "image": "mc",
-                "namespace": "minio",
-                "tag": "latest",
-                "registry": "",
-            },
-            "minio": {
-                "image": "minio",
-                "namespace": "minio",
-                "tag": "latest",
-                "registry": "",
-            },
+            "rc": storage_images["rc"],
+            "rustfs": storage_images["rustfs"],
             "nodejs": {
                 "image": "node",
                 "namespace": "",

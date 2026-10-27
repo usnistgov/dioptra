@@ -81,16 +81,16 @@
             "tag": "latest",
             "registry": ""
         },
-        "mc": {
-            "image": "mc",
-            "namespace": "minio",
-            "tag": "RELEASE.2023-10-14T01-57-03Z",
+        "rc": {
+            "image": "rc",
+            "namespace": "rustfs",
+            "tag": "v0.1.36@sha256:ab024bfebee49a750ce886b4c70963ccd9ddaa03f491704a90710641d7a26699",
             "registry": ""
         },
-        "minio": {
-            "image": "minio",
-            "namespace": "minio",
-            "tag": "latest",
+        "rustfs": {
+            "image": "rustfs",
+            "namespace": "rustfs",
+            "tag": "1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b",
             "registry": ""
         },
         "nodejs": {

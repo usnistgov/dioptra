@@ -90,8 +90,8 @@ Open ``docker-compose.override.yml`` and add the following configuration for the
              "https://localhost:30443",
              "https://localhost:35000",
              "https://localhost:35050/login",
-             "https://localhost:39000",
-             "https://localhost:39001",
+             "https://localhost:39000/health/ready",
+             "https://localhost:39001/rustfs/console/health",
            ]
        ports:
          - "127.0.0.1:443:30443/tcp"

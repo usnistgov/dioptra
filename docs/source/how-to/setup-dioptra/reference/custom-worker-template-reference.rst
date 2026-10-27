@@ -135,7 +135,7 @@ configs/
 **aws-config**
    AWS CLI configuration file copied to ``~dioptra/.aws/config`` in the final image.
    Sets the default AWS region (``us-east-1``), output format (``json``), and S3 signature version (``s3v4``).
-   This is required for the worker to communicate with the S3-compatible storage backend (MinIO).
+   This is required for the worker to communicate with the S3-compatible storage backend (RustFS).
 
 shellscripts/
 ~~~~~~~~~~~~~
@@ -144,7 +144,7 @@ Shell script templates that are compiled during the Docker build.
 
 **entrypoint-worker.m4**
    Template for the container's entrypoint script.
-   The compiled script waits for dependent services (Redis, MinIO, database, REST API) to become available, then starts the ``dioptra-worker-v1`` process.
+   The compiled script waits for dependent services (Redis, RustFS, database, REST API) to become available, then starts the ``dioptra-worker-v1`` process.
 
 **healthcheck-worker.m4**
    Template for the container's health check script.
