@@ -35,16 +35,16 @@ pytestmark = pytest.mark.skipif(
 CREDENTIAL_PATHS = [
     ".env",
     "secrets/postgres-passwd.env",
-    "secrets/dioptra-deployment-minio-accounts.env",
+    "secrets/dioptra-deployment-rustfs-accounts.env",
 ]
 TEST_PASSWORD = "test-password-only"
 PASSWORDS = dict.fromkeys(
     (
-        "minio_mlflow_tracking_password",
-        "minio_kms_secret_key",
-        "minio_root_password",
-        "minio_restapi_password",
-        "minio_worker_password",
+        "rustfs_mlflow_tracking_password",
+        "rustfs_kms_secret_key",
+        "rustfs_root_password",
+        "rustfs_restapi_password",
+        "rustfs_worker_password",
         "pgadmin_default_password",
         "postgres_admin_password",
         "postgres_user_dioptra_password",
@@ -1249,12 +1249,12 @@ def read_env(path):
 
 def assert_shared_values_match():
     environment = read_env(".env")
-    accounts = read_env("secrets/dioptra-deployment-minio-accounts.env")
+    accounts = read_env("secrets/dioptra-deployment-rustfs-accounts.env")
     shared_names = {
-        "MINIO_ROOT_PASSWORD": "MINIO_ROOT_PASSWORD",
-        "MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY": "MINIO_MLFLOW_TRACKING_PASSWORD",
-        "RESTAPI_AWS_SECRET_ACCESS_KEY": "MINIO_RESTAPI_PASSWORD",
-        "WORKER_AWS_SECRET_ACCESS_KEY": "MINIO_WORKER_PASSWORD",
+        "RUSTFS_SECRET_KEY": "RUSTFS_SECRET_KEY",
+        "MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY": "RUSTFS_MLFLOW_TRACKING_PASSWORD",
+        "RESTAPI_AWS_SECRET_ACCESS_KEY": "RUSTFS_RESTAPI_PASSWORD",
+        "WORKER_AWS_SECRET_ACCESS_KEY": "RUSTFS_WORKER_PASSWORD",
     }
     for environment_name, accounts_name in shared_names.items():
         assert environment[environment_name] == accounts[accounts_name]
@@ -1265,7 +1265,7 @@ def assert_shared_values_match():
     [
         [".env"],
         ["secrets/postgres-passwd.env"],
-        ["secrets/dioptra-deployment-minio-accounts.env"],
+        ["secrets/dioptra-deployment-rustfs-accounts.env"],
         CREDENTIAL_PATHS[:2],
         CREDENTIAL_PATHS[::2],
         CREDENTIAL_PATHS[1:],
@@ -1508,9 +1508,9 @@ def test_generator_process_creates_and_preserves_a_consistent_set(generator):
             original.st_gid,
         )
         assert current.st_nlink == 1 and stat.S_IMODE(current.st_mode) == 0o600
-    values = read_env("secrets/dioptra-deployment-minio-accounts.env")
+    values = read_env("secrets/dioptra-deployment-rustfs-accounts.env")
     for name, value in values.items():
-        if name.endswith("_PASSWORD"):
+        if name.endswith(("_PASSWORD", "_SECRET_KEY")):
             assert (
                 value not in first.stdout + first.stderr + second.stdout + second.stderr
             )

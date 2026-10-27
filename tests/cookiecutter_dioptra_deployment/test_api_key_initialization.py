@@ -60,8 +60,8 @@ def test_api_key_volume_and_initializer(result, context):
         "restapi-data:/volumes/restapi-data:rw"
         in initialization["services"]["named-volumes"]["volumes"]
     )
-    assert "minio" in initialization["services"]
-    assert f"{context['__project_slug']}-minio" in deployment["services"]
+    assert "rustfs" in initialization["services"]
+    assert f"{context['__project_slug']}-rustfs" in deployment["services"]
 
 
 @pytest.mark.skipif(
@@ -85,8 +85,8 @@ def test_api_key_initialization_order(result, initializer_status):
         "init_templates",
         "init_scripts",
         "init_extra_ca_certificates",
-        "start_minio_service",
-        "init_minio",
+        "start_rustfs_service",
+        "init_rustfs",
         "stop_services",
         "init_frontend",
         "start_db_service",

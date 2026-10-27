@@ -24,8 +24,8 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([secrets-dir],[],[Path to secrets directory mounted from host],[/secrets])
 # ARG_OPTIONAL_SINGLE([ssl-dir],[],[Path to ssl directory mounted from host],[/ssl])
 # ARG_OPTIONAL_SINGLE([clone-branch],[],[The dioptra branch to clone and use for syncing task plugins],[main])
-# ARG_OPTIONAL_SINGLE([chown-mc],[],[File ownership setting for the user in the mc image],[root:root])
-# ARG_OPTIONAL_SINGLE([chown-minio],[],[File ownership setting for the user in the minio image],[root:root])
+# ARG_OPTIONAL_SINGLE([chown-rc],[],[File ownership setting for the rc initializer],[root:root])
+# ARG_OPTIONAL_SINGLE([chown-rustfs],[],[File ownership setting for the user in the rustfs image],[10001:10001])
 # ARG_OPTIONAL_SINGLE([chown-mlflow],[],[File ownership setting for the non-root user in mlflow-tracking image],[39000:100])
 # ARG_OPTIONAL_SINGLE([chown-nginx],[],[File ownership setting for the non-root user in nginx image],[39000:100])
 # ARG_OPTIONAL_SINGLE([chown-dbadmin],[],[File ownership setting for the non-root user in dbamin image],[5050:5050])
@@ -36,9 +36,9 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([postgres-initdb-d-dir],[],[Path to the directory for the postgres-docker-entrypoint-initdb-d named volume],[/volumes/postgres-docker-entrypoint-initdb-d])
 # ARG_OPTIONAL_SINGLE([postgres-etc-postgresql-dir],[],[Path to the directory for the postgres-etc-postgresql named volume],[/volumes/postgres-etc-postgresql])
 # ARG_OPTIONAL_SINGLE([postgres-var-certs-dir],[],[Path to the directory for the postgres-var-certs named volume],[/volumes/postgres-var-certs])
-# ARG_OPTIONAL_SINGLE([mc-ca-certificates-dir],[],[Path to the directory for the mc-ca-certificates named volume],[/volumes/mc-ca-certificates])
-# ARG_OPTIONAL_SINGLE([minio-certs-dir],[],[Path to the directory for the minio-certs named volume],[/volumes/minio-certs])
-# ARG_OPTIONAL_SINGLE([minio-data-dir],[],[Path to the directory for the minio-data named volume],[/volumes/minio-data])
+# ARG_OPTIONAL_SINGLE([rc-ca-certificates-dir],[],[Path to the directory for the rc-ca-certificates named volume],[/volumes/rc-ca-certificates])
+# ARG_OPTIONAL_SINGLE([rustfs-certs-dir],[],[Path to the directory for the rustfs-certs named volume],[/volumes/rustfs-certs])
+# ARG_OPTIONAL_SINGLE([rustfs-data-dir],[],[Path to the directory for the rustfs-data named volume],[/volumes/rustfs-data])
 # ARG_OPTIONAL_SINGLE([dbadmin-certs-dir],[],[Path to the directory for the dbadmin-certs named volume],[/volumes/dbadmin-ca-certificates])
 # ARG_OPTIONAL_SINGLE([dbadmin-data-dir],[],[Path to the directory for the dbadmin-data named volume],[/volumes/dbadmin-data])
 # ARG_OPTIONAL_SINGLE([nginx-conf-d-dir],[],[Path to the directory for the nginx-conf-d named volume],[/volumes/nginx-conf-d])
@@ -316,31 +316,34 @@ prepare_postgres_volumes() {
 }
 
 ###########################################################################################
-# Prepares the named volumes used by the minio image
+# Prepares the named volumes used by the rustfs image
 #
 # Globals:
-#   _arg_chown_minio
+#   _arg_chown_rustfs
 #   _arg_ssl_dir
-#   _arg_minio_certs_dir
-#   _arg_minio_data_dir
+#   _arg_nginx_etc_ssl_dir
+#   _arg_rustfs_certs_dir
+#   _arg_rustfs_data_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-prepare_minio_volumes() {
-  set_permissions --dir-chmod "0700" --chown "${_arg_chown_minio}" \
-    "${_arg_minio_data_dir}"
+prepare_rustfs_volumes() {
+  set_permissions --dir-chmod "0700" --chown "${_arg_chown_rustfs}" \
+    "${_arg_rustfs_data_dir}"
 
-  set_permissions --dir-chmod "0755" --chown "${_arg_chown_minio}" \
-    "${_arg_minio_certs_dir}"
+  set_permissions --dir-chmod "0755" --chown "${_arg_chown_rustfs}" \
+    "${_arg_rustfs_certs_dir}"
 
-  create_dir "${_arg_minio_certs_dir}/CAs" "0022"
-
-  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_minio}" \
+  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_rustfs}" \
     --ca-directory "${_arg_ssl_dir}/ca-certificates" \
-    --output "${_arg_minio_certs_dir}/CAs"
+    --output "${_arg_rustfs_certs_dir}"
+
+  file_copy --chmod "0644" --chown "${_arg_chown_rustfs}" \
+    "${_arg_nginx_etc_ssl_dir}/certs/ca-certificates.crt" \
+    "${_arg_rustfs_certs_dir}/ca-certificates.crt"
 }
 
 ###########################################################################################
@@ -419,25 +422,30 @@ prepare_restapi_volumes() {
 }
 
 ###########################################################################################
-# Prepares the named volumes used by the mc image
+# Prepares the certificate trust store used by the rc initializer
 #
 # Globals:
-#   _arg_chown_mc
+#   _arg_chown_rc
 #   _arg_ssl_dir
-#   _arg_mc_ca_certificates_dir
+#   _arg_nginx_etc_ssl_dir
+#   _arg_rc_ca_certificates_dir
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-prepare_mc_volumes() {
-  set_permissions --dir-chmod "0755" --chown "${_arg_chown_mc}" \
-    "${_arg_mc_ca_certificates_dir}"
+prepare_rc_volumes() {
+  set_permissions --dir-chmod "0755" --chown "${_arg_chown_rc}" \
+    "${_arg_rc_ca_certificates_dir}"
 
-  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_mc}" \
+  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_rc}" \
     --ca-directory "${_arg_ssl_dir}/ca-certificates" \
-    --output "${_arg_mc_ca_certificates_dir}"
+    --output "${_arg_rc_ca_certificates_dir}"
+
+  file_copy --chmod "0644" --chown "${_arg_chown_rc}" \
+    "${_arg_nginx_etc_ssl_dir}/certs/ca-certificates.crt" \
+    "${_arg_rc_ca_certificates_dir}/ca-certificates.crt"
 }
 
 ###########################################################################################
@@ -473,12 +481,12 @@ prepare_dioptra_repo_clone() {
 main() {
   prepare_nginx_volumes
   prepare_postgres_volumes
-  prepare_minio_volumes
+  prepare_rustfs_volumes
   prepare_mlflow_volumes
   prepare_restapi_volumes
   prepare_redis_volumes
   prepare_dbadmin_volumes
-  prepare_mc_volumes
+  prepare_rc_volumes
   prepare_dioptra_repo_clone
 }
 

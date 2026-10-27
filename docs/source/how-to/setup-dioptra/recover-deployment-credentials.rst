@@ -84,7 +84,7 @@ Look for these temporary-file names, where ``<token>`` is a randomly generated s
 
 * ``..env.<token>.tmp``
 * ``secrets/.postgres-passwd.env.<token>.tmp``
-* ``secrets/.<deployment-slug>-minio-accounts.env.<token>.tmp``
+* ``secrets/.<deployment-slug>-rustfs-accounts.env.<token>.tmp``
 
 If any of these files remain:
 

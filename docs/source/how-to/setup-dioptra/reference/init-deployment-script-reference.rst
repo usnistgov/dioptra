@@ -41,7 +41,7 @@ The ``init-deployment.sh`` script automates the following initialization steps:
 - Copies configuration files and certificates into named volumes
 - Sets appropriate file and folder access permissions
 - Initializes the persistent API signing key before database migrations and API startup
-- Creates Minio S3 accounts and configures their access permissions
+- Creates RustFS S3 accounts and configures their access permissions
 - Syncs built-in task plugins from the Dioptra GitHub repository
 - Enables SSL/TLS in PostgreSQL (if applicable)
 
@@ -60,7 +60,7 @@ The following files form one credential set:
 
 * ``.env``
 * ``secrets/postgres-passwd.env``
-* ``secrets/<deployment-slug>-minio-accounts.env``
+* ``secrets/<deployment-slug>-rustfs-accounts.env``
 
 .. list-table:: Credential-set handling
    :header-rows: 1
@@ -112,7 +112,7 @@ Command-Line Options
 .. code:: text
 
    Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-                             [--skip-minio-setup] [--branch <branch-name>]
+                             [--skip-rustfs-setup] [--branch <branch-name>]
                              [--worker-ssl-service [tfcpu|pytorchcpu]]
                              [--python <cmd>] [-h|--help]
 
@@ -124,9 +124,10 @@ Command-Line Options
    Enable the SSL-enabled configuration settings for the PostgreSQL container.
    Use this if you copied a server certificate and private key into the ``ssl/db/`` folder.
 
-**--skip-minio-setup**
-   Skip Minio service setup.
-   Useful when making configuration changes after the initial deployment, as the script may freeze when trying to reconfigure an already-running Minio container.
+**--skip-rustfs-setup**
+   Skip RustFS service setup.
+   Useful when making configuration changes that do not require reconciling storage accounts and policies.
+   RustFS account initialization can also be rerun without duplicating policy attachments.
 
 **--branch <branch-name>**
    The Dioptra GitHub branch to use when syncing built-in task plugins and frontend files.
@@ -174,7 +175,7 @@ Examples
 
 .. code:: sh
 
-   ./init-deployment.sh --branch <branch-name> --skip-minio-setup
+   ./init-deployment.sh --branch <branch-name> --skip-rustfs-setup
 
 .. important::
 

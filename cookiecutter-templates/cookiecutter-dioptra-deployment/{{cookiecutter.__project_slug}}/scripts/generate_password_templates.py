@@ -28,8 +28,8 @@ PASSWORD_FILES: list[tuple[Path, Path]] = [
         Path("secrets", "postgres-passwd.env"),
     ),
     (
-        Path("scripts", "templates", "minio-accounts.env.j2"),
-        Path("secrets", "{{ cookiecutter.__project_slug }}-minio-accounts.env"),
+        Path("scripts", "templates", "rustfs-accounts.env.j2"),
+        Path("secrets", "{{ cookiecutter.__project_slug }}-rustfs-accounts.env"),
     ),
     (
         Path("scripts", "templates", "dioptra.service.j2"),
@@ -40,7 +40,7 @@ PASSWORD_FILES: list[tuple[Path, Path]] = [
 CREDENTIAL_FILES = {
     Path(".env"),
     Path("secrets", "postgres-passwd.env"),
-    Path("secrets", "{{ cookiecutter.__project_slug }}-minio-accounts.env"),
+    Path("secrets", "{{ cookiecutter.__project_slug }}-rustfs-accounts.env"),
 }
 
 JINJA_ENV = Environment(loader=FileSystemLoader([str(BASE_DIRECTORY)]))
@@ -61,19 +61,19 @@ def generate_random_passwords(words_file: str | Path) -> dict[str, Any]:
     logger.info('Generating "Correct Horse Battery Staple" passwords')
     words = _populate_words(words_file)
     return {
-        "minio_mlflow_tracking_password": _generate_random_password(
+        "rustfs_mlflow_tracking_password": _generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        "minio_kms_secret_key": _generate_random_kms_secret_key(size=32),
-        "minio_root_password": _generate_random_password(words),
-        "minio_restapi_password": _generate_random_password(
+        "rustfs_kms_secret_key": _generate_random_kms_secret_key(size=32),
+        "rustfs_root_password": _generate_random_password(words),
+        "rustfs_restapi_password": _generate_random_password(
             words,
             capitalize=False,
             delimiter="_",
         ),
-        "minio_worker_password": _generate_random_password(
+        "rustfs_worker_password": _generate_random_password(
             words,
             capitalize=False,
             delimiter="_",

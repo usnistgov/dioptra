@@ -142,7 +142,7 @@ For example, if your deployment name is ``dioptra-deployment``, the REST API ser
 - ``<deployment-name>-db`` - PostgreSQL database
 - ``<deployment-name>-dbadmin`` - pgAdmin4 database administration
 - ``<deployment-name>-redis`` - Redis queue
-- ``<deployment-name>-minio`` - Minio S3 storage
+- ``<deployment-name>-rustfs`` - RustFS S3 storage
 - ``<deployment-name>-mlflow-tracking`` - MLflow tracking server
 - ``<deployment-name>-tfcpu-*``, ``<deployment-name>-tfgpu-*`` - TensorFlow workers
 - ``<deployment-name>-pytorchcpu-*``, ``<deployment-name>-pytorchgpu-*`` - PyTorch workers

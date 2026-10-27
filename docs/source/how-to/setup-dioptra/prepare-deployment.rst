@@ -132,6 +132,8 @@ Run the initialization script to generate passwords, copy configuration files, p
 Run initialization as the user who owns the deployment files.
 If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.
 
+The script automates password generation, certificate bundling, volume preparation, RustFS account setup, and built-in plugin syncing.
+
 .. admonition:: Learn More
 
    See :ref:`reference-init-deployment-script` for complete command-line options and detailed examples.

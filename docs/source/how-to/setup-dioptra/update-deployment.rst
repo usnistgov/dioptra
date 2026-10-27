@@ -113,12 +113,12 @@ Run initialization as the user who owns the deployment files.
 The script preserves existing credentials and automatically repairs their permissions to owner-only access (``0600``).
 If it reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before restarting services.
 
-When rerunning the script on an already-initialized deployment, it will freeze during the Minio setup step because those configurations have already been applied.
-Use the ``--skip-minio-setup`` option to skip this step:
+RustFS initialization can be rerun: it preserves the existing bucket and skips policy attachments that are already present.
+Use the ``--skip-rustfs-setup`` option when you do not need to reconcile storage accounts and policies:
 
 .. code:: sh
 
-   ./init-deployment.sh --branch <branch-name> --skip-minio-setup
+   ./init-deployment.sh --branch <branch-name> --skip-rustfs-setup
 
 .. important::
 
@@ -126,7 +126,7 @@ Use the ``--skip-minio-setup`` option to skip this step:
 
    .. code:: sh
 
-      ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl --enable-postgres-ssl --skip-minio-setup
+      ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl --enable-postgres-ssl --skip-rustfs-setup
 
 .. rst-class:: header-on-a-card header-steps
 

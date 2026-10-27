@@ -33,7 +33,7 @@ To stop Dioptra:
 
 | File / Directory                       | Purpose                                                                   |
 | -------------------------------------- | ------------------------------------------------------------------------- |
-| `config/`                              | Service configuration files (Postgres, Minio, NGINX)                      |
+| `config/`                              | Service configuration files (Postgres, RustFS, NGINX)                      |
 | `envs/`                                | Environment variable files for each Dioptra service                       |
 | `scripts/`                             | Initialization and helper scripts used by `init-deployment.sh`            |
 | `secrets/`                             | Generated secret files (passwords) -- do not commit to git                |
