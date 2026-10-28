@@ -50,7 +50,10 @@ Follow these steps to create and register a new user. You can perform these acti
 Step 1: Create the User
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Register a user with a username, email address, and password to be able to create and access resources.
+Register a user with a username and password to be able to create and access resources.
+Choose the username carefully: it cannot be changed after registration or reused
+after account deletion. If you register with the wrong username, register another
+account with a new username.
 
 .. tabs::
 
@@ -60,7 +63,7 @@ Register a user with a username, email address, and password to be able to creat
       click your username in the top right corner of the interface, and then click **LOG OUT** to log out.
       
       Click **Signup** and 
-      enter the username, email address, and password for the user.
+      enter the username and password for the user.
 
       Click **Register** when finished to create the user.
 

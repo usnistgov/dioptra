@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prepare Your Deployment &#8212; Dioptra 1.2.2 documentation</title>
+    <title>Prepare Your Deployment &#8212; Dioptra 1.2.3 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -286,6 +286,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
@@ -539,7 +542,7 @@ In most cases, the default value is appropriate.</p>
 <ul class="simple">
 <li><p><strong>deployment_name:</strong> A name to associate with the deployment (default: <code class="docutils literal notranslate"><span class="pre">Dioptra</span> <span class="pre">deployment</span></code>)</p></li>
 <li><p><strong>container_registry:</strong> Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See <a class="reference internal" href="get-container-images/index.html#how-to-get-container-images-registry-prefix"><span class="std std-ref">Understanding Container Registry Prefixes</span></a> for details. (default: <code class="docutils literal notranslate"><span class="pre">ghcr.io/usnistgov</span></code>)</p></li>
-<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.2.2</span></code>)</p></li>
+<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code>)</p></li>
 <li><p><strong>nginx_server_name:</strong> Domain name, IP address, or <code class="docutils literal notranslate"><span class="pre">_</span></code> for local deployments (default: <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code>)</p></li>
 <li><p><strong>num_tensorflow_cpu_workers / num_pytorch_cpu_workers:</strong> Number of CPU workers (default: <code class="docutils literal notranslate"><span class="pre">1</span></code> each)</p></li>
 <li><p><strong>datasets_directory:</strong> Host directory to mount at <code class="docutils literal notranslate"><span class="pre">/dioptra/data</span></code> in workers (default: <em>empty</em>)</p></li>
@@ -551,7 +554,7 @@ In most cases, the default value is appropriate.</p>
 </section>
 <section class="header-on-a-card header-steps" id="step-4-initialize-the-deployment">
 <h3>Step 4: Initialize the Deployment<a class="headerlink" href="#step-4-initialize-the-deployment" title="Permalink to this headline">#</a></h3>
-<p>Run the initialization script to generate passwords, copy configuration files, and prepare the named volumes.</p>
+<p>Run the initialization script to generate passwords, copy configuration files, prepare the named volumes, and initialize the persistent API signing key.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dioptra-deployment<span class="w">  </span><span class="c1"># Or your deployment folder name</span>
 ./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;
 </pre></div>
@@ -560,7 +563,6 @@ In most cases, the default value is appropriate.</p>
 <p class="admonition-title">Note</p>
 <p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
 </div>
-<p>The script automates password generation, certificate bundling, volume preparation, Minio account setup, and built-in plugin syncing.</p>
 <p>Run initialization as the user who owns the deployment files.
 If initialization reports an incomplete or empty credential set, follow <a class="reference internal" href="recover-deployment-credentials.html#how-to-recover-deployment-credentials"><span class="std std-ref">Recover Deployment Credentials</span></a> before continuing.</p>
 <div class="admonition-learn-more admonition">

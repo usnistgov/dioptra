@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.users &#8212; Dioptra 1.2.2 documentation</title>
+    <title>dioptra.client.users &#8212; Dioptra 1.2.3 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -283,6 +283,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
@@ -463,12 +466,11 @@ document.write(`
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="UsersCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<div class="viewcode-block" id="UsersCollectionClient.create"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.create">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Creates a Dioptra user.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            username: The username of the new user.</span>
-<span class="sd">            email: The email address of the new user.</span>
 <span class="sd">            password: The password to set for the new user.</span>
 
 <span class="sd">        Returns:</span>
@@ -479,7 +481,6 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
             <span class="n">json_</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"username"</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span>
-                <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">,</span>
                 <span class="s2">"password"</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
                 <span class="s2">"confirmPassword"</span><span class="p">:</span> <span class="n">password</span><span class="p">,</span>
             <span class="p">},</span>
@@ -543,22 +544,6 @@ document.write(`
 <span class="sd">            The response from the Dioptra API.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">"current"</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">"password"</span><span class="p">:</span> <span class="n">password</span><span class="p">})</span></div>
-
-<div class="viewcode-block" id="UsersCollectionClient.modify_current_user"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.modify_current_user">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">modify_current_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Modify details about the currently logged-in user.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            username: The new username for the currently logged-in user.</span>
-<span class="sd">            email: The new email address for the currently logged-in user.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-            <span class="s2">"current"</span><span class="p">,</span>
-            <span class="n">json_</span><span class="o">=</span><span class="p">{</span><span class="s2">"username"</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span> <span class="s2">"email"</span><span class="p">:</span> <span class="n">email</span><span class="p">},</span>
-        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsersCollectionClient.change_current_user_password"><a class="viewcode-back" href="../../../reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.change_current_user_password">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">change_current_user_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Change the currently logged-in user's password.</span>

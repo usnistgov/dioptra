@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Create Users and Groups &#8212; Dioptra 1.2.2 documentation</title>
+    <title>Create Users and Groups &#8212; Dioptra 1.2.3 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -288,6 +288,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
@@ -491,24 +494,26 @@ document.write(`
 <p>Follow these steps to create and register a new user. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.</p>
 <section class="header-on-a-card header-steps" id="step-1-create-the-user">
 <h3>Step 1: Create the User<a class="headerlink" href="#step-1-create-the-user" title="Permalink to this headline">#</a></h3>
-<p>Register a user with a username, email address, and password to be able to create and access resources.</p>
+<p>Register a user with a username and password to be able to create and access resources.
+Choose the username carefully: it cannot be changed after registration or reused
+after account deletion. If you register with the wrong username, register another
+account with a new username.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-R1VJ" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-1-R1VJ" name="R1VJ" role="tab" tabindex="0">GUI</button><button aria-controls="panel-1-UHl0aG9uIENsaWVudA==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tab" tabindex="-1">Python Client</button></div><div aria-labelledby="tab-1-R1VJ" class="sphinx-tabs-panel group-tab" id="panel-1-R1VJ" name="R1VJ" role="tabpanel" tabindex="0"><p>In the Dioptra GUI, if you are not logged in, the front page will display a login screen. If you are logged in,
 click your username in the top right corner of the interface, and then click <strong>LOG OUT</strong> to log out.</p>
 <p>Click <strong>Signup</strong> and
-enter the username, email address, and password for the user.</p>
+enter the username and password for the user.</p>
 <p>Click <strong>Register</strong> when finished to create the user.</p>
 </div><div aria-labelledby="tab-1-UHl0aG9uIENsaWVudA==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-UHl0aG9uIENsaWVudA==" name="UHl0aG9uIENsaWVudA==" role="tabpanel" tabindex="0"><p><strong>Client Method:</strong></p>
 <p>Use the client to create the user.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Creates a Dioptra user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>username</strong> – The username of the new user.</p></li>
-<li><p><strong>email</strong> – The email address of the new user.</p></li>
 <li><p><strong>password</strong> – The password to set for the new user.</p></li>
 </ul>
 </dd>

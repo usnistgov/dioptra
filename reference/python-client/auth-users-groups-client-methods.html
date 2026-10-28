@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Auth, Users, and Groups Client Methods &#8212; Dioptra 1.2.2 documentation</title>
+    <title>Auth, Users, and Groups Client Methods &#8212; Dioptra 1.2.3 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -286,6 +286,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../task-engine-reference.html">Declarative Experiment Description</a></li>
@@ -466,7 +469,6 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#users-current-user-methods">Users - Current User Methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-current-user">Get Current User</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-current-user">Modify Current User</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#change-current-user-password">Change Current User Password</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-current-user">Delete Current User</a></li>
 </ul>
@@ -512,18 +514,17 @@ document.write(`
 <li><p><a class="reference internal" href="#users-current-user-methods" id="id10">Users - Current User Methods</a></p>
 <ul>
 <li><p><a class="reference internal" href="#get-current-user" id="id11">Get Current User</a></p></li>
-<li><p><a class="reference internal" href="#modify-current-user" id="id12">Modify Current User</a></p></li>
-<li><p><a class="reference internal" href="#change-current-user-password" id="id13">Change Current User Password</a></p></li>
-<li><p><a class="reference internal" href="#delete-current-user" id="id14">Delete Current User</a></p></li>
+<li><p><a class="reference internal" href="#change-current-user-password" id="id12">Change Current User Password</a></p></li>
+<li><p><a class="reference internal" href="#delete-current-user" id="id13">Delete Current User</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#groups-methods" id="id15">Groups Methods</a></p>
+<li><p><a class="reference internal" href="#groups-methods" id="id14">Groups Methods</a></p>
 <ul>
-<li><p><a class="reference internal" href="#get-all-groups" id="id16">Get All Groups</a></p></li>
-<li><p><a class="reference internal" href="#get-group-by-id" id="id17">Get Group by ID</a></p></li>
+<li><p><a class="reference internal" href="#get-all-groups" id="id15">Get All Groups</a></p></li>
+<li><p><a class="reference internal" href="#get-group-by-id" id="id16">Get Group by ID</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#see-also" id="id18">See Also</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id17">See Also</a></p></li>
 </ul>
 </div>
 <section id="requirements">
@@ -611,13 +612,12 @@ defaults to None.</p></li>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.create">
-<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.users.UsersCollectionClient.create" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.users.UsersCollectionClient.create" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates a Dioptra user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>username</strong> – The username of the new user.</p></li>
-<li><p><strong>email</strong> – The email address of the new user.</p></li>
 <li><p><strong>password</strong> – The password to set for the new user.</p></li>
 </ul>
 </dd>
@@ -694,30 +694,8 @@ this is incorrect.</p></li>
 
 </div></blockquote>
 </section>
-<section id="modify-current-user">
-<h3><a class="toc-backref" href="#id12">Modify Current User</a><a class="headerlink" href="#modify-current-user" title="Permalink to this headline">#</a></h3>
-<blockquote>
-<div><dl class="py method">
-<dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.modify_current_user">
-<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">modify_current_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.modify_current_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#dioptra.client.users.UsersCollectionClient.modify_current_user" title="Permalink to this definition">#</a></dt>
-<dd><p>Modify details about the currently logged-in user.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>username</strong> – The new username for the currently logged-in user.</p></li>
-<li><p><strong>email</strong> – The new email address for the currently logged-in user.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The response from the Dioptra API.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div></blockquote>
-</section>
 <section id="change-current-user-password">
-<h3><a class="toc-backref" href="#id13">Change Current User Password</a><a class="headerlink" href="#change-current-user-password" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id12">Change Current User Password</a><a class="headerlink" href="#change-current-user-password" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.change_current_user_password">
@@ -740,7 +718,7 @@ change will fail if this is incorrect.</p></li>
 </div></blockquote>
 </section>
 <section id="delete-current-user">
-<h3><a class="toc-backref" href="#id14">Delete Current User</a><a class="headerlink" href="#delete-current-user" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id13">Delete Current User</a><a class="headerlink" href="#delete-current-user" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.users.UsersCollectionClient.delete_current_user">
@@ -761,14 +739,14 @@ fail if this is incorrect.</p>
 </section>
 </section>
 <section id="groups-methods">
-<span id="reference-groups-client-methods"></span><h2><a class="toc-backref" href="#id15">Groups Methods</a><a class="headerlink" href="#groups-methods" title="Permalink to this headline">#</a></h2>
+<span id="reference-groups-client-methods"></span><h2><a class="toc-backref" href="#id14">Groups Methods</a><a class="headerlink" href="#groups-methods" title="Permalink to this headline">#</a></h2>
 <p>These methods relate to group management and retrieval. They can be executed via <code class="docutils literal notranslate"><span class="pre">client.groups.METHOD_NAME()</span></code>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Groups are only partially implemented in Dioptra currently. All users are created under a single “Public” group. At this time, the creation of custom groups is not yet supported.</p>
 </div>
 <section id="get-all-groups">
-<h3><a class="toc-backref" href="#id16">Get All Groups</a><a class="headerlink" href="#get-all-groups" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id15">Get All Groups</a><a class="headerlink" href="#get-all-groups" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.groups.GroupsCollectionClient.get">
@@ -793,7 +771,7 @@ defaults to None.</p></li>
 </div></blockquote>
 </section>
 <section id="get-group-by-id">
-<h3><a class="toc-backref" href="#id17">Get Group by ID</a><a class="headerlink" href="#get-group-by-id" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id16">Get Group by ID</a><a class="headerlink" href="#get-group-by-id" title="Permalink to this headline">#</a></h3>
 <blockquote>
 <div><dl class="py method">
 <dt class="sig sig-object py" id="dioptra.client.groups.GroupsCollectionClient.get_by_id">
@@ -813,7 +791,7 @@ defaults to None.</p></li>
 </section>
 </section>
 <section class="fancy-header header-seealso" id="see-also">
-<h2><a class="toc-backref" href="#id18">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id17">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../../how-to/essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">How to set up the Python Client</span></a></p></li>
 <li><p><a class="reference internal" href="../../explanation/components/users-groups-explanation.html#explanation-users-and-groups"><span class="std std-ref">Explanation: Users and Groups</span></a></p></li>
@@ -884,7 +862,6 @@ defaults to None.</p></li>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#users-current-user-methods">Users - Current User Methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-current-user">Get Current User</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modify-current-user">Modify Current User</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#change-current-user-password">Change Current User Password</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-current-user">Delete Current User</a></li>
 </ul>

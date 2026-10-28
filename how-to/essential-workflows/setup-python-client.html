@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Set Up the Python Client &#8212; Dioptra 1.2.2 documentation</title>
+    <title>Set Up the Python Client &#8212; Dioptra 1.2.3 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.2 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -288,6 +288,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
@@ -575,21 +578,19 @@ environment variable will be checked and used.</p>
 </section>
 <section class="header-on-a-card header-steps" id="step-3-register-user">
 <h3>Step 3: Register User<a class="headerlink" href="#step-3-register-user" title="Permalink to this headline">#</a></h3>
-<p>In your python interpreter, set the username, email, and password, then use the client to register a new user:</p>
+<p>In your python interpreter, set the username and password, then use the client to register a new user:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-SlNPTiBDbGllbnQ=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-1-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tab" tabindex="0">JSON Client</button><button aria-controls="panel-1-UmVzcG9uc2UgQ2xpZW50" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-UmVzcG9uc2UgQ2xpZW50" name="UmVzcG9uc2UgQ2xpZW50" role="tab" tabindex="-1">Response Client</button></div><div aria-labelledby="tab-1-SlNPTiBDbGllbnQ=" class="sphinx-tabs-panel group-tab" id="panel-1-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tabpanel" tabindex="0"><div class="code-panel python admonition">
 <p class="admonition-title">Register User</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">username</span> <span class="o">=</span> <span class="s2">"user"</span>
-<span class="n">email</span> <span class="o">=</span> <span class="s2">"user@localhost"</span>
 <span class="n">password</span> <span class="o">=</span> <span class="s2">"pass"</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>You should see a successful response similar to the below:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">{</span><span class="s1">'username'</span>:<span class="w"> </span><span class="s1">'user'</span>,
-<span class="w"> </span><span class="s1">'email'</span>:<span class="w"> </span><span class="s1">'user@localhost'</span>,
 <span class="w"> </span><span class="s1">'id'</span>:<span class="w"> </span><span class="m">1</span>,
 <span class="w"> </span><span class="s1">'groups'</span>:<span class="w"> </span><span class="o">[{</span><span class="s1">'id'</span>:<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="s1">'name'</span>:<span class="w"> </span><span class="s1">'public'</span>,<span class="w"> </span><span class="s1">'url'</span>:<span class="w"> </span><span class="s1">'/api/v1/groups/1'</span><span class="o">}]</span>,
 <span class="w"> </span><span class="s1">'createdOn'</span>:<span class="w"> </span><span class="s1">'2026-02-02T18:47:44.794278+00:00'</span>,
@@ -602,16 +603,14 @@ environment variable will be checked and used.</p>
 </div><div aria-labelledby="tab-1-UmVzcG9uc2UgQ2xpZW50" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-UmVzcG9uc2UgQ2xpZW50" name="UmVzcG9uc2UgQ2xpZW50" role="tabpanel" tabindex="0"><div class="code-panel python admonition">
 <p class="admonition-title">Register User</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">username</span> <span class="o">=</span> <span class="s2">"user"</span>
-<span class="n">email</span> <span class="o">=</span> <span class="s2">"user@localhost"</span>
 <span class="n">password</span> <span class="o">=</span> <span class="s2">"pass"</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>You should see a successful response similar to the below:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">{</span><span class="s1">'username'</span>:<span class="w"> </span><span class="s1">'user'</span>,
-<span class="w"> </span><span class="s1">'email'</span>:<span class="w"> </span><span class="s1">'user@localhost'</span>,
 <span class="w"> </span><span class="s1">'id'</span>:<span class="w"> </span><span class="m">1</span>,
 <span class="w"> </span><span class="s1">'groups'</span>:<span class="w"> </span><span class="o">[{</span><span class="s1">'id'</span>:<span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="s1">'name'</span>:<span class="w"> </span><span class="s1">'public'</span>,<span class="w"> </span><span class="s1">'url'</span>:<span class="w"> </span><span class="s1">'/api/v1/groups/1'</span><span class="o">}]</span>,
 <span class="w"> </span><span class="s1">'createdOn'</span>:<span class="w"> </span><span class="s1">'2026-02-02T18:47:44.794278+00:00'</span>,
@@ -625,13 +624,12 @@ environment variable will be checked and used.</p>
 <p><em>Full Client Method Documentation:</em></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-prename descclassname"><span class="pre">UsersCollectionClient.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.users.T</span></span></span><a class="reference internal" href="../../_modules/dioptra/client/users.html#UsersCollectionClient.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Creates a Dioptra user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>username</strong> – The username of the new user.</p></li>
-<li><p><strong>email</strong> – The email address of the new user.</p></li>
 <li><p><strong>password</strong> – The password to set for the new user.</p></li>
 </ul>
 </dd>
