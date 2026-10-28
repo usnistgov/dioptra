@@ -26,15 +26,17 @@ import jsonschema
 import structlog
 import tomli as toml
 import yaml
+from flask_login import current_user
 from injector import inject
 from sqlalchemy import select
 from structlog.stdlib import BoundLogger
 from werkzeug.datastructures import FileStorage
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     DioptraError,
-    DraftDoesNotExistError,
+    DioptraServerError,
     DraftResourceModificationsCommitError,
     EntityDoesNotExistError,
     GitError,
@@ -1178,18 +1180,20 @@ class DraftCommitService(object):
         self,
         resource_service: ResourceService,
         resource_id_service: ResourceIdService,
+        uow: UnitOfWork,
     ) -> None:
         """Initialize the draft commit service.
 
-        All arguments are provided via dependency injection.
         All arguments are provided via dependency injection.
 
         Args:
             resource_service: A ResourceService object.
             resource_id_service: A ResourceIdService object.
+            uow: A UnitOfWork object.
         """
         self._resource_service = resource_service
         self._resource_id_service = resource_id_service
+        self._uow = uow
 
     def commit_draft(self, draft_id: int, **kwargs) -> dict:
         """Commit the Draft as a new ResourceSnapshot
@@ -1203,9 +1207,15 @@ class DraftCommitService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("commit draft", draft_id=draft_id)
 
-        draft = views.get_draft_resource(draft_id, logger=log)
-        if draft is None:
-            raise DraftDoesNotExistError(draft_resource_id=draft_id)
+        try:
+            draft = self._uow.drafts_repo.get_one(
+                draft_id, creator=current_user.user_id
+            )
+        except TypeError as error:
+            log.exception("Draft commit lookup failed", draft_resource_id=draft_id)
+            raise DioptraServerError(
+                "The server could not commit the draft. Contact the administrator."
+            ) from error
 
         if draft.payload["resource_id"] is None:
             resource_ids = (
@@ -1272,9 +1282,15 @@ class DraftCommitService(object):
                 log=log,
             )
 
-        db.session.delete(draft)
-
-        db.session.commit()
+        try:
+            self._uow.drafts_repo.delete(draft, creator=current_user.user_id)
+        except TypeError as error:
+            self._uow.rollback()
+            log.exception("Draft commit deletion failed", draft_resource_id=draft_id)
+            raise DioptraServerError(
+                "The server could not commit the draft. Contact the administrator."
+            ) from error
+        self._uow.commit()
 
         resource_ids = [resource_dict[draft.resource_type].resource_id]
         if draft.payload["base_resource_id"] is not None:

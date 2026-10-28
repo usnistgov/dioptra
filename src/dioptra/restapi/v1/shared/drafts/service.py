@@ -29,6 +29,7 @@ from dioptra.restapi.db.repository.drafts import DraftType
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
+    DioptraServerError,
     DraftBaseResourceDoesNotExistError,
     DraftDoesNotExistError,
     EntityDoesNotExistError,
@@ -207,13 +208,17 @@ class ResourceDraftsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get draft by id", draft_id=draft_id)
 
-        draft = self._uow.drafts_repo.get(
-            # probably should not reference a flask detail like this from
-            # a service.
-            draft_id,
-            self._resource_type.db_table_name,
-            current_user,
-        )
+        try:
+            draft = self._uow.drafts_repo.get(
+                draft_id,
+                resource_type=self._resource_type.db_table_name,
+                creator=current_user.user_id,
+            )
+        except TypeError as error:
+            log.exception("Draft retrieval failed", draft_resource_id=draft_id)
+            raise DioptraServerError(
+                "The server could not retrieve the draft. Contact the administrator."
+            ) from error
 
         if draft is None and error_if_not_found:
             raise DraftDoesNotExistError(draft_resource_id=draft_id)
@@ -273,8 +278,18 @@ class ResourceDraftsIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        with self._uow:
-            self._uow.drafts_repo.delete(draft_id)
+        try:
+            with self._uow:
+                self._uow.drafts_repo.delete(
+                    draft_id,
+                    creator=current_user.user_id,
+                    resource_type=self._resource_type.db_table_name,
+                )
+        except TypeError as error:
+            log.exception("Draft deletion failed", draft_resource_id=draft_id)
+            raise DioptraServerError(
+                "The server could not delete the draft. Contact the administrator."
+            ) from error
         log.debug("Draft deleted", draft_resource_id=draft_id)
 
         return {"status": "Success", "id": [draft_id]}
@@ -446,7 +461,14 @@ class ResourceIdDraftService(object):
                 draft,
                 payload["resource_data"],
                 payload["resource_snapshot_id"],
+                creator=current_user.user_id,
             )
+        except TypeError as error:
+            self._uow.rollback()
+            log.exception("Draft modification failed", resource_id=resource_id)
+            raise DioptraServerError(
+                "The server could not modify the draft. Contact the administrator."
+            ) from error
         except Exception:
             self._uow.rollback()
             raise
@@ -473,8 +495,18 @@ class ResourceIdDraftService(object):
             self.get(resource_id, error_if_not_found=True, log=log),
         )
         draft_id = draft.draft_resource_id
-        with self._uow:
-            self._uow.drafts_repo.delete(draft)
+        try:
+            with self._uow:
+                self._uow.drafts_repo.delete(
+                    draft,
+                    creator=current_user.user_id,
+                    resource_type=self._resource_type.db_table_name,
+                )
+        except TypeError as error:
+            log.exception("Draft deletion failed", resource_id=resource_id)
+            raise DioptraServerError(
+                "The server could not delete the draft. Contact the administrator."
+            ) from error
 
         log.debug("Draft deleted", resource_id=resource_id)
 

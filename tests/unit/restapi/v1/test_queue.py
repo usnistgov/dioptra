@@ -25,12 +25,15 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from structlog.testing import capture_logs
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.drafts import DraftsRepository
 
 from ..lib import helpers, routines
+from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -545,6 +548,7 @@ def test_delete_queue_by_id(
 
 
 def test_manage_existing_queue_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -598,6 +602,9 @@ def test_manage_existing_queue_draft(
         dioptra_client.queues.modify_resource_drafts,
         dioptra_client.workflows,
         queue["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.queues.new_resource_drafts,
+        wrong_type_client=dioptra_client.plugins.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -606,6 +613,7 @@ def test_manage_existing_queue_draft(
 
 
 def test_manage_new_queue_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
@@ -651,6 +659,8 @@ def test_manage_new_queue_drafts(
         dioptra_client.queues,
         dioptra_client.queues.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.plugins.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,
@@ -714,3 +724,75 @@ def test_tag_queue(
         queue["id"],
         tag_ids=tag_ids,
     )
+
+
+def database_counts(db_session):
+    return tuple(
+        db_session.query(model).count()
+        for model in (models.Resource, models.ResourceSnapshot, models.DraftResource)
+    )
+
+
+@pytest.mark.parametrize(
+    "repo_method,event",
+    [("get_one", "Draft commit lookup failed"), ("delete", "Draft commit deletion failed")],
+)
+def test_draft_commit_error(
+    client, db_session, account, fake_data, flask_app, monkeypatch, caplog, repo_method, event
+):
+    monkeypatch.setitem(flask_app.config, "LOGIN_DISABLED", False)
+    monkeypatch.setitem(flask_app.config, "PROPAGATE_EXCEPTIONS", False)
+    snapshot = fake_data.queue(account.user, account.group)
+    db_session.add(snapshot)
+    db_session.commit()
+    draft = models.DraftResource(
+        "queue",
+        {
+            "resource_data": {"name": "pending-queue", "description": "private"},
+            "resource_id": snapshot.resource_id,
+            "resource_snapshot_id": snapshot.resource_snapshot_id,
+            "base_resource_id": None,
+        },
+        account.group,
+        account.user,
+    )
+    db_session.add(draft)
+    db_session.commit()
+    with client.session_transaction() as session:
+        session["_user_id"] = account.user.get_id()
+        session["_fresh"] = True
+
+    original = getattr(DraftsRepository, repo_method)
+
+    def fail(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        db_session.flush()
+        raise TypeError("private repository failure")
+
+    monkeypatch.setattr(DraftsRepository, repo_method, fail)
+
+    draft_id = draft.draft_resource_id
+    before = database_counts(db_session)
+    original_payload = draft.payload.copy()
+    with capture_logs() as logs:
+        response = client.post(f"/api/v1/workflows/draftCommit/{draft_id}")
+    assert_public_failure(response, caplog)
+    entry = next(entry for entry in logs if entry["event"] == event)
+    assert entry["request_id"] and entry["exc_info"]
+    assert entry["draft_resource_id"] == draft_id
+    db_session.expire_all()
+    assert database_counts(db_session) == before
+    assert db_session.get(models.DraftResource, draft_id).payload == original_payload
+
+
+def assert_public_failure(response, caplog):
+    assert response.status_code == 500
+    assert response.json["error"] == "DioptraServerError"
+    assert response.json["message"].endswith(
+        "The server could not commit the draft. Contact the administrator."
+    )
+    assert response.json["detail"] == {}
+    assert "private" not in response.get_data(as_text=True)
+    error = next(record.exc_info[1] for record in caplog.records if record.exc_info)
+    assert isinstance(error.__cause__, TypeError)
+    assert str(error.__cause__) == "private repository failure"

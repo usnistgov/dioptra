@@ -95,6 +95,25 @@ class DioptraError(Exception):
         return f"{self.message} Cause: {self.__cause__}"
 
 
+class DioptraServerError(DioptraError):
+    """Generic Internal Dioptra Server Error.
+
+    Args:
+        message: An error specific message to display that provides context for why the
+        error was raised.
+        detail: Optional client-facing details.
+    """
+
+    def __init__(
+        self,
+        message: str = "The server could not complete the request.",
+        *,
+        detail: dict[str, typing.Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.detail = dict(detail) if detail is not None else {}
+
+
 class EntityDoesNotExistError(DioptraError):
     """
     The requested entity does not exist.
@@ -1171,6 +1190,10 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             if error._validation_error_dict
             else {},
         )
+
+    @api.errorhandler(DioptraServerError)
+    def handle_server_error(error: DioptraServerError):
+        return error_result(error, http.HTTPStatus.INTERNAL_SERVER_ERROR, error.detail)
 
     @api.errorhandler(DioptraError)
     def handle_base_error(error: DioptraError):

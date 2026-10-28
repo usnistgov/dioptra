@@ -598,6 +598,7 @@ def test_delete_model_by_id(
 
 
 def test_manage_existing_model_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_models: dict[str, Any],
@@ -651,6 +652,9 @@ def test_manage_existing_model_draft(
         dioptra_client.models.modify_resource_drafts,
         dioptra_client.workflows,
         model["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.models.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -659,6 +663,7 @@ def test_manage_existing_model_draft(
 
 
 def test_manage_new_model_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
@@ -704,6 +709,8 @@ def test_manage_new_model_drafts(
         dioptra_client.models,
         dioptra_client.models.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

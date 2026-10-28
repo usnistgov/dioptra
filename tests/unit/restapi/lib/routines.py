@@ -27,7 +27,52 @@ from dioptra.client.tags import TagsSubCollectionClient
 from dioptra.client.workflows import WorkflowsCollectionClient
 from dioptra.restapi.v1.shared.resource_service import ResourceDataAdapterType
 
-from . import asserts
+from . import asserts, helpers
+
+
+def run_draft_authorization_tests(
+    authorization: helpers.DraftAuthorizationContext,
+    draft_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
+    *parent_ids: str | int,
+    draft_id: int,
+    wrong_type_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+) -> dict[str, Any]:
+    """Reject a fellow group member and a creator using the wrong resource route."""
+    with authorization.as_member():
+        foreign_delete = asserts.assert_draft_request_rejected(
+            authorization,
+            draft_id,
+            lambda: draft_client.delete(*parent_ids, draft_id=draft_id),
+        )
+        foreign_commit = asserts.assert_draft_request_rejected(
+            authorization, draft_id, lambda: workflow_client.commit_draft(draft_id)
+        )
+    asserts.assert_draft_request_rejected(
+        authorization,
+        draft_id,
+        lambda: wrong_type_client.delete(draft_id=draft_id),
+    )
+    return {"delete": foreign_delete, "commit": foreign_commit}
+
+
+def run_missing_draft_tests(
+    authorization: helpers.DraftAuthorizationContext,
+    draft_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
+    *parent_ids: str | int,
+    draft_id: int,
+    foreign: dict[str, Any],
+) -> None:
+    """Repeat the foreign-user requests after the creator consumes the same ID."""
+    with authorization.as_member():
+        asserts.assert_missing_draft_matches_foreign(
+            lambda: draft_client.delete(*parent_ids, draft_id=draft_id),
+            foreign["delete"],
+        )
+        asserts.assert_missing_draft_matches_foreign(
+            lambda: workflow_client.commit_draft(draft_id), foreign["commit"]
+        )
 
 
 def run_new_resource_drafts_tests(
@@ -40,6 +85,8 @@ def run_new_resource_drafts_tests(
     draft1_expected: dict[str, Any],
     draft2_expected: dict[str, Any],
     draft1_mod_expected: dict[str, Any],
+    authorization: helpers.DraftAuthorizationContext,
+    wrong_type_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
     group_id: int | None = None,
 ) -> None:
     # Creation operation tests
@@ -84,19 +131,54 @@ def run_new_resource_drafts_tests(
 
     # Delete operation tests
 
-    draft_client.delete(*resource_ids, draft_id=draft1_response["id"])
+    foreign = run_draft_authorization_tests(
+        authorization,
+        draft_client,
+        workflow_client,
+        *resource_ids,
+        draft_id=draft1_response["id"],
+        wrong_type_client=wrong_type_client,
+    )
+    delete_response = draft_client.delete(*resource_ids, draft_id=draft1_response["id"])
+    assert delete_response.status_code == HTTPStatus.OK
     asserts.assert_new_draft_is_not_found(
         draft_client, *resource_ids, draft_id=draft1_response["id"]
     )
 
     # Commit operation tests
-    commit_response = workflow_client.commit_draft(draft2_response["id"]).json()
+    run_missing_draft_tests(
+        authorization,
+        draft_client,
+        workflow_client,
+        *resource_ids,
+        draft_id=draft1_response["id"],
+        foreign=foreign,
+    )
+    foreign = run_draft_authorization_tests(
+        authorization,
+        draft_client,
+        workflow_client,
+        *resource_ids,
+        draft_id=draft2_response["id"],
+        wrong_type_client=wrong_type_client,
+    )
+    response = workflow_client.commit_draft(draft2_response["id"])
+    assert response.status_code == HTTPStatus.OK
+    commit_response = response.json()
     asserts.assert_new_draft_is_not_found(
         draft_client, *resource_ids, draft_id=draft2_response["id"]
     )
     resource_response = resource_client.get_by_id(*commit_response["id"]).json()
     asserts.assert_resource_contents_match_expectations(
         resource_response, draft2_expected["payload"]
+    )
+    run_missing_draft_tests(
+        authorization,
+        draft_client,
+        workflow_client,
+        *resource_ids,
+        draft_id=draft2_response["id"],
+        foreign=foreign,
     )
 
 
@@ -109,6 +191,9 @@ def run_existing_resource_drafts_tests(
     draft_mod: dict[str, Any],
     draft_expected: dict[str, Any],
     draft_mod_expected: dict[str, Any],
+    authorization: helpers.DraftAuthorizationContext,
+    draft_id_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    wrong_type_client: NewResourceDraftsSubCollectionClient[DioptraResponseProtocol],
     resource_data_adapters: ResourceDataAdapterType | None = None,
 ) -> None:
     # Creation operation tests
@@ -132,8 +217,26 @@ def run_existing_resource_drafts_tests(
     )
 
     # Delete operation tests
-    draft_client.delete(*resource_ids)
+    draft_id = response["id"]
+    foreign = run_draft_authorization_tests(
+        authorization,
+        draft_id_client,
+        workflow_client,
+        *resource_ids[:-1],
+        draft_id=draft_id,
+        wrong_type_client=wrong_type_client,
+    )
+    delete_response = draft_client.delete(*resource_ids)
+    assert delete_response.status_code == HTTPStatus.OK
     asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
+    run_missing_draft_tests(
+        authorization,
+        draft_id_client,
+        workflow_client,
+        *resource_ids[:-1],
+        draft_id=draft_id,
+        foreign=foreign,
+    )
 
     # Commit operation tests
     # This sequence tests the case where a resource that has draft modifications is
@@ -150,18 +253,83 @@ def run_existing_resource_drafts_tests(
             else resource_data_adapters(draft_mod)
         ),
     ).json()
-    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
+    foreign = run_draft_authorization_tests(
+        authorization,
+        draft_id_client,
+        workflow_client,
+        *resource_ids[:-1],
+        draft_id=draft_response["id"],
+        wrong_type_client=wrong_type_client,
+    )
+    before = authorization.draft_state(draft_response["id"])
+    conflict_response = workflow_client.commit_draft(draft_response["id"])
+    assert conflict_response.status_code == HTTPStatus.BAD_REQUEST
+    commit_response = conflict_response.json()
+    assert commit_response["detail"]["draft"] == before["payload"]["resource_data"]
+    assert authorization.draft_state(draft_response["id"]) == before
     draft_response = draft_client.modify(
         *resource_ids,
         resource_snapshot_id=commit_response["detail"]["curr_snapshot_id"],
         **draft,
     ).json()
-    commit_response = workflow_client.commit_draft(draft_response["id"]).json()
+    response = workflow_client.commit_draft(draft_response["id"])
+    assert response.status_code == HTTPStatus.OK
+    commit_response = response.json()
     asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
     resource_response = resource_client.get_by_id(*commit_response["id"]).json()
     asserts.assert_resource_contents_match_expectations(
         resource_response, draft_expected["payload"]
     )
+    run_missing_draft_tests(
+        authorization,
+        draft_id_client,
+        workflow_client,
+        *resource_ids[:-1],
+        draft_id=draft_response["id"],
+        foreign=foreign,
+    )
+    run_group_member_draft_commit_tests(
+        authorization,
+        resource_client,
+        draft_client,
+        workflow_client,
+        *resource_ids,
+        draft=draft_mod,
+        expected=draft_mod_expected["payload"],
+    )
+
+
+def run_group_member_draft_commit_tests(
+    authorization: helpers.DraftAuthorizationContext,
+    resource_client: CollectionClient[DioptraResponseProtocol],
+    draft_client: ModifyResourceDraftsSubCollectionClient[DioptraResponseProtocol],
+    workflow_client: WorkflowsCollectionClient[DioptraResponseProtocol],
+    *resource_ids: str | int,
+    draft: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """A group member may create and consume their own modification draft."""
+    import dioptra.restapi.db.models as models
+
+    with authorization.as_member():
+        response = draft_client.create(*resource_ids, **draft)
+        assert response.status_code == HTTPStatus.OK
+        draft_id = response.json()["id"]
+        before = authorization.draft_state(draft_id)
+        assert before["creator"] == authorization.member.user_id
+        response = workflow_client.commit_draft(draft_id)
+        assert response.status_code == HTTPStatus.OK
+        asserts.assert_existing_draft_is_not_found(draft_client, *resource_ids)
+        resource_response = resource_client.get_by_id(*resource_ids).json()
+        asserts.assert_resource_contents_match_expectations(resource_response, expected)
+        authorization.session.expire_all()
+        assert authorization.session.get(models.DraftResource, draft_id) is None
+        snapshot = authorization.session.get(
+            models.ResourceSnapshot, resource_response["snapshot"]
+        )
+        assert snapshot is not None
+        assert snapshot.user_id == authorization.member.user_id
+        assert snapshot.resource.group_id == before["group"]
 
 
 def run_resource_snapshots_tests(
