@@ -14,12 +14,13 @@ The information presented in this article makes the following assumptions:
 
 -   The following environment variables are set in your environment:
 
-        DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:////full/path/to/dioptra/dioptra-migration.db"
-        DIOPTRA_RESTAPI_ENV=dev
+        DIOPTRA_RESTAPI_DATABASE_URI="sqlite:////full/path/to/dioptra/dioptra-migration.db"
 
--   The SQLite database file set in the environment variable `DIOPTRA_RESTAPI_DEV_DATABASE_URI` does not exist. If it does, it should be temporarily renamed or deleted.
+-   Use an isolated SQLite database for migration development. Preserve existing databases.
 
 -   Running `dioptra-db --help` on the commandline prints a help message listing the available commands and the environment variables that you need to set. Run `dioptra-db <COMMAND> --help` to print the help message for a specific command.
+
+Database commands do not require an API mode, signing key or non-database backing services. Without an explicit URI, they use `dioptra.db` in the invocation directory. Remove `DIOPTRA_RESTAPI_DEV_DATABASE_URI` if it remains in an older shell configuration; its presence now causes an error.
 
 ## Generate a migration script for changes to the ORM
 

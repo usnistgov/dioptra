@@ -1166,7 +1166,7 @@ def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
         user: A User object
 
     Raises:
-        EntityExistsError: if the given user's username or email address
+        EntityExistsError: if the given user's username
             collides with an existing/deleted user
     """
 
@@ -1175,14 +1175,6 @@ def check_user_collision(session: CompatibleSession[S], user: m.User) -> None:
 
     if user_id is not None:
         raise e.EntityExistsError(EntityType.USER, user_id, username=user.username)
-
-    stmt = sa.select(m.User.user_id).where(m.User.email_address == user.email_address)
-    user_id = session.scalar(stmt)
-
-    if user_id is not None:
-        raise e.EntityExistsError(
-            EntityType.USER, user_id, email_address=user.email_address
-        )
 
 
 def assert_resource_name_available(

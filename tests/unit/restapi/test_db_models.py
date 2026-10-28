@@ -21,6 +21,7 @@ correctly and respect the data integrity constraints defined in the database sch
 These tests are a temporary measure that should eventually be replaced by integration
 tests for the REST API.
 """
+
 import uuid
 
 import pytest
@@ -560,6 +561,45 @@ def registered_ml_model_id(
 
 
 # -- Tests -----------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("deleted", [False, True])
+def test_db_reject_duplicate_username(
+    db_session: DBSession, account: libdb.FakeAccount, deleted: bool
+) -> None:
+    if deleted:
+        db_session.add(models.UserLock(user_lock_types.DELETE, account.user))
+        db_session.commit()
+
+    duplicate = models.User(account.user.username, "password", "other@example.org")
+    db_session.add(duplicate)
+
+    with pytest.raises(IntegrityError):
+        db_session.flush()
+    db_session.rollback()
+
+
+def test_db_reject_rename_to_existing_username(
+    db_session: DBSession,
+    account: libdb.FakeAccount,
+    second_account: libdb.FakeAccount,
+) -> None:
+    second_account.user.username = account.user.username
+
+    with pytest.raises(IntegrityError):
+        db_session.flush()
+    db_session.rollback()
+
+
+def test_db_rename_to_available_username(
+    db_session: DBSession, account: libdb.FakeAccount
+) -> None:
+    user_id = account.user.user_id
+    account.user.username = "available_username"
+    db_session.commit()
+    db_session.expire_all()
+
+    assert db_session.get(models.User, user_id).username == "available_username"
 
 
 def test_db_user_not_deleted(db_session: DBSession, account: libdb.FakeAccount) -> None:

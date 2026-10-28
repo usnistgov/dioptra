@@ -9,13 +9,17 @@ Open a terminal and run the following to initialize and start Dioptra.
 ```sh
 cd {{ cookiecutter.__project_slug }}
 
-# Initialize the deployment (generates passwords, prepares volumes, etc.)
+# Initialize passwords, volumes, and the persistent API signing key
 # Replace "main" with the branch that matches your container images if different
 ./init-deployment.sh --branch main
 
 # Start Dioptra
 {{ cookiecutter.docker_compose_path }} up -d
 ```
+
+Initialization runs `dioptra-api init-key` inside the REST API image without requiring Dioptra on the host. The signing key is stored in `{{ cookiecutter.__project_slug }}_restapi-data` at `/work/data/restapi/secret-key`, separate from certificate storage. Normal and bootstrap API services mount that volume read-only. Rerunning initialization preserves a valid key and repairs its permissions when needed.
+
+Use a fresh deployment when adopting this configuration and remove the retired `DIOPTRA_DEPLOY_SECRET_KEY` setting. Initialization does not convert previous deployment state.
 
 Once the containers are running, open your web browser and navigate to `http://localhost/`.
 

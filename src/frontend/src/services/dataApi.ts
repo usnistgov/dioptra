@@ -536,10 +536,9 @@ export async function logout(everywhere: boolean = false) {
   return await axios.post(`/api/auth/logout?everywhere=${everywhere}`);
 }
 
-export async function registerUser(username: string, email: string, password: string, confirmPassword: string) {
+export async function registerUser(username: string, password: string, confirmPassword: string) {
   return await axios.post(`/api/users`, {
     username: username,
-    email: email,
     password: password,
     confirmPassword: confirmPassword,
   });

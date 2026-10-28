@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 _dioptra_worker_lib="${DIOPTRA_WORKER_LIB:-tensorflow-cpu}"
 
 echo "Your current BASH_VERSION is $BASH_VERSION"
@@ -18,5 +20,6 @@ fi
 # Ensure your environment is up-to-date
 uv sync --extra worker --extra "${_dioptra_worker_lib}"
 source ${DIOPTRA_VENV}/bin/activate
+dioptra-api init-key
 dioptra-db autoupgrade
-exec flask run
+exec dioptra-api dev "$@"

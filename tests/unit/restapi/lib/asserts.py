@@ -15,9 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Shared assertions for REST API unit tests."""
-from http import HTTPStatus
-from typing import Any
 
+from http import HTTPStatus
+from typing import Any, Callable
+
+from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
@@ -25,6 +27,29 @@ from dioptra.client.drafts import (
 from dioptra.client.snapshots import SnapshotsSubCollectionClient
 
 from . import helpers
+
+
+def assert_draft_request_rejected(
+    authorization: helpers.DraftAuthorizationContext,
+    draft_id: int,
+    request: Callable[[], DioptraResponseProtocol],
+) -> dict[str, Any]:
+    """A rejected operation must neither expose conflict data nor change state."""
+    before = authorization.draft_state(draft_id)
+    response = request()
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    body = response.json()
+    assert body["detail"] == {}
+    assert authorization.draft_state(draft_id) == before
+    return body
+
+
+def assert_missing_draft_matches_foreign(
+    request: Callable[[], DioptraResponseProtocol], foreign: dict[str, Any]
+) -> None:
+    response = request()
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == foreign
 
 
 def assert_base_resource_contents_match_expectations(response: dict[str, Any]) -> None:

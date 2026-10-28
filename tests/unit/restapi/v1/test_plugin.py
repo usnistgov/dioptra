@@ -1379,6 +1379,7 @@ def test_delete_plugin_file_by_id(
 
 
 def test_manage_existing_plugin_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1428,6 +1429,9 @@ def test_manage_existing_plugin_draft(
         dioptra_client.plugins.modify_resource_drafts,
         dioptra_client.workflows,
         plugin["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.plugins.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -1436,6 +1440,7 @@ def test_manage_existing_plugin_draft(
 
 
 def test_manage_new_plugin_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
@@ -1481,6 +1486,8 @@ def test_manage_new_plugin_drafts(
         dioptra_client.plugins,
         dioptra_client.plugins.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,
@@ -1491,6 +1498,7 @@ def test_manage_new_plugin_drafts(
 
 
 def test_manage_existing_plugin_file_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_plugin_with_files: dict[str, Any],
@@ -1561,6 +1569,9 @@ def test_manage_existing_plugin_file_draft(
         dioptra_client.workflows,
         plugin_id,
         plugin_file["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.plugins.files.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -1570,6 +1581,7 @@ def test_manage_existing_plugin_file_draft(
 
 
 def test_manage_new_plugin_file_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_plugins: dict[str, Any],
@@ -1641,6 +1653,8 @@ def test_manage_new_plugin_file_drafts(
         dioptra_client.plugins.files.new_resource_drafts,
         dioptra_client.workflows,
         plugin_id,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

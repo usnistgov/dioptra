@@ -85,6 +85,8 @@ services:
     name: {{ cookiecutter.__project_slug }}_postgres-var-certs
   redis-data:
     name: {{ cookiecutter.__project_slug }}_redis-data
+  restapi-data:
+    name: {{ cookiecutter.__project_slug }}_restapi-data
   restapi-ca-certificates:
     name: {{ cookiecutter.__project_slug }}_restapi-ca-certificates
   restapi-etc-ssl:

@@ -43,6 +43,7 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([dbadmin-data-dir],[],[Path to the directory for the dbadmin-data named volume],[/volumes/dbadmin-data])
 # ARG_OPTIONAL_SINGLE([nginx-conf-d-dir],[],[Path to the directory for the nginx-conf-d named volume],[/volumes/nginx-conf-d])
 # ARG_OPTIONAL_SINGLE([nginx-etc-ssl-dir],[],[Path to the directory for the nginx-etc-ssl named volume],[/volumes/nginx-etc-ssl])
+# ARG_OPTIONAL_SINGLE([restapi-data-dir],[],[Path to the directory for the restapi-data named volume],[/volumes/restapi-data])
 # ARG_OPTIONAL_SINGLE([redis-data-dir],[],[Path to the directory for the redis-data named volume],[/volumes/redis-data])
 # ARG_OPTIONAL_BOOLEAN([enable-nginx-ssl],[],[Enable the SSL-enabled configuration settings for nginx image])
 # ARG_OPTIONAL_BOOLEAN([enable-postgres-ssl],[],[Enable the SSL-enabled configuration settings for postgres image])
@@ -404,7 +405,8 @@ prepare_redis_volumes() {
 # Prepares the named volumes used by the restapi image
 #
 # Globals:
-#   None
+#   _arg_chown_restapi
+#   _arg_restapi_data_dir
 # Arguments:
 #   None
 # Returns:
@@ -412,7 +414,8 @@ prepare_redis_volumes() {
 ###########################################################################################
 
 prepare_restapi_volumes() {
-  return 0
+  set_permissions --dir-chmod "0700" --chown "${_arg_chown_restapi}" \
+    "${_arg_restapi_data_dir}"
 }
 
 ###########################################################################################

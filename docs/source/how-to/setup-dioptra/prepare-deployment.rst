@@ -104,7 +104,7 @@ Key variables include:
 
 - **deployment_name:** A name to associate with the deployment (default: ``Dioptra deployment``)
 - **container_registry:** Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: ``ghcr.io/usnistgov``)
-- **container_tag:** Should match the tags of your Dioptra container images (default: ``1.2.2``)
+- **container_tag:** Should match the tags of your Dioptra container images (default: ``1.2.3``)
 - **nginx_server_name:** Domain name, IP address, or ``_`` for local deployments (default: ``dioptra.example.org``)
 - **num_tensorflow_cpu_workers / num_pytorch_cpu_workers:** Number of CPU workers (default: ``1`` each)
 - **datasets_directory:** Host directory to mount at ``/dioptra/data`` in workers (default: *empty*)
@@ -118,7 +118,7 @@ Key variables include:
 Step 4: Initialize the Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run the initialization script to generate passwords, copy configuration files, and prepare the named volumes.
+Run the initialization script to generate passwords, copy configuration files, prepare the named volumes, and initialize the persistent API signing key.
 
 .. code:: sh
 
@@ -128,8 +128,6 @@ Run the initialization script to generate passwords, copy configuration files, a
 .. note::
 
    Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
-
-The script automates password generation, certificate bundling, volume preparation, Minio account setup, and built-in plugin syncing.
 
 Run initialization as the user who owns the deployment files.
 If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.
