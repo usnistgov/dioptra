@@ -87,7 +87,14 @@ def test_new_ancestors_follow_umask(selected):
 
 @pytest.mark.parametrize(
     "content",
-    [b"", b"deploy123", b"a" * 63, b"A" * 64, b"a" * 64 + b"\r\n", b"b" * 100000],
+    [
+        b"",
+        b"deploy123",
+        b"a" * 63,
+        b"A" * 64,
+        b"a" * 64 + b"\r\n",
+        pytest.param(b"b" * 100000, id="oversized"),
+    ],
 )
 def test_invalid_content_never_replaced(selected, content):
     """Preserve invalid supplied material for explicit operator inspection.

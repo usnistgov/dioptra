@@ -76,7 +76,7 @@ def test_valid_key_representation(key_path, suffix):
         b"a" * 64 + b"\n\n",
         b" " + b"a" * 64,
         b"a" * 64 + b" ",
-        b"a" * 100000,
+        pytest.param(b"a" * 100000, id="oversized"),
         b"\xff" * 64,
     ],
 )
