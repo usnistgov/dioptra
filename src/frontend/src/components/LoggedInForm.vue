@@ -10,7 +10,6 @@
         You are currently logged in as <span class="text-weight-bold text-primary">{{ loggedInUser.username }}</span>
       </p>
       <p>
-        Email: {{ loggedInUser.email }} <br />
         Password Expires:
         {{
           new Date(loggedInUser.passwordExpiresOn).toLocaleString("en-US", {

@@ -58,12 +58,11 @@ class UsersCollectionClient(CollectionClient[T]):
             params=params,
         )
 
-    def create(self, username: str, email: str, password: str) -> T:
+    def create(self, username: str, password: str) -> T:
         """Creates a Dioptra user.
 
         Args:
             username: The username of the new user.
-            email: The email address of the new user.
             password: The password to set for the new user.
 
         Returns:
@@ -74,7 +73,6 @@ class UsersCollectionClient(CollectionClient[T]):
             self.url,
             json_={
                 "username": username,
-                "email": email,
                 "password": password,
                 "confirmPassword": password,
             },
@@ -138,22 +136,6 @@ class UsersCollectionClient(CollectionClient[T]):
             The response from the Dioptra API.
         """
         return self._session.delete(self.url, "current", json_={"password": password})
-
-    def modify_current_user(self, username: str, email: str) -> T:
-        """Modify details about the currently logged-in user.
-
-        Args:
-            username: The new username for the currently logged-in user.
-            email: The new email address for the currently logged-in user.
-
-        Returns:
-            The response from the Dioptra API.
-        """
-        return self._session.put(
-            self.url,
-            "current",
-            json_={"username": username, "email": email},
-        )
 
     def change_current_user_password(self, old_password: str, new_password: str) -> T:
         """Change the currently logged-in user's password.

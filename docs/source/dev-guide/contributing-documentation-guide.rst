@@ -749,7 +749,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                LOCAL_PATH = 'http://127.0.0.1'
                from dioptra.client import connect_json_dioptra_client
                client = connect_json_dioptra_client(LOCAL_PATH)
-               client.users.create(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+               client.users.create(username=USER_NAME, password=USER_PASSWORD)
                client.auth.login(USER_NAME, USER_PASSWORD)
 
       .. tabs::
@@ -794,7 +794,7 @@ Tabs can be used for alternate instructions (e.g., GUI vs. Python client), as de
                   LOCAL_PATH = 'http://127.0.0.1'
                   from dioptra.client import connect_json_dioptra_client
                   client = connect_json_dioptra_client(LOCAL_PATH)
-                  client.users.create(username=USER_NAME, email=USER_EMAIL, password=USER_PASSWORD)
+                  client.users.create(username=USER_NAME, password=USER_PASSWORD)
                   client.auth.login(USER_NAME, USER_PASSWORD)
 
          .. tabs::

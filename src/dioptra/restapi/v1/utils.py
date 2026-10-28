@@ -513,7 +513,6 @@ def build_user(user: models.User) -> dict[str, Any]:
     return {
         "id": user.user_id,
         "username": user.username,
-        "email": user.email_address,
     }
 
 
@@ -530,7 +529,6 @@ def build_current_user(user: models.User) -> dict[str, Any]:
     return {
         "id": user.user_id,
         "username": user.username,
-        "email": user.email_address,
         "groups": [
             build_group_ref(membership.group) for membership in user.group_memberships
         ],

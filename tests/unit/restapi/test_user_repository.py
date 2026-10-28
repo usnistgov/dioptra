@@ -62,9 +62,32 @@ def test_user_create_collision(user_repo, account):
     with pytest.raises(EntityExistsError):
         user_repo.create(user_colliding_name, account.group)
 
-    user_colliding_email = User("user2", "password2", account.user.email_address)
-    with pytest.raises(EntityExistsError):
-        user_repo.create(user_colliding_email, account.group)
+
+@pytest.mark.parametrize("email", [None, "shared@example.org"])
+def test_user_create_without_unique_email(
+    user_repo, account, db_session: DBSession, email: str | None
+) -> None:
+    account.user.email_address = email
+    db_session.commit()
+    user = User("user2", "password2", email)
+
+    user_repo.create(user, account.group)
+    db_session.commit()
+
+    assert_user_exists(db_session, user, DeletionPolicy.NOT_DELETED)
+    assert user.email_address == email
+
+
+def test_user_create_defaults_email_to_none(
+    user_repo, account, db_session: DBSession
+) -> None:
+    user = User("user2", "password2")
+
+    user_repo.create(user, account.group)
+    db_session.commit()
+    db_session.refresh(user)
+
+    assert user.email_address is None
 
 
 def test_user_delete(user_repo, account, db_session: DBSession):
@@ -261,53 +284,6 @@ def test_user_get_by_alternative_id_not_exist(user_repo, account):
     assert not user
 
     user = user_repo.get_by_alternative_id(rnd_uuid, DeletionPolicy.DELETED)
-    assert not user
-
-
-def test_user_get_by_email(user_repo, account):
-    user = user_repo.get_by_email(account.user.email_address, DeletionPolicy.ANY)
-    assert user == account.user
-    assert not user.is_deleted
-
-    user = user_repo.get_by_email(
-        account.user.email_address, DeletionPolicy.NOT_DELETED
-    )
-    assert user == account.user
-    assert not user.is_deleted
-
-    user = user_repo.get_by_email(account.user.email_address, DeletionPolicy.DELETED)
-    assert not user
-
-
-def test_user_get_by_email_deleted(user_repo, account, db_session: DBSession):
-    # Deletes the only user; may break in the future if that violates a
-    # consistency rule.  We might have to create more users, so we can delete
-    # one.
-    user_repo.delete(account.user)
-    db_session.commit()
-
-    user = user_repo.get_by_email(account.user.email_address, DeletionPolicy.ANY)
-    assert user == account.user
-    assert user.is_deleted
-
-    user = user_repo.get_by_email(
-        account.user.email_address, DeletionPolicy.NOT_DELETED
-    )
-    assert not user
-
-    user = user_repo.get_by_email(account.user.email_address, DeletionPolicy.DELETED)
-    assert user == account.user
-    assert user.is_deleted
-
-
-def test_user_get_by_email_not_exist(user_repo, account):
-    user = user_repo.get_by_email("no-exist@bar.net", DeletionPolicy.ANY)
-    assert not user
-
-    user = user_repo.get_by_email("no-exist@bar.net", DeletionPolicy.NOT_DELETED)
-    assert not user
-
-    user = user_repo.get_by_email("no-exist@bar.net", DeletionPolicy.DELETED)
     assert not user
 
 

@@ -998,7 +998,6 @@ def register_error_handlers(api: Api, **kwargs) -> None:  # noqa: C901
             http.HTTPStatus.CONFLICT,
             {
                 "entity_type": error.entity_type.db_table_name,
-                "existing_id": error.existing_id,
                 "entity_attributes": {**error.entity_attributes},
             },
         )

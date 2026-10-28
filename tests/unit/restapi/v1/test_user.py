@@ -25,7 +25,9 @@ import datetime
 from http import HTTPStatus
 from typing import Any
 
+import pytest
 from flask.testing import FlaskClient
+from freezegun import freeze_time
 from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
@@ -59,7 +61,6 @@ def assert_user_response_contents_matches_expectations(
 
     expected_keys = {
         "username",
-        "email",
         "id",
     }
     if current_user:
@@ -76,11 +77,9 @@ def assert_user_response_contents_matches_expectations(
 
     # Validate non-Ref fields
     assert isinstance(response["username"], str)
-    assert isinstance(response["email"], str)
     assert isinstance(response["id"], int)
 
     assert response["username"] == expected_contents["username"]
-    assert response["email"] == expected_contents["email"]
 
     if current_user:
         assert isinstance(response["createdOn"], str)
@@ -175,7 +174,6 @@ def assert_retrieving_users_works(
 def assert_registering_existing_username_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     existing_username: str,
-    non_existing_email: str,
 ) -> None:
     """Assert that registering a user with an existing username fails.
 
@@ -188,30 +186,13 @@ def assert_registering_existing_username_fails(
     """
     password = "supersecurepassword"
     response = dioptra_client.users.create(
-        username=existing_username, email=non_existing_email, password=password
+        username=existing_username, password=password
     )
     assert response.status_code == HTTPStatus.CONFLICT
-
-
-def assert_registering_existing_email_fails(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    non_existing_username: str,
-    existing_email: str,
-) -> None:
-    """Assert that registering a user with an existing username fails.
-
-    Args:
-        dioptra_client: The Dioptra client.
-        username: The username to assign to the new user.
-
-    Raises:
-        AssertionError: If the response status code is not 409.
-    """
-    password = "supersecurepassword"
-    response = dioptra_client.users.create(
-        username=non_existing_username, email=existing_email, password=password
-    )
-    assert response.status_code == HTTPStatus.CONFLICT
+    body = response.json()
+    assert body["error"] == "EntityExistsError"
+    assert "existing_id" not in body["detail"]
+    assert body["detail"]["entity_attributes"] == {"username": existing_username}
 
 
 def assert_user_username_matches_expected_name(
@@ -272,46 +253,6 @@ def assert_user_is_not_found(
     """
     response = dioptra_client.users.get_by_id(user_id)
     assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-def assert_cannot_rename_user_with_existing_username(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    existing_username: str,
-) -> None:
-    """Assert that renaming a user with an existing username fails.
-
-    Args:
-        dioptra_client: The Dioptra client.
-        existing_username: The username of the existing user.
-
-    Raises:
-        AssertionError: If the response status code is not 400.
-    """
-    response = dioptra_client.users.modify_current_user(
-        username=existing_username,
-        email="new_email",
-    )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-def assert_cannot_rename_user_with_existing_email(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    existing_email: str,
-) -> None:
-    """Assert that changing a user email with an existing email fails.
-
-    Args:
-        dioptra_client: The Dioptra client.
-        existing_email: The email of the existing user.
-
-    Raises:
-        AssertionError: If the response status code is not 400.
-    """
-    response = dioptra_client.users.modify_current_user(
-        username="new_username",
-        email=existing_email,
-    )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def assert_login_works(
@@ -406,7 +347,7 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
 
     This test validates the following sequence of actions:
 
-    - Register a new user using the username, email, and password.
+    - Register a new user using the username and password.
     - Assert that the response matches what we expect to see, i.e. CurrentUser
     schema information.
     - Login with the user that we just created.
@@ -415,16 +356,14 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
     our expectations.
     """
     username = "user"
-    email = "user@example.org"
     password = "supersecurepassword"
 
     # Posting a user returns CurrentUserSchema.
-    user_response = dioptra_client.users.create(username, email, password).json()
+    user_response = dioptra_client.users.create(username, password).json()
     assert_user_response_contents_matches_expectations(
         response=user_response,
         expected_contents={
             "username": username,
-            "email": email,
         },
         current_user=True,
     )
@@ -433,12 +372,53 @@ def test_create_user(dioptra_client: DioptraClient[DioptraResponseProtocol]) -> 
     assert_retrieving_current_user_works(dioptra_client, expected=user_response)
 
     # Getting a user by id returns UserSchema.
-    user_expected = {
-        k: v for k, v in user_response.items() if k in ["username", "email", "id"]
-    }
+    user_expected = {k: v for k, v in user_response.items() if k in ["username", "id"]}
     assert_retrieving_user_by_id_works(
         dioptra_client, user_expected["id"], user_expected
     )
+
+
+def test_existing_email_is_preserved_and_not_exposed(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+    db_session: DBSession,
+) -> None:
+    user = db_session.get(User, auth_account["id"])
+    user.email_address = "legacy@example.org"
+    db_session.commit()
+
+    response = dioptra_client.users.get_current()
+    assert response.status_code == HTTPStatus.OK
+    assert "email" not in response.json()
+    assert "email" not in dioptra_client.users.get_current().json()
+    assert "email" not in dioptra_client.users.get_by_id(user.user_id).json()
+    assert all(
+        "email" not in entry for entry in dioptra_client.users.get().json()["data"]
+    )
+    db_session.refresh(user)
+    assert user.email_address == "legacy@example.org"
+
+
+def test_email_is_not_an_account_input(
+    client: FlaskClient,
+) -> None:
+    payload = {
+        "username": "new_name",
+        "email": "removed@example.org",
+        "password": "password",
+        "confirmPassword": "password",
+    }
+
+    response = client.post("/api/v1/users/", json=payload)
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_email_is_not_searchable(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], auth_account: dict[str, Any]
+) -> None:
+    response = dioptra_client.users.get(search="email:legacy*")
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def test_user_get_all(
@@ -456,7 +436,7 @@ def test_user_get_all(
     - The returned list of users matches the full list of registered users.
     """
     user_expected_list = [
-        {"username": user["username"], "email": user["email"], "id": user["id"]}
+        {"username": user["username"], "id": user["id"]}
         for user in list(registered_users.values())
     ]
     assert_retrieving_users_works(dioptra_client, expected=user_expected_list)
@@ -476,7 +456,7 @@ def test_user_search_query(
     - The returned list of users matches the expected matches from the query.
     """
     user_expected_list = [
-        {"username": user["username"], "email": user["email"], "id": user["id"]}
+        {"username": user["username"], "id": user["id"]}
         for user in list(registered_users.values())[:2]
     ]
     assert_retrieving_users_works(
@@ -489,74 +469,65 @@ def test_user_search_query(
         dioptra_client, expected=user_expected_list, search='username:"user?"'
     )
     assert_retrieving_users_works(
-        dioptra_client, expected=user_expected_list, search="username:user?,email:user*"
-    )
-    assert_retrieving_users_works(
         dioptra_client, expected=[], search=r"username:\*user*"
     )
-    assert_retrieving_users_works(dioptra_client, expected=[], search="email:user?")
 
 
 def test_cannot_register_existing_username(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_users: dict[str, Any],
 ) -> None:
-    """Test that registering a user with an existing username fails.
+    """Test that duplicate registration fails without exposing the account ID.
 
-    Given an authenticated user and registered users, this test validates the following
+    Given an unauthenticated client and registered users, this test validates the following
     sequence of actions:
 
     - One user is registered, "user1".
-    - A new user is registered with the same email as user1, a different username.
+    - A new user is registered with the same username as user1.
     - The request fails with an appropriate error message and response code.
     """
     existing_user = registered_users["user1"]
     assert_registering_existing_username_fails(
         dioptra_client,
         existing_username=existing_user["username"],
-        non_existing_email="unique" + existing_user["email"],
     )
 
 
-def test_cannot_register_existing_email(
+@pytest.mark.parametrize("new_username", ["new_name", "user2"])
+def test_current_user_cannot_be_renamed(
+    client: FlaskClient,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    registered_users: dict[str, Any],
+    auth_account: dict[str, Any],
+    new_username: str,
 ) -> None:
-    """Test that registering a user with an existing email fails.
+    """Reject renaming to either an unused or an existing username."""
+    original = dioptra_client.users.get_current().json()
 
-    Given an authenticated user and registered users, this test validates the following
-    sequence of actions:
+    response = client.put("/api/v1/users/current", json={"username": new_username})
 
-    - One user is registered, "user1".
-    - A new user is registered with the same email as user1, but _not_ the same email.
-    - The request fails with an appropriate error message and response code.
-    """
-    existing_user = registered_users["user1"]
-    assert_registering_existing_email_fails(
-        dioptra_client,
-        non_existing_username="unique" + existing_user["username"],
-        existing_email=existing_user["email"],
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+    current = dioptra_client.users.get_current()
+    assert current.status_code == HTTPStatus.OK
+    assert current.json() == original
+    user = dioptra_client.users.get_by_id(auth_account["id"])
+    assert user.json()["username"] == auth_account["username"]
+    assert_registering_existing_username_fails(
+        dioptra_client, existing_username=auth_account["username"]
     )
 
 
-def test_rename_current_user(
+@freeze_time("Apr 1st, 2025 6:00am", auto_tick_seconds=1)
+def test_deleted_username_cannot_be_reused(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
-    """Test that renaming the current user works.
+    """Deleting an account keeps its username reserved."""
+    response = dioptra_client.users.delete_current_user(auth_account["password"])
+    assert response.status_code == HTTPStatus.OK
 
-    Given an authenticated user, this test validates the following sequence of actions:
-
-    - A user modifies its username and we record the response from the API.
-    - Retrieving the current user works and responds with the response we recorded
-    that reflects the updated username.
-    """
-    new_username = "new_name"
-    user = dioptra_client.users.modify_current_user(
-        username=new_username,
-        email=auth_account["email"],
-    ).json()
-    assert_retrieving_current_user_works(dioptra_client, expected=user)
+    assert_registering_existing_username_fails(
+        dioptra_client, existing_username=auth_account["username"]
+    )
 
 
 def test_user_authorization_failure(
