@@ -42,6 +42,7 @@ INIT_MLFLOW_TRACKING_SSL_SERVICE="mlflow-tracking-ssl"
 INIT_NAMED_VOLUMES_SERVICE="named-volumes"
 INIT_NGINX_SSL_SERVICE="nginx-ssl"
 INIT_PYTORCHCPU_SSL_SERVICE="pytorchcpu-ssl"
+INIT_RESTAPI_KEY_SERVICE="init-restapi-key"
 INIT_RESTAPI_SERVICE="restapi"
 INIT_RESTAPI_SSL_SERVICE="restapi-ssl"
 INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
@@ -570,6 +571,23 @@ init_named_volumes() {
 }
 
 ###########################################################################################
+# Initialize or preserve the API signing key before migrations and API startup
+#
+# Globals:
+#   INIT_RESTAPI_KEY_SERVICE
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+init_restapi_key() {
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
+    --rm \
+    "${INIT_RESTAPI_KEY_SERVICE}"
+}
+
+###########################################################################################
 # Wrapper for the init-minio.sh utility script
 #
 # Globals:
@@ -680,6 +698,7 @@ main() {
   init_scripts
   init_extra_ca_certificates
   init_named_volumes
+  init_restapi_key
   start_minio_service
   init_minio
   stop_services

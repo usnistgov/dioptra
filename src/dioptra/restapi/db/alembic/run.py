@@ -38,16 +38,52 @@ Examples:
         # Execute from the root of the repository
         dioptra-db migrate --message "Add new table"
 """
+
 from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from importlib.util import find_spec
 from pathlib import Path
 
 import click
 
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+from dioptra.restapi.config import resolve_database_uri
+
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
+
+
+def _run_flask_db(
+    args: list[str], *, capture_output: bool, text: bool
+) -> subprocess.CompletedProcess[str]:
+    """Run a Flask database command with the resolved migration factory and URI.
+
+    Forward output or capture it as requested. On failure, print captured stderr
+    and propagate a nonzero Click exit; invalid URI settings become Click errors.
+    """
+    try:
+        uri = resolve_database_uri()
+    except ValueError as error:
+        raise click.ClickException(str(error)) from None
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "flask",
+            "--app",
+            "dioptra.restapi.db.alembic.app:create_migration_app",
+            *args[1:],
+        ],
+        env={**os.environ, "DIOPTRA_RESTAPI_DATABASE_URI": uri},
+        capture_output=capture_output,
+        text=text,
+    )
+    if result.returncode:
+        if capture_output and result.stderr:
+            click.echo(result.stderr, err=True)
+        raise click.exceptions.Exit(result.returncode if result.returncode > 0 else 1)
+    return result
 
 
 def _flask_db_current(alembic_dir: Path) -> str | None:
@@ -59,7 +95,7 @@ def _flask_db_current(alembic_dir: Path) -> str | None:
     Returns:
         The current revision of the database.
     """
-    p = subprocess.run(
+    p = _run_flask_db(
         ["flask", "db", "current", "-d", str(alembic_dir)],
         capture_output=True,
         text=True,
@@ -78,7 +114,7 @@ def _flask_db_heads(alembic_dir: Path) -> str | None:
     Returns:
         The head revision of the database.
     """
-    p = subprocess.run(
+    p = _run_flask_db(
         ["flask", "db", "heads", "-d", str(alembic_dir)],
         capture_output=True,
         text=True,
@@ -97,7 +133,7 @@ def _flask_db_downgrade(alembic_dir: Path, revision: str) -> None:
     """
     args = ["flask", "db", "downgrade", "-d", str(alembic_dir), revision]
 
-    subprocess.run(
+    _run_flask_db(
         args=args,
         capture_output=False,
         text=True,
@@ -116,7 +152,7 @@ def _flask_db_history(alembic_dir: Path, indicate_current: bool) -> None:
     if indicate_current:
         args.append("--indicate-current")
 
-    subprocess.run(
+    _run_flask_db(
         args=args,
         capture_output=False,
         text=True,
@@ -131,7 +167,7 @@ def _flask_db_upgrade(alembic_dir: Path, revision: str) -> None:
         revision: The revision identifier.
     """
     args = ["flask", "db", "upgrade", "-d", str(alembic_dir), revision]
-    subprocess.run(
+    _run_flask_db(
         args=args,
         capture_output=False,
         text=True,
@@ -189,7 +225,7 @@ def _flask_db_migrate(
         for arg in x_arg:
             args.extend(["--x-arg", arg])
 
-    subprocess.run(
+    _run_flask_db(
         args=args,
         capture_output=False,
         text=True,
@@ -207,7 +243,7 @@ def _flask_db_revision(
     version_path: str | None,
     rev_id: str | None,
 ) -> None:
-    """Autogenerate a new revision file.
+    """Create a new revision file.
 
     Args:
         alembic_dir: Path to directory containing the Alembic migration scripts.
@@ -247,7 +283,7 @@ def _flask_db_revision(
     if rev_id is not None:
         args.extend(["--rev-id", rev_id])
 
-    subprocess.run(
+    _run_flask_db(
         args=args,
         capture_output=False,
         text=True,
@@ -255,10 +291,18 @@ def _flask_db_revision(
 
 
 def autoupgrade_cmd(alembic_dir: Path) -> None:
-    """Command for automatically upgrading the database schema to the latest version.
+    """Upgrade the database schema to the migration head when needed.
+
+    Compare the current revision with the head and print the result. If they
+    match, do not run an upgrade. Otherwise upgrade to head, including when the
+    database has no current revision.
 
     Args:
-        alembic_dir: Path to directory containing the Alembic migration scripts.
+        alembic_dir: Directory containing the Alembic migration scripts.
+
+    Raises:
+        click.ClickException: If database URI resolution fails.
+        click.exceptions.Exit: If a database command exits unsuccessfully.
     """
     db_revision_id = _flask_db_current(alembic_dir=alembic_dir)
     head_revision_id = _flask_db_heads(alembic_dir=alembic_dir)
@@ -277,10 +321,13 @@ def autoupgrade_cmd(alembic_dir: Path) -> None:
 
 
 def find_alembic_dir() -> Path:
-    """Find the directory containing the Alembic migration scripts.
+    """Find the installed directory containing Alembic migration scripts.
 
     Returns:
-        The path to the directory containing the Alembic migration scripts.
+        The first package search location for the migration scripts.
+
+    Raises:
+        ModuleNotFoundError: If the package spec or its search locations are absent.
     """
     module_spec = find_spec("dioptra.restapi.db.alembic")
 
@@ -294,67 +341,22 @@ def find_alembic_dir() -> Path:
     return alembic_dir
 
 
-def is_db_uri_set() -> bool:
-    """Check if the database URI is set in the environment.
-
-    Returns:
-        True if the database URI is set in the environment, False otherwise.
-    """
-    app_env = os.getenv("DIOPTRA_RESTAPI_ENV", "dev")
-    env_vars = {
-        "dev": "DIOPTRA_RESTAPI_DEV_DATABASE_URI",
-        "prod": "DIOPTRA_RESTAPI_DATABASE_URI",
-    }
-
-    if (env_var := env_vars.get(app_env)) is None:
-        raise ValueError(
-            f"Invalid value for DIOPTRA_RESTAPI_ENV: {app_env}. "
-            f"Valid values are 'dev' and 'prod'."
-        )
-
-    result = os.getenv(env_var) is not None
-
-    if not result:
-        print(
-            f"Environment variable {env_var} is not set. "
-            "The database cannot be found. Please set the environment variable and "
-            "try again."
-        )
-
-    return result
-
-
 @click.group(context_settings=CONTEXT_SETTINGS)
 def cli():
-    """Command-line interface for managing the Dioptra database.
+    """Manage the database selected by DIOPTRA_RESTAPI_DATABASE_URI.
 
-    The database connection details are set using the following environment
-    variables.
-
-    \b
-    DIOPTRA_RESTAPI_ENV:
-        The environment in which the Dioptra REST API is running. Valid values
-        are 'dev' and 'prod'. Defaults to 'dev'.
-
-    \b
-    DIOPTRA_RESTAPI_DEV_DATABASE_URI:
-        The connection URI for the development database. Used when
-        DIOPTRA_RESTAPI_ENV is set to 'dev'.
-
-    \b
-    DIOPTRA_RESTAPI_DATABASE_URI:
-        The connection URI for the production database. Used when
-        DIOPTRA_RESTAPI_ENV is set to 'prod'.
+    The default is dioptra.db in the invocation directory. Database commands
+    require neither an API mode nor a signing key or non-database services.
     """
-    pass
+    try:
+        resolve_database_uri()
+    except ValueError as error:
+        raise click.ClickException(str(error)) from None
 
 
 @cli.command()
 def autoupgrade() -> None:
     """Automatically upgrade the Dioptra database schema to the latest version."""
-    if not is_db_uri_set():
-        return None
-
     autoupgrade_cmd(alembic_dir=find_alembic_dir())
 
 
@@ -367,10 +369,12 @@ def autoupgrade() -> None:
     help="Revision identifier",
 )
 def upgrade(revision: str):
-    """Upgrade the Dioptra database schema to the specified revision."""
-    if not is_db_uri_set():
-        return None
+    """Upgrade the Dioptra database schema to the specified revision.
 
+    \f
+    Args:
+        revision: Target revision identifier, defaulting to ``head``.
+    """
     _flask_db_upgrade(alembic_dir=find_alembic_dir(), revision=revision)
 
 
@@ -384,10 +388,11 @@ def downgrade(revision: str):
     """Downgrade the Dioptra database schema to an earlier version.
 
     REVISION: Revision identifier
-    """
-    if not is_db_uri_set():
-        return None
 
+    \f
+    Args:
+        revision: Target revision identifier.
+    """
     _flask_db_downgrade(alembic_dir=find_alembic_dir(), revision=revision)
 
 
@@ -401,10 +406,12 @@ def downgrade(revision: str):
     help="Indicate the current revision",
 )
 def history(indicate_current: bool):
-    """Display the Dioptra database schema history."""
-    if not is_db_uri_set():
-        return None
+    """Display the Dioptra database schema history.
 
+    \f
+    Args:
+        indicate_current: Mark the current database revision in the displayed history.
+    """
     _flask_db_history(alembic_dir=find_alembic_dir(), indicate_current=indicate_current)
 
 
@@ -469,10 +476,20 @@ def migrate(
     rev_id: str | None,
     x_arg: list[str],
 ):
-    """Autogenerate a new revision file (Alias for 'flask db migrate')."""
-    if not is_db_uri_set():
-        return None
+    """Autogenerate a new revision file (Alias for 'flask db migrate').
 
+    \f
+    Args:
+        directory: Directory containing the Alembic migration scripts.
+        message: Optional revision message.
+        sql: Emit SQL to standard output instead of executing it against the database.
+        head: Head revision or ``<branchname>@head`` to base the new revision on.
+        splice: Allow a non-head revision as the head to splice onto.
+        branch_label: Optional branch label for the revision.
+        version_path: Configured path for the version file, if specified.
+        rev_id: Explicit revision identifier, if specified.
+        x_arg: Additional arguments consumed by custom Alembic environment scripts.
+    """
     _flask_db_migrate(
         alembic_dir=directory,
         message=message,
@@ -550,10 +567,21 @@ def revision(
     version_path: str | None,
     rev_id: str | None,
 ):
-    """Create a new revision file (Alias for 'flask db revision')."""
-    if not is_db_uri_set():
-        return None
+    """Create a new revision file (Alias for 'flask db revision').
 
+    \f
+    Args:
+        directory: Directory containing the Alembic migration scripts.
+        message: Optional revision message.
+        autogenerate: Populate the script with candidate operations from a model
+            and database comparison.
+        sql: Emit SQL to standard output instead of executing it against the database.
+        head: Head revision or ``<branchname>@head`` to base the new revision on.
+        splice: Allow a non-head revision as the head to splice onto.
+        branch_label: Optional branch label for the revision.
+        version_path: Configured path for the version file, if specified.
+        rev_id: Explicit revision identifier, if specified.
+    """
     _flask_db_revision(
         alembic_dir=directory,
         message=message,

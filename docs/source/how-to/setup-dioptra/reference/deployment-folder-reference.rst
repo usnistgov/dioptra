@@ -173,6 +173,7 @@ Contains environment variable files that configure each service. **These files a
    Customizes the Dioptra REST API service.
 
    - ``DIOPTRA_RESTAPI_ENV``
+   - ``DIOPTRA_RESTAPI_SECRET_KEY_FILE``
    - ``MLFLOW_S3_ENDPOINT_URL``
    - ``MLFLOW_TRACKING_URI``
    - ``RQ_REDIS_URI``
