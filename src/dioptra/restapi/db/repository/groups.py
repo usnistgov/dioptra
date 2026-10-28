@@ -84,7 +84,7 @@ class GroupRepository:
             EntityExistsError: if the group already exists, the group name
                 collides with an existing/deleted group, or the group's
                 creator/initial user does not exist (so it must be created),
-                but that user's name or email address collides with an existing
+                but that user's name collides with an existing
                 user
             EntityDeletedError: if the group is deleted, or the group's
                 creator/initial user is deleted

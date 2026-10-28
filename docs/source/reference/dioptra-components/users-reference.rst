@@ -44,9 +44,11 @@ This section describes the attributes that define a User.
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-* **Username**: (string) The name of the user. Used for authentication.
+* **Username**: (string) The unique name of the user. Used for authentication and fixed after registration.
 * **Password**: (string) A password for the user. Used for authentication.
-* **Email**: (string) The email address of the user.
+
+Usernames cannot be changed or reused, including after an account is deleted.
+If you register with the wrong username, register another account with a new username.
 
 .. _reference-users-system-managed-state:
 

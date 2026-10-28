@@ -104,7 +104,7 @@ Choose your preferred client, then in your python interpreter, run the following
 Step 3: Register User
 ~~~~~~~~~~~~~~~~~~~~~
 
-In your python interpreter, set the username, email, and password, then use the client to register a new user:
+In your python interpreter, set the username and password, then use the client to register a new user:
 
 .. tabs::
 
@@ -115,9 +115,8 @@ In your python interpreter, set the username, email, and password, then use the 
             .. code-block:: python
 
                 username = "user"
-                email = "user@localhost"
                 password = "pass"
-                response = client.users.create(username, email=email, password=password)
+                response = client.users.create(username, password=password)
                 print(response)
 
         You should see a successful response similar to the below:
@@ -125,7 +124,6 @@ In your python interpreter, set the username, email, and password, then use the 
         .. code-block:: bash
 
             {'username': 'user',
-             'email': 'user@localhost',
              'id': 1,
              'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
              'createdOn': '2026-02-02T18:47:44.794278+00:00',
@@ -142,9 +140,8 @@ In your python interpreter, set the username, email, and password, then use the 
             .. code-block:: python
 
                 username = "user"
-                email = "user@localhost"
                 password = "pass"
-                response = client.users.create(username, email=email, password=password)
+                response = client.users.create(username, password=password)
                 print(response.json)
 
         You should see a successful response similar to the below:
@@ -152,7 +149,6 @@ In your python interpreter, set the username, email, and password, then use the 
         .. code-block:: bash
 
             {'username': 'user',
-             'email': 'user@localhost',
              'id': 1,
              'groups': [{'id': 1, 'name': 'public', 'url': '/api/v1/groups/1'}],
              'createdOn': '2026-02-02T18:47:44.794278+00:00',

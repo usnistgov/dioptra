@@ -45,23 +45,14 @@ class UserRefSchema(Schema):
     )
 
 
-class UserMutableFieldsSchema(Schema):
-    """The schema for the mutable data fields in a User resource."""
+class UserSchema(Schema):
+    """The schema for registering and displaying a User."""
 
     username = fields.String(
         attribute="username",
-        metadata={"description": "Username of the User."},
+        metadata={"description": "Username of the User. Fixed after registration."},
         required=True,
     )
-    email = fields.String(
-        attribute="email",
-        metadata={"description": "Email of the User."},
-        required=True,
-    )
-
-
-class UserSchema(UserMutableFieldsSchema):
-    """The schema for a User that is not the logged-in User."""
 
     password = fields.String(
         attribute="password",

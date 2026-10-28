@@ -4,7 +4,6 @@ const runId = Date.now();
 
 export const testUser = {
   username: `e2e_user_${runId}`,
-  email: `e2e_user_${runId}@example.com`,
   password: "Password123!",
 };
 
@@ -43,7 +42,6 @@ export async function registerTestUser(page: Page) {
   await page.goto("/register");
 
   await page.getByRole("textbox", { name: "Username" }).fill(testUser.username);
-  await page.getByRole("textbox", { name: "Email Address" }).fill(testUser.email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(testUser.password);
   await page.getByRole("textbox", { name: "Confirm Password" }).fill(testUser.password);
   await page.getByRole("button", { name: "Register" }).click();

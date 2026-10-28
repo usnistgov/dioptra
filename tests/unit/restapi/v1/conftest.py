@@ -60,15 +60,9 @@ def io_file_service(dependency_injector) -> IOFileService:
 @freeze_time("Apr 1st, 2025 5:00am", auto_tick_seconds=1)
 def registered_users(client: FlaskClient) -> dict[str, Any]:
     password = "supersecurepassword"
-    user1_response = actions.register_user(
-        client, "user1", "user1@example.org", password
-    ).get_json()
-    user2_response = actions.register_user(
-        client, "user2", "user2@example.net", password
-    ).get_json()
-    user3_response = actions.register_user(
-        client, "name", "user3@example.org", password
-    ).get_json()
+    user1_response = actions.register_user(client, "user1", password).get_json()
+    user2_response = actions.register_user(client, "user2", password).get_json()
+    user3_response = actions.register_user(client, "name", password).get_json()
     users_info = {
         "user1": user1_response,
         "user2": user2_response,
