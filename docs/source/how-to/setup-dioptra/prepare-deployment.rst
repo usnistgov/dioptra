@@ -118,7 +118,7 @@ Key variables include:
 Step 4: Initialize the Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run the initialization script to generate passwords, copy configuration files, and prepare the named volumes.
+Run the initialization script to generate passwords, copy configuration files, prepare the named volumes, and initialize the persistent API signing key.
 
 .. code:: sh
 
@@ -128,8 +128,6 @@ Run the initialization script to generate passwords, copy configuration files, a
 .. note::
 
    Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
-
-The script automates password generation, certificate bundling, volume preparation, Minio account setup, and built-in plugin syncing.
 
 Run initialization as the user who owns the deployment files.
 If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.

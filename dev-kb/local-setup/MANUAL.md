@@ -9,7 +9,10 @@ The instructions for the automated scripts can be found in [README.md](README.md
   - [Environment setup](#environment-setup)
   - [Limited frontend and REST API setup for Windows (no containers)](#limited-frontend-and-rest-api-setup-for-windows-no-containers)
   - [Full local development setup (no containers)](#full-local-development-setup-no-containers)
+  - [Installed API commands](#installed-api-commands)
 <!-- markdownlint-enable MD007 MD030 -->
+
+The API uses a persistent signing-key file. Provision the selected path explicitly before starting the API and remove the retired `DIOPTRA_DEPLOY_SECRET_KEY` and `DIOPTRA_RESTAPI_DEV_DATABASE_URI` variables from older shell configurations. Development and production both use `DIOPTRA_RESTAPI_DATABASE_URI`; database commands require neither an API mode nor a signing key. See the [API configuration reference](../../docs/source/reference/api-configuration-reference.rst) for path, format, permissions and native-Windows development constraints.
 
 ## Note for Windows Users
 
@@ -90,13 +93,14 @@ It's also recommended that you install `tox` as a uv tool:
     1.  Flask Terminal (as written, this puts the SQLite database at `$env:UserProfile\dioptra\dev\dioptra-dev.db`)
         -   Environment variables that must be set for flask:
 
-                $env:DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///<path-to-cloned-dioptra-directory>/dioptra/dev/dioptra-dev.db"
+                $env:DIOPTRA_RESTAPI_DATABASE_URI="sqlite:///<path-to-cloned-dioptra-directory>/dioptra/dev/dioptra-dev.db"
                 $env:DIOPTRA_RESTAPI_ENV=dev
 
             N.B.: replace `<path-to-cloned-dioptra-directory>` with the full path to the folder where you cloned Dioptra. If you followed the suggested instructions, this will be the folder pointed at by `$env:UserProfile`. The URI should use forward slashes `/` and include the drive, for example `C:/Users/username/dioptra/dev/dioptra-dev.db`.
         -   [Activate the virtual environment if you haven't already](#environment-setup)
+        -   `dioptra-api init-key --development`
         -   `dioptra-db autoupgrade`
-        -   `flask run`
+        -   `dioptra-api dev`
 
     2.  Frontend UI Terminal
         -   Commands to get a Frontend running:
@@ -104,6 +108,8 @@ It's also recommended that you install `tox` as a uv tool:
                 cd src\fronted
                 npm install
                 npm run dev
+
+The Windows initializer option permits development provisioning with ordinary Windows account and directory access controls. It does not establish owner-only ACLs. Production is unsupported on native Windows. On Linux, macOS and WSL2, the same option retains all POSIX protections.
 
 ## Full local development setup (no containers)
 
@@ -123,14 +129,15 @@ It's also recommended that you install `tox` as a uv tool:
     1.  Flask Terminal (as written, this puts the SQLite database at `~/dioptra/dev/dioptra-dev.db`)
         -   Environment variables that must be set for flask:
 
-                DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:////home/<username>/dioptra/dev/dioptra-dev.db"
+                DIOPTRA_RESTAPI_DATABASE_URI="sqlite:////home/<username>/dioptra/dev/dioptra-dev.db"
                 DIOPTRA_RESTAPI_ENV=dev
 
             N.B.: replace <username> with your username. On some systems the home path may also be different. Verify the expansion of '~' with the `pwd` command while in the appropriate directory.
 
         -   Activate the python environment set-up in prior steps
+        -   `dioptra-api init-key`
         -   `dioptra-db autoupgrade`
-        -   `flask run`
+        -   `dioptra-api dev`
 
     2.  Frontend UI Terminal
         -   Commands to get a Frontend running:
@@ -147,7 +154,7 @@ It's also recommended that you install `tox` as a uv tool:
 
                 DIOPTRA_WORKER_USERNAME="dioptra-worker"  # This must be a registered user in the Dioptra app
                 DIOPTRA_WORKER_PASSWORD="password"        # Must match the username's password
-                DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
+                DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `dioptra-api dev`
                 RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
                 MLFLOW_TRACKING_URI="http://localhost:35000"     # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
                 MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
@@ -167,3 +174,15 @@ It's also recommended that you install `tox` as a uv tool:
         curl http://localhost:5000/api/v1/users/ -X POST --data-raw "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",  \"email\": \"dioptra-worker@localhost\", \"password\": \"$DIOPTRA_WORKER_PASSWORD\", \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"
 
 -   Create 'Tensorflow CPU' Queue -- this needs to agree with the queue name used in Step iv.
+
+## Installed API commands
+
+The [dioptra-api command reference](../../docs/source/reference/dioptra-api-reference.rst) lists command syntax, options and exit behavior.
+
+The same commands work in a virtual environment containing the installed `dioptra-platform` package. Run `dioptra-api init-key` once as the API runtime account, run `dioptra-db autoupgrade`, then run `dioptra-api dev`. Initializer reruns preserve a valid key. Missing or invalid keys fail startup without creation, replacement or fallback. Keep key files out of source control.
+
+The default key is `~/.local/share/dioptra/restapi/secret-key`, shared by local checkouts using the same account. For a separate API instance, set `DIOPTRA_RESTAPI_SECRET_KEY_FILE` or pass `--key-file PATH` to both initialization and launch. A custom key's immediate parent is API-owned data and is created or repaired to mode `0700` on POSIX; select that directory deliberately. Existing higher ancestors keep their permissions. The key is created or repaired to `0600`, with existing contents and ownership preserved.
+
+Forward native Flask options after `dev`, for example `dioptra-api dev --host 127.0.0.1 --port 5000 --no-reload`. Debug precedence is `--debug` or `--no-debug`, then `FLASK_DEBUG`, then the enabled development default. Environment booleans accept `true`, `false`, `1` and `0`, ignoring case and surrounding whitespace; empty or other values fail. Native reload and debugger options remain independent. Development policy is selected even if `DIOPTRA_RESTAPI_ENV=prod` was inherited.
+
+On Linux or macOS, launch production with `dioptra-api prod` and native Gunicorn options, for example `dioptra-api prod --bind 127.0.0.1:8000 --workers 2`. Production policy takes precedence over an inherited development mode. Gunicorn config files, timeouts, TLS options and signals remain available. The Dioptra application is fixed; positional replacement applications, WSGI-app overrides and Paste dispatch are rejected. Direct `wsgi:app` use requires explicit `DIOPTRA_RESTAPI_ENV` and a valid key, and does not run the packaged launcher's pre-server validation action. The current pre-server validation function performs no validation.

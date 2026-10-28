@@ -23,8 +23,6 @@ from typing import Any, BinaryIO, List
 
 import pytest
 import sqlalchemy
-from boto3.session import Session
-from botocore.client import BaseClient
 from faker import Faker
 from flask import Flask
 from flask.testing import FlaskClient
@@ -47,6 +45,7 @@ from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
 from dioptra.restapi.db.repository.utils import DeletionPolicy, ExistenceResult
 from dioptra.restapi.db.unit_of_work import UnitOfWork
+from dioptra.restapi.key_file import initialize_key
 from dioptra.restapi.request_scope import request
 
 from .lib import db as libdb
@@ -102,20 +101,12 @@ def dependency_modules() -> List[Any]:
             scope=request,
         )
 
-    def _bind_s3_service_configuration(binder: Binder) -> None:
-        s3_session: Session = Session()
-        s3_client: BaseClient = s3_session.client("s3")
-
-        binder.bind(Session, to=s3_session, scope=request)
-        binder.bind(BaseClient, to=s3_client, scope=request)
-
     def _bind_job_run_store_configuration(binder: Binder):
         binder.bind(interface=MlflowClient, to=MockMlflowClient(), scope=request)
 
     def configure(binder: Binder) -> None:
         _bind_password_service_configuration(binder)
         _bind_rq_service_configuration(binder)
-        _bind_s3_service_configuration(binder)
         _bind_job_run_store_configuration(binder)
 
     return [configure, PasswordServiceModule, RQServiceV1Module, JobRunStoreModule]
@@ -152,11 +143,36 @@ def db_session(flask_app: Flask) -> DBSession:
 
 
 @pytest.fixture(scope="session")
-def flask_app(dependency_modules: List[Any]) -> Flask:
+def signing_key_file(tmp_path_factory) -> Path:
+    """Supply one protected temporary key to successful application fixtures.
+
+    The real reader validates this caller-owned file. Component tests do not
+    acquire a key unless they construct a complete application.
+    """
+    directory = tmp_path_factory.mktemp("restapi-key").resolve()
+    path = directory / "secret-key"
+    initialize_key(path, development=True)
+    return path
+
+
+@pytest.fixture(scope="session")
+def flask_app(dependency_modules: List[Any], signing_key_file: Path) -> Flask:
     from dioptra.restapi import create_app
 
     injector = Injector(dependency_modules)
-    app = create_app(env="test_no_login", injector=injector)
+    app = create_app(
+        env="dev",
+        injector=injector,
+        overrides={
+            "SECRET_KEY_FILE": signing_key_file,
+            "TESTING": True,
+            "LOGIN_DISABLED": True,
+            "SESSION_PROTECTION": None,
+            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "MLFLOW_TRACKING_URI": "file:///unused-fixture-mlruns",
+            "RQ_REDIS_URI": "redis://",
+        },
+    )
 
     with app.app_context():
         # sqlite specific fix, see:

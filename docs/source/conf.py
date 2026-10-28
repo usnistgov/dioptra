@@ -135,6 +135,8 @@ html_scaled_image_link = False
 # -- Options for autodoc extension -------------------------------------------
 
 autoclass_content = "class"
+# API factory imports evaluate ORM mappings and union annotations, so
+# Flask-SQLAlchemy and Injector must use their installed classes.
 autodoc_mock_imports = [
     "alembic",
     "botocore",
@@ -142,8 +144,6 @@ autodoc_mock_imports = [
     "entrypoints",
     "flask_injector",
     "flask_migrate",
-    "flask_sqlalchemy",
-    "injector",
     "mlflow",
     "numpy",
     "pandas",

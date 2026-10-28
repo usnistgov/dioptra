@@ -16,17 +16,15 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """A module for binding configurations to shared services using dependency injection."""
 
-import os
 from dataclasses import dataclass
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List
 
-from boto3.session import Session
-from botocore.client import BaseClient
 from injector import Binder, Module, provider
 from mlflow import MlflowClient
 from passlib.context import CryptContext
 from redis import Redis
 
+from dioptra.restapi.config import BaseConfig
 from dioptra.restapi.request_scope import request
 from dioptra.restapi.v1.shared.job_run_store import (
     JobRunStoreProtocol,
@@ -37,64 +35,99 @@ from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
 class JobRunStoreModule(Module):
+    """Provide the MLflow-backed job run store in request scope."""
+
     @request
     @provider
     def provide_job_run_store_module(
         self,
         client: MlflowClient,
     ) -> JobRunStoreProtocol:
+        """Wrap the injected MLflow client in a job run store.
+
+        Args:
+            client: MLflow client used for run storage.
+
+        Returns:
+            The request-scoped MLflow-backed job run store.
+        """
         return MlFlowJobRunStore(client)
 
 
 @dataclass
 class RQServiceConfiguration(object):
+    """Hold the Redis connection supplied to request-scoped RQ services.
+
+    Args:
+        redis: Connection used by the RQ service provider.
+    """
+
     redis: Redis
 
 
 class RQServiceV1Module(Module):
+    """Provide RQ services using the configured Redis connection."""
+
     @request
     @provider
     def provide_rq_service_module(
         self, configuration: RQServiceConfiguration
     ) -> RQServiceV1:
+        """Create an RQ service from the injected Redis configuration.
+
+        Args:
+            configuration: Redis connection configuration.
+
+        Returns:
+            A request-scoped RQ service using that connection.
+        """
         return RQServiceV1(redis=configuration.redis)
 
 
 @dataclass
 class PasswordServiceConfiguration(object):
+    """Hold the cryptographic context used by password services.
+
+    Args:
+        crypt_context: Context used to hash and verify passwords.
+    """
+
     crypt_context: CryptContext
 
 
 class PasswordServiceModule(Module):
+    """Provide password services using the configured cryptographic context."""
+
     @provider
     def provide_password_service_module(
         self, configuration: PasswordServiceConfiguration
     ) -> PasswordService:
+        """Create a password service from the injected cryptographic context.
+
+        Args:
+            configuration: Password hashing configuration.
+
+        Returns:
+            A password service using that context.
+        """
         return PasswordService(crypt_context=configuration.crypt_context)
 
 
-def _bind_rq_service_configuration(binder: Binder):
-    redis_conn: Redis = Redis.from_url(os.getenv("RQ_REDIS_URI", "redis://"))
+def _bind_rq_service_configuration(binder: Binder, settings: BaseConfig):
+    """Bind a Redis connection constructed from the resolved API URI."""
+    redis_conn: Redis = Redis.from_url(settings.RQ_REDIS_URI)
     configuration: RQServiceConfiguration = RQServiceConfiguration(redis=redis_conn)
     binder.bind(RQServiceConfiguration, to=configuration, scope=request)
 
 
-def _bind_job_run_store_configuration(binder: Binder):
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+def _bind_job_run_store_configuration(binder: Binder, settings: BaseConfig):
+    """Bind an MLflow client using the resolved tracking URI."""
+    tracking_uri = settings.MLFLOW_TRACKING_URI
     binder.bind(MlflowClient, to=MlflowClient(tracking_uri=tracking_uri), scope=request)
 
 
-def _bind_s3_service_configuration(binder: Binder) -> None:
-    s3_endpoint_url: Optional[str] = os.getenv("MLFLOW_S3_ENDPOINT_URL")
-
-    s3_session: Session = Session()
-    s3_client: BaseClient = s3_session.client("s3", endpoint_url=s3_endpoint_url)
-
-    binder.bind(Session, to=s3_session, scope=request)
-    binder.bind(BaseClient, to=s3_client, scope=request)
-
-
 def _bind_password_service_configuration(binder: Binder):
+    """Bind the password hashing configuration used by the provider."""
     configuration: PasswordServiceConfiguration = PasswordServiceConfiguration(
         crypt_context=CryptContext(
             schemes=["pbkdf2_sha256"],
@@ -105,25 +138,25 @@ def _bind_password_service_configuration(binder: Binder):
     binder.bind(PasswordServiceConfiguration, to=configuration)
 
 
-def bind_dependencies(binder: Binder) -> None:
+def bind_dependencies(binder: Binder, settings: BaseConfig) -> None:
     """Binds interfaces to implementations within the main application.
 
     Args:
         binder: A :py:class:`~injector.Binder` object.
+        settings: The application's validated, resolved configuration.
     """
 
-    _bind_rq_service_configuration(binder)
-    _bind_s3_service_configuration(binder)
+    _bind_rq_service_configuration(binder, settings)
     _bind_password_service_configuration(binder)
-    _bind_job_run_store_configuration(binder)
+    _bind_job_run_store_configuration(binder, settings)
 
 
 def register_providers(modules: List[Callable[..., Any]]) -> None:
-    """Registers type providers within the main application.
+    """Register the application service providers in an injector module list.
 
     Args:
-        modules: A list of callables used for configuring the dependency injection
-            environment.
+        modules: List to which the provider module classes are appended. The list
+            is modified in place.
     """
 
     modules.append(JobRunStoreModule)

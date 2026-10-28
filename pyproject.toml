@@ -110,6 +110,7 @@ documentation = "https://pages.nist.gov/dioptra"
 "Issue Tracker" = "https://github.com/usnistgov/dioptra/issues"
 
 [project.scripts]
+dioptra-api = "dioptra.restapi.cli.api:main"
 dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"

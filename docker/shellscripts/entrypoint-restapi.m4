@@ -19,14 +19,14 @@
 # m4_ignore(
 echo "This is just a script template, not the script (yet) - pass it to 'argbash' to fix this." >&2
 exit 11 #)Created by argbash-init v2.8.1
-# ARG_OPTIONAL_SINGLE([app-module],[],[Application module],[wsgi:app])
 # ARG_OPTIONAL_SINGLE([backend],[],[Server backend],[gunicorn])
-# ARG_OPTIONAL_SINGLE([gunicorn-module],[],[Python module used to start Gunicorn WSGI server],[dioptra.restapi.cli.gunicorn])
 # ARG_OPTIONAL_REPEATED([wait-for],[],[Wait on the availability of a host and TCP port before proceeding],[])
+# ARG_LEFTOVERS([Additional Gunicorn options after --])
+# ARG_POSITIONAL_DOUBLEDASH
 # ARG_DEFAULTS_POS
 # ARGBASH_SET_INDENT([  ])
 # ARG_HELP([Dioptra REST API Entry Point\n])"
-# ARGBASH_PREPARE
+# ARGBASH_GO
 
 # [ <-- needed because of Argbash
 shopt -s extglob
@@ -40,8 +40,6 @@ readonly dioptra_workdir="${DIOPTRA_WORKDIR}"
 readonly logname="Container Entry Point"
 
 set_parsed_globals() {
-  readonly app_module="${_arg_app_module}"
-  readonly gunicorn_module="${_arg_gunicorn_module}"
   readonly server_backend="${_arg_backend}"
 }
 
@@ -57,8 +55,8 @@ set_parsed_globals() {
 ###########################################################################################
 
 wait_for_services() {
-  for service in ${_arg_wait_for[@]}; do
-    if ! (/usr/local/bin/wait-for-it.sh -t 0 ${service}); then
+  for service in "${_arg_wait_for[@]}"; do
+    if ! (/usr/local/bin/wait-for-it.sh -t 0 "${service}"); then
       echo "${logname}: ERROR - Unexpected error while waiting for ${service}." 1>&2
       exit 1
     fi
@@ -85,9 +83,8 @@ upgrade_database() {
 # Start gunicorn server
 #
 # Globals:
-#   app_module
 #   dioptra_workdir
-#   gunicorn_module
+#   _arg_leftovers
 #   logname
 # Arguments:
 #   None
@@ -98,8 +95,8 @@ upgrade_database() {
 start_gunicorn() {
   echo "${logname}: INFO - Starting gunicorn server"
 
-  cd ${dioptra_workdir}
-  python -m ${gunicorn_module} -c /etc/gunicorn/gunicorn.conf.py ${app_module}
+  cd "${dioptra_workdir}"
+  exec dioptra-api prod -c /etc/gunicorn/gunicorn.conf.py "${_arg_leftovers[@]}"
 }
 
 ###########################################################################################
@@ -130,7 +127,6 @@ start_restapi() {
 # Main script
 ###########################################################################################
 
-parse_commandline "$@"
 set_parsed_globals
 wait_for_services
 upgrade_database

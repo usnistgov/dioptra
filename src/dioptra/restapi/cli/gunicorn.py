@@ -15,22 +15,14 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""A module for starting the gunicorn wsgi server."""
+"""Run the packaged production API command with Gunicorn options.
 
-import os
+This compatibility entry point forwards its arguments to ``dioptra-api prod``.
+"""
 
-from gunicorn.app.wsgiapp import run as gunicorn_cli
+import sys
 
-from dioptra.sdk.utilities.logging import (
-    attach_stdout_stream_handler,
-    configure_structlog,
-    set_logging_level,
-)
+from dioptra.restapi.cli.api import main
 
 if __name__ == "__main__":
-    attach_stdout_stream_handler(
-        True if os.getenv("DIOPTRA_RESTAPI_LOG_AS_JSON") else False,
-    )
-    set_logging_level(os.getenv("DIOPTRA_RESTAPI_LOG_LEVEL", default="INFO"))
-    configure_structlog()
-    gunicorn_cli()
+    main(args=["prod", *sys.argv[1:]], prog_name="dioptra-api")
