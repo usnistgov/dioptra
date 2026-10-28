@@ -19,12 +19,75 @@
 This module contains shared functionality used across test suites for each of the REST
 API endpoints.
 """
-import datetime
-from typing import Any, Container, Iterable, Type
 
+import datetime
+from contextlib import contextmanager
+from copy import deepcopy
+from typing import Any, Container, Iterable, Iterator, Type
+
+from flask import g
+from flask.testing import FlaskClient
+from sqlalchemy.orm import Session
+
+import dioptra.restapi.db.models as models
 import dioptra.restapi.db.repository.utils as utils
 import dioptra.restapi.errors as errors
 from dioptra.restapi.db.models import ResourceSnapshot
+
+
+class DraftAuthorizationContext:
+    """Shared actors and database observations for draft authorization tests."""
+
+    def __init__(
+        self, client: FlaskClient, session: Session, member: models.User
+    ) -> None:
+        self.client = client
+        self.session = session
+        self.member = member
+
+    @contextmanager
+    def as_member(self) -> Iterator[None]:
+        """Temporarily authenticate as another member of the creator's group."""
+        with self.client.session_transaction() as session:
+            original = dict(session)
+            session.clear()
+            session["_user_id"] = self.member.get_id()
+            session["_fresh"] = True
+        # db_session keeps an app context alive across requests, including the
+        # Flask-Login user cache. Reload it from the changed session.
+        g.pop("_login_user", None)
+        try:
+            yield
+        finally:
+            with self.client.session_transaction() as session:
+                session.clear()
+                session.update(original)
+            g.pop("_login_user", None)
+
+    def draft_state(self, draft_id: int) -> dict[str, Any]:
+        """Capture persisted draft contents and resource snapshot pointers."""
+        self.session.expire_all()
+        draft = self.session.get(models.DraftResource, draft_id)
+        assert draft is not None
+        return {
+            "payload": deepcopy(draft.payload),
+            "creator": draft.user_id,
+            "group": draft.group_id,
+            "type": draft.resource_type,
+            "counts": tuple(
+                self.session.query(model).count()
+                for model in (
+                    models.Resource,
+                    models.ResourceSnapshot,
+                    models.DraftResource,
+                )
+            ),
+            "snapshots": dict(
+                self.session.query(
+                    models.Resource.resource_id, models.Resource.latest_snapshot_id
+                ).all()
+            ),
+        }
 
 
 def is_iso_format(date_string: str) -> bool:

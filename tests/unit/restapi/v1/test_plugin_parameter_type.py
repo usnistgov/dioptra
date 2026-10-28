@@ -777,6 +777,7 @@ def test_cannot_retrieve_nonexistent_plugin_parameter_type(
 
 
 def test_manage_existing_plugin_parameter_type_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_plugin_parameter_types: dict[str, Any],
@@ -830,6 +831,9 @@ def test_manage_existing_plugin_parameter_type_draft(
         dioptra_client.plugin_parameter_types.modify_resource_drafts,
         dioptra_client.workflows,
         plugin_param_type["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.plugin_parameter_types.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -838,6 +842,7 @@ def test_manage_existing_plugin_parameter_type_draft(
 
 
 def test_manage_new_plugin_parameter_type_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
 ) -> None:
@@ -889,6 +894,8 @@ def test_manage_new_plugin_parameter_type_drafts(
         dioptra_client.plugin_parameter_types,
         dioptra_client.plugin_parameter_types.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

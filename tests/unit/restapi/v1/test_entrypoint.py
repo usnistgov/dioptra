@@ -1378,6 +1378,7 @@ def test_entrypoint_show_deleted(
     assert delete_id in ids_with_show_deleted
 
 def test_manage_existing_entrypoint_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1478,6 +1479,9 @@ def test_manage_existing_entrypoint_draft(
         dioptra_client.entrypoints.modify_resource_drafts,
         dioptra_client.workflows,
         entrypoint["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.entrypoints.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -1492,6 +1496,7 @@ def test_manage_existing_entrypoint_draft(
     )
 
 def test_manage_new_entrypoint_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_queues: dict[str, Any],
@@ -1620,6 +1625,8 @@ def test_manage_new_entrypoint_drafts(
         dioptra_client.entrypoints,
         dioptra_client.entrypoints.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

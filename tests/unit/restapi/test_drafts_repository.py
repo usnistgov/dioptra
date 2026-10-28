@@ -15,6 +15,7 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import datetime
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy.orm.session import Session as DBSession
@@ -22,7 +23,7 @@ from sqlalchemy.orm.session import Session as DBSession
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
 from dioptra.restapi.db.models.constants import resource_lock_types, user_lock_types
-from dioptra.restapi.db.repository.drafts import DraftType
+from dioptra.restapi.db.repository.drafts import DraftsRepository, DraftType
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.v1.entity_types import EntityType
 
@@ -42,6 +43,51 @@ def draft_content():
     }
 
     return draft_content
+
+
+def call_draft_operation(repo, method, draft, **kwargs):
+    if method == "update":
+        return repo.update(draft, {"draft": "updated"}, **kwargs)
+    return getattr(repo, method)(draft, **kwargs)
+
+
+@pytest.mark.parametrize("method", ["get", "get_one", "update", "delete"])
+@pytest.mark.parametrize("kwargs", [{}, {"creator": None}])
+def test_drafts_require_creator_before_database_access(method, kwargs):
+    session = Mock()
+    with pytest.raises(TypeError):
+        call_draft_operation(DraftsRepository(session), method, 1, **kwargs)
+    assert session.mock_calls == []
+
+
+@pytest.mark.parametrize("method", ["update", "delete"])
+def test_drafts_validate_creator(drafts_repo, draft_stuff, method):
+    creator = m.User("invalid", "password", "invalid@example.org")
+    draft_id = draft_stuff["draft_resources"][0].draft_resource_id
+    with pytest.raises(e.EntityDoesNotExistError):
+        call_draft_operation(drafts_repo, method, draft_id, creator=creator)
+
+
+def test_drafts_cannot_read_another_creators_draft(drafts_repo, draft_stuff):
+    draft_id = draft_stuff["draft_resources"][0].draft_resource_id
+    creator = draft_stuff["alpha"].user_id
+    assert drafts_repo.get(draft_id, creator=creator) is None
+    with pytest.raises(e.DraftDoesNotExistError):
+        drafts_repo.get_one(draft_id, creator=creator)
+
+
+@pytest.mark.parametrize("by_id", [False, True])
+def test_drafts_cannot_update_another_creators_draft(
+    db_session, drafts_repo, draft_stuff, by_id
+):
+    draft = draft_stuff["draft_resources"][0]
+    target = draft.draft_resource_id if by_id else draft
+    original = draft.payload.copy()
+    with pytest.raises(e.DraftDoesNotExistError):
+        drafts_repo.update(target, {}, creator=draft_stuff["alpha"].user_id)
+    db_session.flush()
+    db_session.expire_all()
+    assert draft.payload == original
 
 
 @pytest.fixture
@@ -838,21 +884,21 @@ def test_drafts_get(db_session: DBSession, drafts_repo, draft_stuff):
 
     draft = draft_stuff["draft_resources"][0]
 
-    found_draft = drafts_repo.get(draft.draft_resource_id)
+    found_draft = drafts_repo.get(draft.draft_resource_id, creator=draft.user_id)
     assert found_draft is not None
     assert found_draft.draft_resource_id == draft.draft_resource_id
 
-    found_draft = drafts_repo.get(draft.draft_resource_id, "job")
+    found_draft = drafts_repo.get(draft.draft_resource_id, "job", creator=draft.user_id)
     assert found_draft is None
 
-    found_draft = drafts_repo.get(draft.draft_resource_id, "queue", None)
+    found_draft = drafts_repo.get(
+        draft.draft_resource_id, "queue", creator=draft.user_id
+    )
     assert found_draft is not None
     assert found_draft.draft_resource_id == draft.draft_resource_id
 
     found_draft = drafts_repo.get(
-        draft.draft_resource_id,
-        "queue",
-        draft.creator,
+        draft.draft_resource_id, "queue", creator=draft.creator
     )
     assert found_draft is not None
     assert found_draft.draft_resource_id == draft.draft_resource_id
@@ -861,13 +907,13 @@ def test_drafts_get(db_session: DBSession, drafts_repo, draft_stuff):
 def test_drafts_get_one(drafts_repo, draft_stuff):
     draft = draft_stuff["draft_resources"][0]
 
-    found_draft = drafts_repo.get_one(draft.draft_resource_id)
+    found_draft = drafts_repo.get_one(draft.draft_resource_id, creator=draft.user_id)
     assert draft == found_draft
 
 
-def test_drafts_get_one_not_exist(drafts_repo):
+def test_drafts_get_one_not_exist(drafts_repo, account):
     with pytest.raises(e.DraftDoesNotExistError):
-        drafts_repo.get_one(999999)
+        drafts_repo.get_one(999999, creator=account.user.user_id)
 
 
 def test_drafts_get_user_not_exist(db_session: DBSession, drafts_repo, draft_stuff):
@@ -877,10 +923,10 @@ def test_drafts_get_user_not_exist(db_session: DBSession, drafts_repo, draft_stu
     user = m.User("user", "password", "user@example.org")
 
     with pytest.raises(e.EntityDoesNotExistError):
-        drafts_repo.get(draft, None, user)
+        drafts_repo.get(draft.draft_resource_id, None, creator=user)
 
     with pytest.raises(e.EntityDoesNotExistError):
-        drafts_repo.get(draft.draft_resource_id, "queue", 999999)
+        drafts_repo.get(draft.draft_resource_id, "queue", creator=999999)
 
 
 def test_drafts_get_user_deleted(db_session: DBSession, drafts_repo, draft_stuff):
@@ -905,10 +951,10 @@ def test_drafts_get_user_deleted(db_session: DBSession, drafts_repo, draft_stuff
     draft = draft_stuff["draft_resources"][0]
 
     with pytest.raises(e.EntityDeletedError):
-        drafts_repo.get(draft, None, user)
+        drafts_repo.get(draft.draft_resource_id, None, creator=user)
 
     with pytest.raises(e.EntityDeletedError):
-        drafts_repo.get(draft.draft_resource_id, "queue", user.user_id)
+        drafts_repo.get(draft.draft_resource_id, "queue", creator=user.user_id)
 
 
 def test_drafts_get_resource(db_session: DBSession, drafts_repo, draft_stuff):
@@ -1265,19 +1311,21 @@ def test_drafts_update(db_session: DBSession, drafts_repo, draft_stuff):
     draft = draft_stuff["draft_mods"][0]
     orig_ts = draft.last_modified_on
 
-    drafts_repo.update(draft, {"draft": "updated", "number": 6})
+    drafts_repo.update(draft, {"draft": "updated", "number": 6}, creator=draft.user_id)
     db_session.commit()
 
     assert draft.last_modified_on > orig_ts
 
-    check_draft = drafts_repo.get(draft.draft_resource_id)
+    check_draft = drafts_repo.get(draft.draft_resource_id, creator=draft.user_id)
     assert check_draft.payload["resource_data"]["draft"] == "updated"
 
 
-def test_drafts_update_not_exist(db_session: DBSession, drafts_repo):
+def test_drafts_update_not_exist(db_session: DBSession, drafts_repo, account):
 
     with pytest.raises(e.DraftDoesNotExistError):
-        drafts_repo.update(999999, {"draft": "updated", "number": 6})
+        drafts_repo.update(
+            999999, {"draft": "updated", "number": 6}, creator=account.user.user_id
+        )
 
 
 def test_drafts_update_modification_snapshot(
@@ -1287,9 +1335,7 @@ def test_drafts_update_modification_snapshot(
     queue = draft_stuff["queues"][0][1]
 
     updated_draft = drafts_repo.update(
-        draft,
-        {"draft": "updated", "number": 6},
-        queue,
+        draft, {"draft": "updated", "number": 6}, queue, creator=draft.user_id
     )
     db_session.commit()
 
@@ -1309,9 +1355,7 @@ def test_drafts_update_modification_snapshot_not_modification(
 
     with pytest.raises(e.DraftModificationRequiredError):
         drafts_repo.update(
-            draft,
-            {"draft": "updated", "number": 6},
-            queue,
+            draft, {"draft": "updated", "number": 6}, queue, creator=draft.user_id
         )
 
 
@@ -1322,9 +1366,7 @@ def test_drafts_update_modification_snapshot_not_exist(
 
     with pytest.raises(e.EntityDoesNotExistError):
         drafts_repo.update(
-            draft,
-            {"draft": "updated", "number": 6},
-            999999,
+            draft, {"draft": "updated", "number": 6}, 999999, creator=draft.user_id
         )
 
 
@@ -1338,31 +1380,37 @@ def test_drafts_update_modification_snapshot_wrong_resource(
 
     with pytest.raises(e.DraftSnapshotIdInvalidError):
         drafts_repo.update(
-            draft,
-            {"draft": "updated", "number": 6},
-            queue,
+            draft, {"draft": "updated", "number": 6}, queue, creator=draft.user_id
         )
 
 
 def test_drafts_delete(drafts_repo, draft_stuff):
 
     draft_resource = draft_stuff["draft_resources"][0]
-    drafts_repo.delete(draft_resource)
+    drafts_repo.delete(draft_resource, creator=draft_resource.creator)
 
-    check_draft = drafts_repo.get(draft_resource.draft_resource_id)
+    check_draft = drafts_repo.get(
+        draft_resource.draft_resource_id, creator=draft_resource.user_id
+    )
     assert check_draft is None
 
     draft_mod = draft_stuff["draft_mods"][0]
-    drafts_repo.delete(draft_mod)
+    drafts_repo.delete(draft_mod, creator=draft_mod.user_id)
 
-    check_draft = drafts_repo.get(draft_mod.draft_resource_id)
+    check_draft = drafts_repo.get(
+        draft_mod.draft_resource_id, creator=draft_mod.user_id
+    )
     assert check_draft is None
 
     # Try delete by ID
     draft_resource_id = draft_stuff["draft_resources"][1].draft_resource_id
-    drafts_repo.delete(draft_resource_id)
+    drafts_repo.delete(
+        draft_resource_id, creator=draft_stuff["draft_resources"][1].user_id
+    )
 
-    check_draft = drafts_repo.get(draft_resource_id)
+    check_draft = drafts_repo.get(
+        draft_resource_id, creator=draft_stuff["draft_resources"][1].user_id
+    )
     assert check_draft is None
 
 
@@ -1375,11 +1423,32 @@ def test_drafts_delete_not_found(drafts_repo, draft_stuff, draft_content):
     )
 
     with pytest.raises(e.DraftDoesNotExistError):
-        drafts_repo.delete(draft)
+        drafts_repo.delete(draft, creator=draft_stuff["abi"])
 
     # Try delete by ID
     with pytest.raises(e.DraftDoesNotExistError):
-        drafts_repo.delete(999999)
+        drafts_repo.delete(999999, creator=draft_stuff["abi"].user_id)
+
+
+@pytest.mark.parametrize("by_id", [False, True])
+def test_drafts_delete_requires_creator(drafts_repo, draft_stuff, by_id):
+    draft = draft_stuff["draft_resources"][0]
+    target = draft.draft_resource_id if by_id else draft
+
+    # Another member of the same group cannot delete the creator's draft.
+    with pytest.raises(e.DraftDoesNotExistError):
+        drafts_repo.delete(target, creator=draft_stuff["alpha"].user_id)
+
+    assert drafts_repo.get(draft.draft_resource_id, creator=draft.user_id) is draft
+
+
+def test_drafts_delete_requires_resource_type(drafts_repo, draft_stuff):
+    draft = draft_stuff["draft_resources"][0]
+
+    with pytest.raises(e.DraftDoesNotExistError):
+        drafts_repo.delete(draft, creator=draft.user_id, resource_type="plugin")
+
+    assert drafts_repo.get(draft.draft_resource_id, creator=draft.user_id) is draft
 
 
 def test_drafts_has_draft_modifications(drafts_repo, draft_stuff):
