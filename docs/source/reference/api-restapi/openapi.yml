@@ -10456,46 +10456,6 @@
             }
         },
         "/api/v1/users/current": {
-            "put": {
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/UserCurrent-dump"
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Modifies the Current User",
-                "operationId": "put_user_current_endpoint",
-                "parameters": [
-                    {
-                        "name": "X-Fields",
-                        "in": "header",
-                        "description": "An optional fields mask",
-                        "schema": {
-                            "type": "string",
-                            "format": "mask"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserMutableFields"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "tags": [
-                    "Users"
-                ]
-            },
             "get": {
                 "responses": {
                     "200": {
@@ -16672,17 +16632,12 @@
             },
             "User-load": {
                 "required": [
-                    "email",
                     "username"
                 ],
                 "properties": {
                     "username": {
                         "type": "string",
-                        "description": "Username of the User."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "Email of the User."
+                        "description": "Username of the User. Fixed after registration."
                     },
                     "password": {
                         "type": "string",
@@ -16697,17 +16652,12 @@
             },
             "UserCurrent-dump": {
                 "required": [
-                    "email",
                     "username"
                 ],
                 "properties": {
                     "username": {
                         "type": "string",
-                        "description": "Username of the User."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "Email of the User."
+                        "description": "Username of the User. Fixed after registration."
                     },
                     "id": {
                         "type": "integer",
@@ -16789,17 +16739,12 @@
             },
             "User-dump": {
                 "required": [
-                    "email",
                     "username"
                 ],
                 "properties": {
                     "username": {
                         "type": "string",
-                        "description": "Username of the User."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "Email of the User."
+                        "description": "Username of the User. Fixed after registration."
                     },
                     "id": {
                         "type": "integer",
@@ -16821,23 +16766,6 @@
                     "confirmNewPassword": {
                         "type": "string",
                         "description": "The new password confirmation when changing a password."
-                    }
-                },
-                "type": "object"
-            },
-            "UserMutableFields": {
-                "required": [
-                    "email",
-                    "username"
-                ],
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "description": "Username of the User."
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "Email of the User."
                     }
                 },
                 "type": "object"

@@ -86,7 +86,6 @@ class UserService(object):
     def create(
         self,
         username: str,
-        email_address: str,
         password: str,
         confirm_password: str,
         commit: bool = True,
@@ -96,8 +95,6 @@ class UserService(object):
 
         Args:
             username: The username requested by the new user. Must be unique.
-            email_address: The email address to associate with the new user. Must be
-                unique.
             password: The password for the new user.
             confirm_password: The password confirmation for the new user.
             commit: If True, commit the transaction. Defaults to True.
@@ -109,7 +106,6 @@ class UserService(object):
             UserRegistrationError: If the password and confirmation password do not
                 match.
             UsernameNotAvailableError: If the username already exists.
-            UserEmailNotAvailableError: If the email already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
@@ -119,9 +115,7 @@ class UserService(object):
             )
 
         hashed_password = self._user_password_service.hash(password, log=log)
-        new_user: models.User = models.User(
-            username=username, password=hashed_password, email_address=email_address
-        )
+        new_user: models.User = models.User(username=username, password=hashed_password)
 
         default_group = self._create_or_get_default_group(
             user=new_user,
@@ -319,32 +313,6 @@ class UserCurrentService(object):
 
         if not current_user.is_authenticated:
             raise NoCurrentUserError
-
-        return cast(models.User, current_user)
-
-    def modify(
-        self, username: str, email_address: str, commit: bool = True, **kwargs
-    ) -> models.User:
-        """Modifies the current user
-
-        Args:
-            username: The user's current username.
-            email_address: The user's current email_address.
-            commit: If True, commit the transaction. Defaults to True.
-
-        Returns:
-            The current user object.
-        """
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug("Modify user account", user_id=current_user.user_id)
-
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        current_user.username = username
-        current_user.email_address = email_address
-        current_user.last_modified_on = current_timestamp
-
-        if commit:
-            self._uow.commit()
 
         return cast(models.User, current_user)
 

@@ -115,10 +115,20 @@ def test_group_create_creator_collision(group_repo, account):
     with pytest.raises(EntityExistsError):
         group_repo.create(g2)
 
-    user_colliding_email = User("user2", "password2", account.user.email_address)
-    g2 = Group("group2", user_colliding_email)
-    with pytest.raises(EntityExistsError):
-        group_repo.create(g2)
+
+@pytest.mark.parametrize("email", [None, "shared@example.org"])
+def test_group_create_creator_without_unique_email(
+    group_repo, account, db_session: DBSession, email: str | None
+) -> None:
+    account.user.email_address = email
+    db_session.commit()
+    user = User("user2", "password2", email)
+    group = Group("group2", user)
+
+    group_repo.create(group)
+    db_session.commit()
+
+    assert db_session.get(User, user.user_id).email_address == email
 
 
 def test_group_create_creator_deleted(

@@ -48,7 +48,6 @@ from dioptra.restapi.v1.entity_types import EntityType
 class UserRepository:
     SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
         "username": lambda x: User.username.like(x, escape="/"),
-        "email": lambda x: User.email_address.like(x, escape="/"),
     }
 
     def __init__(self, session: CompatibleSession[S]):
@@ -79,7 +78,7 @@ class UserRepository:
 
         Raises:
             EntityDoesNotExistError: If group does not exist
-            EntityExistsError: If user already exists, or the name or email
+            EntityExistsError: If user already exists, or the name
                 collides with an existing user
             EntityDeletedError: If the user or group are deleted
         """
@@ -87,7 +86,6 @@ class UserRepository:
         # Consistency rules:
         # - Every user must be in a group
         # - Every user must have a unique name
-        # - Every user must have a unique email address
 
         assert_group_exists(self.session, group, DeletionPolicy.NOT_DELETED)
         assert_user_does_not_exist(self.session, user, DeletionPolicy.ANY)
@@ -231,27 +229,6 @@ class UserRepository:
             A user, or None if one was not found
         """
         stmt = sa.select(User).where(User.alternative_id == alternative_id)
-        stmt = _apply_deletion_policy(stmt, deletion_policy)
-
-        user = self.session.scalar(stmt)
-
-        return user
-
-    def get_by_email(
-        self, email: str, deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED
-    ) -> User | None:
-        """
-        Get a user by email address.
-
-        Args:
-            email: An email address
-            deletion_policy: Whether to look at deleted users, non-deleted
-                users, or all users
-
-        Returns:
-            A user, or None if one was not found
-        """
-        stmt = sa.select(User).where(User.email_address == email)
         stmt = _apply_deletion_policy(stmt, deletion_policy)
 
         user = self.session.scalar(stmt)

@@ -50,9 +50,9 @@ class User(db.Model):  # type: ignore[name-defined]
     alternative_id: Mapped[guid] = mapped_column(
         init=False, nullable=False, unique=True, index=True
     )
-    username: Mapped[text_] = mapped_column(nullable=False, index=True)
+    username: Mapped[text_] = mapped_column(nullable=False, unique=True, index=True)
     password: Mapped[optionalstr]
-    email_address: Mapped[text_] = mapped_column(nullable=False, index=True)
+    email_address: Mapped[optionalstr] = mapped_column(default=None, index=True)
     created_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
     last_modified_on: Mapped[datetimetz] = mapped_column(init=False, nullable=False)
     last_login_on: Mapped[optionaldatetimetz] = mapped_column(init=False, nullable=True)

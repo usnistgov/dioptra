@@ -177,15 +177,12 @@ def register_job(
     )
 
 
-def register_user(
-    client: FlaskClient, username: str, email: str, password: str
-) -> TestResponse:
+def register_user(client: FlaskClient, username: str, password: str) -> TestResponse:
     """Register a user using the API.
 
     Args:
         client: The Flask test client.
         username: The username to assign to the new user.
-        email: The email to assign to the new user.
         password: The password to set for the new user.
 
     Returns:
@@ -195,7 +192,6 @@ def register_user(
         f"/{V1_ROOT}/{V1_USERS_ROUTE}",
         json={
             "username": username,
-            "email": email,
             "password": password,
             "confirmPassword": password,
         },

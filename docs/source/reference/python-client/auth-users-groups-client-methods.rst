@@ -92,11 +92,6 @@ Get Current User
 
     .. automethod:: dioptra.client.users.UsersCollectionClient.get_current
 
-Modify Current User
-~~~~~~~~~~~~~~~~~~~
-
-    .. automethod:: dioptra.client.users.UsersCollectionClient.modify_current_user
-
 Change Current User Password
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -36,7 +36,6 @@ from .schema import (
     UserCurrentSchema,
     UserDeleteSchema,
     UserGetQueryParameters,
-    UserMutableFieldsSchema,
     UserPageSchema,
     UserPasswordSchema,
     UserSchema,
@@ -107,7 +106,6 @@ class UserEndpoint(Resource):
 
         user = self._user_service.create(
             username=str(parsed_obj["username"]),
-            email_address=str(parsed_obj["email"]),
             password=str(parsed_obj["password"]),
             confirm_password=str(parsed_obj["confirm_password"]),
             log=log,
@@ -214,25 +212,6 @@ class UserCurrentEndpoint(Resource):
         )
         parsed_obj = request.parsed_obj  # type: ignore
         return self._user_current_service.delete(parsed_obj["password"], log=log)
-
-    @login_required
-    @accepts(schema=UserMutableFieldsSchema, api=api)
-    @responds(schema=UserCurrentSchema, api=api)
-    def put(self) -> dict[str, Any]:
-        """Modifies the Current User"""
-        log: BoundLogger = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="User",
-            request_type="PUT",
-        )
-        parsed_obj = request.parsed_obj  # type: ignore
-        user = self._user_current_service.modify(
-            username=parsed_obj["username"],
-            email_address=parsed_obj["email"],
-            error_if_not_found=True,
-            log=log,
-        )
-        return utils.build_current_user(user)
 
 
 @api.route("/current/password")

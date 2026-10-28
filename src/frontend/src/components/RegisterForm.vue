@@ -19,14 +19,6 @@
           aria-required="true"
         />
         <q-input
-          v-model="email"
-          class="q-mb-sm"
-          outlined
-          label="Email Address"
-          :rules="[requiredRule, emailRule]"
-          aria-required="true"
-        />
-        <q-input
           v-model="password"
           class="q-mb-sm"
           outlined
@@ -97,20 +89,15 @@ const isMobile = inject("isMobile");
 
 const requiredRule = (val) => (val && val.length > 0) || "This field is required";
 const matchRule = (val) => (val && val === password.value) || "Password mismatch";
-const emailRule = (val) => {
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-  return (val && emailRegex.test(val)) || "Invalid email address";
-};
 
 const username = ref("");
 const password = ref("");
-const email = ref("");
 const confirmPassword = ref("");
 const showPassword = ref(false);
 
 async function submit() {
   try {
-    const res = await api.registerUser(username.value, email.value, password.value, confirmPassword.value);
+    const res = await api.registerUser(username.value, password.value, confirmPassword.value);
     router.push("/login");
     notify.success(`Successfully created user '${res.data.username}'`);
   } catch (err) {
