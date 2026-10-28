@@ -64,6 +64,9 @@ def test_api_key_volume_and_initializer(result, context):
     assert f"{context['__project_slug']}-minio" in deployment["services"]
 
 
+@pytest.mark.skipif(
+    os.name != "posix", reason="deployment scripts require a POSIX shell"
+)
 @pytest.mark.parametrize("initializer_status", [0, 17])
 def test_api_key_initialization_order(result, initializer_status):
     """Stop deployment setup when key initialization fails before API startup.
@@ -118,6 +121,9 @@ def test_api_key_initialization_order(result, initializer_status):
         assert lines[2] == "start_restapi_service"
 
 
+@pytest.mark.skipif(
+    os.name != "posix", reason="deployment scripts require a POSIX shell"
+)
 @pytest.mark.skipif(shutil.which("argbash") is None, reason="Argbash is not installed")
 def test_restapi_entrypoint_preserves_native_arguments(tmp_path, monkeypatch):
     """Preserve native Gunicorn arguments through the compiled shell parser.
