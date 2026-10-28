@@ -34,7 +34,7 @@ export DIOPTRA_E2E_API_URL="http://localhost:5000"
 mkdir -p "${E2E_DEPLOY}/instance" "${E2E_DEPLOY}/workdir"
 
 export DIOPTRA_DEPLOY="${E2E_DEPLOY}"
-export DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///${DB_PATH}"
+export DIOPTRA_RESTAPI_DATABASE_URI="sqlite:///${DB_PATH}"
 
 "${REPO_DIR}/dev-kb/local-setup/run-flask.sh" &
 FLASK_PID=$!

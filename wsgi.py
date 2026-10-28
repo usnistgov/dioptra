@@ -14,20 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import os
+"""Construct the API application for WSGI servers.
+
+Settings are resolved from the environment, including an explicit API mode and
+an existing signing key. Logging is configured before constructing the app.
+"""
 
 from dioptra.restapi import create_app
+from dioptra.restapi.cli.api import configure_logging
+from dioptra.restapi.config import load_config
 
-from dioptra.sdk.utilities.logging import (
-    attach_stdout_stream_handler,
-    configure_structlog,
-    set_logging_level,
-)
-
-
-attach_stdout_stream_handler(
-    True if os.getenv("DIOPTRA_RESTAPI_LOG_AS_JSON") else False,
-)
-set_logging_level(os.getenv("DIOPTRA_RESTAPI_LOG_LEVEL", default="INFO"))
-configure_structlog()
-app = create_app(env=os.getenv("DIOPTRA_RESTAPI_ENV"))
+settings = load_config()
+configure_logging(settings)
+app = create_app(settings=settings)

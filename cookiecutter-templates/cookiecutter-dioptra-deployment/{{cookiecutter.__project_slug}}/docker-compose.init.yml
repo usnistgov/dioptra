@@ -78,8 +78,19 @@ services:
     networks:
       - dioptra
     volumes:
+      - "restapi-data:/work/data/restapi:ro"
       - "restapi-ca-certificates:/usr/local/share/ca-certificates:rw"
       - "restapi-etc-ssl:/etc/ssl:rw"
+
+  init-restapi-key:
+    image: {{ container_image(cookiecutter.__containers.restapi) }}
+    entrypoint: ["dioptra-api"]
+    command: ["init-key"]
+    env_file:
+      - ./envs/{{ cookiecutter.__project_slug }}-restapi.env
+    network_mode: none
+    volumes:
+      - "restapi-data:/work/data/restapi:rw"
 
   init-dioptra-worker:
     image: {{ container_image(cookiecutter.__containers.restapi) }}
@@ -155,6 +166,7 @@ services:
       - "postgres-etc-postgresql:/volumes/postgres-etc-postgresql:rw"
       - "postgres-var-certs:/volumes/postgres-var-certs:rw"
       - "redis-data:/volumes/redis-data:rw"
+      - "restapi-data:/volumes/restapi-data:rw"
 
   nginx-ssl:
     image: {{ container_image(cookiecutter.__containers.nginx) }}
@@ -262,6 +274,8 @@ volumes:
     name: {{ cookiecutter.__project_slug }}_postgres-var-certs
   redis-data:
     name: {{ cookiecutter.__project_slug }}_redis-data
+  restapi-data:
+    name: {{ cookiecutter.__project_slug }}_restapi-data
   restapi-ca-certificates:
     name: {{ cookiecutter.__project_slug }}_restapi-ca-certificates
   restapi-etc-ssl:

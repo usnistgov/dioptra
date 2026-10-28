@@ -247,7 +247,7 @@ volumes:
 
 {% macro restapi_service(cookiecutter) -%}
 {%- set _restapi_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
-{%- set _restapi_volumes = ["restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
+{%- set _restapi_volumes = ["restapi-data:/work/data/restapi:ro", "restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-restapi:
   image: {{ container_image(cookiecutter.__containers.restapi) }}
   restart: always

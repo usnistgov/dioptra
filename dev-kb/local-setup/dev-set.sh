@@ -256,7 +256,8 @@ else
   alias frontend='cd ${DIOPTRA_CODE}/src/frontend'
 
   ######## Setup REST-API Configuration
-  export DIOPTRA_RESTAPI_DEV_DATABASE_URI="sqlite:///${DIOPTRA_DEPLOY}/instance/dioptra-dev.db"
+  export DIOPTRA_RESTAPI_DATABASE_URI="sqlite:///${DIOPTRA_DEPLOY}/instance/dioptra-dev.db"
+  export DIOPTRA_RESTAPI_SECRET_KEY_FILE="${DIOPTRA_DEPLOY}/restapi/secret-key"
   export DIOPTRA_RESTAPI_ENV=dev
   export DIOPTRA_RESTAPI_VERSION=v1
   ######## End-of REST-API Configuration
@@ -266,7 +267,7 @@ else
   export DIOPTRA_WORKER_USERNAME="dioptra-worker"  # This must be a registered user in the Dioptra app
   export DIOPTRA_WORKER_PASSWORD="password"        # Must match the username's password
 
-  export DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `flask run`
+  export DIOPTRA_API="http://localhost:5000"       # This is the default API location when you run `dioptra-api dev`
   export RQ_REDIS_URI="redis://localhost:6379/0"   # This is the default URI when you run `redis-server`
   export MLFLOW_S3_ENDPOINT_URL="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
   export MLFLOW_TRACKING_URI="http://localhost:35000"  # If you're running a MLflow Tracking server, update this to point at it. Otherwise, this is a placeholder.
