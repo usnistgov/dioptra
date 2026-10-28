@@ -932,6 +932,7 @@ def test_experiment_remove_entrypoints(
 
 
 def test_manage_existing_experiment_draft(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_experiments: dict[str, Any],
@@ -998,6 +999,9 @@ def test_manage_existing_experiment_draft(
         dioptra_client.experiments.modify_resource_drafts,
         dioptra_client.workflows,
         experiment["id"],
+        authorization=draft_authorization,
+        draft_id_client=dioptra_client.experiments.new_resource_drafts,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         draft=draft,
         draft_mod=draft_mod,
         draft_expected=draft_expected,
@@ -1006,6 +1010,7 @@ def test_manage_existing_experiment_draft(
 
 
 def test_manage_new_experiment_drafts(
+    draft_authorization,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_entrypoints: dict[str, Any],
@@ -1063,6 +1068,8 @@ def test_manage_new_experiment_drafts(
         dioptra_client.experiments,
         dioptra_client.experiments.new_resource_drafts,
         dioptra_client.workflows,
+        authorization=draft_authorization,
+        wrong_type_client=dioptra_client.queues.new_resource_drafts,
         drafts=drafts,
         draft1_mod=draft1_mod,
         draft1_expected=draft1_expected,

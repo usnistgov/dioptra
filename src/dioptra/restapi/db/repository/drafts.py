@@ -38,13 +38,11 @@ from dioptra.restapi.db.repository.utils import (
     DeletionPolicy,
     S,
     assert_draft_does_not_exist,
-    assert_draft_exists,
     assert_group_exists,
     assert_resource_exists,
     assert_snapshot_exists,
     assert_user_exists,
     assert_user_in_group,
-    draft_exists,
     get_draft_id,
     get_group_id,
     get_resource_id,
@@ -244,7 +242,8 @@ class DraftsRepository:
         self,
         draft_id: int,
         resource_type: str | None = None,
-        creator: User | int | None = None,
+        *,
+        creator: User | int,
     ) -> DraftResource | None:
         """
         Get a draft (either kind) by ID.
@@ -255,37 +254,34 @@ class DraftsRepository:
                 doesn't exist if it's for the wrong type of resource; None to
                 not filter by resource type
             creator: A User object or user_id integer primary key value, used
-                to pretend an existing draft doesn't exist if it was created
-                by the wrong user; None to not filter by user creator
+                to return only drafts belonging to that creator
 
         Returns:
             A DraftResource object, or None if one was not found according to
                 the given criteria
 
         Raises:
+            TypeError: if creator is None
             EntityDoesNotExistError: if a creator user is given but it does not
                 exist
             EntityDeletedError:  if a creator user is given but it is deleted
         """
 
-        if creator is not None:
-            assert_user_exists(
-                self._session,
-                creator,
-                DeletionPolicy.NOT_DELETED,
+        if creator is None:
+            raise TypeError(
+                "DraftsRepository.get() requires creator to be a User or "
+                "integer user ID; received NoneType."
             )
 
+        assert_user_exists(self._session, creator, DeletionPolicy.NOT_DELETED)
+        creator_id = get_user_id(creator)
         stmt = sa.select(DraftResource).where(
-            DraftResource.draft_resource_id == draft_id
+            DraftResource.draft_resource_id == draft_id,
+            DraftResource.user_id == creator_id,
         )
 
         if resource_type is not None:
             stmt = stmt.where(DraftResource.resource_type == resource_type)
-
-        if creator is not None:
-            creator_id = get_user_id(creator)
-            if creator_id is not None:
-                stmt = stmt.where(DraftResource.user_id == creator_id)
 
         draft = self._session.scalar(stmt)
 
@@ -295,7 +291,8 @@ class DraftsRepository:
         self,
         draft_id: int,
         resource_type: str | None = None,
-        creator: User | int | None = None,
+        *,
+        creator: User | int,
     ) -> DraftResource:
         """
         Get a draft (either kind) by ID.  Analogous to .get(), but raises
@@ -307,20 +304,20 @@ class DraftsRepository:
                 doesn't exist if it's for the wrong type of resource; None to
                 not filter by resource type
             creator: A User object or user_id integer primary key value, used
-                to pretend an existing draft doesn't exist if it was created
-                by the wrong user; None to not filter by user creator
+                to return only drafts belonging to that creator
 
         Returns:
             A DraftResource object
 
         Raises:
+            TypeError: if creator is None
             EntityDoesNotExistError: if a creator user is given but it does not
                 exist
             EntityDeletedError: if a creator user is given but it is deleted
             DraftDoesNotExistError: if the draft is not found
         """
 
-        draft = self.get(draft_id, resource_type, creator)
+        draft = self.get(draft_id, resource_type=resource_type, creator=creator)
         if not draft:
             raise DraftDoesNotExistError(draft_resource_id=draft_id)
 
@@ -556,6 +553,8 @@ class DraftsRepository:
         draft: DraftResource | int,
         payload: dict[str, Any],
         resource_snapshot: ResourceSnapshot | int | None = None,
+        *,
+        creator: User | int,
     ) -> DraftResource:
         """
         Replace the payload of the given draft with the given payload, and
@@ -564,6 +563,7 @@ class DraftsRepository:
         Args:
             draft: An existing or ID of an existing DraftResource
             payload: A payload to set
+            creator: The requesting user or their user_id
             resource_snapshot: A resource snapshot or ID, used to update a
                 draft modification to a different snapshot, or None to leave
                 the snapshot ID as-is.  This argument must be None for draft
@@ -574,23 +574,27 @@ class DraftsRepository:
             the same one is returned.
 
         Raises:
-            DraftDoesNotExistError: if the draft does not exist
+            TypeError: if creator is None
+            DraftDoesNotExistError: if no draft matches the ID and creator
             DraftModificationRequiredError: if attempting to change the
                 resource snapshot ID on a draft resource
             DraftSnapshotIdInvalidError: if a resource snapshot change is
                 attempted on a draft modification, but the new snapshot
                 is of a different resource than the old one
-            EntityDoesNotExistError: if resource_snapshot does not exist
+            EntityDoesNotExistError: if the creator or resource_snapshot does not exist
+            EntityDeletedError: if the creator is deleted
         """
 
-        # Really need the DraftResource object here
-        if isinstance(draft, int):
-            temp = self.get(draft)
-            if not temp:
-                raise DraftDoesNotExistError(draft_resource_id=draft)
-            draft = temp
-        else:
-            assert_draft_exists(self._session, draft)
+        if creator is None:
+            raise TypeError(
+                "DraftsRepository.update() requires creator to be a User or "
+                "integer user ID; received NoneType."
+            )
+
+        draft_id = get_draft_id(draft)
+        if draft_id is None:
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
+        draft = self.get_one(draft_id, creator=creator)
 
         if resource_snapshot is not None:
             # If the existing draft's resource_snapshot_id property is null,
@@ -621,28 +625,41 @@ class DraftsRepository:
 
         return draft
 
-    def delete(self, draft: DraftResource | int) -> None:
+    def delete(
+        self,
+        draft: DraftResource | int,
+        *,
+        creator: User | int,
+        resource_type: str | None = None,
+    ) -> None:
         """
         Delete the given draft.
 
         Args:
             draft: An existing or ID of an existing DraftResource
+            creator: The requesting user or their user_id
+            resource_type: Only delete drafts of this resource type, if given
 
         Raises:
-            DraftDoesNotExistError: if the draft does not exist
+            TypeError: if creator is None
+            DraftDoesNotExistError: if the draft does not exist or does not
+                match the creator or resource type
+            EntityDoesNotExistError: if the creator does not exist
+            EntityDeletedError: if the creator is deleted
         """
 
-        if draft_exists(self._session, draft):
-            if isinstance(draft, int):
-                stmt = sa.delete(DraftResource).where(
-                    DraftResource.draft_resource_id == draft
-                )
-                self._session.execute(stmt)
-            else:
-                self._session.delete(draft)
+        if creator is None:
+            raise TypeError(
+                "DraftsRepository.delete() requires creator to be a User or "
+                "integer user ID; received NoneType."
+            )
 
-        else:
-            raise DraftDoesNotExistError(draft_resource_id=get_draft_id(draft))
+        draft_id = get_draft_id(draft)
+        if draft_id is None:
+            raise DraftDoesNotExistError(draft_resource_id=draft_id)
+
+        draft = self.get_one(draft_id, resource_type=resource_type, creator=creator)
+        self._session.delete(draft)
 
     def has_draft_modifications(
         self,

@@ -48,7 +48,24 @@ from dioptra.client import (
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.sdk.utilities.paths import set_cwd
 
-from ..lib import actions, mock_mlflow, mock_rq
+from ..lib import actions, helpers, mock_mlflow, mock_rq
+
+
+@pytest.fixture
+def draft_authorization(
+    client, auth_account, fake_data, db_session, flask_app, monkeypatch
+) -> helpers.DraftAuthorizationContext:
+    """Enforce authentication and add another member of the draft owner's group."""
+    import dioptra.restapi.db.models as models
+
+    monkeypatch.setitem(flask_app.config, "LOGIN_DISABLED", False)
+    shared = fake_data.account()
+    db_session.add_all([shared.user, shared.group])
+    group = db_session.get(models.Group, auth_account["default_group_id"])
+    assert group is not None
+    group.members.append(models.GroupMember(True, True, True, True, shared.user))
+    db_session.commit()
+    return helpers.DraftAuthorizationContext(client, db_session, shared.user)
 
 
 @pytest.fixture
