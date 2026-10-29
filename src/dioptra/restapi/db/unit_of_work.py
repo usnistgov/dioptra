@@ -21,10 +21,12 @@ from typing import Type
 from injector import inject
 
 from dioptra.restapi.db.db import db
+from dioptra.restapi.db.repository.artifacts import ArtifactRepository
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
+from dioptra.restapi.db.repository.jobs import JobRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
@@ -38,6 +40,7 @@ class UnitOfWork(contextlib.AbstractContextManager):
     repositories via attributes on the instance.
     """
 
+    @inject
     def __init__(self) -> None:
         self.session = db.session
         self.user_repo = UserRepository(self.session)
@@ -47,6 +50,8 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self.experiment_repo = ExperimentRepository(self.session)
         self.entrypoint_repo = EntrypointRepository(self.session)
         self.type_repo = TypeRepository(self.session)
+        self.job_repo = JobRepository(self.session)
+        self.artifact_repo = ArtifactRepository(self.session)
         self._do_commit = True
 
     def commit(self) -> None:
@@ -78,16 +83,3 @@ class UnitOfWork(contextlib.AbstractContextManager):
         self._do_commit = True
 
         return None
-
-
-class UnitOfWorkService:
-    @inject
-    def __init__(self, uow: UnitOfWork) -> None:
-        """Initialize the UnitOfWork service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            uow: A UnitOfWork instance
-        """
-        self._uow = uow

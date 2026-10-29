@@ -16,54 +16,30 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The server-side functions that perform artifact endpoint operations."""
 
-from typing import Any, Final, cast
+from typing import Any
 
 import structlog
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import Integer, Select, func, select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.db import db, models
+from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.errors import (
-    BackendDatabaseError,
     DioptraError,
-    EntityDoesNotExistError,
-    EntityExistsError,
     EntityRelationshipDoesNotExistError,
     JobMlflowRunNotSetError,
-    SortParameterValidationError,
 )
+from dioptra.restapi.service_context import ServiceContext, ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
-from dioptra.restapi.v1.groups.service import GroupIdService
-from dioptra.restapi.v1.jobs.service import JobIdMlflowrunService, JobIdService
 from dioptra.restapi.v1.plugins.service import (
     PluginIdSnapshotIdService,
     PluginTaskIdService,
 )
-from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
-from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
+from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
-
-SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "artifactPath": lambda x: models.Artifact.location.has(
-        models.ArtifactLocation.relative_path.like(x, escape="/")
-    ),
-    "description": lambda x: models.Artifact.description.like(x, escape="/"),
-    "tag": lambda x: models.Artifact.tags.any(models.Tag.name.like(x, escape="/")),
-}
-SORTABLE_FIELDS: Final[dict[str, Any]] = {
-    "id": models.Resource.resource_id,
-    "artifactPath": models.ArtifactLocation.relative_path,
-    "createdOn": models.Artifact.created_on,
-    "lastModifiedOn": models.Resource.last_modified_on,
-    "description": models.Artifact.description,
-    "job": models.Artifact.job_id,
-}
 
 
 class ArtifactTaskHelper(object):
@@ -95,10 +71,12 @@ class ArtifactTaskHelper(object):
                 raise DioptraError(
                     "plugin_snapshot_id must be provided if task_id is provided"
                 )
+
             # verify the plugin task exists and then associate
             plugin_task = self._plugin_task_id_service.get(task_id=task_id)
             if not isinstance(plugin_task, models.ArtifactTask):
                 raise DioptraError("task_id provided was not an Artifact Task")
+
             plugin_plugin_file = (
                 self._plugin_id_snapshot_id_service.get_plugin_plugin_file(
                     plugin_snapshot_id, plugin_task.plugin_file_resource_snapshot_id
@@ -110,6 +88,7 @@ class ArtifactTaskHelper(object):
                     plugin_snapshot_id=plugin_snapshot_id,
                     plugin_file_snapshot_id=plugin_task.plugin_file_resource_snapshot_id,
                 )
+
             # associate this artifact with the task
             artifact.task = plugin_task
             artifact.plugin_plugin_file = plugin_plugin_file
@@ -119,34 +98,25 @@ class ArtifactTaskHelper(object):
             )
 
 
-class ArtifactService(object):
+class ArtifactService(ServiceContextService):
     """The service methods for registering and managing artifacts by their unique id."""
 
     @inject
     def __init__(
         self,
-        job_id_service: JobIdService,
-        job_id_mlflowrun_service: JobIdMlflowrunService,
-        group_id_service: GroupIdService,
         artifact_task_helper: ArtifactTaskHelper,
-        job_run_store: JobRunStoreProtocol,
+        context: ServiceContext,
     ) -> None:
         """Initialize the artifact service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            job_id_service: Service that retrieves the producing job.
-            job_id_mlflowrun_service: Service that reads the job's current run binding.
-            group_id_service: Service that resolves the artifact-owning group.
-            artifact_task_helper: Helper that resolves the optional artifact task.
-            job_run_store: Store that verifies the uploaded entry for the producing run.
+            artifact_task_helper: An ArtifactTask object.
+            context: A ServiceContext instance.
         """
-        self._job_id_service = job_id_service
-        self._group_id_service = group_id_service
-        self._job_id_mlflowrun_service = job_id_mlflowrun_service
+        super().__init__(context)
         self._artifact_task_helper = artifact_task_helper
-        self._job_run_store = job_run_store
 
     def create(
         self,
@@ -156,88 +126,75 @@ class ArtifactService(object):
         job_id: int,
         plugin_snapshot_id: int | None = None,
         task_id: int | None = None,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ArtifactDict:
-        """Register an uploaded file or directory under its producing run.
+        """Create a new artifact.
 
-        Each snapshot reads the file or directory uploaded by this job. To use
-        the artifact as input to another job, register its artifact task too.
-
-        Note:
-            Resetting a job during development starts a new run. Existing
-            artifacts continue to use the files from the run that produced them.
-
+            Both plugin_snapshot_id and must be None or not None. If None, then the
+            artifact is unavailable for use as input into another job and may only be
+            downloaded.
         Args:
             artifact_path: Canonical path relative to the producing run.
-            description: Description of the artifact.
-            group_id: Group that will own the artifact.
-            job_id: Job that produced the artifact.
-            plugin_snapshot_id: Plugin snapshot that contains the artifact task.
-            task_id: Artifact task for serialization and deserialization, if supplied.
-                Requires the plugin snapshot ID.
-            commit: Whether to commit the registration in this call.
-            **kwargs: Optional structured logger supplied as `log`.
+            description: The description of the artifact.
+            group_id: The group that will own the artifact; must match the job's
+                owning group. The artifact is attributed to the job's creator.
+            job_id: the job which owns/produced this artifact
+            plugin_snapshot_id: the plugin snapshot id of the plugin
+                containing the artifact task used to serialize/deserialize the artifact,
+                defaults to None.
+            task_id: the task id of the plugin artifact task used to
+                serialize/deserialize the artifact, defaults to None
 
         Returns:
-            Newly registered artifact and its draft status.
+            utils.ArtifactDict: The newly created artifact object.
 
         Raises:
-            EntityDoesNotExistError: If the job, group or associated task is missing.
-            EntityExistsError: If this path is already registered for the run.
-            JobMlflowRunNotSetError: If the producing job has no bound run.
-            MlflowRunNotFoundError: If MLflow cannot find the bound run.
-            JobStoreError: If the uploaded entry could not be verified.
-            DioptraError: If the optional task association is invalid.
+            EntityExistsError: If the artifact already exists.
+            MLFlowError: If the mlflow run id does not exist.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        job_dict = self._job_id_service.get(job_id, log=log)
-        job = job_dict["job"]
-        mlflow_run_id = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
+        job = self._uow.job_repo.get_one(job_id, DeletionPolicy.NOT_DELETED)
 
-        if mlflow_run_id is None:
+        if group_id != job.resource.group_id:
+            raise DioptraError("Artifact group must match the job's owning group.")
+
+        if job.mlflow_run is None:
             raise JobMlflowRunNotSetError
 
-        group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
-        # UploadedArtifact describes the file or directory already in job run storage.
-        uploaded_artifact = self._job_run_store.find_artifact(
-            run_id=mlflow_run_id, artifact_path=artifact_path
+        artifact_file = self._context.job_run_store.find_artifact(
+            run_id=job.mlflow_run.mlflow_run_id.hex, artifact_path=artifact_path
         )
 
         resource = models.Resource(
             resource_type=EntityType.ARTIFACT.db_table_name,
-            owner=group,
+            owner=job.resource.owner,
         )
         new_artifact = models.Artifact(
             description=description,
-            is_dir=uploaded_artifact.is_dir,
-            file_size=uploaded_artifact.file_size,
+            is_dir=artifact_file.is_dir,
+            file_size=artifact_file.file_size,
             resource=resource,
-            creator=current_user,
+            creator=job.creator,
         )
+
         self._artifact_task_helper.associate_task(
             artifact=new_artifact,
             plugin_snapshot_id=plugin_snapshot_id,
             task_id=task_id,
         )
 
-        job.children.append(resource)
-        db.session.add(new_artifact)
-        # Start the registration write before checking whether the path is available.
-        db.session.flush()
-        prefix = _get_or_create_storage_prefix(uploaded_artifact.storage_prefix)
-        _check_duplicate_artifact(prefix.storage_prefix_id, artifact_path)
-        new_artifact.location = models.ArtifactLocation(
-            storage_prefix_id=prefix.storage_prefix_id, relative_path=artifact_path
-        )
-        db.session.flush()
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact registration successful", artifact_id=new_artifact.resource_id
+        with self._uow():
+            self._uow.artifact_repo.create(
+                new_artifact,
+                job=job,
+                storage_prefix=artifact_file.storage_prefix,
+                artifact_path=artifact_path,
             )
+
+        log.debug(
+            "Artifact registration successful", artifact_id=new_artifact.resource_id
+        )
 
         return utils.ArtifactDict(artifact=new_artifact, has_draft=False)
 
@@ -278,158 +235,41 @@ class ArtifactService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get full list of artifacts")
 
-        filters = []
+        search_struct = parse_search_text(search_string)
 
-        if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
-
-        if search_string:
-            filters.append(
-                construct_sql_query_filters(search_string, SEARCHABLE_FIELDS)
-            )
-
-        stmt = (
-            select(func.count(models.Artifact.resource_id))
-            .join(models.Resource)
-            .join(
-                models.ArtifactLocation,
-                models.ArtifactLocation.artifact_resource_id
-                == models.Artifact.resource_id,
-            )
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Artifact.resource_snapshot_id,
-            )
+        artifacts, total_num_artifacts = self._uow.artifact_repo.get_by_filters_paged(
+            group_id,
+            search_struct,
+            output_params,
+            page_index,
+            page_length,
+            sort_by_string,
+            descending,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        if output_params:
-            stmt = self._apply_ouput_params_filter(stmt, output_params)
-
-        total_num_artifacts = db.session.scalars(stmt).first()
-
-        if total_num_artifacts is None:
-            log.error(
-                "The database query returned a None when counting the number of "
-                "groups when it should return a number.",
-                sql=str(stmt),
-            )
-            raise BackendDatabaseError
-
-        if total_num_artifacts == 0:
-            return [], total_num_artifacts
-
-        # get latest artifact snapshots
-        latest_artifacts_stmt = (
-            select(models.Artifact)
-            .join(models.Resource)
-            .join(
-                models.ArtifactLocation,
-                models.ArtifactLocation.artifact_resource_id
-                == models.Artifact.resource_id,
-            )
-            .where(
-                *filters,
-                models.Resource.is_deleted == False,  # noqa: E712
-                models.Resource.latest_snapshot_id
-                == models.Artifact.resource_snapshot_id,
-            )
-            .offset(page_index)
-            .limit(page_length)
-        )
-
-        if output_params:
-            latest_artifacts_stmt = self._apply_ouput_params_filter(
-                latest_artifacts_stmt, output_params
-            )
-
-        if sort_by_string and sort_by_string in SORTABLE_FIELDS:
-            sort_column = SORTABLE_FIELDS[sort_by_string]
-            if descending:
-                sort_column = sort_column.desc()
-            else:
-                sort_column = sort_column.asc()
-            latest_artifacts_stmt = latest_artifacts_stmt.order_by(sort_column)
-        elif sort_by_string and sort_by_string not in SORTABLE_FIELDS:
-            raise SortParameterValidationError(
-                EntityType.ARTIFACT.db_table_name, sort_by_string
-            )
-
-        artifacts = db.session.scalars(latest_artifacts_stmt).all()
-
-        drafts_stmt = select(
-            models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-        ).where(
-            models.DraftResource.payload["resource_id"]
-            .as_string()
-            .cast(Integer)
-            .in_(tuple(artifact.resource_id for artifact in artifacts)),
-            models.DraftResource.user_id == current_user.user_id,
-        )
         artifacts_dict: dict[int, utils.ArtifactDict] = {
             artifact.resource_id: utils.ArtifactDict(artifact=artifact, has_draft=False)
             for artifact in artifacts
         }
-        resource_id: int
-        for resource_id in db.session.scalars(drafts_stmt):
+        resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
+            artifacts,
+            current_user,
+        )
+        for resource_id in resource_ids_with_drafts:
             artifacts_dict[resource_id]["has_draft"] = True
 
         return list(artifacts_dict.values()), total_num_artifacts
 
-    def _apply_ouput_params_filter(
-        self, stmt: Select, output_params: list[int]
-    ) -> Select:
-        # creates a comparison for each outuput parameter and makes
-        # sure the type is correct for that parameter_number
-        for index, p in enumerate(output_params):
-            task_alias = aliased(models.ArtifactTask)
-            parameter_alias = aliased(models.PluginTaskOutputParameter)
-            type_alias = aliased(models.PluginTaskParameterType)
-            stmt = (
-                stmt.join(models.Artifact.task.of_type(task_alias))
-                .join(models.ArtifactTask.output_parameters.of_type(parameter_alias))
-                .join(
-                    type_alias,
-                    type_alias.resource_snapshot_id
-                    == parameter_alias.plugin_task_parameter_type_resource_snapshot_id,
-                )
-                .where(
-                    type_alias.resource_id == p,
-                    parameter_alias.parameter_number == index,
-                )
-            )
 
-        # verifies that the number of parameters is what we are looking for
-        # prevents picking up artifacts which match the ones we are looking
-        # for, but have more parameters
-        count_subquery = (
-            select(
-                models.PluginTaskOutputParameter.task_id,
-                func.count().label("param_count"),
-            )
-            .group_by(models.PluginTaskOutputParameter.task_id)
-            .subquery()
-        )
-        task_alias = aliased(models.ArtifactTask)
-        stmt = (
-            stmt.join(models.Artifact.task.of_type(task_alias))
-            .join(count_subquery, task_alias.task_id == count_subquery.c.task_id)
-            .where(
-                count_subquery.c.param_count == len(output_params),
-            )
-        )
-        return stmt
-
-
-class ArtifactIdService(object):
+class ArtifactIdService(ServiceContextService):
     """The service methods for retrieving artifacts by their unique id."""
 
     @inject
     def __init__(
         self,
         artifact_task_helper: ArtifactTaskHelper,
-        job_run_store: JobRunStoreProtocol,
+        context: ServiceContext,
     ) -> None:
         """Initialize the artifact service.
 
@@ -438,8 +278,8 @@ class ArtifactIdService(object):
         Args:
             artifact_task_helper: A ArtifactTaskHelper object.
         """
+        super().__init__(context)
         self._artifact_task_helper = artifact_task_helper
-        self._job_run_store = job_run_store
 
     def get(
         self,
@@ -460,32 +300,12 @@ class ArtifactIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get artifact by id", artifact_id=artifact_id)
 
-        stmt = (
-            select(models.Artifact)
-            .join(models.Resource)
-            .where(
-                models.Artifact.resource_id == artifact_id,
-                models.Artifact.resource_snapshot_id
-                == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        artifact = db.session.scalars(stmt).first()
+        artifact = self._uow.artifact_repo.get_one(artifact_id, DeletionPolicy.ANY)
 
-        if artifact is None:
-            raise EntityDoesNotExistError(EntityType.ARTIFACT, artifact_id=artifact_id)
-
-        drafts_stmt = (
-            select(models.DraftResource.draft_resource_id)
-            .where(
-                models.DraftResource.payload["resource_id"].as_string().cast(Integer)
-                == artifact.resource_id,
-                models.DraftResource.user_id == current_user.user_id,
-            )
-            .exists()
-            .select()
+        has_draft = self._uow.drafts_repo.has_draft_modification(
+            artifact,
+            current_user,
         )
-        has_draft = db.session.scalar(drafts_stmt)
 
         return utils.ArtifactDict(artifact=artifact, has_draft=has_draft)
 
@@ -495,7 +315,6 @@ class ArtifactIdService(object):
         description: str,
         plugin_snapshot_id: int | None = None,
         task_id: int | None = None,
-        commit: bool = True,
         **kwargs,
     ) -> utils.ArtifactDict:
         """Modify a artifact.
@@ -503,27 +322,20 @@ class ArtifactIdService(object):
         Args:
             artifact_id: The unique id of the artifact.
             description: The new description of the artifact.
-            error_if_not_found: If True, raise an error if the group is not found.
-                Defaults to False.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The updated artifact object.
 
         Raises:
-            EntityDoesNotExistError: If the artifact is not found and
-                `error_if_not_found` is True.
+            EntityDoesNotExistError: If the artifact is not found.
             EntityExistsError: If the artifact name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        artifact_dict = self.get(artifact_id, log=log)
-
-        artifact = artifact_dict.get("artifact")
-        has_draft = cast(bool, artifact_dict.get("has_draft"))
+        artifact = self._uow.artifact_repo.get_one(artifact_id, DeletionPolicy.ANY)
 
         new_artifact = models.Artifact(
-            location=artifact.location,  # pyright: ignore
+            location=artifact.location,
             description=description,  # pyright: ignore
             resource=artifact.resource,  # pyright: ignore
             is_dir=artifact.is_dir,  # pyright: ignore
@@ -535,17 +347,17 @@ class ArtifactIdService(object):
             plugin_snapshot_id=plugin_snapshot_id,
             task_id=task_id,
         )
-        db.session.add(new_artifact)
 
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Artifact modification successful",
-                artifact_id=artifact_id,
-                description=description,
-            )
+        with self._uow():
+            self._uow.artifact_repo.create_snapshot(new_artifact)
 
-        return utils.ArtifactDict(artifact=new_artifact, has_draft=has_draft)
+        log.debug(
+            "Artifact modification successful",
+            artifact_id=artifact_id,
+            description=description,
+        )
+
+        return utils.ArtifactDict(artifact=new_artifact, has_draft=False)
 
     def get_listing(
         self,
@@ -565,63 +377,49 @@ class ArtifactIdService(object):
             EntityExistsError: If the artifact name already exists.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug("Get artifact by id", artifact_id=artifact_id)
 
-        artifact_dict = self.get(artifact_id, log=log)
+        artifact = self._uow.artifact_repo.get_one(artifact_id, DeletionPolicy.ANY)
 
-        artifact = artifact_dict["artifact"]
         location = utils.require_artifact_location(artifact)
-
         return [
             utils.ArtifactFileDict(
                 file_size=element.file_size,
                 relative_path=element.relative_path,
                 is_dir=element.is_dir,
             )
-            for element in self._job_run_store.get_artifact_file_list(
+            for element in self._context.job_run_store.get_artifact_file_list(
                 storage_prefix=location.storage_prefix.relative_prefix,
                 artifact_path=location.relative_path,
             )
         ]
 
 
-def _get_or_create_storage_prefix(relative_prefix: str) -> models.ArtifactStoragePrefix:
-    """Find or create the run directory shared by registrations in this transaction."""
-    query = (
-        select(models.ArtifactStoragePrefix)
-        .where(models.ArtifactStoragePrefix.relative_prefix == relative_prefix)
-        .with_for_update()
-    )
-    prefix = db.session.scalar(query)
-    if prefix is not None:
-        return prefix
+class ArtifactSnapshotIdService(ServiceContextService):
+    """The service methods for retrieving artifact snapshots by id."""
 
-    try:
-        with db.session.begin_nested():
-            prefix = models.ArtifactStoragePrefix(relative_prefix=relative_prefix)
-            db.session.add(prefix)
-            db.session.flush()
-    except IntegrityError:
-        # A concurrent registration may have created this prefix first.
-        existing = db.session.scalar(query)
-        if existing is None:
-            raise
-        return existing
-    return prefix
+    def get(
+        self, artifact_id: int, artifact_snapshot_id: int, **kwargs
+    ) -> models.Artifact:
+        """Gets an Artifact snapshot.
 
+        Args:
+            artifact_id: The ID of the artifact resource the snapshot is associated with.
+            artifact_snapshot_id: The Snapshot ID of the artifact to retrieve.
 
-def _check_duplicate_artifact(storage_prefix_id: int, artifact_path: str) -> None:
-    """Reject a second active artifact at the same storage location."""
-    duplicate_id = db.session.scalar(
-        select(models.ArtifactLocation.artifact_resource_id)
-        .join(models.Resource)
-        .where(
-            models.ArtifactLocation.storage_prefix_id == storage_prefix_id,
-            models.ArtifactLocation.relative_path == artifact_path,
-            models.Resource.is_deleted.is_(False),
+        Returns:
+            The artifact snapshot.
+
+        Raises:
+            EntityDoesNotExistError: If the artifact snapshot is not found.
+        """
+        log: BoundLogger = kwargs.get("log", LOGGER.new())
+        log.debug(
+            "get artifact snapshot",
+            resource_id=artifact_id,
+            resource_snapshot_id=artifact_snapshot_id,
         )
-        .limit(1)
-    )
-    if duplicate_id is not None:
-        raise EntityExistsError(
-            EntityType.ARTIFACT, duplicate_id, artifact_path=artifact_path
+
+        return self._uow.artifact_repo.get_one_snapshot(
+            artifact_id, artifact_snapshot_id, DeletionPolicy.ANY
         )
