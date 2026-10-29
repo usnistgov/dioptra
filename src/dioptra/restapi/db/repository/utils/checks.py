@@ -908,7 +908,11 @@ def assert_can_create_resource(
 
 
 def assert_can_create_snapshot(
-    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
+    session: CompatibleSession[S],
+    snap: m.ResourceSnapshot,
+    resource_type: EntityType,
+    *,
+    creator_deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
 ):
     """
     Check whether the given snapshot may be created, of an existing resource.
@@ -918,6 +922,7 @@ def assert_can_create_snapshot(
     Args:
         session: An SQLAlchemy session
         snap: A ResourceSnapshot object with the desired snapshot settings
+        creator_deletion_policy: Whether the snapshot creator may be deleted.
         resource_type: the resource_type value for the type of resource being
             created.  Used to verify type settings on the snapshot and resource
             objects.
@@ -927,7 +932,8 @@ def assert_can_create_snapshot(
         EntityDoesNotExistError: if the resource or snapshot creator
             user does not exist, or if any child resource does not exist
         EntityDeletedError: if the resource is deleted, snapshot creator user
-            is deleted, or if all child resources exist but some are deleted
+            is deleted and excluded by policy, or if all child resources exist
+            but some are deleted
         ReadOnlyLockError: if the resource exists and has a read-only lock
         UserNotInGroupError: if the snapshot creator user is not a member
             of the group who owns the resource
@@ -937,7 +943,7 @@ def assert_can_create_snapshot(
     assert_resource_exists(session, snap, DeletionPolicy.NOT_DELETED)
     assert_snapshot_does_not_exist(session, snap)
     assert_resource_modifiable(session, snap)
-    assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
+    assert_user_exists(session, snap.creator, creator_deletion_policy)
     assert_user_in_group(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
     assert_resource_type(session, snap, resource_type)

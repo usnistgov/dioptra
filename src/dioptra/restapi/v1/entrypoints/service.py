@@ -37,7 +37,7 @@ from dioptra.restapi.db.repository.utils import (
     assert_user_in_group,
 )
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
-from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     EmptyGraphError,
     EntityDoesNotExistError,
@@ -47,6 +47,7 @@ from dioptra.restapi.errors import (
     InvalidYamlError,
     TasksNotFoundError,
 )
+from dioptra.restapi.service_context import ServiceContext, ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.task_engine_yaml import (
@@ -416,7 +417,7 @@ class EntrypointService(object):
         return list(entrypoint_dicts.values()), total_num_entrypoints
 
 
-class EntrypointIdService(UnitOfWorkService):
+class EntrypointIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
@@ -425,6 +426,7 @@ class EntrypointIdService(UnitOfWorkService):
         self,
         plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
+        context: ServiceContext,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
@@ -433,9 +435,10 @@ class EntrypointIdService(UnitOfWorkService):
 
         Args:
         """
+        super().__init__(context)
+        self._uow = uow
         self._plugin_ids_service = plugin_ids_service
         self._swaps_validation_service = swaps_validation_service
-        self._uow = uow
 
     @contextmanager
     def validate_modify(
@@ -780,7 +783,7 @@ class EntrypointIdService(UnitOfWorkService):
         return {"status": "Success", "id": [entrypoint_id]}
 
 
-class EntrypointSnapshotIdService(UnitOfWorkService):
+class EntrypointSnapshotIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
@@ -1030,14 +1033,16 @@ class EntrypointIdPluginsService(object):
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdPluginsIdService(UnitOfWorkService):
+class EntrypointIdPluginsIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by their unique id."""
 
     @inject
     def __init__(
-        self, swaps_validation_service: SwapsValidationService, uow: UnitOfWork
+        self,
+        swaps_validation_service: SwapsValidationService,
+        context: ServiceContext,
     ) -> None:
-        super().__init__(uow)
+        super().__init__(context)
         self._swaps_validation_service = swaps_validation_service
 
     def get(
@@ -1286,7 +1291,7 @@ class EntrypointIdArtifactPluginsService(object):
         return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
+class EntrypointIdArtifactPluginsIdService(ServiceContextService):
     """The service methods for creating and managing the artifact plugins for a specific
     entrypoint by their unique id."""
 
@@ -1415,7 +1420,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         return {"status": "Success", "id": [artifact_plugin_id]}
 
 
-class EntrypointIdQueuesService(UnitOfWorkService):
+class EntrypointIdQueuesService(ServiceContextService):
     """The service methods for managing queues attached to an entrypoint."""
 
     def get(self, entrypoint_id: int, **kwargs) -> list[models.Queue]:
@@ -1523,7 +1528,7 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         return {"status": "Success", "id": queue_ids}
 
 
-class EntrypointIdQueuesIdService(UnitOfWorkService):
+class EntrypointIdQueuesIdService(ServiceContextService):
     """The service methods for removing a queue attached to an entrypoint."""
 
     def delete(self, entrypoint_id: int, queue_id, **kwargs) -> dict[str, Any]:
@@ -1546,7 +1551,7 @@ class EntrypointIdQueuesIdService(UnitOfWorkService):
         return {"status": "Success", "id": [queue_id]}
 
 
-class EntrypointNameService(UnitOfWorkService):
+class EntrypointNameService(ServiceContextService):
     """The service methods for managing entrypoints by their name."""
 
     def get(self, name: str, group_id: int, **kwargs) -> models.EntryPoint | None:
@@ -1567,7 +1572,7 @@ class EntrypointNameService(UnitOfWorkService):
         )
 
 
-class EntrypointConfigService(UnitOfWorkService):
+class EntrypointConfigService(object):
     """Service to retrieve a rendered YAML configuration for an Entrypoint."""
 
     @inject
@@ -1674,7 +1679,7 @@ class EntrypointConfigService(UnitOfWorkService):
         return config
 
 
-class DynamicGlobalParametersService(UnitOfWorkService):
+class DynamicGlobalParametersService(object):
     @inject
     def __init__(
         self,
@@ -1762,7 +1767,7 @@ class DynamicGlobalParametersService(UnitOfWorkService):
         }
 
 
-class SwapsValidationService(UnitOfWorkService):
+class SwapsValidationService(object):
     """Validate proposed entrypoint graphs, including swap definitions.
 
     All arguments are provided via dependency injection.
@@ -1770,6 +1775,10 @@ class SwapsValidationService(UnitOfWorkService):
     Args:
         uow: A UnitOfWork instance.
     """
+
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        self._uow = uow
 
     def swaps_graph_validation(
         self,
@@ -2292,7 +2301,7 @@ class SwapsValidationService(UnitOfWorkService):
         return validation_results
 
 
-class SwapsRetrievalService(UnitOfWorkService):
+class SwapsRetrievalService(object):
     """Service for retrieving available swaps for an entrypoint snapshot.
 
     Currently this implementation returns an empty mapping. It can be extended to

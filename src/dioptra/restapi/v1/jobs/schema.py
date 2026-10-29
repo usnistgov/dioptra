@@ -31,6 +31,7 @@ from dioptra.restapi.v1.schemas import (
     GroupIdQueryParametersSchema,
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
     SortByGetQueryParametersSchema,
     generate_base_resource_ref_schema,
     generate_base_resource_schema,
@@ -215,11 +216,11 @@ JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
 class JobArtifactValueSchema(Schema):
     id = fields.Int(
         attribute="id",
-        metadata={"description": "Artifact Resoure Id."},
+        metadata={"description": "Artifact resource ID."},
     )
     snapshotId = fields.Int(
         attribute="snapshot_id",
-        metadata={"description": "Artifact Resoure Snapshot Id."},
+        metadata={"description": "Artifact resource snapshot ID."},
     )
 
 
@@ -440,6 +441,7 @@ class JobGetQueryParameters(
     GroupIdQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /jobs endpoint."""
 
@@ -448,6 +450,7 @@ class ExperimentJobGetQueryParameters(
     PagingQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    ShowDeletedQueryParametersSchema,
 ):
     """The query parameters for the GET method of the /experiments/{id}/jobs
     endpoint."""

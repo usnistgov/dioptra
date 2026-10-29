@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.jobs import JobRepository
 from dioptra.restapi.routes import V1_JOBS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -61,7 +62,6 @@ from .schema import (
     MetricsSnapshotsGetQueryParameters,
 )
 from .service import (
-    SEARCHABLE_FIELDS,
     JobConfigService,
     JobIdMetricsService,
     JobIdMetricsSnapshotsService,
@@ -108,6 +108,7 @@ class JobEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         jobs, total_num_jobs = self._job_service.get(
             group_id=group_id,
@@ -116,6 +117,7 @@ class JobEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -130,7 +132,7 @@ class JobEndpoint(Resource):
             total_num_elements=total_num_jobs,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
 
@@ -463,8 +465,8 @@ class JobIdLogEndpoint(Resource):
         descending = request.parsed_query_params["descending"]  # type: ignore
 
         records, total = self._job_log_service.get_logs(
-            job_resource_id=id,
-            index=index,
+            job_id=id,
+            page_index=index,
             page_length=page_length,
             search_string=search_string,
             sort_by_string=sort_by_string,
@@ -502,7 +504,7 @@ JobSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Job,
     resource_type=EntityType.JOB,
     route_prefix=V1_JOBS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=JobRepository.SEARCHABLE_FIELDS,
     page_schema=JobPageSchema,
     build_fn=utils.build_job,
 )
