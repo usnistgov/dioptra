@@ -375,7 +375,7 @@ artifact_plugins = [ "artifacts", "dioptra_optic" ]
 
 [[entrypoints]]
 path = "entrypoints/dioptra_optic/attack_patch_create.yml"
-name = "Evasion Attack: Adversarial Patch (Generate)"
+name = "Evasion Attack - Adversarial Patch - Generate"
 description = "Running the Patch attack on an MNIST trained LeNet model to generate patches."
 params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
@@ -400,7 +400,7 @@ artifact_plugins = [ "artifacts", "dioptra_optic" ]
 
 [[entrypoints]]
 path = "entrypoints/dioptra_optic/attack_patch_apply.yml"
-name = "Evasion Attack: Adversarial Patch (Apply)"
+name = "Evasion Attack - Adversarial Patch - Apply"
 description = "Applying a patch to the images in the dataset."
 params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
@@ -423,7 +423,7 @@ artifact_plugins = [ "artifacts", "dioptra_optic" ]
 
 [[entrypoints]]
 path = "entrypoints/dioptra_optic/defense_preprocessing.yml"
-name = "Defense: Preprocessing"
+name = "Defense - Preprocessing"
 description = "Perform defenses on a dataset."
 params = [
   { name = "seed", type = "integer", default_value = "1286012834" },
