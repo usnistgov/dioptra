@@ -153,17 +153,11 @@ class ResourceDraftsService(object):
             current_user,
         )
 
-        try:
+        with self._uow(commit):
             self._uow.drafts_repo.create_draft_resource(
                 draft,
                 expected_base_resource_type=self._base_resource_type,
             )
-        except Exception:
-            self._uow.rollback()
-            raise
-
-        if commit:
-            self._uow.commit()
 
         log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
@@ -261,13 +255,13 @@ class ResourceDraftsIdService(object):
         if draft is None:
             return None
 
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        # TODO: sanity check the payload?
-        draft.payload["resource_data"] = payload
-        draft.last_modified_on = current_timestamp
+        with self._uow(commit):
+            current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            # TODO: sanity check the payload?
+            draft.payload["resource_data"] = payload
+            draft.last_modified_on = current_timestamp
 
         if commit:
-            self._uow.commit()
             log.debug("Draft modification successful", draft_resource_id=draft_id)
 
         return draft
@@ -284,7 +278,7 @@ class ResourceDraftsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         try:
-            with self._uow:
+            with self._uow():
                 self._uow.drafts_repo.delete(
                     draft_id,
                     creator=current_user.user_id,
@@ -414,17 +408,13 @@ class ResourceIdDraftService(object):
             creator=current_user,
         )
 
-        try:
+        with self._uow(commit):
             self._uow.drafts_repo.create_draft_modification(
                 draft,
                 expected_base_resource_type=self._base_resource_type,
             )
-        except Exception:
-            self._uow.rollback()
-            raise
 
         if commit:
-            self._uow.commit()
             log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
         return draft, num_other_drafts
@@ -471,12 +461,13 @@ class ResourceIdDraftService(object):
             )
 
         try:
-            self._uow.drafts_repo.update(
-                draft,
-                payload["resource_data"],
-                payload["resource_snapshot_id"],
-                creator=current_user.user_id,
-            )
+            with self._uow(commit):
+                self._uow.drafts_repo.update(
+                    draft,
+                    payload["resource_data"],
+                    payload["resource_snapshot_id"],
+                    creator=current_user.user_id,
+                )
         except TypeError as error:
             self._uow.rollback()
             log.exception("Draft modification failed", resource_id=resource_id)
@@ -488,7 +479,6 @@ class ResourceIdDraftService(object):
             raise
 
         if commit:
-            self._uow.commit()
             log.debug("Draft modification successful", resource_id=resource_id)
 
         return draft, num_other_drafts
@@ -510,7 +500,7 @@ class ResourceIdDraftService(object):
         )
         draft_id = draft.draft_resource_id
         try:
-            with self._uow:
+            with self._uow():
                 self._uow.drafts_repo.delete(
                     draft,
                     creator=current_user.user_id,
