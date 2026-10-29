@@ -141,7 +141,7 @@ async function getJobs(pagination, showDrafts) {
       tableRef.value?.updateTotalRows(res.data.totalNumResults);
       isLoading.value = false;
     } else if (route.name === "allJobs") {
-      await getData(pagination, showDrafts, showDeleted);
+      await getData(pagination, showDrafts);
     }
   } catch (err) {
     console.log("err = ", err);

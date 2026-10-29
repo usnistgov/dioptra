@@ -129,11 +129,11 @@ export async function createPluginFile(page: Page, pluginId: number, filename: s
 
   await page.getByRole("button", { name: "Submit File" }).click();
   const createResponse = await createResponsePromise;
+  const createdPluginFile = await createResponse.json();
   expect(
     createResponse.ok(),
-    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}`,
+    `Expected POST ${createResponse.url()} to succeed, got ${createResponse.status()} ${createResponse.statusText()}: ${JSON.stringify(createdPluginFile)}`,
   ).toBe(true);
-  const createdPluginFile = await createResponse.json();
 
   await expect(
     page.getByRole("alert").filter({

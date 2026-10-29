@@ -833,18 +833,11 @@ class EntrypointSnapshotIdService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        # change this to new repo method
-        # should not call other service methods from a service method
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for entry_point_plugin in entry_point.entry_point_plugins
-            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_artifact_plugin_files(
         self,
@@ -864,16 +857,11 @@ class EntrypointSnapshotIdService(ServiceContextService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_artifact_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for artifact_plugin in entry_point.entry_point_artifact_plugins
-            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_group_plugin_parameter_types(
         self, group_id: int, **kwargs
