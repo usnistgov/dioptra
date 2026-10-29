@@ -90,7 +90,7 @@ Below is a template for a custom worker container that integrates with Dioptra's
          - --wait-for
          - <deployment-name>-redis:6379
          - --wait-for
-         - <deployment-name>-minio:9001
+         - <deployment-name>-rustfs:9000
          - --wait-for
          - <deployment-name>-db:5432
          - --wait-for

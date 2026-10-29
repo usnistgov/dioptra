@@ -126,36 +126,36 @@ volumes:
   {{ service_volumes(_dbadmin_volumes)|indent(2) }}
 {%- endmacro -%}
 
-{% macro minio_service(cookiecutter) -%}
-{%- set _minio_volumes = ["minio-certs:/root/.minio/certs:rw", "minio-data:/data:rw"] -%}
-{{ cookiecutter.__project_slug }}-minio:
-  image: {{ container_image(cookiecutter.__containers.minio) }}
+{% macro rustfs_service(cookiecutter, service_name=none) -%}
+{%- set _rustfs_volumes = ["rustfs-certs:/etc/ssl/certs:ro", "rustfs-data:/data:rw"] -%}
+{{ service_name or cookiecutter.__project_slug ~ "-rustfs" }}:
+  image: {{ container_image(cookiecutter.__containers.rustfs) }}
   restart: always
-  hostname: {{ cookiecutter.__project_slug }}-minio
+  hostname: {{ cookiecutter.__project_slug }}-rustfs
+  user: "10001:10001"
   healthcheck:
     test:
       [
         "CMD",
         "curl",
         "-f",
-        "http://localhost:9000/minio/health/live",
+        "http://localhost:9000/health/ready",
       ]
     interval: 30s
     timeout: 10s
     retries: 3
   environment:
-    MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-    MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-    MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
-  command:
-    - server
-    - /data
-    - --console-address
-    - ":9001"
+    RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY:?Run init-deployment.sh to generate RustFS credentials}"
+    RUSTFS_SECRET_KEY: "${RUSTFS_SECRET_KEY:?Run init-deployment.sh to generate RustFS credentials}"
+    RUSTFS_KMS_ENABLE: "true"
+    RUSTFS_KMS_BACKEND: "static"
+    RUSTFS_KMS_STATIC_SECRET_KEY: "${RUSTFS_KMS_STATIC_SECRET_KEY:?Run init-deployment.sh to generate the RustFS encryption key}"
+    SSL_CERT_FILE: "/etc/ssl/certs/ca-certificates.crt"
+    SSL_CERT_DIR: "/etc/ssl/certs"
   {% if cookiecutter.__containers.networks -%}
   {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
   {% endif -%}
-  {{ service_volumes(_minio_volumes)|indent(2) }}
+  {{ service_volumes(_rustfs_volumes)|indent(2) }}
 {%- endmacro -%}
 
 {% macro nginx_service(cookiecutter) %}
@@ -174,13 +174,13 @@ volumes:
         "http://localhost:30080",
         "http://localhost:35000",
         "http://localhost:35050/login",
-        "http://localhost:39000",
-        "http://localhost:39001",
+        "http://localhost:39000/health/ready",
+        "http://localhost:39001/rustfs/console/health",
         # "https://localhost:30443",
         # "https://localhost:35000",
         # "https://localhost:35050/login",
-        # "https://localhost:39000",
-        # "https://localhost:39001",
+        # "https://localhost:39000/health/ready",
+        # "https://localhost:39001/rustfs/console/health",
       ]
     interval: 30s
     timeout: 10s
@@ -188,7 +188,7 @@ volumes:
     start_period: 30s
   command:
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-dbadmin:35050
     - --wait-for
@@ -235,7 +235,7 @@ volumes:
     - --backend-store-uri
     - {{ '$${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}' }}
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
   {{ service_env_files(_mlflow_tracking_env_files)|indent(2) }}
@@ -266,7 +266,7 @@ volumes:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
     - --wait-for
@@ -301,7 +301,7 @@ volumes:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
     - --wait-for
@@ -341,7 +341,7 @@ volumes:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
     - --wait-for
@@ -379,7 +379,7 @@ volumes:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
     - --wait-for
@@ -419,7 +419,7 @@ volumes:
     - --wait-for
     - {{ cookiecutter.__project_slug }}-redis:6379
     - --wait-for
-    - {{ cookiecutter.__project_slug }}-minio:9001
+    - {{ cookiecutter.__project_slug }}-rustfs:9000
     - --wait-for
     - {{ cookiecutter.__project_slug }}-db:5432
     - --wait-for

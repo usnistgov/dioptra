@@ -111,7 +111,7 @@ Bumpver updates the package and module versions, README version, and Sphinx rele
 
 The stable release uses its version number for the deployment template's `container_tag` and pins `dioptra-platform` to that version in `examples/examples-setup-requirements.txt`. Dev retains the literal `dev` container tag and an unbounded platform requirement. README installation instructions select main, so their image tags follow the published stable release even when the README is viewed on dev. The README's package version can therefore differ from its installation image tags.
 
-Most third-party image defaults use `latest`, including pgAdmin, MinIO, and Redis. PostgreSQL stays on a selected major version to avoid unexpected database migrations, and `minio/mc` retains a specific release pin because newer client versions have caused compatibility problems. Stable preparation reviews these defaults without replacing every `latest` tag or upgrading dependencies as a release prerequisite.
+Several third-party image defaults use `latest`, including pgAdmin and Redis. PostgreSQL stays on a selected major version to avoid unexpected database migrations. RustFS and its `rc` client uses tested version tags and image digests. Stable preparation reviews these defaults without replacing every `latest` tag or upgrading dependencies as a release prerequisite.
 
 ## Downstream Artifacts
 

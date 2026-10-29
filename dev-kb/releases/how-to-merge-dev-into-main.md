@@ -83,7 +83,7 @@ rm "$DEPLOYMENT_TEMPLATE.bak" "$DEPLOYMENT_DOCS/prepare-deployment.rst.bak" \
     README.md.bak examples/examples-setup-requirements.txt.bak
 ```
 
-Keep third-party image defaults unchanged unless a separate update has been agreed. This retains `latest` for pgAdmin, MinIO, and Redis, the selected PostgreSQL major, and the existing MinIO client pin. The commands change only the platform requirement in the examples; other requirements remain unchanged.
+Keep third-party image defaults unchanged unless a separate update has been agreed. This retains `latest` for pgAdmin and Redis, the selected PostgreSQL major, and the RustFS server/client version and digest pins. The commands change only the platform requirement in the examples; other requirements remain unchanged.
 
 Review the combined version diff and create one preparation commit:
 

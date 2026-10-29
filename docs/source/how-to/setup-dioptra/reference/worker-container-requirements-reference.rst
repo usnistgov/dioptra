@@ -49,9 +49,9 @@ The worker container must provide all environment variables required by the ``di
    * - ``DIOPTRA_WORKER_PASSWORD``
      - Password for worker authentication with the REST API.
    * - ``AWS_ACCESS_KEY_ID``
-     - S3/MinIO access key (consumed by boto3/MLflow).
+     - S3/RustFS access key (consumed by boto3/MLflow).
    * - ``AWS_SECRET_ACCESS_KEY``
-     - S3/MinIO secret key (consumed by boto3/MLflow).
+     - S3/RustFS secret key (consumed by boto3/MLflow).
 
 The first five variables are checked by ``dioptra-worker-v1`` at startup; the process exits immediately if any are missing.
 ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY`` are consumed by underlying libraries (boto3/MLflow) and must be present for artifact storage operations to succeed.
@@ -84,7 +84,7 @@ Queue names are passed as positional arguments through the ``command:`` section 
 Network
 -------
 
-The worker container must join the ``dioptra`` Docker network to communicate with other Dioptra services (Redis, MinIO, REST API, MLflow Tracking).
+The worker container must join the ``dioptra`` Docker network to communicate with other Dioptra services (Redis, RustFS, REST API, MLflow Tracking).
 
 .. code:: yaml
 
