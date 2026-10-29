@@ -8,10 +8,12 @@
   <TableComponent
     ref="tableRef"
     v-model:selected="selected"
+    v-model:showDeleted="showDeleted"
     :rows="rows"
     :columns="columns"
     title="Plugins"
     :loading="isLoading"
+    :showDeletedToggle="true"
     @open="
       (openTab) =>
         openTab ? openWindow.open(`/plugins/${selected[0].id}`, '_blank') : router.push(`/plugins/${selected[0].id}`)
@@ -64,7 +66,8 @@ const router = useRouter();
 const showTagsDialog = ref(false);
 const editObjTags = ref({});
 
-const { rows, isLoading, tableRef, selected, showDeleteDialog, getData, deleteRow } = useTableUtils("plugins");
+const { rows, isLoading, tableRef, selected, showDeleteDialog, showDeleted, getData, deleteRow } =
+  useTableUtils("plugins");
 
 const columns = [
   { name: "id", label: "ID", align: "left", field: "id", sortable: false },

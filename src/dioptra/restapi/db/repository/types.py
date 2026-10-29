@@ -21,6 +21,8 @@ The type repository: data operations related to types
 from collections.abc import Iterable, Sequence, Set
 from typing import Any, Final, overload
 
+from sqlalchemy import select
+
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
     Group,
@@ -28,6 +30,7 @@ from dioptra.restapi.db.models import (
     Resource,
     Tag,
 )
+from dioptra.restapi.errors import BackendDatabaseError, EntityDoesNotExistError
 from dioptra.restapi.v1.entity_types import EntityType
 
 
@@ -147,6 +150,31 @@ class TypeRepository:
             or None/empty list if none were found with the given ID(s)
         """
         return utils.get_latest_snapshots(
+            self.session, PluginTaskParameterType, resource_ids, deletion_policy
+        )
+
+    def get_exact(
+        self,
+        resource_ids: Sequence[int],
+        deletion_policy: utils.DeletionPolicy = utils.DeletionPolicy.NOT_DELETED,
+    ) -> Sequence[PluginTaskParameterType]:
+        """
+        Get the latest snapshots of the given type resource IDs.
+
+        Args:
+            resource_ids: An or iterable of type resource IDs
+            deletion_policy: Whether to look at deleted types,
+                non-deleted types, or all types
+
+        Returns:
+            A list of PluginTaskParameterType objects matching the given IDs
+
+        Raises:
+            EntityDoesNotExistError: if any of the types do not exist in the
+                database (according to deletion policy)
+        """
+
+        return utils.get_exact_latest_snapshots(
             self.session, PluginTaskParameterType, resource_ids, deletion_policy
         )
 

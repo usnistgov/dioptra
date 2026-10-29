@@ -394,7 +394,7 @@ export async function convertToResource(id: number) {
   return await axios.post(`/api/workflows/draftCommit/${id}`);
 }
 
-export async function getFiles(id: number, pagination: Pagination) {
+export async function getFiles(id: number, pagination: Pagination, showDeleted = false) {
   const res = await axios.get(`/api/plugins/${id}/files`, {
     params: {
       index: pagination.index,
@@ -402,6 +402,7 @@ export async function getFiles(id: number, pagination: Pagination) {
       search: pagination.search,
       sortBy: pagination.sortBy,
       descending: pagination.descending,
+      showDeleted,
     },
   });
 

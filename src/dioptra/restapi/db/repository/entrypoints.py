@@ -26,6 +26,7 @@ from dioptra.restapi.db.models import (
     EntryPoint,
     Group,
     Plugin,
+    PluginPluginFile,
     Queue,
     Resource,
     Tag,
@@ -432,6 +433,80 @@ class EntrypointRepository:
             entrypoint,
             deletion_policy,
         )
+
+    def get_plugin_files(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> list[PluginPluginFile]:
+        """Get plugin file associations for an entrypoint snapshot's plugins.
+
+        Args:
+            entrypoint_id: The entrypoint resource ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+            deletion_policy: Whether to look at deleted entrypoints,
+                non-deleted entrypoints, or all entrypoints.
+
+        Returns:
+            Plugin-plugin-file associations for the entrypoint's plugins.
+
+        Raises:
+            EntityDoesNotExistError: if the entrypoint does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the entrypoint exists and is not deleted, but
+                policy was to find a deleted entrypoint
+            EntityDeletedError: if the entrypoint is deleted, but policy was to
+                find a non-deleted entrypoint
+        """
+        entrypoint = self.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            deletion_policy,
+        )
+
+        return [
+            plugin_plugin_file
+            for entry_point_plugin in entrypoint.entry_point_plugins
+            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
+        ]
+
+    def get_artifact_plugin_files(
+        self,
+        entrypoint_id: int,
+        entrypoint_snapshot_id: int,
+        deletion_policy: utils.DeletionPolicy,
+    ) -> list[PluginPluginFile]:
+        """Get plugin file associations for an entrypoint snapshot's artifact plugins.
+
+        Args:
+            entrypoint_id: The entrypoint resource ID.
+            entrypoint_snapshot_id: The entrypoint snapshot ID.
+            deletion_policy: Whether to look at deleted entrypoints,
+                non-deleted entrypoints, or all entrypoints.
+
+        Returns:
+            Plugin-plugin-file associations for the entrypoint's artifact plugins.
+
+        Raises:
+            EntityDoesNotExistError: if the entrypoint does not exist in the
+                database (deleted or not)
+            EntityExistsError: if the entrypoint exists and is not deleted, but
+                policy was to find a deleted entrypoint
+            EntityDeletedError: if the entrypoint is deleted, but policy was to
+                find a non-deleted entrypoint
+        """
+        entrypoint = self.get_one_snapshot(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            deletion_policy,
+        )
+
+        return [
+            plugin_plugin_file
+            for artifact_plugin in entrypoint.entry_point_artifact_plugins
+            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
+        ]
 
     def create_plugins(
         self,

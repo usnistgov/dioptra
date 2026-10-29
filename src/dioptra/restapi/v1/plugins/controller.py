@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -68,8 +69,6 @@ from .schema import (
     PluginSchema,
 )
 from .service import (
-    PLUGIN_FILE_SEARCHABLE_FIELDS,
-    PLUGIN_SEARCHABLE_FIELDS,
     PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
@@ -90,7 +89,7 @@ PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     resource_type=EntityType.PLUGIN_FILE,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_FILE_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.FILE_SEARCHABLE_FIELDS,
     page_schema=PluginFilePageSchema,
     build_fn=utils.build_plugin_file,
 )
@@ -134,6 +133,7 @@ class PluginEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         plugins, total_num_plugins = self._plugin_service.get(
             group_id=group_id,
@@ -142,6 +142,7 @@ class PluginEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -156,7 +157,7 @@ class PluginEndpoint(Resource):
             total_num_elements=total_num_plugins,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -275,6 +276,7 @@ class PluginIdFilesEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         plugin_files, total_num_plugin_files = self._plugin_id_file_service.get(
             plugin_id=id,
@@ -283,6 +285,7 @@ class PluginIdFilesEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
 
@@ -298,7 +301,7 @@ class PluginIdFilesEndpoint(Resource):
             total_num_elements=total_num_plugin_files,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -417,8 +420,8 @@ class PluginIdFileIdEndpoint(Resource):
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/files/bundle")
-@api.param("id", "ID for the Entrypoint resource.")
-@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+@api.param("id", "ID for the Plugin resource.")
+@api.param("snapshotId", "Snapshot ID for the Plugin resource.")
 class PluginSnapshotIdFileBundleEndpoint(Resource):
     @inject
     def __init__(
@@ -445,7 +448,7 @@ class PluginSnapshotIdFileBundleEndpoint(Resource):
         """
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="EntrypointSnapshotPluginsBundle",
+            resource="PluginSnapshotFilesBundle",
             request_type="GET",
             id=id,
             snapshot_id=snapshotId,
@@ -519,7 +522,7 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Plugin,
     resource_type=EntityType.PLUGIN,
     route_prefix=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
     build_fn=build_plugin,
 )
