@@ -37,7 +37,7 @@ class RQServiceV1(object):
         experiment_id: int,
         queue: str,
         timeout: str | None = None,
-    ):
+    ) -> None:
         log: BoundLogger = LOGGER.new()
 
         cmd_kwargs = {

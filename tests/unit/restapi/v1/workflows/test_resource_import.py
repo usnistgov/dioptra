@@ -596,6 +596,29 @@ def test_resource_import_update_deleted_queue(
     )
 
 
+def test_resource_import_update_dioptra_optic(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+):
+    group_id = auth_account["groups"][0]["id"]
+    extra_path = Path(__file__).parents[5] / "extra"
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+
 def test_resource_import_overwrite(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
