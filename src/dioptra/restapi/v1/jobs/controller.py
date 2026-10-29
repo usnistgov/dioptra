@@ -269,9 +269,7 @@ class JobIdStatusEndpoint(Resource):
         log = LOGGER.new(
             request_id=str(uuid.uuid4()), resource="Job", request_type="GET", id=id
         )
-        return self._job_id_status_service.get(
-            job_id=id, error_if_not_found=True, log=log
-        )
+        return self._job_id_status_service.get(job_id=id, log=log)
 
 
 @api.route("/<int:id>/mlflowRun")
@@ -338,9 +336,7 @@ class JobIdMetricsEndpoint(Resource):
             job_id=id,
         )
 
-        return self._job_id_metrics_service.get(
-            job_id=id, error_if_not_found=True, log=log
-        )
+        return self._job_id_metrics_service.get(job_id=id, log=log)
 
     @login_required
     @accepts(schema=MetricsSchema, api=api)
@@ -360,7 +356,6 @@ class JobIdMetricsEndpoint(Resource):
             metric_value=parsed_obj["value"],
             metric_step=parsed_obj["step"],
             metric_timestamp=parsed_obj["timestamp"],
-            error_if_not_found=True,
             log=log,
         )
 
@@ -406,7 +401,6 @@ class JobIdMetricsSnapshotsEndpoint(Resource):
             metric_name=name,
             page_index=page_index,
             page_length=page_length,
-            error_if_not_found=True,
             log=log,
         )
 

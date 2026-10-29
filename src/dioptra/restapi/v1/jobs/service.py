@@ -802,23 +802,22 @@ class JobIdMetricsService(ServiceContextService):
             else datetime.datetime.now(tz=datetime.timezone.utc)
         )
 
-        if metric is None:
-            new_metric = models.JobMetric(
-                name=metric_name,
-                value=value,
-                special_value=special_value,
-                step=metric_step,
-                timestamp=timestamp,
-                job_resource=job.resource,
-            )
+        with self._uow():
+            if metric is None:
+                new_metric = models.JobMetric(
+                    name=metric_name,
+                    value=value,
+                    special_value=special_value,
+                    step=metric_step,
+                    timestamp=timestamp,
+                    job_resource=job.resource,
+                )
 
-            self._uow.job_repo.add_metric(new_metric)
-        else:
-            metric.value = value
-            metric.special_value = special_value
-            metric.timestamp = timestamp
-
-        self._uow.commit()
+                self._uow.job_repo.add_metric(new_metric)
+            else:
+                metric.value = value
+                metric.special_value = special_value
+                metric.timestamp = timestamp
 
         return {
             "name": metric_name,

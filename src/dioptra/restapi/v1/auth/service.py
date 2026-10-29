@@ -97,7 +97,7 @@ class AuthService(object):
         except (UserDoesNotExistError, UserPasswordError) as error:
             raise UserAuthenticationError() from error
         login_user(user, remember=True)
-        with self._uow:
+        with self._uow():
             user.last_login_on = datetime.datetime.now(tz=datetime.timezone.utc)
         log.debug("Login successful", user_id=user.user_id)
         return {"status": "Login successful", "username": username}
@@ -117,7 +117,7 @@ class AuthService(object):
         username = current_user.username
 
         if everywhere:
-            with self._uow:
+            with self._uow():
                 current_user.alternative_id = uuid.uuid4()
 
         logout_user()
