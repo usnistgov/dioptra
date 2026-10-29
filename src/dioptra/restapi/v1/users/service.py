@@ -35,6 +35,7 @@ from dioptra.restapi.errors import (
     UserPasswordChangeError,
     UserPasswordError,
 )
+from dioptra.restapi.service_context import ServiceContextService
 from dioptra.restapi.v1.groups.service import GroupMemberService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     BuiltinPluginParameterTypeService,
@@ -88,7 +89,6 @@ class UserService(object):
         username: str,
         password: str,
         confirm_password: str,
-        commit: bool = True,
         **kwargs,
     ) -> models.User:
         """Create a new user.
@@ -97,7 +97,6 @@ class UserService(object):
             username: The username requested by the new user. Must be unique.
             password: The password for the new user.
             confirm_password: The password confirmation for the new user.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             The new user object.
@@ -123,14 +122,13 @@ class UserService(object):
         )
         # If this user was created at the same time as the group, i.e. as the
         # creator/initial member, we need not create the user separately.
-        if new_user != default_group.creator:
-            self._uow.user_repo.create(
-                new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
-            )
+        with self._uow():
+            if new_user != default_group.creator:
+                self._uow.user_repo.create(
+                    new_user, default_group, **DEFAULT_GROUP_PERMISSIONS
+                )
 
-        if commit:
-            self._uow.commit()
-            log.debug("User registration successful", user_id=new_user.user_id)
+        log.debug("User registration successful", user_id=new_user.user_id)
 
         return new_user
 
@@ -185,7 +183,7 @@ class UserService(object):
             return group
 
         default_group = models.Group(name=DEFAULT_GROUP_NAME, creator=user)
-        with self._uow:
+        with self._uow():
             self._uow.group_repo.create(default_group)
         # Register the built-in plugin parameter types when creating a new group.
         self._builtin_plugin_parameter_type_service.create_all(
@@ -339,7 +337,7 @@ class UserCurrentService(object):
         user_id = current_user.user_id
         username = current_user.username
 
-        with self._uow:
+        with self._uow():
             self._uow.user_repo.delete(current_user)
 
         log.debug("User account deleted", user_id=user_id, username=username)
@@ -441,7 +439,6 @@ class UserPasswordService(object):
         current_password: str,
         new_password: str,
         confirm_new_password: str,
-        commit: bool = True,
         **kwargs,
     ) -> dict[str, Any]:
         """Change a user's password.
@@ -452,7 +449,6 @@ class UserPasswordService(object):
             new_password: The user's new password, to replace the current one after
                 authentication.
             confirm_new_password: Confirmation of the new password.
-            commit: If True, commit the transaction. Defaults to True.
 
         Returns:
             A dictionary containing the password change success message if the password
@@ -480,16 +476,14 @@ class UserPasswordService(object):
         ):
             raise UserPasswordChangeError("New password matches old password.")
 
-        timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        user.password = self._password_service.hash(password=new_password, log=log)
-        user.alternative_id = uuid.uuid4()
-        user.last_modified_on = timestamp
-        user.password_expire_on = timestamp + datetime.timedelta(
-            days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
-        )
-
-        if commit:
-            self._uow.commit()
+        with self._uow():
+            timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            user.password = self._password_service.hash(password=new_password, log=log)
+            user.alternative_id = uuid.uuid4()
+            user.last_modified_on = timestamp
+            user.password_expire_on = timestamp + datetime.timedelta(
+                days=DAYS_TO_EXPIRE_PASSWORD_DEFAULT
+            )
 
         return {"status": "Password Change Success", "username": user.username}
 
@@ -506,22 +500,16 @@ class UserPasswordService(object):
         return self._password_service.hash(password=password, log=log)
 
 
-def load_user(user_id: str) -> models.User | None:
-    """Load the user associated with a provided id.
+class UserLoaderService(ServiceContextService):
+    """Service used by Flask-Login to load users from session state."""
 
-    This function is intended for use with Flask-Login. The use of the alternative ID is
-    needed to support the "logout everywhere" functionality and provides a mechanism for
-    expiring sessions.
+    def load(self, user_id: str) -> models.User | None:
+        """Load the user associated with a provided alternative id.
 
+        Args:
+            user_id: A string containing a UUID that matches the user's alternative ID.
 
-    Args:
-        user_id: A string containing a UUID that matches the user's alternative ID.
-
-    Returns:
-        A user object if the user is found, otherwise None.
-    """
-    # Should injection be used for UnitOfWork here?
-    uow = UnitOfWork()
-    user = uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))
-
-    return user
+        Returns:
+            A user object if the user is found, otherwise None.
+        """
+        return self._uow.user_repo.get_by_alternative_id(uuid.UUID(user_id))

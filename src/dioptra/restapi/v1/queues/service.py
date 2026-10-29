@@ -83,14 +83,8 @@ class QueueService(object):
             name=name, description=description, resource=resource, creator=current_user
         )
 
-        try:
+        with self._uow(commit):
             self._uow.queue_repo.create(new_queue)
-        except Exception:
-            self._uow.rollback()
-            raise
-
-        if commit:
-            self._uow.commit()
         log.debug(
             "Queue registration successful",
             queue_id=new_queue.resource_id,
@@ -264,14 +258,9 @@ class QueueIdService(object):
             resource=queue.resource,
             creator=current_user,
         )
-        try:
-            self._uow.queue_repo.create_snapshot(new_queue)
-        except Exception:
-            self._uow.rollback()
-            raise
 
-        if commit:
-            self._uow.commit()
+        with self._uow(commit):
+            self._uow.queue_repo.create_snapshot(new_queue)
 
         log.debug(
             "Queue modification successful",
@@ -296,7 +285,7 @@ class QueueIdService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        with self._uow:
+        with self._uow():
             # No-op if already deleted
             self._uow.queue_repo.unlink_entrypoints(queue_id)
             self._uow.queue_repo.delete(queue_id)

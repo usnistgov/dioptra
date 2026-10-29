@@ -39,7 +39,7 @@ from dioptra.restapi.utils import setup_injection
 
 from .__version__ import __version__ as DIOPTRA_VERSION
 from .config import BaseConfig, load_config
-from .db import db
+from .db import db, models
 from .patches import monkey_patch_flask_restx
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -98,7 +98,7 @@ def create_app(
     from .bootstrap import bind_dependencies, register_providers
     from .errors import register_error_handlers
     from .routes import register_routes
-    from .v1.users.service import load_user as v1_load_user
+    from .v1.users.service import UserLoaderService
 
     monkey_patch_flask_restx()
 
@@ -116,8 +116,6 @@ def create_app(
 
     register_routes(api)
     register_error_handlers(api)
-
-    login_manager.user_loader(v1_load_user)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -144,6 +142,10 @@ def create_app(
         modules: List[Callable[..., Any]] = [configure]
         register_providers(modules)
         injector = Injector(modules)
+
+    @login_manager.user_loader
+    def load_user(user_id: str) -> models.User | None:
+        return injector.get(UserLoaderService).load(user_id)
 
     setup_injection(api, injector)
 
