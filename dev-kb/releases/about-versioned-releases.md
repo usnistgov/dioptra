@@ -1,137 +1,135 @@
+<a id="about-versioned-releases"></a>
+
 # About Versioned Releases
 
-This document explains the versioning philosophy and release model used in the Dioptra repository. It covers why releases happen, when they happen, and how version numbers flow between branches.
+Dioptra's version numbers tell users how much a release changes the platform they work with. Container images add a second dimension of change, because their operating system and locked Python dependencies need refreshing even when the application stays the same. This article explains how the project decides what kind of release a change needs, how the `main` and `dev` branches carry that work, and why container images have build numbers in addition to package versions.
 
-- [Semantic Versioning](#semantic-versioning)
-- [The Two-Branch Model](#the-two-branch-model)
-  - [The `main` Branch](#the-main-branch)
-  - [The `dev` Branch](#the-dev-branch)
-- [When Releases Happen](#when-releases-happen)
-  - [Main Branch Releases](#main-branch-releases)
-  - [Dev Branch Releases](#dev-branch-releases)
-    - [Scenario 1 - After a minor or major release to main](#scenario-1---after-a-minor-or-major-release-to-main)
-    - [Scenario 2 - After a patch release to main with corresponding changes to dev](#scenario-2---after-a-patch-release-to-main-with-corresponding-changes-to-dev)
-    - [Scenario 3 - When substantial new content warrants a dev release](#scenario-3---when-substantial-new-content-warrants-a-dev-release)
-- [How Version Numbers Flow](#how-version-numbers-flow)
-- [Branch-Specific Release References](#branch-specific-release-references)
-- [Downstream Artifacts](#downstream-artifacts)
-- [Version Format Variations](#version-format-variations)
+The [release and maintenance policy](release-and-maintenance-policy.md) states the rules, and the [workflow and metadata reference](release-workflow-reference.md) describes the GitHub Actions workflows that publish releases. The [implementation status](release-policy-implementation-status.md) tracks which rules are currently in effect.
 
-## Semantic Versioning
+<a id="semantic-versioning"></a>
 
-Dioptra follows [Semantic Versioning](https://semver.org/) (semver) conventions. Version numbers take the form `X.Y.Z` where:
+## Version increments
 
-- **X (Major)**: Incremented for incompatible API changes
-- **Y (Minor)**: Incremented for new functionality that is backwards-compatible
-- **Z (Patch)**: Incremented for backwards-compatible bug fixes
+A package version such as `1.2.1` identifies the backend source, the built frontend, and the dependency requirements published in `pyproject.toml` for the `dioptra-platform` package. A change to any of these needs a new package version.
 
-Development versions append a dev tag: `X.Y.ZdevN`, where N is incremented for each development release.
+Dioptra uses major, minor, and patch increments, but it does not apply semantic versioning strictly. Under strict semantic versioning, any change that could break an existing script requires a new major version. For example, the 1.2.0 release removed the `workflows/validateEntrypoint` endpoint and added required fields to entrypoint update requests, and the 1.2.1 release restricted repository imports to public HTTPS archives on GitHub and GitLab. Strictly applied, those two releases would have been 2.0.0 and 3.0.0, even though neither changed how Dioptra works as a system. The project instead chooses the increment by how much a release changes the way people use the platform.
 
-## The Two-Branch Model
+### Major versions
 
-The repository maintains two primary branches with distinct purposes:
+Dioptra 1.x is built on a core set of architectural assumptions:
 
-### The `main` Branch
+-   Users write plugins as Python packages of task functions and compose them into workflows using entrypoint YAML files.
+-   Bundled Docker worker containers execute those workflows.
+-   The REST API and its MLflow integration manage centralized database records and artifacts, tracking file versions so that every job result links to a complete snapshot of its inputs.
+-   The web client, Python client, and REST API endpoints share a consistent resource layout around these concepts.
 
-The `main` branch contains stable, released code. Every release to `main` is tagged with a version number (e.g., `1.0.0`) and represents code that has been tested and deemed ready for production use.
+A major version is reserved for a planned architectural break with those concepts or a fundamental change to a primary user workflow or file format. Examples include replacing bundled worker containers with a general execution protocol, decentralizing artifact storage, removing the assumption that components run in Docker, replacing entrypoint YAML without backward compatibility, or reorganizing the REST API thoroughly enough that existing client scripts stop working. Breaking changes of this scale are planned and released together rather than triggered by an isolated feature change.
 
-Not every commit to `main` constitutes a release. Releases are deliberate: a release commit is created and tagged, which triggers the release process. This includes [publishing to PyPI](https://pypi.org/project/dioptra-platform) and building container images that are pushed to [GitHub Packages](https://github.com/orgs/usnistgov/packages?repo_name=dioptra).
+### Minor versions
 
-### The `dev` Branch
+A minor version adds capability within the current architecture, makes an existing workflow easier, or consolidates existing features. A minor release can include incompatible changes to features outside the main user workflows. For example, entrypoint task swaps in 1.2.0 extended the entrypoint YAML format. Supporting them required removing an ad hoc validation endpoint that the backend did not enforce and adding required fields to entrypoint update requests. Because the domain model and overall API structure remained intact, 1.2.0 was a minor release.
 
-The `dev` branch contains bleeding-edge development work. It uses development version tags (`X.Y.ZdevN`) to distinguish pre-release builds from stable releases. After the post-release version bump, dev targets the next minor version beyond the stable release on `main`, unless a new major version has been selected for upcoming work.
+### Patch versions
 
-For Dioptra developers, `dev` is the branch from which feature branches are created and merged back into as part of the development workflow. For users, the dev branch provides access to the latest features and fixes before they land in a stable release.
+A patch corrects a flaw without adding capability. A fix can still narrow what users can do when required for security or correctness, as when 1.2.1 restricted repository imports from arbitrary Git clones to HTTPS archive downloads. Other changes that add no new user-facing capability also ship as patches when released on their own:
 
-As with `main`, not every commit to `dev` constitutes a release. Development releases are deliberate and follow the same pattern: a release commit is created and tagged, triggering TestPyPI and container builds that are made available for testing and evaluation.
+-   Removal of an unused or high-maintenance feature.
+-   An internal refactoring that leaves user-facing behavior unchanged.
+-   A database migration that fixes a bug, such as adding a missing constraint.
 
-## When Releases Happen
+When a feature removal is ready at the same time as new capabilities, it ships with them in the next minor release. In either case, the content of a release determines the version increment, not the branch it originates from.
 
-### Main Branch Releases
+### Separate version signals
 
-A stable release brings the selected dev changes into main with stable package versions, deployment defaults, and example requirements. Preparation creates one integration merge locally, which is reviewed and checked through a release PR before main is advanced to it. Tagging and publication follow successful main CI.
+The REST API path version (`api/v1`) does not track the package version. It would change only if the endpoint resource layout were reorganized, allowing `v1` to remain available temporarily alongside `v2`.
 
-See [How to Merge Dev into Main](how-to-merge-dev-into-main.md) for preparation and integration, then [How to Create a Release](how-to-create-a-release.md) for tagging and publication.
+Commit messages follow the [commit style guide](../../COMMIT_STYLE_GUIDE.md), which is based on Conventional Commits. A `BREAKING CHANGE` footer records that a commit could interrupt an existing script or workflow and helps maintainers identify changes that may need migration notes. It does not determine the version increment.
 
-A patch release can instead select an ordered set of fixes from dev. Its preparation starts from current main, retains one cherry-picked commit per fix, and adds stable metadata before the local integration merge. See [How to Create a Patch Release](how-to-create-a-patch-release.md) for that procedure.
+## Deprecation
 
-### Dev Branch Releases
+Dioptra does not have a deprecation policy yet, so a removed or replaced feature ships in the next suitable release without a notice period. The project will adopt one once removing features without notice would disrupt work that depends on them, and no later than the 2.0 release.
 
-Dev branch releases happen under three circumstances:
+<a id="when-releases-happen"></a>
+<a id="main-branch-releases"></a>
 
-#### Scenario 1 - After a minor or major release to main
+## Release timing
 
-When a new minor version is released to `main` (e.g., `1.0.0` → `1.1.0`), the `dev` branch must be updated to stay one minor version ahead. The minor version on `dev` is incremented, and the dev tag is reset to zero.
+Releases follow completed work rather than a calendar schedule. The development team maintains an internal project roadmap that groups planned features into milestones, and each completed milestone becomes a minor release. When features outside the roadmap accumulate on `dev`, the team can also approve a minor release once that work is complete. Major releases follow the same milestone planning at a larger scale.
 
-For example, if `main` releases `1.1.0`, then `dev` (which was at `1.1.0dev3`) becomes `1.2.0dev0`.
+Patch releases go out between minor releases for changes that should not wait, as listed in the [release policy](release-and-maintenance-policy.md#release-timing-and-approval).
 
-Major releases follow the same mechanical pattern. When a major version is released to `main` (e.g., `1.2.0` → `2.0.0`), `dev` bumps to the next minor version of that new major. For example, if `main` releases `2.0.0`, then `dev` becomes `2.1.0dev0`.
+<a id="the-two-branch-model"></a>
+<a id="the-main-branch"></a>
+<a id="the-dev-branch"></a>
+<a id="dev-branch-releases"></a>
+<a id="development-targets-and-snapshots"></a>
+<a id="scenario-1---after-a-minor-or-major-release-to-main"></a>
+<a id="scenario-2---after-a-patch-release-to-main-with-corresponding-changes-to-dev"></a>
+<a id="scenario-3---when-substantial-new-content-warrants-a-dev-release"></a>
+<a id="how-version-numbers-flow"></a>
+<a id="version-format-variations"></a>
+<a id="branch-specific-release-references"></a>
 
-This keeps `dev` one minor version ahead of the latest stable release, clearly indicating that it contains work targeted at the *next* release.
+## Branch life cycles
 
-**A note on pre-emptive major version bumps on dev**
+The `main` and `dev` branches have separate life cycles. The `main` branch holds the latest stable release along with ongoing maintenance, such as dependency lockfile refreshes, workflow updates, bug fixes, and corrections to released documentation. The `dev` branch integrates work for the next release. Feature branches start from `dev` and merge back into it, and the version on `dev` (such as `1.3.0dev0`) names the upcoming release that `dev` is building toward.
 
-The scenarios above describe what happens *after* a release occurs on `main`. There is a separate question of whether to bump `dev` to a new major version *before* `main` has released that major. Unlike minor version increments, which follow a mechanical rule, the decision to target a new major version on `dev` is a planning decision. It requires determining that upcoming work represents breaking changes significant enough to warrant a new major version. This is not governed by a fixed rule but by judgment about the nature of the planned changes.
+Most changes land on `dev` first and move to `main` in the next minor release, while urgent fixes and maintenance updates can land on `main` between minor releases. A fix can be written on `main` and carried to `dev`, or written on `dev` and cherry-picked to `main`, as long as both branches receive the same fix rather than separate implementations. Each branch also updates its own dependency lockfiles independently.
 
-#### Scenario 2 - After a patch release to main with corresponding changes to dev
+Because both branches accumulate changes between minor releases, preparing a stable release requires reconciling them on a release branch before fast-forwarding `main`.
 
-The fixes in a patch release must also be present on dev for the corresponding development release. They can originate on dev and be backported to main, or originate on main and be brought onto dev. Multiple fixes can be collected into one patch release.
+Development snapshots (such as `1.3.0dev1`) publish work from `dev` to TestPyPI and the container registry when the team wants to test or evaluate in-progress work. They are optional and independent of stable releases on `main`.
 
-A dev tag increment happens when both of the following conditions are met:
+The following diagram illustrates how `main` and `dev` can evolve between two minor releases:
 
-1. A patch version release occurs on `main` (i.e., a release commit is created and tagged)
-2. The same fixes are present on `dev`, regardless of which branch received them first
-
-When both conditions are met, the dev tag increments once for the collected patch release, such as `1.3.0dev0` to `1.3.0dev1`. This applies even when dev received the fixes before main. The increment publishes the corresponding development artifacts without changing the target major or minor version. It requires neither reapplying fixes already on dev nor merging stable version metadata into it. [How to Bump the Dev Branch Version](how-to-bump-dev-branch-version.md#scenario-2-incrementing-the-dev-tag) describes the procedure.
-
-#### Scenario 3 - When substantial new content warrants a dev release
-
-Even without a corresponding main branch release, there are times when significant work has landed on `dev` that should be made available to users tracking the bleeding edge. Incrementing the dev tag triggers new TestPyPI and container builds, making this work accessible.
-
-## How Version Numbers Flow
-
-The relationship between `main` and `dev` versions follows a predictable pattern, with dev advancing to the next minor version after a stable release:
-
-```text
-main: 1.0.0 ──────────────────────────────> 1.1.0 ────────────────> 1.1.1 ────> 2.0.0
-                                              │                       │           │
-dev:  1.1.0dev0 → 1.1.0dev1 → 1.1.0dev2 → 1.2.0dev0 → 1.2.0dev1 → 1.2.0dev2 → 2.1.0dev0
-                                              ↑                       ↑           ↑
-                                    minor release to main      patch to main  major release
-                                    triggers minor bump        triggers dev   triggers bump to
-                                    and dev tag reset          tag increment  next minor of
-                                                                              new major
+```mermaid
+gitGraph TB:
+    commit id: "Release 1.2.0" tag: "1.2.0"
+    branch dev
+    checkout dev
+    commit id: "Target 1.3.0dev0"
+    commit id: "Feature work"
+    checkout main
+    commit id: "uv.lock refresh (images 1.2.0-build2)"
+    branch release-1.2.1
+    checkout release-1.2.1
+    commit id: "Security fix"
+    commit id: "release 1.2.0 → 1.2.1"
+    checkout main
+    merge release-1.2.1 tag: "1.2.1"
+    checkout dev
+    cherry-pick id: "Security fix"
+    commit id: "npm refresh"
+    commit id: "Snapshot" tag: "1.3.0dev1"
+    checkout main
+    branch release-1.3.0
+    checkout release-1.3.0
+    merge dev id: "Reconcile and uv lock --upgrade"
+    commit id: "release 1.2.1 → 1.3.0"
+    checkout main
+    merge release-1.3.0 tag: "1.3.0"
+    checkout dev
+    commit id: "Target 1.4.0dev0"
 ```
 
-The dev branch version always indicates what the *next* release will be. When `dev` shows `1.2.0dev3`, it means the next minor release will be `1.2.0` (or the version will increment further if scope changes).
+In this example, the lockfile refresh on `main` triggers a new container build of `1.2.0` without changing the Python package version. A security fix ships as `1.2.1` from a release branch and is cherry-picked to `dev`.
 
-## Branch-Specific Release References
+## Dependency lockfiles
 
-Bumpver updates the package and module versions, README version, and Sphinx release value according to the patterns in `pyproject.toml`. It does not update `uv.lock`, deployment template defaults, deployment documentation examples, README installation image tags, or the example platform requirement. Stable preparation includes those references in the same version commit. A development bump updates the configured versions and local package lock entry. When it follows stable publication, the development release commit also updates README installation image tags to that published stable version.
+Dioptra maintains `uv.lock` for Python dependencies and `src/frontend/package-lock.json` for the web frontend.
 
-The stable release uses its version number for the deployment template's `container_tag` and pins `dioptra-platform` to that version in `examples/examples-setup-requirements.txt`. Dev retains the literal `dev` container tag and an unbounded platform requirement. README installation instructions select main, so their image tags follow the published stable release even when the README is viewed on dev. The README's package version can therefore differ from its installation image tags.
+In `pyproject.toml`, Dioptra declares compatible version ranges for its Python dependencies. When a user runs `pip install dioptra-platform`, pip resolves versions within those ranges and ignores `uv.lock`. Container images, by contrast, install their Python environment directly from `uv.lock` so that image builds are reproducible.
 
-Most third-party image defaults use `latest`, including pgAdmin, MinIO, and Redis. PostgreSQL stays on a selected major version to avoid unexpected database migrations, and `minio/mc` retains a specific release pin because newer client versions have caused compatibility problems. Stable preparation reviews these defaults without replacing every `latest` tag or upgrading dependencies as a release prerequisite.
+Both `main` and `dev` refresh `uv.lock` through reviewed pull requests. Refreshing `uv.lock` on `main` incorporates upstream security fixes into the container images and keeps the locked environment close to what a fresh `pip install` would resolve.
 
-## Downstream Artifacts
+The frontend's `package-lock.json` has a different life cycle because the frontend builds exclusively from its lockfile and ships as compiled assets. Every npm lockfile update changes the shipped application. Routine npm dependency refreshes therefore land on `dev` and ship in the next minor release. The `main` branch updates `package-lock.json` only when a security or bug fix requires a patch release.
 
-Version releases trigger automated builds of downstream artifacts:
+<a id="downstream-artifacts"></a>
 
-- **Python packages**: Stable releases are [published to PyPI](https://pypi.org/project/dioptra-platform), and development releases are [published to TestPyPI](https://test.pypi.org/project/dioptra-platform)
-- **Container images**: Docker images are built, tagged with the corresponding version numbers, and published to [GitHub Packages](https://github.com/orgs/usnistgov/packages?repo_name=dioptra)
+## Container builds
 
-These automated builds are one of the primary reasons for creating dev releases, as they make in-progress work available for testing in realistic deployment scenarios.
+A container image packages the Dioptra application together with an operating system, system libraries, and the locked Python environment from `uv.lock`. Those underlying layers need regular security refreshes even when Dioptra's own code and `pyproject.toml` requirements have not changed. Publishing a new Python package version solely to rebuild unchanged code into new container images would create empty releases on PyPI.
 
-## Version Format Variations
+To separate image refreshes from package releases, container image tags add a build number to the package version, such as `restapi:1.2.1-build3`. The package version (`1.2.1`) identifies the `dioptra-platform` package inside the image, while the build number (`build3`) identifies the container environment around it. Numbered build tags are immutable, whereas the unnumbered version tag (`restapi:1.2.1`) moves to point to the latest completed build of that package version. Using immutable build numbers lets operators and deployment tooling detect when refreshed images are available without blindly re-pulling a moving tag.
 
-Due to tooling differences, the dev version format varies slightly depending on where it appears:
-
-| Location                                                                          | Format       | Example      |
-| --------------------------------------------------------------------------------- | ------------ | ------------ |
-| Most files                                                                        | `X.Y.ZdevN`  | `1.1.0dev5`  |
-| `uv.lock`                                                                         | `X.Y.Z.devN` | `1.1.0.dev5` |
-| `README.md`, `docs/source/conf.py`, bumpver `current_version` in `pyproject.toml` | `X.Y.Z-devN` | `1.1.0-dev5` |
-
-When `N=0`, the numeric counter is omitted in `README.md`, `docs/source/conf.py`, and the bumpver `current_version` field; the `-dev` suffix remains. For example, these fields use `1.3.0-dev`, while the project version and Git tag use `1.3.0dev0` and the lockfile uses `1.3.0.dev0`. TestPyPI and distribution filenames also use the normalized form `1.3.0.dev0`. Package metadata can retain the equivalent spelling `1.3.0dev0`.
-
-These variations exist due to a combination of tooling requirements (different tools expect different version string formats) and readability considerations for user-facing documents (such as spelling out "beta" instead of using the abbreviated "b").
+Each container build produces all seven Dioptra service images as a single unit. Because the images share base layers and Python packages, a vulnerability in one image usually affects the others, so deployments should update all services to the same build number together. Each completed build publishes a record of its image digests so tooling can discover the newest completed build for an installed package version. See [Completed-build discovery](release-and-maintenance-policy.md#completed-build-discovery) for the publication and selection rules.

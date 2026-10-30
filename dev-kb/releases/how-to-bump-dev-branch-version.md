@@ -1,140 +1,128 @@
 # How to Bump the Dev Branch Version
 
-This guide provides step-by-step instructions for creating a version release on the `dev` branch. For background on when and why dev releases happen, see [About Versioned Releases](about-versioned-releases.md).
+Use this guide to advance the target version on `dev` after a stable release or to increment the counter for a development snapshot. Advancing the target version on `dev` does not by itself require publishing a snapshot. See [About Versioned Releases](about-versioned-releases.md#branch-life-cycles) for background and the [release policy](release-and-maintenance-policy.md#development-versions) for snapshot rules.
 
-- [Prerequisites](#prerequisites)
-- [Scenario 1: After a Minor or Major Release to Main](#scenario-1-after-a-minor-or-major-release-to-main)
-  - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command)
-  - [Step 2: Update uv.lock](#step-2-update-uvlock)
-  - [Step 3: Amend the release commit](#step-3-amend-the-release-commit)
-  - [Step 4: Verify the result](#step-4-verify-the-result)
-- [Scenario 2: Incrementing the Dev Tag](#scenario-2-incrementing-the-dev-tag)
-  - [Step 1: Run the bumpver command](#step-1-run-the-bumpver-command-1)
-  - [Step 2: Update uv.lock](#step-2-update-uvlock-1)
-  - [Step 3: Amend the release commit](#step-3-amend-the-release-commit-1)
-  - [Step 4: Verify the result](#step-4-verify-the-result-1)
+-   [Prerequisites](#prerequisites)
+-   [Scenario 1: Advance the Development Target](#scenario-1-after-a-minor-or-major-release-to-main)
+    -   [Step 1: Run bumpver](#step-1-run-the-bumpver-command)
+    -   [Step 2: Update uv.lock](#step-2-update-uvlock)
+    -   [Step 3: Amend the release commit](#step-3-amend-the-release-commit)
+    -   [Step 4: Verify the result](#step-4-verify-the-result)
+-   [Scenario 2: Increment the Development Snapshot Counter](#scenario-2-incrementing-the-dev-tag)
+    -   [Step 1: Run bumpver](#step-1-run-the-bumpver-command-1)
+    -   [Step 2: Update uv.lock](#step-2-update-uvlock-1)
+    -   [Step 3: Amend the release commit](#step-3-amend-the-release-commit-1)
+    -   [Step 4: Verify the result](#step-4-verify-the-result-1)
 -   [README Installation Image Tags](#readme-installation-image-tags)
-- [After Bumping the Version](#after-bumping-the-version)
+-   [After Bumping the Version](#after-bumping-the-version)
 
 ## Prerequisites
 
-Before bumping the version, ensure you have:
+-   A clean working tree with `dev` checked out and up to date with `origin/dev`
+-   [uv](https://docs.astral.sh/uv/) and `sed` installed, with tox available through `uv tool install --python 3.11 tox --with tox-uv`
 
-- A clean working tree (no uncommitted changes)
-- The `dev` branch checked out and up to date with the remote
-- [uv](https://docs.astral.sh/uv/) installed and available on your PATH
-- `sed` installed and available on your PATH
+Run the commands from the clone root. Bumpver displays development versions with a hyphen (`1.3.0-dev`), whereas `pyproject.toml` and Git tags use `1.3.0dev0` and `uv.lock` uses `1.3.0.dev0` (see [Version spellings](release-workflow-reference.md#version-spellings)). Bumpver commits its file changes locally without creating a Git tag or pushing.
 
-Run the commands from the root of the Dioptra clone. Install tox with `uv tool install --python 3.11 tox --with tox-uv` if needed. Bumpver creates a local commit automatically; it does not create a tag or push changes.
+<a id="scenario-1-after-a-minor-or-major-release-to-main"></a>
 
-## Scenario 1: After a Minor or Major Release to Main
+## Scenario 1: Advance the Development Target
 
-Use this workflow when a minor or major version has been released to `main` and you need to bump `dev` to stay one minor version ahead.
+Use this workflow after a minor or major release on `main` to advance `dev` to the next minor target.
 
-### Step 1: Run the bumpver command
+<a id="step-1-run-the-bumpver-command"></a>
 
-Check the current version with `uvx tox run -e bumpver -- show`. If dev still targets the major and minor version just released on main, increment its minor version:
+### Step 1: Run bumpver
+
+Check the current version on `dev` with `uvx tox run -e bumpver -- show`. If `dev` still targets the version just released on `main`, increment the minor version and reset the `dev` counter:
 
 ```sh
 uvx tox run -e bumpver -- update -m -t dev
 ```
 
-This applies after either a minor or major release. For example, `1.2.0-dev` becomes `1.3.0-dev`, and `2.0.0-dev3` becomes `2.1.0-dev`. If dev targets a different version, select the intended next minor version explicitly:
+For example, `1.2.0-dev` becomes `1.3.0-dev`, and `2.0.0-dev3` becomes `2.1.0-dev`. To set a specific target version directly (such as after a major release or when targeting `2.0.0-dev`), pass `--set-version`:
 
 ```sh
-# Example after main releases 2.0.0
 uvx tox run -e bumpver -- update --set-version 2.1.0-dev
 ```
 
-Confirm the target before running the command; do not bump again if dev already has the intended version.
-
-The command updates the configured version files, resets the dev tag to zero, and creates a release commit.
+<a id="step-2-update-uvlock"></a>
 
 ### Step 2: Update uv.lock
 
-The `uv.lock` file needs its version updated to match the new version.
-
-> 📝 NOTE: `uv lock` can also rewrite dependency markers and other lockfile content. For a version-only release, capture the formatted local package version, revert the lockfile, and apply only that version change. Dependency upgrades are a separate task.
+Update only the local `dioptra-platform` version entry in `uv.lock` to the PEP 440 normalized version (`X.Y.Z.devN`), without re-resolving other dependencies:
 
 ```sh
-uv lock
-NEW_VERSION=$(sed -n '/^name = "dioptra-platform"$/{ n; s/^version = "\(.*\)"$/\1/p; }' uv.lock)
-printf '%s\n' "$NEW_VERSION"
-```
-
-Confirm the captured value is nonempty and matches the intended version. For example, `1.3.0dev0` is normalized to `1.3.0.dev0` in the lockfile. Then restore the lockfile:
-
-```sh
-git checkout -- uv.lock
-```
-
-Apply only the local package version change:
-
-```sh
+NEW_VERSION=$(sed -n 's/^version = "\(.*\)dev\([0-9]*\)"$/\1.dev\2/p' pyproject.toml | head -n 1)
 sed -i.bak '/^name = "dioptra-platform"$/{ n; s/^version = ".*"$/version = "'"$NEW_VERSION"'"/; }' uv.lock
 rm uv.lock.bak
+uv lock --check
 ```
 
-The backup suffix works with macOS and GNU sed. Remove the temporary backup after the edit.
+<a id="step-3-amend-the-release-commit"></a>
 
 ### Step 3: Amend the release commit
 
-If a stable release has been published, update the [README installation image tags](#readme-installation-image-tags) before amending. Include those changes with the local package version in the release commit:
+If a new stable release was just published on `main`, also update the [README installation image tags](#readme-installation-image-tags) now. Stage `uv.lock` (and `README.md` if updated) and amend the bumpver commit:
 
 ```sh
 git add README.md uv.lock
 git commit --amend --no-edit
 ```
 
+<a id="step-4-verify-the-result"></a>
+
 ### Step 4: Verify the result
 
-Confirm the version was bumped correctly:
+Verify the updated version and confirm that only the expected lines changed in `uv.lock` and `README.md`:
 
 ```sh
 uvx tox run -e bumpver -- show
-```
-
-Check that `uv.lock` shows only the local package version change and any README image tags match the published stable release:
-
-```sh
 git diff HEAD~1 -- uv.lock README.md
 ```
 
-## Scenario 2: Incrementing the Dev Tag
+<a id="scenario-2-incrementing-the-dev-tag"></a>
 
-Use this workflow when you need to increment the dev tag number without changing the minor or major version. This applies when:
+## Scenario 2: Increment the Development Snapshot Counter
 
-- A patch release to `main` has the same fixes present on `dev`, regardless of which branch received them first
-- Substantial new content on `dev` warrants a new development release
+Use this workflow when you want to publish a new development snapshot and the current `X.Y.ZdevN` version on `dev` has already been published.
 
-For a collected patch release, increment the counter once after stable publication is verified. Do not reapply fixes already present on dev or merge stable version metadata into it. See [How to Create a Patch Release](how-to-create-a-patch-release.md) for the complete sequence.
+First, check [How to Check Published Versions](how-to-check-published-versions.md). If the current version on `dev` (including `dev0`) has never been published, skip this scenario and tag the existing version directly with [How to Create a Release](how-to-create-a-release.md).
 
-### Step 1: Run the bumpver command
+<a id="step-1-run-the-bumpver-command-1"></a>
 
-Check the current version with `uvx tox run -e bumpver -- show` and the latest development release tag before incrementing. If another maintainer has already released the corresponding development version, do not increment it again.
+### Step 1: Run bumpver
+
+Increment the `dev` tag number (for example, `1.3.0-dev` to `1.3.0-dev1`, or `1.3.0-dev1` to `1.3.0-dev2`):
 
 ```sh
 uvx tox run -e bumpver -- update --tag-num
 ```
 
-This command:
-
-- Increments only the dev tag number (e.g., `1.2.0dev1` → `1.2.0dev2`)
-- Updates version strings in all configured files
-- Creates a release commit
+<a id="step-2-update-uvlock-1"></a>
 
 ### Step 2: Update uv.lock
 
-Follow [Step 2 of Scenario 1](#step-2-update-uvlock) to capture the normalized version, restore the lockfile, and change only the local package version.
+Update the local `dioptra-platform` entry in `uv.lock` and verify that the lockfile remains consistent:
+
+```sh
+NEW_VERSION=$(sed -n 's/^version = "\(.*\)dev\([0-9]*\)"$/\1.dev\2/p' pyproject.toml | head -n 1)
+sed -i.bak '/^name = "dioptra-platform"$/{ n; s/^version = ".*"$/version = "'"$NEW_VERSION"'"/; }' uv.lock
+rm uv.lock.bak
+uv lock --check
+```
+
+<a id="step-3-amend-the-release-commit-1"></a>
 
 ### Step 3: Amend the release commit
 
-After a stable patch release, update the [README installation image tags](#readme-installation-image-tags) before amending. For a development release without a new stable release, leave those tags unchanged.
+Stage `uv.lock` (along with `README.md` if you also updated its stable image references) and amend the bumpver commit:
 
 ```sh
 git add README.md uv.lock
 git commit --amend --no-edit
 ```
+
+<a id="step-4-verify-the-result-1"></a>
 
 ### Step 4: Verify the result
 
@@ -145,9 +133,7 @@ git diff HEAD~1 -- uv.lock README.md
 
 ## README Installation Image Tags
 
-The README installation commands use the latest published stable images, even on dev. When preparing a development release after stable publication, update these tags to the version just published. This is separate from the development version that bumpver writes in the README's release heading.
-
-Set `RELEASE_VERSION` to the published stable version and run:
+The `docker pull` commands in `README.md` reference the latest published stable release, even on `dev`. After publishing a stable release on `main`, update those tags on `dev`:
 
 ```sh
 RELEASE_VERSION=1.2.1
@@ -157,14 +143,23 @@ sed -i.bak -E \
 rm README.md.bak
 ```
 
-Keep deployment defaults at `dev` and the example platform requirement unbounded. Include any README changes when amending the development release commit in Step 3 of the selected scenario.
+Leave the deployment template `container_tag` on `dev` set to `dev` and keep `examples/examples-setup-requirements.txt` unbounded. If you are already running Scenario 1 or Scenario 2, include `README.md` in Step 3. Otherwise, commit `README.md` as an ordinary documentation change on `dev`:
+
+```sh
+git add README.md
+git commit -m "docs: update stable installation image references"
+```
+
+<a id="after-bumping-the-version"></a>
 
 ## After Bumping the Version
 
-Once the version bump is complete and verified:
+Push the version commit to `origin/dev` (or open a pull request into `dev` if you do not push directly):
 
-1. Adopt the version commit on remote `dev` using the permitted branch workflow. Maintainers with direct push permission can use `git push origin dev`; otherwise, use a pull request.
-2. Wait for the applicable dev branch CI checks to pass on that exact commit.
-3. Follow [How to Create a Release](how-to-create-a-release.md) to create and push the annotated version tag.
+```sh
+git push origin dev
+```
 
-The tag push triggers automated publishing to [TestPyPI](https://test.pypi.org/project/dioptra-platform) and [GitHub Container Registry](https://github.com/orgs/usnistgov/packages?repo_name=dioptra). Keep development deployment defaults at `dev` and the example platform requirement unbounded. Stable installation references in the README continue to follow the published main release.
+If you are only advancing the target version after a stable release, stop here once `dev` CI passes.
+
+If you are publishing a development snapshot, wait for CI checks to pass on the pushed commit, then follow [How to Create a Release](how-to-create-a-release.md) to tag that commit and publish to TestPyPI and GHCR.
