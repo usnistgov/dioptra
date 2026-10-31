@@ -89,6 +89,15 @@ def hello() -> str:
     return "hello"
 
 
+@capture_return
+def pick(config: Any, key: Any) -> Any:
+    """
+    Simple function which takes a mapping argument, to register with pyplugs,
+    for testing
+    """
+    return config[key]
+
+
 @contextlib.contextmanager
 def pyplugs_register(*funcs: Callable[..., Any]) -> Iterator[None]:
     """
@@ -573,3 +582,36 @@ def test_illegal_plugin_name() -> None:
         _run_experiment(experiment_desc=desc, global_parameters={})
 
     assert e.value.plugin_name == "foo"
+
+
+@require_plugins(pick, square)
+def test_task_key_in_arg_value() -> None:
+    desc = {
+        "tasks": {
+            "square": {
+                "plugin": "tests.unit.task_engine.test_task_engine.square",
+                "outputs": {"value": "sometype"},
+            },
+            "pick": {
+                "plugin": "tests.unit.task_engine.test_task_engine.pick",
+                "outputs": {"value": "sometype"},
+            },
+        },
+        "graph": {
+            # step1 is declared first but consumes step2's output, so the
+            # reference has to be found for the steps to be ordered correctly.
+            # The "task" entry sitting beside it is just data here, and must
+            # not be read as a mixed invocation.
+            "step1": {
+                "pick": {
+                    "config": {"task": "classification", "value": "$step2"},
+                    "key": "value",
+                }
+            },
+            "step2": {"square": 6},
+        },
+    }
+
+    _run_experiment(experiment_desc=desc, global_parameters={})
+
+    assert _output == 36
