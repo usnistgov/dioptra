@@ -420,16 +420,14 @@ def test_archive_extraction_timeout_is_handled(
     dioptra_client, auth_account, resource_import_source, monkeypatch
 ):
     source, _ = resource_import_source({"dioptra.toml": b"", "extra.txt": b""})
-    now = [1000.0]
-    monkeypatch.setattr(file_io, "monotonic", lambda: now[0])
-    write_file = file_io.IOFileService.write_file
+    extract_archive = file_io.IOFileService.safe_extract_archive
 
-    def slow_write(*args, **kwargs):
-        now[0] += 61
-        return write_file(*args, **kwargs)
+    def expired_budget(self, *args, **kwargs):
+        return extract_archive(self, *args, **kwargs, timeout_seconds=0)
 
-    # Two individually short writes must share one 120-second extraction budget.
-    monkeypatch.setattr(file_io.IOFileService, "write_file", staticmethod(slow_write))
+    # Exercise both workflow error translations with an expired budget. The IO
+    # tests separately synchronize a running worker and verify kill/reap behavior.
+    monkeypatch.setattr(file_io.IOFileService, "safe_extract_archive", expired_budget)
     response = dioptra_client.workflows.import_resources(
         auth_account["groups"][0]["id"], source=source
     )
@@ -667,3 +665,43 @@ def test_resource_import_duplicate_names_fail(
         assert_resource_import_fails_due_to_duplicate_names(
             dioptra_client, group_id, files
         )
+
+
+@pytest.mark.parametrize(
+    "resource_import_source", ["tar.gz", "github", "gitlab"], indirect=True
+)
+def test_archive_metadata_rejection_cleans_staging_and_preserves_resources(
+    dioptra_client, auth_account, resource_import_source, monkeypatch
+):
+    group_id = auth_account["groups"][0]["id"]
+    original = dioptra_client.plugins.create(group_id=group_id, name="original").json()
+    source, _ = resource_import_source(
+        {
+            "dioptra.toml": b"",
+            "nested/" * 20 + "file.py": b"contents",
+        }
+    )
+    monkeypatch.setattr(file_io, "MAX_METADATA_BYTES", 512)
+    extract_archive = file_io.IOFileService.safe_extract_archive
+    staging = []
+
+    def capture_staging(self, output_dir, *args, **kwargs):
+        staging.append(Path(output_dir))
+        return extract_archive(self, output_dir, *args, **kwargs)
+
+    monkeypatch.setattr(file_io.IOFileService, "safe_extract_archive", capture_staging)
+    response = dioptra_client.workflows.import_resources(group_id, source=source)
+    expected_status = (
+        HTTPStatus.INTERNAL_SERVER_ERROR
+        if isinstance(source, str)
+        else HTTPStatus.BAD_REQUEST
+    )
+    assert response.status_code == expected_status, response.text
+    assert "metadata exceeds the record size limit" in response.text
+    assert len(staging) == 1
+    assert not staging[0].exists()
+    plugins = dioptra_client.plugins.get().json()["data"]
+    assert [(plugin["id"], plugin["name"]) for plugin in plugins] == [
+        (original["id"], "original")
+    ]
+    assert dioptra_client.entrypoints.get().json()["data"] == []
