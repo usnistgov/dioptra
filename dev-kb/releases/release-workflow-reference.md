@@ -37,9 +37,9 @@ Container images are built from the repository source tree and `uv.lock`, not fr
 | [docker-images.yml](../../.github/workflows/docker-images.yml) | Pushes to `main` and `dev`, PRs targeting them, tags matching `*.*.*`, and Sundays at 03:00 UTC (`0 3 * * 0`). | Builds and pushes platform images, assembles image indexes, and signs and verifies them. | Images are pushed to GHCR before the signing and verification jobs run. |
 | [tox-tests.yml](../../.github/workflows/tox-tests.yml) | Branch pushes, tag pushes, and manual dispatch. | Runs linting, type checks, unit tests, and deployment template tests (`pytest-cookiecutter`). | Reports a failed check on the commit or PR. |
 | [sphinx-docs.yml](../../.github/workflows/sphinx-docs.yml) | Branch pushes, tag pushes, and manual dispatch. | Builds the Sphinx documentation and OpenAPI spec. Builds on `main` deploy `docs/build` to `nist-pages`. | Deploys on `main` push without waiting for tag workflows. |
-| [refresh-uv-lock.yml](../../.github/workflows/refresh-uv-lock.yml) | Mondays at 08:37 UTC (`37 8 * * 1`) and manual dispatch (`target_branch`, `dry_run`). | Runs `uv lock --upgrade`, opens or updates a PR (defaulting to `dev`), and dispatches `tox-tests.yml` and `sphinx-docs.yml`. | Reports check results on the PR; merging requires human review. |
+| [refresh-uv-lock.yml](../../.github/workflows/refresh-uv-lock.yml) | Mondays at 08:37 UTC (`37 8 * * 1`) and manual dispatch (`target_branch`, `dry_run`). | Refreshes `main` and `dev` independently, opens or updates PRs, removes obsolete candidates, and dispatches tox and Sphinx validation. | Failed or missing validation fails the target job; the other target continues. |
 
-`refresh-uv-lock.yml` uses the branch and concurrency group name `refresh-uv-lock-dev` regardless of the selected `target_branch`.
+See the [lockfile refresh README](../../.github/actions/refresh-uv-lock/README.md) for inputs, generated resources, validation reporting, and failure recovery.
 
 <a id="release-review-and-main-adoption"></a>
 
