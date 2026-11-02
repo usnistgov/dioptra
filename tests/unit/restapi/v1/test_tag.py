@@ -29,7 +29,7 @@ import pytest
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
-from ..lib import helpers
+from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -205,6 +205,22 @@ def assert_cannot_rename_tag_with_existing_name(
 
 
 # -- Tests -----------------------------------------------------------------------------
+
+
+def test_cannot_rename_tag_in_deleted_group(client, auth_account, dioptra_client):
+    group_response = actions.register_group(client, name="archived-tags")
+    assert group_response.status_code == HTTPStatus.OK
+    group_id = group_response.get_json()["id"]
+    tag_response = dioptra_client.tags.create(group_id=group_id, name="original")
+    assert tag_response.status_code == HTTPStatus.OK
+    tag_id = tag_response.json()["id"]
+
+    response = client.delete(f"/api/v1/groups/{group_id}")
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.tags.modify_by_id(tag_id=tag_id, name="renamed")
+    assert response.status_code == HTTPStatus.LOCKED
+    assert client.get(f"/api/v1/tags/{tag_id}").get_json()["name"] == "original"
 
 
 def test_create_tag(

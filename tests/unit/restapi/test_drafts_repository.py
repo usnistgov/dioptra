@@ -90,6 +90,26 @@ def test_drafts_cannot_update_another_creators_draft(
     assert draft.payload == original
 
 
+@pytest.mark.parametrize("by_id", [False, True])
+def test_drafts_cannot_update_in_deleted_group(
+    db_session, drafts_repo, draft_stuff, by_id
+):
+    draft = draft_stuff["draft_resources"][0]
+    original = draft.payload.copy()
+    db_session.add(m.GroupLock("delete", draft.target_owner))
+    db_session.flush()
+
+    with pytest.raises(e.EntityDeletedError):
+        drafts_repo.update(
+            draft.draft_resource_id if by_id else draft,
+            {"draft": "updated"},
+            creator=draft.creator,
+        )
+
+    db_session.expire_all()
+    assert draft.payload == original
+
+
 @pytest.fixture
 def draft_stuff(db_session: DBSession, fake_data, draft_content):
     """

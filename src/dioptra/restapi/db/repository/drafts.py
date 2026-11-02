@@ -608,6 +608,10 @@ class DraftsRepository:
             raise DraftDoesNotExistError(draft_resource_id=draft_id)
         draft = self.get_one(draft_id, creator=creator)
 
+        assert_group_exists(
+            self._session, draft.target_owner, DeletionPolicy.NOT_DELETED
+        )
+
         if resource_snapshot is not None:
             # If the existing draft's resource_snapshot_id property is null,
             # it must be for a draft resource, not a draft modification.
