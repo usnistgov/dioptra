@@ -26,6 +26,10 @@ MODULE_PATH = Path(__file__).parents[1] / "refresh.py"
 SPEC = importlib.util.spec_from_file_location("refresh", MODULE_PATH)
 refresh = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(refresh)
+MONITOR_PATH = MODULE_PATH.parent.parent / "monitor-refresh-validation" / "monitor.py"
+MONITOR_SPEC = importlib.util.spec_from_file_location("monitor", MONITOR_PATH)
+monitor = importlib.util.module_from_spec(MONITOR_SPEC)
+MONITOR_SPEC.loader.exec_module(monitor)
 REPOSITORY = "example/dioptra"
 
 
@@ -455,3 +459,41 @@ def test_dispatch_failure_leaves_pending_candidate_and_fails(checkout):
     assert candidate == git("rev-parse", "HEAD") and candidate in body
     assert "Validation is pending" in body
     assert "Validation completed successfully" not in body
+
+
+@pytest.mark.parametrize("conclusion", ["success", "failure"])
+def test_final_report_replaces_pending_status(checkout, conclusion):
+    """Keep one current validation status from publication through completion.
+
+    A published candidate begins with pending validation. Completing either a
+    successful or failed validation must replace that status while preserving
+    the source and candidate identifiers and the stable PR introduction.
+    """
+    state, _ = checkout
+    outputs = refresh.refresh(REPOSITORY, "dev", False)
+    body = state["pulls"][0]["body"]
+    assert "Validation is pending" in body
+    assert monitor.VALIDATION_START in body and monitor.VALIDATION_END in body
+    before, pending = body.split(monitor.VALIDATION_START, 1)
+    _, after = pending.split(monitor.VALIDATION_END, 1)
+    assert "Validation is pending" not in before + after
+    results = [
+        monitor.RunResult(spec=spec, status="completed", conclusion=conclusion)
+        for spec in monitor.WORKFLOWS
+    ]
+    report = monitor.render_validation_section(
+        results=results,
+        head_branch="automation/refresh-uv-lock-dev",
+        source_branch="dev",
+    )
+    updated = monitor.replace_validation_section(body, report)
+    assert "Validation is pending" not in updated
+    assert updated.startswith(before) and updated.endswith(after)
+    assert updated.count(monitor.VALIDATION_START) == 1
+    assert outputs["head_sha"] in updated and outputs["source_sha"] in updated
+    expected = (
+        "Validation completed successfully."
+        if conclusion == "success"
+        else "Validation failed."
+    )
+    assert expected in updated
