@@ -113,6 +113,14 @@ Run initialization as the user who owns the deployment files.
 The script preserves existing credentials and automatically repairs their permissions to owner-only access (``0600``).
 If it reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before restarting services.
 
+.. warning::
+
+   The deployment template now uses RustFS instead of MinIO. Updating a
+   MinIO-based deployment with this template does not migrate its stored
+   artifacts or storage credentials. The RustFS initialization and rerun
+   instructions below apply to fresh RustFS deployments and subsequent
+   updates to those deployments.
+
 RustFS initialization can be rerun: it preserves the existing bucket and skips policy attachments that are already present.
 Use the ``--skip-rustfs-setup`` option when you do not need to reconcile storage accounts and policies:
 
