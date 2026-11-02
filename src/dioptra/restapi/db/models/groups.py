@@ -58,7 +58,9 @@ class Group(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    creator: Mapped["User"] = relationship(back_populates="created_groups")
+    creator: Mapped["User"] = relationship(
+        back_populates="created_groups", lazy="joined", innerjoin=True
+    )
     members: Mapped[list["GroupMember"]] = relationship(
         init=False, back_populates="group"
     )
