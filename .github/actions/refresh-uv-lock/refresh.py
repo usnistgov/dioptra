@@ -248,13 +248,17 @@ def publish_candidate(
         f"This pull request refreshes `uv.lock` for `{target}` using "
         "`uv lock --upgrade` within the constraints in `pyproject.toml`.\n\n"
         f"Source commit: `{source_sha}`. Candidate commit: `{sha}`.\n\n"
-        f"Validation is pending for `{sha}` on `{branch}`. The refresh workflow "
+        "The refresh workflow "
         "dispatches tox tests and the Sphinx documentation build and reports "
         "their exact-commit results here. Human review and successful validation "
         "are required before merging.\n\n"
         f"If code, dependency declarations or `uv.lock` change on `{target}`, "
         "regenerate and revalidate before merging. Documentation-only changes "
-        "do not require regeneration.\n"
+        "do not require regeneration.\n\n"
+        "<!-- refresh-validation:start -->\n"
+        "## Validation\n\n"
+        f"Validation is pending for `{sha}` on `{branch}`.\n"
+        "<!-- refresh-validation:end -->\n"
     )
     if opened:
         number = opened[0]["number"]
