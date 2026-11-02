@@ -338,8 +338,8 @@
           <q-btn-dropdown
             style="background-color: #cf5c36"
             icon="groups"
-            :label="isMobile ? '' : store.loggedInGroup.name"
-            :aria-label="`Group context: ${store.loggedInGroup.name}`"
+            :label="isMobile ? '' : groupContextLabel"
+            :aria-label="`Group context: ${groupContextLabel}`"
             :disable="store.groupContextLocked || store.groupContextResolving"
             dense
             class="q-pl-md q-my-xs"
@@ -383,7 +383,7 @@
 
 <script setup>
 import { useQuasar } from "quasar";
-import { watch, inject, ref, onMounted } from "vue";
+import { watch, inject, ref, onMounted, computed } from "vue";
 import { useLoginStore } from "@/stores/LoginStore";
 import * as api from "@/services/dataApi";
 import { useRoute, useRouter } from "vue-router";
@@ -393,6 +393,14 @@ import ImportResourcesDialog from "../dialogs/ImportResourcesDialog.vue";
 const showImportDialog = defineModel();
 
 const store = useLoginStore();
+const groupContextLabel = computed(() => {
+  const group = store.loggedInGroup;
+  if (!group) return "";
+  if (group.user?.username && group.user.id !== store.loggedInUser?.id) {
+    return `${group.user.username} / ${group.name}`;
+  }
+  return group.name;
+});
 const route = useRoute();
 const router = useRouter();
 const { withGroupContext } = useGroupContextLink();
