@@ -617,9 +617,11 @@ def registered_plugin_parameter_types(
         follow_redirects=True,
         query_string={
             "groupId": auth_account["default_group_id"],
-            "pageLength": 0,
+            "pageLength": 10,
         },
-    ).get_json()
+    )
+    assert response.status_code == 200, response.get_json()
+    response = response.get_json()
     built_in_types_dict = {
         param_type["name"]: param_type
         for param_type in response["data"]
