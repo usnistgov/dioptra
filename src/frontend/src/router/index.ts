@@ -296,10 +296,16 @@ router.beforeEach(async (to, from) => {
     store.groupContextResolving = true;
     try {
       const requestedGroupId = parseGroupIdQuery(to.query.groupId);
-      if (requestedGroupId !== null && !store.setLoggedInGroup(requestedGroupId)) {
-        await api.refreshLoginState();
-        if (!store.setLoggedInGroup(requestedGroupId)) {
-          notify.error(`Group ${requestedGroupId} is not available to the current user.`);
+      if (requestedGroupId !== null) {
+        const groupWasSet = store.setLoggedInGroup(requestedGroupId);
+
+        if (!groupWasSet) {
+          await api.refreshLoginState();
+          const groupWasSetAfterRefresh = store.setLoggedInGroup(requestedGroupId);
+
+          if (!groupWasSetAfterRefresh) {
+            notify.error(`Group ${requestedGroupId} is not available to the current user.`);
+          }
         }
       }
 
