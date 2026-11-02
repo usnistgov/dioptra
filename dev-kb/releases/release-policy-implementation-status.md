@@ -10,7 +10,7 @@ This temporary table tracks which rules of the [release and maintenance policy](
 | [Patch preparation from `main`](release-and-maintenance-policy.md#candidate-preparation) | ✓ | | | [How to Create a Patch Release](how-to-create-a-patch-release.md). |
 | [Major and minor preparation](release-and-maintenance-policy.md#candidate-preparation) | ✓ | | | [How to Merge Dev into Main](how-to-merge-dev-into-main.md). |
 | [`uv.lock` refresh PRs on `dev`](release-and-maintenance-policy.md#dependency-maintenance) | | ✓ | | [refresh-uv-lock.yml](../../.github/workflows/refresh-uv-lock.yml) opens a weekly PR targeting `dev`. |
-| [`uv.lock` refresh PRs on `main`](release-and-maintenance-policy.md#dependency-maintenance) | ✓ | | | Dispatched manually via `refresh-uv-lock.yml` (`target_branch=main`). Independent weekly scheduling remains pending delivery of the updated default-branch workflow and its helper to both targets. |
+| [`uv.lock` refresh PRs on `main`](release-and-maintenance-policy.md#dependency-maintenance) | | ✓ | | [refresh-uv-lock.yml](../../.github/workflows/refresh-uv-lock.yml) schedules independent weekly PRs for `main` and `dev`; manual dispatch also supports regeneration. |
 | [npm refresh PRs on `dev`, `main` patches only](release-and-maintenance-policy.md#dependency-maintenance) | ✓ | | | Opened manually by maintainers; Dependabot currently covers only GitHub Actions. |
 | [Development targets and snapshots](release-and-maintenance-policy.md#development-versions) | ✓ | | | [How to Bump the Dev Branch Version](how-to-bump-dev-branch-version.md). |
 | [Release and maintenance owners](release-and-maintenance-policy.md#ownership-and-recovery) | ✓ | | | Assigned per release and for ongoing maintenance. |
