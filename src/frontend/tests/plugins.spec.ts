@@ -100,7 +100,6 @@ test("does not restore another user's unsaved plugin form", async ({ page }) => 
   const unsavedPluginName = `unsaved_plugin_${Date.now()}`;
   const secondUser = {
     username: `e2e_second_user_${Date.now()}`,
-    email: `e2e_second_user_${Date.now()}@example.com`,
     password: "Password123!",
   };
 
@@ -116,12 +115,11 @@ test("does not restore another user's unsaved plugin form", async ({ page }) => 
   const registerResponse = await page.request.post("/api/v1/users", {
     data: {
       username: secondUser.username,
-      email: secondUser.email,
       password: secondUser.password,
       confirmPassword: secondUser.password,
     },
   });
-  expect(registerResponse.ok()).toBe(true);
+  expect(registerResponse.ok(), await registerResponse.text()).toBe(true);
 
   await page.getByRole("textbox", { name: "Username" }).fill(secondUser.username);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(secondUser.password);

@@ -13,9 +13,9 @@ const test = base.extend<{ otherGroup: OtherGroup }>({
     let loggedIn = false;
     try {
       const registration = await ownerApi.post("/api/v1/users", {
-        data: { username, email: `${username}@example.com`, password, confirmPassword: password },
+        data: { username, password, confirmPassword: password },
       });
-      expect(registration.ok()).toBe(true);
+      expect(registration.ok(), await registration.text()).toBe(true);
       const login = await ownerApi.post("/api/v1/auth/login", { data: { username, password } });
       expect(login.ok()).toBe(true);
       loggedIn = true;
