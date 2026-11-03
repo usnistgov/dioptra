@@ -117,21 +117,6 @@ The following is the list of endpoints under the ``/api/v1/jobs/`` namespace.
      /api/v1/jobs/.*
 
 
-Models
-------
-
-Model management operations.
-
-Endpoints
-^^^^^^^^^
-
-The following is the list of endpoints under the ``/api/v1/models/`` namespace.
-
-.. openapi:: api-restapi/openapi.yml
-   :include:
-     /api/v1/models/.*
-
-
 PluginParameterTypes
 --------------------
 

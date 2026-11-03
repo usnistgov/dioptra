@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
 
-from typing import Any, Callable, Final, Iterable, Optional, TypedDict, cast
+from typing import Any, Callable, Final, Iterable, Optional, TypedDict
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -28,7 +28,6 @@ ARTIFACTS: Final[str] = "artifacts"
 ENTRYPOINTS: Final[str] = "entrypoints"
 EXPERIMENTS: Final[str] = "experiments"
 GROUPS: Final[str] = "groups"
-MODELS: Final[str] = "models"
 PLUGINS: Final[str] = "plugins"
 PLUGIN_FILES: Final[str] = "files"
 PLUGIN_PARAMETER_TYPES: Final[str] = "pluginParameterTypes"
@@ -149,12 +148,6 @@ class JobDict(TypedDict):
     artifacts: list[models.Artifact]
     has_draft: bool | None
     swap_task_names: dict[tuple[int, str, str], str]
-
-
-class ModelWithVersionDict(TypedDict):
-    ml_model: models.MlModel
-    version: models.MlModelVersion | None
-    has_draft: bool | None
 
 
 # -- Ref Types -----------------------------------------------------------------
@@ -403,24 +396,6 @@ def build_entrypoint_snapshot_ref(entrypoint: models.EntryPoint) -> dict[str, An
     }
 
 
-def build_model_ref(model: models.MlModel) -> dict[str, Any]:
-    """Build a MlModel dictionary.
-
-    Args:
-        model: The Model object to convert into a MlModel dictionary.
-
-    Returns:
-        The MlModel dictionary.
-    """
-    return {
-        "id": model.resource_id,
-        "name": model.name,
-        "group": build_group_ref(model.resource.owner),
-        "url": f"{MODELS}/{model.resource_id}",
-        "deleted": model.resource.is_deleted,
-    }
-
-
 def build_queue_ref(queue: models.Queue) -> dict[str, Any]:
     """Build a QueueRef dictionary.
 
@@ -589,7 +564,6 @@ def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]
     from dioptra.restapi.v1.artifacts.schema import ArtifactSchema
     from dioptra.restapi.v1.entrypoints.schema import EntrypointSchema
     from dioptra.restapi.v1.experiments.schema import ExperimentSchema
-    from dioptra.restapi.v1.models.schema import ModelSchema
     from dioptra.restapi.v1.plugin_parameter_types.schema import (
         PluginParameterTypeSchema,
     )
@@ -600,7 +574,6 @@ def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]
         "artifact": build_artifact,
         "entry_point": build_entrypoint,
         "experiment": build_experiment,
-        "ml_model": build_model,
         "plugin": build_plugin,
         "plugin_file": build_plugin_file,
         "plugin_task_parameter_type": build_plugin_parameter_type,
@@ -611,7 +584,6 @@ def build_resource(resource_snapshot: models.ResourceSnapshot) -> dict[str, Any]
         "artifact": ArtifactSchema(),
         "entry_point": EntrypointSchema(),
         "experiment": ExperimentSchema(),
-        "ml_model": ModelSchema(),
         "plugin": PluginSchema(),
         "plugin_file": PluginFileSchema(),
         "plugin_task_parameter_type": PluginParameterTypeSchema(),
@@ -842,79 +814,6 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     return data
 
 
-def build_model(model_dict: ModelWithVersionDict) -> dict[str, Any]:
-    """Build a Model response dictionary for the latest version.
-
-    Args:
-        model: The Model object to convert into a Model response dictionary.
-
-    Returns:
-        The Model response dictionary.
-    """
-    model = model_dict["ml_model"]
-    version = model_dict.get("version", None)
-    has_draft = model_dict.get("has_draft", None)
-
-    latest_version = build_model_version(model_dict) if version is not None else None
-    latest_version_number = version.version_number if version is not None else 0
-
-    # WARNING: this assumes versions cannot be deleted and that no details of
-    # the version # are needed in constructing the ref type. If either of these
-    # assumptions change, the service and controller layers will need to be
-    # updated to return the MlModelVersion # ORM objects.
-    versions = [
-        {
-            "version_number": version_number,
-            "url": build_url(f"{MODELS}/{model.resource_id}/versions/{version_number}"),
-        }
-        for version_number in range(1, latest_version_number + 1)
-    ]
-
-    data = {
-        "id": model.resource_id,
-        "snapshot_id": model.resource_snapshot_id,
-        "name": model.name,
-        "description": model.description,
-        "user": build_user_ref(model.creator),
-        "group": build_group_ref(model.resource.owner),
-        "created_on": model.resource.created_on,
-        "last_modified_on": model.resource.last_modified_on,
-        "snapshot_created_on": model.created_on,
-        "latest_snapshot": model.resource.latest_snapshot_id
-        == model.resource_snapshot_id,
-        "tags": [build_tag_ref(tag) for tag in model.tags],
-        "deleted": model.resource.is_deleted,
-        "latest_version": latest_version,
-        "versions": versions,
-    }
-
-    if has_draft is not None:
-        data["has_draft"] = has_draft
-
-    return data
-
-
-def build_model_version(model_dict: ModelWithVersionDict) -> dict[str, Any]:
-    """Build a ModelVersion response dictionary.
-
-    Args:
-        model: The ModelVersion object to convert into a ModelVersion response
-            dictionary.
-
-    Returns:
-        The ModelVersion response dictionary.
-    """
-    model = model_dict["ml_model"]
-    version = cast(models.MlModelVersion, model_dict["version"])
-    return {
-        "model": build_model_ref(model),
-        "description": version.description,
-        "version_number": version.version_number,
-        "artifact": build_artifact_ref(version.artifact),
-        "created_on": version.resource.created_on,
-    }
-
-
 def build_artifact_artifact_task(artifact: models.Artifact) -> dict[str, Any]:
     if not artifact.task:
         return {}
@@ -947,7 +846,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
     """Build an Artifact response dictionary.
 
     Args:
-        artifact_dict: The Artifact object to convert into a ModelVeArtifactrsion
+        artifact_dict: The Artifact object to convert into an Artifact
             response dictionary.
 
     Returns:

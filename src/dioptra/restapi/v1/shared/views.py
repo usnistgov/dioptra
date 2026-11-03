@@ -322,7 +322,6 @@ def get_resource_snapshot(
         "artifact": models.Artifact,
         "entry_point": models.EntryPoint,
         "experiment": models.Experiment,
-        "ml_model": models.MlModel,
         "plugin": models.Plugin,
         "plugin_file": models.PluginFile,
         "plugin_task_parameter_type": models.PluginTaskParameterType,

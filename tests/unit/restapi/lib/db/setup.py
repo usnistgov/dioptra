@@ -51,12 +51,10 @@ RESOURCE_TYPES: Final[list[dict[str, str]]] = [
     {"resource_type": "entry_point"},
     {"resource_type": "experiment"},
     {"resource_type": "job"},
-    {"resource_type": "ml_model"},
     {"resource_type": "plugin"},
     {"resource_type": "plugin_file"},
     {"resource_type": "plugin_task_parameter_type"},
     {"resource_type": "queue"},
-    {"resource_type": "ml_model_version"},
 ]
 RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "experiment", "child_resource_type": "entry_point"},
@@ -65,7 +63,6 @@ RESOURCE_DEPENDENCY_TYPES: Final[list[dict[str, str]]] = [
     {"parent_resource_type": "plugin", "child_resource_type": "plugin_file"},
     {"parent_resource_type": "job", "child_resource_type": "artifact"},
     {"parent_resource_type": "job", "child_resource_type": "job"},
-    {"parent_resource_type": "ml_model", "child_resource_type": "ml_model_version"},
 ]
 JOB_LOG_SEVERITY_LEVELS: Final[list[dict[str, str]]] = [
     {"severity": "DEBUG"},

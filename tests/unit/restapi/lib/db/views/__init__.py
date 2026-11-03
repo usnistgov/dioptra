@@ -18,7 +18,6 @@ from .artifacts import get_latest_artifact
 from .entry_points import get_latest_entry_point, get_latest_entry_point_queues
 from .experiments import get_latest_experiment, get_latest_experiment_entry_points
 from .jobs import get_latest_job, get_latest_job_artifacts
-from .ml_models import get_latest_ml_model
 from .plugin_task_parameter_types import get_latest_plugin_task_parameter_type
 from .plugins import get_latest_plugin, get_latest_plugin_files
 from .queues import get_latest_queue
@@ -31,7 +30,6 @@ __all__ = [
     "get_latest_experiment",
     "get_latest_job_artifacts",
     "get_latest_job",
-    "get_latest_ml_model",
     "get_latest_plugin_files",
     "get_latest_plugin_task_parameter_type",
     "get_latest_plugin",

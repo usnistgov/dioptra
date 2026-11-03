@@ -537,29 +537,6 @@ def registered_artifact_id(
     return artifact.resource_id
 
 
-@pytest.fixture
-def registered_ml_model_id(
-    db_session: DBSession,
-    account: libdb.FakeAccount,
-    fake_data: libdb.FakeData,
-    registered_artifact_id: int,
-) -> int:
-    artifact = viewsdb.get_latest_artifact(
-        db_session, resource_id=registered_artifact_id
-    )
-
-    if artifact is None:
-        raise ValueError("Failed to retrieve the latest artifact for test.")
-
-    ml_model = fake_data.ml_model(
-        creator=account.user, group=account.group, artifact=artifact
-    )
-    db_session.add(ml_model)
-    db_session.commit()
-
-    return ml_model.resource_id
-
-
 # -- Tests -----------------------------------------------------------------------------
 
 
@@ -919,7 +896,7 @@ def test_db_add_mlflow_run_to_job(
     assert isinstance(job.mlflow_run.mlflow_run_id, uuid.UUID)
 
 
-@pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
+@pytest.mark.skip(reason="Changes to the Artifact ORM object make this test incorrect.")
 def test_db_add_artifact_to_job(
     db_session: DBSession,
     account: libdb.FakeAccount,
@@ -942,44 +919,3 @@ def test_db_add_artifact_to_job(
     assert new_artifact.creator.user_id == account.user.user_id
     assert new_artifact.resource.owner.group_id == account.group.group_id
     assert new_artifact.uri.startswith("s3://")
-
-
-@pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
-def test_db_add_ml_model_to_job(
-    db_session: DBSession,
-    account: libdb.FakeAccount,
-    registered_ml_model_id: int,
-) -> None:
-    new_ml_model = viewsdb.get_latest_ml_model(
-        db_session, resource_id=registered_ml_model_id
-    )
-
-    assert new_ml_model is not None
-    assert new_ml_model.creator.user_id == account.user.user_id
-    assert new_ml_model.resource.owner.group_id == account.group.group_id
-    assert new_ml_model.artifact.creator.user_id == account.user.user_id
-    assert new_ml_model.artifact.resource.owner.group_id == account.group.group_id
-    assert isinstance(new_ml_model.name, str)
-
-
-@pytest.mark.skip(reason="Changes to the MlModel ORM object make this test incorrect.")
-def test_db_invalid_resource_dependency_fails(
-    db_session: DBSession,
-    registered_plugin_id: int,
-    registered_ml_model_id: int,
-) -> None:
-    plugin = viewsdb.get_latest_plugin(db_session, resource_id=registered_plugin_id)
-    ml_model = viewsdb.get_latest_ml_model(
-        db_session, resource_id=registered_ml_model_id
-    )
-
-    assert plugin is not None and ml_model is not None
-
-    with pytest.raises(IntegrityError):
-        try:
-            ml_model.parents.append(plugin.resource)
-            db_session.commit()
-
-        except IntegrityError as err:
-            db_session.rollback()
-            raise err

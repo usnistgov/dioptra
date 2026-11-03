@@ -53,11 +53,6 @@ type CreateParams = {
     queues: number[];
     plugins: number[];
   };
-  models: {
-    name: string;
-    description: string;
-    group: number;
-  };
   artifacts: {
     description: string;
     group: number;
@@ -104,10 +99,6 @@ type UpdateParams = {
     queues: number[];
     pluginSnapshotIds: number[];
     artifactPluginSnapshotIds: number[];
-  };
-  models: {
-    name: string;
-    description: string;
   };
   artifacts: {
     description: string;
@@ -511,10 +502,6 @@ export async function removeResourceFromResource<T extends ResourceType>(
   id: number,
 ) {
   return await axios.delete(`/api/${parentResourceType}/${parentResourceId}/${childResourceType}/${id}`);
-}
-
-export async function getVersions(id: string) {
-  return await axios.get(`/api/models/${id}/versions`);
 }
 
 export async function suggestPluginTasks(pythonCode: string) {

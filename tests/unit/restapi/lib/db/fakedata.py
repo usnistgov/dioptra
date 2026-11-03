@@ -454,34 +454,3 @@ class FakeData(object):
         job.children.append(new_artifact.resource)
 
         return new_artifact
-
-    def ml_model(
-        self,
-        creator: models.User,
-        group: models.Group,
-        artifact: models.Artifact,
-        include_description: bool = False,
-    ) -> models.MlModel:
-        """Generate a fake ML model.
-
-        Args:
-            creator: The user that created the ML model.
-            group: The group that owns the ML model.
-            artifact: The artifact to register as a ML model.
-            include_description: Whether to generate a fake description for the ML
-                model.
-
-        Returns:
-            An ORM object representing a fake ML model.
-        """
-        description = self._faker.sentence() if include_description else None
-        ml_model_resource = models.Resource(resource_type="ml_model", owner=group)
-        new_ml_model = models.MlModel(
-            name=self._faker.word(),
-            description=description,
-            resource=ml_model_resource,
-            creator=creator,
-            artifact=artifact,
-        )
-
-        return new_ml_model
