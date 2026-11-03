@@ -23,7 +23,6 @@ from typing import Any, Final, overload
 
 import sqlalchemy as sa
 from sqlalchemy import func, select
-from sqlalchemy.orm import aliased
 
 import dioptra.restapi.db.repository.utils as utils
 from dioptra.restapi.db.models import (
@@ -37,13 +36,11 @@ from dioptra.restapi.db.models import (
     QueueJob,
     Resource,
     Tag,
-    resource_dependencies_table,
 )
 from dioptra.restapi.db.models.jobs import JobLog, JobMetric, JobMlflowRun
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.errors import (
     EntityDoesNotExistError,
-    EntityNotRegisteredError,
     JobInvalidStatusTransitionError,
     SortParameterValidationError,
 )
@@ -317,61 +314,6 @@ class JobRepository:
             deletion_policy,
             additional_query_terms,
         )
-
-    def assert_resources_registered(
-        self, entrypoint_id: int, experiment_id: int, queue_id: int
-    ):
-        # Validate that the provided entrypoint_id is registered to the experiment
-        parent_experiment = aliased(Experiment)
-        experiment_entry_point_ids_stmt = (
-            select(EntryPoint.resource_id)
-            .join(
-                resource_dependencies_table,
-                EntryPoint.resource_id
-                == resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_experiment,
-                parent_experiment.resource_id
-                == resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_experiment.resource_id == experiment_id)
-        )
-        experiment_entry_point_ids = list(
-            self.session.scalars(experiment_entry_point_ids_stmt).all()
-        )
-
-        if entrypoint_id not in set(experiment_entry_point_ids):
-            raise EntityNotRegisteredError(
-                "experiment",
-                experiment_id,
-                "entry_point",
-                entrypoint_id,
-            )
-
-        # Validate that the provided queue_id is registered to the entrypoint
-        parent_entry_point = aliased(EntryPoint)
-        entry_point_queue_ids_stmt = (
-            select(Queue.resource_id)
-            .join(
-                resource_dependencies_table,
-                Queue.resource_id == resource_dependencies_table.c.child_resource_id,
-            )
-            .join(
-                parent_entry_point,
-                parent_entry_point.resource_id
-                == resource_dependencies_table.c.parent_resource_id,
-            )
-            .where(parent_entry_point.resource_id == entrypoint_id)
-        )
-        entry_point_queue_ids = list(
-            self.session.scalars(entry_point_queue_ids_stmt).all()
-        )
-
-        if queue_id not in set(entry_point_queue_ids):
-            raise EntityNotRegisteredError(
-                "entry_point", entrypoint_id, "queue", queue_id
-            )
 
     def set_status(
         self,

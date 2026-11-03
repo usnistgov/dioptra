@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.utils.checks import assert_resource_registered
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
 from dioptra.restapi.errors import (
     DioptraError,
@@ -81,7 +82,20 @@ def _create_job(
 
     status = "queued"
 
-    uow.job_repo.assert_resources_registered(entrypoint_id, experiment_id, queue_id)
+    assert_resource_registered(
+        uow.session,
+        experiment_id,
+        entrypoint_id,
+        parent_type=EntityType.EXPERIMENT,
+        child_type=EntityType.ENTRY_POINT,
+    )
+    assert_resource_registered(
+        uow.session,
+        entrypoint_id,
+        queue_id,
+        parent_type=EntityType.ENTRY_POINT,
+        child_type=EntityType.QUEUE,
+    )
 
     experiment = uow.experiment_repo.get_one(experiment_id, DeletionPolicy.NOT_DELETED)
     queue = uow.queue_repo.get_one(queue_id, DeletionPolicy.NOT_DELETED)
