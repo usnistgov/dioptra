@@ -23,6 +23,7 @@ without raising exceptions.
 from collections.abc import Iterable, Mapping
 
 import sqlalchemy as sa
+from sqlalchemy.orm import aliased
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
@@ -875,6 +876,39 @@ def assert_draft_does_not_exist(
         raise e.DraftAlreadyExistsError(resource_type, draft_id)
 
 
+def assert_resource_registered(
+    session: CompatibleSession[S],
+    parent_id: int,
+    child_id: int,
+    *,
+    parent_type: EntityType,
+    child_type: EntityType,
+) -> None:
+    """Require a typed parent-child registration, regardless of deletion status.
+
+    Raises:
+        EntityNotRegisteredError: If the requested registration does not exist.
+    """
+    parent = aliased(m.Resource)
+    child = aliased(m.Resource)
+    dependencies = m.resource_dependencies_table
+    registration = (
+        sa.select(dependencies.c.parent_resource_id)
+        .join(parent, parent.resource_id == dependencies.c.parent_resource_id)
+        .join(child, child.resource_id == dependencies.c.child_resource_id)
+        .where(
+            parent.resource_id == parent_id,
+            child.resource_id == child_id,
+            parent.resource_type == parent_type.db_table_name,
+            child.resource_type == child_type.db_table_name,
+        )
+    )
+    if not session.scalar(sa.select(registration.exists())):
+        raise e.EntityNotRegisteredError(
+            parent_type.db_table_name, parent_id, child_type.db_table_name, child_id
+        )
+
+
 def assert_can_create_resource(
     session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
 ):
@@ -1287,6 +1321,7 @@ def assert_snapshot_name_available(
 
 
 __all__ = [
+    "assert_resource_registered",
     "assert_can_create_resource",
     "assert_can_create_snapshot",
     "assert_draft_does_not_exist",

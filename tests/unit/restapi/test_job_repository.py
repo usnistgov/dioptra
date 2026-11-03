@@ -27,6 +27,7 @@ from dioptra.restapi.db.models.constants import (
     resource_lock_types,
     user_lock_types,
 )
+from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.jobs.schema import JobLogSeverity
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
@@ -1129,17 +1130,26 @@ class TestJobGetByFiltersPaged:
 
 
 class TestJobAssertResourcesRegistered:
-    """Tests for JobRepository.assert_resources_registered()"""
+    """Tests for registration checks used during job creation."""
 
     def test_assert_resources_registered_success(
         self, db_session: DBSession, account, job_repo, experiment_with_dependencies
     ):
         experiment, entry_point, queue = experiment_with_dependencies
 
-        job_repo.assert_resources_registered(
-            entry_point.resource_id,
+        utils.assert_resource_registered(
+            db_session,
             experiment.resource_id,
+            entry_point.resource_id,
+            parent_type=EntityType.EXPERIMENT,
+            child_type=EntityType.ENTRY_POINT,
+        )
+        utils.assert_resource_registered(
+            db_session,
+            entry_point.resource_id,
             queue.resource_id,
+            parent_type=EntityType.ENTRY_POINT,
+            child_type=EntityType.QUEUE,
         )
 
     def test_assert_resources_registered_entrypoint_not_registered(
@@ -1173,10 +1183,12 @@ class TestJobAssertResourcesRegistered:
         db_session.commit()
 
         with pytest.raises(errors.EntityNotRegisteredError):
-            job_repo.assert_resources_registered(
-                entry_point2.resource_id,
+            utils.assert_resource_registered(
+                db_session,
                 experiment.resource_id,
-                queue.resource_id,
+                entry_point2.resource_id,
+                parent_type=EntityType.EXPERIMENT,
+                child_type=EntityType.ENTRY_POINT,
             )
 
     def test_assert_resources_registered_queue_not_registered(
@@ -1194,10 +1206,12 @@ class TestJobAssertResourcesRegistered:
         db_session.commit()
 
         with pytest.raises(errors.EntityNotRegisteredError):
-            job_repo.assert_resources_registered(
+            utils.assert_resource_registered(
+                db_session,
                 entry_point.resource_id,
-                experiment.resource_id,
                 queue2.resource_id,
+                parent_type=EntityType.ENTRY_POINT,
+                child_type=EntityType.QUEUE,
             )
 
     def test_assert_resources_registered_queue_registered_to_other_entrypoint(
@@ -1222,10 +1236,12 @@ class TestJobAssertResourcesRegistered:
         db_session.commit()
 
         with pytest.raises(errors.EntityNotRegisteredError):
-            job_repo.assert_resources_registered(
+            utils.assert_resource_registered(
+                db_session,
                 entry_point.resource_id,
-                experiment.resource_id,
                 queue2.resource_id,
+                parent_type=EntityType.ENTRY_POINT,
+                child_type=EntityType.QUEUE,
             )
 
 
