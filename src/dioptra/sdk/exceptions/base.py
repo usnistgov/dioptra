@@ -21,14 +21,6 @@ class BaseDioptraError(Exception):
     """Base class for all Dioptra exceptions."""
 
 
-class BaseGenericsRegistryError(BaseDioptraError):
-    """Base class for all generics registration exceptions."""
-
-
-class BaseOptionalDependencyError(BaseDioptraError):
-    """Base class for all optional dependency exceptions."""
-
-
 class BasePyPlugsException(BaseDioptraError):
     """Base class for all PyPlugs exceptions."""
 

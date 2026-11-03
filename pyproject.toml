@@ -54,7 +54,6 @@ dependencies = [
     "async-timeout>=4.0.0",
     "boto3>=1.16.0",
     "Click>=8.0.0,<9",
-    "entrypoints>=0.3",
     "flask-accepts>=0.17.0",
     "Flask-Cors>=3.0.1",
     "Flask-Login>=0.6.0",
@@ -67,7 +66,6 @@ dependencies = [
     "jsonschema>=4.17.0",
     "marshmallow>=3.9.0,<4",
     "mlflow-skinny>=2",
-    "multimethod>=1.5",
     "nh3>=0.3.0",
     "numpy>=1.22.0",
     "pandas>=1.5.0",
@@ -115,12 +113,6 @@ dioptra-db = "dioptra.restapi.db.alembic.run:cli"
 run-experiment = "dioptra.task_engine.run_experiment:main"
 validate-experiment = "dioptra.task_engine.validate:main"
 dioptra-worker-v1 = "dioptra.worker.dioptra_worker_v1:main"
-
-[project.entry-points."dioptra.generics.estimator_predict"]
-tf_keras_model = "dioptra.generics_plugins.estimator_predict.tf_keras_model"
-
-[project.entry-points."dioptra.generics.fit_estimator"]
-tf_keras_model = "dioptra.generics_plugins.fit_estimator.tf_keras_model"
 
 [dependency-groups]
 dev = [

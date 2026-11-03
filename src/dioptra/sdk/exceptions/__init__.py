@@ -14,19 +14,9 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .generics import EstimatorPredictGenericPredTypeError
-from .optional_dependencies import (
-    ARTDependencyError,
-    CryptographyDependencyError,
-    TensorflowDependencyError,
-)
 from .pyplugs import UnknownPackageError, UnknownPluginError, UnknownPluginFunctionError
 
 __all__ = [
-    "ARTDependencyError",
-    "CryptographyDependencyError",
-    "EstimatorPredictGenericPredTypeError",
-    "TensorflowDependencyError",
     "UnknownPackageError",
     "UnknownPluginError",
     "UnknownPluginFunctionError",
