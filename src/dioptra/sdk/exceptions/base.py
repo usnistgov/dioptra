@@ -25,9 +25,5 @@ class BasePyPlugsException(BaseDioptraError):
     """Base class for all PyPlugs exceptions."""
 
 
-class BaseTaskPluginError(BaseDioptraError):
-    """Base class for all task plugin exceptions."""
-
-
 class BaseTaskEngineError(BaseDioptraError):
     """Base class for all declarative task engine errors."""

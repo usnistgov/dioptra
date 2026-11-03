@@ -265,15 +265,6 @@ def render_swaps_graph(
     return rendered_graph
 
 
-def validate_swaps_graph(graph):
-    # validation checks that can be performed with only the graph portion of the yaml
-    issues = []
-    issues += validation._find_non_string_keys(graph, "graph")
-    issues += validation._check_graph_dependencies({"graph": graph})
-    issues += validation._check_step_structure({"graph": graph})
-    return issues
-
-
 def check_swaps_graph_dependencies(graph: dict[str, Any]) -> list[ValidationIssue]:
     """Check the dependency union of a schema-valid graph without rendering choices.
 

@@ -16,21 +16,16 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from .config import (
     attach_stdout_stream_handler,
-    clear_logger_handlers,
     configure_structlog,
     configure_structlog_for_worker,
     forward_job_logs_to_api,
     set_logging_level,
 )
-from .log_stream import StderrLogStream, StdoutLogStream
 
 __all__ = [
     "attach_stdout_stream_handler",
-    "clear_logger_handlers",
     "configure_structlog",
     "configure_structlog_for_worker",
     "forward_job_logs_to_api",
     "set_logging_level",
-    "StderrLogStream",
-    "StdoutLogStream",
 ]

@@ -16,7 +16,6 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from ._env_vars import env_vars
 from ._import_temp import import_temp
-from ._plugin_dirs import plugin_dirs
 from ._sys_path_dirs import sys_path_dirs
 
-__all__ = ["plugin_dirs", "sys_path_dirs", "env_vars", "import_temp"]
+__all__ = ["sys_path_dirs", "env_vars", "import_temp"]

@@ -22,7 +22,7 @@ import os
 import tarfile
 import textwrap
 import uuid
-from contextlib import ExitStack
+from contextlib import ExitStack, chdir
 from hashlib import sha256
 from http import HTTPStatus
 from io import BytesIO
@@ -46,7 +46,6 @@ from dioptra.client import (
     select_one_or_more_files,
 )
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
-from dioptra.sdk.utilities.paths import set_cwd
 
 from ..lib import actions, helpers, mock_mlflow, mock_rq
 
@@ -895,7 +894,7 @@ def registered_mlflowrun_incomplete(
 @pytest.fixture
 def resources_tar_file() -> DioptraFile:
     path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-    with set_cwd(path):
+    with chdir(path):
         with NamedTemporaryFile(suffix=".tar.gz", delete=False) as f:
             with tarfile.open(fileobj=f, mode="w:gz") as tar:
                 tar.add("dioptra.toml")
@@ -998,7 +997,7 @@ def resource_import_source(request, repository_http, repository_response):
 @pytest.fixture
 def resources_import_config() -> dict[str, Any]:
     path = Path(__file__).absolute().parent / "workflows" / "resource_import_files"
-    with set_cwd(path):
+    with chdir(path):
         with open(path / "dioptra.toml", "rb") as f:
             return toml.load(f)
 

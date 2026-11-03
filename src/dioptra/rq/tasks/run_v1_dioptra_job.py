@@ -15,13 +15,13 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import tempfile
+from contextlib import chdir
 
 import structlog
 from structlog.stdlib import BoundLogger
 
 import dioptra.sdk.utilities.run_dioptra_job as run_dioptra_job
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
-from dioptra.sdk.utilities.paths import set_cwd
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -38,7 +38,7 @@ def run_v1_dioptra_job(job_id: int, experiment_id: int) -> None:  # noqa: C901
     # Set up a temporary directory and set it as the current working directory
     with (
         tempfile.TemporaryDirectory() as tempdir,
-        set_cwd(tempdir),
+        chdir(tempdir),
         forward_job_logs_to_api(job_id),
     ):
         run_dioptra_job.main(

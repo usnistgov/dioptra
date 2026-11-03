@@ -33,8 +33,8 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     extract_swaps,
     render_swaps_config,
     render_swaps_graph,
-    validate_swaps_graph,
 )
+from dioptra.task_engine import validation
 from dioptra.task_engine.task_engine import EngineContext, _run_steps
 from dioptra.task_engine.util import step_get_plugin_short_name
 from dioptra.task_engine.validation import schema_validate
@@ -204,7 +204,6 @@ available_swaps = {
 
 
 def verify_correct_yaml(graph, all_swaps):
-    issues = []
     for output_file in all_swaps.keys():
         with (Path(__file__).absolute().parent / FILES_LOCATION / output_file).open(
             "r"
@@ -217,9 +216,9 @@ def verify_correct_yaml(graph, all_swaps):
         rendered_graph = render_swaps_graph(graph, swaps)
 
         assert expected_graph == rendered_graph
-        issues.append(validate_swaps_graph(rendered_graph))
-
-    return issues
+        assert validation._find_non_string_keys(rendered_graph, "graph") == []
+        assert validation._check_graph_dependencies({"graph": rendered_graph}) == []
+        assert validation._check_step_structure({"graph": rendered_graph}) == []
 
 
 @pytest.mark.parametrize(
@@ -233,8 +232,7 @@ def test_swap_render(yaml_file: str):
         data = f.read()
     graph = yaml.safe_load(data)
 
-    issues = verify_correct_yaml(graph, available_swaps)
-    assert all(issue == [] for issue in issues)
+    verify_correct_yaml(graph, available_swaps)
 
 
 @pytest.mark.parametrize("yaml_file", ["no_swaps_test.yml"])

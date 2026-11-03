@@ -113,14 +113,6 @@ def forward_job_logs_to_api(
         logger.removeHandler(handler)
 
 
-def clear_logger_handlers(logger: logging.Logger | None) -> None:
-    if logger is None:
-        return None
-
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-
-
 def configure_structlog_for_worker() -> None:
     structlog.configure(
         processors=[
