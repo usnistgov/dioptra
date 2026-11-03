@@ -266,7 +266,11 @@ def _check_global_parameter_types(
 
     global_parameters = experiment_desc.get("parameters", {})
     type_defs = experiment_desc.get("types", {})
-    type_names = type_registry.BUILTIN_TYPES.keys() | type_defs.keys()
+    type_names = (
+        type_registry.BUILTIN_TYPES.keys()
+        | type_registry.GLOBAL_PARAMETER_TYPE_KEYWORDS.keys()
+        | type_defs.keys()
+    )
 
     issues = []
 

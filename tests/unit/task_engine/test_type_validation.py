@@ -462,12 +462,96 @@ def test_global_parameter_defaults_good():
             "string": {"type": "string", "default": "abc"},
             "boolean": {"type": "boolean", "default": True},
             "null": {"type": "null", "default": None},
+            "list": {"type": "list", "default": [1, "a", True]},
+            "mapping": {"type": "mapping", "default": {"a": 1, "b": "c"}},
         },
         "tasks": {"foo": {"plugin": "org.example.foo"}},
         "graph": {"step1": {"foo": []}},
     }
 
     assert is_valid(experiment_desc)
+
+
+@pytest.mark.parametrize(
+    "bad_param",
+    [
+        {"type": "list", "default": "not_a_list"},
+        {"type": "list", "default": {"a": 1}},
+        {"type": "mapping", "default": "not_a_mapping"},
+        {"type": "mapping", "default": [1, 2]},
+    ],
+)
+def test_global_parameter_defaults_bad_list_mapping(bad_param) -> None:
+    experiment_desc = {
+        "parameters": {"bad_param": bad_param},
+        "tasks": {"foo": {"plugin": "org.example.foo"}},
+        "graph": {"step1": {"foo": []}},
+    }
+
+    assert not is_valid(experiment_desc)
+
+
+def test_global_parameter_list_flows_into_compatible_task_input() -> None:
+    experiment_desc = {
+        "types": {"list_of_anything": {"list": "any"}},
+        "parameters": {"items": {"type": "list"}},
+        "tasks": {
+            "foo": {
+                "plugin": "org.example.foo",
+                "inputs": [{"n1": "list_of_anything"}],
+            }
+        },
+        "graph": {"step1": {"foo": ["$items"]}},
+    }
+
+    assert is_valid(experiment_desc)
+
+
+def test_global_parameter_mapping_flows_into_compatible_task_input() -> None:
+    experiment_desc = {
+        "types": {"str_to_anything": {"mapping": ["string", "any"]}},
+        "parameters": {"options": {"type": "mapping"}},
+        "tasks": {
+            "foo": {
+                "plugin": "org.example.foo",
+                "inputs": [{"n1": "str_to_anything"}],
+            }
+        },
+        "graph": {"step1": {"foo": ["$options"]}},
+    }
+
+    assert is_valid(experiment_desc)
+
+
+def test_global_parameter_list_incompatible_with_scalar_task_input() -> None:
+    experiment_desc = {
+        "parameters": {"items": {"type": "list"}},
+        "tasks": {
+            "foo": {
+                "plugin": "org.example.foo",
+                "inputs": [{"n1": "string"}],
+            }
+        },
+        "graph": {"step1": {"foo": ["$items"]}},
+    }
+
+    assert not is_valid(experiment_desc)
+
+
+def test_global_parameter_mapping_incompatible_with_tuple_task_input() -> None:
+    experiment_desc = {
+        "types": {"str_int_tuple": {"tuple": ["string", "integer"]}},
+        "parameters": {"options": {"type": "mapping"}},
+        "tasks": {
+            "foo": {
+                "plugin": "org.example.foo",
+                "inputs": [{"n1": "str_int_tuple"}],
+            }
+        },
+        "graph": {"step1": {"foo": ["$options"]}},
+    }
+
+    assert not is_valid(experiment_desc)
 
 
 @pytest.mark.parametrize(

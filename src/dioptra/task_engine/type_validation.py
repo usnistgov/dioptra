@@ -890,7 +890,10 @@ def _infer_global_parameter_types(
             param_type_name = None
             param_default = param_def
 
-        if param_type_name:
+        if param_type_name in type_registry.GLOBAL_PARAMETER_TYPE_KEYWORDS:
+            param_type = type_registry.GLOBAL_PARAMETER_TYPE_KEYWORDS[param_type_name]
+
+        elif param_type_name:
             param_type = type_reg[param_type_name]
 
         else:

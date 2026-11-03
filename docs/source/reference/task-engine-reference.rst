@@ -328,6 +328,35 @@ Additional rules include:
   default value (from which a type can be inferred), or an explicitly given
   type.
 
+Global parameters may also be given the special ``list`` or ``mapping`` type
+keywords:
+
+.. code:: YAML
+
+    parameters:
+        selections:
+            type: list
+        options:
+            type: mapping
+
+These keywords are reserved transport types usable only as a global
+parameter's ``type`` value.  ``list`` resolves to an anonymous, broadly typed
+list (equivalent to ``{list: any}``), and ``mapping`` resolves to an anonymous,
+broadly typed string-keyed mapping (equivalent to ``{mapping: [string,
+any]}``).  They allow a required ``list``- or ``mapping``-valued global
+parameter to be declared without a default value, which would otherwise be
+impossible since there would be no way to infer a type.  Because they resolve
+to anonymous structured types, values assigned to them may still flow into any
+structurally compatible task input; structurally incompatible task inputs
+continue to fail type validation as usual (see `Structured Type
+Compatibility`_).
+
+``list`` and ``mapping`` are not part of the simple :ref:`builtin_types`, are
+not usable as plugin parameter types or task input/output types, and may still
+be used as ordinary property/structure keywords within a ``types:``
+definition, or as the name of a custom type.  They are recognized only when
+used as a global parameter's ``type`` value.
+
 Tasks
 -----
 

@@ -62,9 +62,9 @@ Optional Attributes
 - **Artifact Plugins**:  (list of Plugin IDs, optional) A list of Plugin containers to attach to the entrypoint - the associated Plugin Artifact Tasks are then made available to the Artifact Output Graph. Defaults to empty. (See: :ref:`Plugins Reference <reference-plugins>`)
 - **Artifact Plugin Snapshots**: (list of Plugin Snapshot IDs, optional) The selected plugin versions that provide artifact serialization and deserialization tasks to the Entrypoint.
 - **Parameters**: (list of Dicts, optional) Global parameters that can be used in the Entrypoint Task Graph and Artifact Output Graph. Each Parameter has a type and can optionally have a default value. Parameter values are set at Job runtime. Defaults to empty.
-    - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs 
-    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-parameter-types>`) 
-    - **Default Value** (String, Optional) An optional default value for the parameter which can be overwritten during job execution. Gets type converted during job execution time. 
+    - **Name** (string) The Name of the Entrypoint Parameter, used to access the Parameter in the Task Graphs
+    - **Type** (Plugin Parameter Type ID) The type for the parameter, used for type validation. (See: :ref:`Plugin Parameter Types <reference-parameter-types>`) Supported types are ``string``, ``float``, ``integer``, ``boolean``, ``list``, and ``mapping``. A ``list`` or ``mapping`` parameter may be required (no default value); the task-engine YAML generated for it uses the broad ``list``/``mapping`` global-parameter transport types described in the Task Engine Reference.
+    - **Default Value** (String, Optional) An optional default value for the parameter which can be overwritten during job execution. Gets type converted during job execution time.
 - **Artifact Parameters**: (list of Dicts, optional) Global objects, loaded from disk at Job execution, can be used in the Entrypoint Task Graph and Artifact Output Graph. User selects which specific artifact snapshot to load into the Artifact Parameter at Job Runtime. Defaults to empty.
     - **Name** (string) The Name of the Artifact Parameter, used to access the Object(s) in the Task Graphs 
     - **Output Parameters** (List of Outputs) List of outputs that the deserialize method of an artifact task is expected to produce

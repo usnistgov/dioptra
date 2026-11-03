@@ -43,6 +43,8 @@ from dioptra.restapi.v1.type_coercions import (
     BOOLEAN_PARAM_TYPE,
     FLOAT_PARAM_TYPE,
     INTEGER_PARAM_TYPE,
+    LIST_PARAM_TYPE,
+    MAPPING_PARAM_TYPE,
     STRING_PARAM_TYPE,
     coerce_to_type,
 )
@@ -90,6 +92,8 @@ _ENTRYPOINT_TO_TASK_ENGINE_TYPES: Final[dict[str, str]] = {
     BOOLEAN_PARAM_TYPE: "boolean",
     INTEGER_PARAM_TYPE: "integer",
     FLOAT_PARAM_TYPE: "number",
+    LIST_PARAM_TYPE: "list",
+    MAPPING_PARAM_TYPE: "mapping",
 }
 
 

@@ -72,6 +72,10 @@ def test_invalid_description(experiment_desc) -> None:
         {"arg1": {"default": "default_value"}},
         {"arg1": {"type": "integer"}},
         {"arg1": {"default": "default_value", "type": "string"}},
+        {"arg1": {"type": "list"}},
+        {"arg1": {"type": "mapping"}},
+        {"arg1": {"type": "list", "default": [1, 2, 3]}},
+        {"arg1": {"type": "mapping", "default": {"a": 1}}},
     ],
 )
 def test_valid_parameters(parameters) -> None:

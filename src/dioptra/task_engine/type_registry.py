@@ -53,6 +53,21 @@ BUILTIN_TYPES = {
 }
 
 
+# Reserved type-name shorthand usable only as a global parameter's "type"
+# value (not as a plugin parameter type, task input/output type, or inside a
+# "types:" definition).  They resolve to broad, anonymous structured types
+# meant as JSON-compatible transport types: "list" accepts a list of anything,
+# "mapping" accepts a string-keyed mapping to anything.
+GLOBAL_PARAMETER_TYPE_KEYWORDS: dict[str, types.Type] = {
+    "list": types.StructuredType(
+        types.TypeStructure(types.StructureType.LIST, TYPE_ANY)
+    ),
+    "mapping": types.StructuredType(
+        types.TypeStructure(types.StructureType.MAPPING, [TYPE_STRING, TYPE_ANY])
+    ),
+}
+
+
 # Type aliases for type annotations
 _TypeRegistry = Mapping[str, types.Type]
 _TypeDefinition = Mapping[str, Any]

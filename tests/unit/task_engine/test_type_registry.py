@@ -17,6 +17,7 @@
 """
 Test building types from type definitions.
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -33,6 +34,7 @@ from dioptra.sdk.exceptions.task_engine import (
     TypeReferenceCycleError,
 )
 from dioptra.task_engine.type_registry import (
+    GLOBAL_PARAMETER_TYPE_KEYWORDS,
     TYPE_ANY,
     TYPE_BOOLEAN,
     TYPE_INTEGER,
@@ -70,6 +72,20 @@ def test_builtin_types() -> None:
     assert any_type == TYPE_ANY
 
     assert int_type.is_subtype_of(number_type)
+
+
+def test_global_parameter_type_keywords() -> None:
+    list_type = GLOBAL_PARAMETER_TYPE_KEYWORDS["list"]
+    mapping_type = GLOBAL_PARAMETER_TYPE_KEYWORDS["mapping"]
+
+    assert list_type == StructuredType(TypeStructure(StructureType.LIST, TYPE_ANY))
+    assert mapping_type == StructuredType(
+        TypeStructure(StructureType.MAPPING, [TYPE_STRING, TYPE_ANY])
+    )
+
+    # Must be anonymous: not registered as builtin/named types
+    assert list_type.name is None
+    assert mapping_type.name is None
 
 
 def test_build_simple_type() -> None:
