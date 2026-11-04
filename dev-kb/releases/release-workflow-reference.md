@@ -82,7 +82,7 @@ The [validate-release-tag](../../.github/actions/validate-release-tag/action.yml
 
 ## Version reference locations
 
-Running `uvx tox run -e bumpver` updates `pyproject.toml`, `src/dioptra/{client,pyplugs,restapi,rq,sdk,task_engine,worker}/__version__.py`, the `README.md` version heading, and `docs/source/conf.py`.
+Running `uvx tox run -e bumpver` updates `pyproject.toml`, `src/dioptra/{client,pyplugs,restapi,rq,task_engine,worker}/__version__.py`, the `README.md` version heading, and `docs/source/conf.py`.
 
 The following files are outside bumpver and are updated explicitly during release preparation. `X.Y.Z` is the version being released:
 

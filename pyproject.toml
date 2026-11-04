@@ -266,9 +266,6 @@ tag_scope = "branch"
 "src/dioptra/rq/__version__.py" = [
     "{pep440_version}",
 ]
-"src/dioptra/sdk/__version__.py" = [
-    "{pep440_version}",
-]
 "src/dioptra/task_engine/__version__.py" = [
     "{pep440_version}",
 ]

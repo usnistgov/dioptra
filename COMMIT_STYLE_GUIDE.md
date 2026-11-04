@@ -79,7 +79,7 @@ The following is the list of supported scopes:
 
 -   **restapi**: used for updates related to the development and maintenance of the Testbed’s RESTful API
 
--   **sdk**: used for updates related to the development and maintenance of the Testbed’s software development kit
+-   **shared**: changes to shared contracts, exceptions, and logging infrastructure
 
 -   **ui**: used for updates related to the development and maintenance of the frontend web UI
 
