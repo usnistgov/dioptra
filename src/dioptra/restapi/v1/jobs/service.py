@@ -67,7 +67,7 @@ from dioptra.restapi.v1.type_coercions import (
     check_artifact_param_type_mismatch,
     coerce_entrypoint_param_types,
 )
-from dioptra.sdk.utilities.entrypoint_swaps import (
+from dioptra.task_engine.swaps import (
     check_swaps_graph_dependencies,
     render_swaps_graph,
 )

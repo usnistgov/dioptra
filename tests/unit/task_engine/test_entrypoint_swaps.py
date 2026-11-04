@@ -21,11 +21,12 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from dioptra.sdk.api.swappable_validation import (
+from dioptra.task_engine import validation
+from dioptra.task_engine.swappable_validation import (
     get_swap_graph_schema,
     get_swappable_json_schema_resources,
 )
-from dioptra.sdk.utilities.entrypoint_swaps import (
+from dioptra.task_engine.swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
     check_swaps_graph_dependencies,
@@ -34,7 +35,6 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     render_swaps_config,
     render_swaps_graph,
 )
-from dioptra.task_engine import validation
 from dioptra.task_engine.task_engine import EngineContext, _run_steps
 from dioptra.task_engine.util import step_get_plugin_short_name
 from dioptra.task_engine.validation import schema_validate

@@ -58,11 +58,13 @@ from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.views import (
     get_plugin_plugin_files_from_plugin_snapshot_ids,
 )
-from dioptra.sdk.api.swappable_validation import (
+from dioptra.task_engine import util
+from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.swappable_validation import (
     get_swappable_experiment_schema,
     get_swappable_json_schema_resources,
 )
-from dioptra.sdk.utilities.entrypoint_swaps import (
+from dioptra.task_engine.swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
     check_swaps_graph_dependencies,
@@ -72,8 +74,6 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     render_swaps_config,
     render_swaps_graph,
 )
-from dioptra.task_engine import util
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 from dioptra.task_engine.validation import schema_validate
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -1775,7 +1775,7 @@ class SwapsValidationService(UnitOfWorkService):
         self,
         pre_rendered_task_graph: dict[str, Any],
     ) -> list[ValidationIssue]:
-        from dioptra.sdk.api.swappable_validation import (
+        from dioptra.task_engine.swappable_validation import (
             get_swap_graph_schema,
             get_swappable_json_schema_resources,
         )

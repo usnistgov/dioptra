@@ -38,9 +38,9 @@ from dioptra.client import DioptraClient, connect_json_dioptra_client
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.sdk.utilities.contexts import env_vars, import_temp
-from dioptra.sdk.utilities.entrypoint_swaps import compile_swaps_config
 from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine.issues import IssueSeverity
+from dioptra.task_engine.swaps import compile_swaps_config
 from dioptra.task_engine.task_engine import (
     ArtifactOutputEntry,
     ArtifactTaskEntry,

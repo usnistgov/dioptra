@@ -21,13 +21,13 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
-from dioptra.sdk.api.swappable_validation import (
-    get_swappable_experiment_schema,
-    get_swappable_json_schema_resources,
-)
 from dioptra.task_engine import util, validation
 from dioptra.task_engine.exceptions import BaseTaskEngineError
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.swappable_validation import (
+    get_swappable_experiment_schema,
+    get_swappable_json_schema_resources,
+)
 
 
 def get_swap_choices(declaration: dict[str, Any]) -> dict[str, Any]:
