@@ -254,6 +254,13 @@ class BackendDatabaseError(DioptraError):
         )
 
 
+class RedisUnavailableError(DioptraError):
+    """The Redis service could not be reached or did not respond in time."""
+
+    def __init__(self):
+        super().__init__("Redis is unavailable.")
+
+
 class SearchNotImplementedError(DioptraError):
     """The search functionality has not been implemented."""
 

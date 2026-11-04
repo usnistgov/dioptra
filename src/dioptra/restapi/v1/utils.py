@@ -16,7 +16,16 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """Utility functions to help in building responses from ORM models"""
 
-from typing import Any, Callable, Final, Iterable, Optional, TypedDict, cast
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Iterable,
+    NotRequired,
+    Optional,
+    TypedDict,
+    cast,
+)
 from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
@@ -126,6 +135,7 @@ class ArtifactFileDict(TypedDict):
 class QueueDict(TypedDict):
     queue: models.Queue
     has_draft: bool | None
+    known_worker_count: NotRequired[int | None]
 
 
 class EntrypointDict(TypedDict):
@@ -146,6 +156,7 @@ class EntrypointArtifactDict(TypedDict):
 
 class JobDict(TypedDict):
     job: models.Job
+    queue_known_worker_count: NotRequired[int | None]
     artifacts: list[models.Artifact]
     has_draft: bool | None
     swap_task_names: dict[tuple[int, str, str], str]
@@ -791,7 +802,7 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
     has_draft = job_dict.get("has_draft", None)
     swap_task_names = job_dict.get("swap_task_names", {})
 
-    data = {
+    data: dict[str, Any] = {
         "id": job.resource_id,
         "snapshot_id": job.resource_snapshot_id,
         "description": job.description,
@@ -832,6 +843,8 @@ def build_job(job_dict: JobDict) -> dict[str, Any]:
         "latest_snapshot": job.resource.latest_snapshot_id == job.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in job.tags],
     }
+
+    data["queue"]["knownWorkerCount"] = job_dict.get("queue_known_worker_count")
 
     if artifacts is not None:
         data["artifacts"] = [build_artifact_ref(artifact) for artifact in artifacts]
@@ -1033,6 +1046,7 @@ def build_queue(queue_dict: QueueDict) -> dict[str, Any]:
         "id": queue.resource_id,
         "snapshot_id": queue.resource_snapshot_id,
         "name": queue.name,
+        "knownWorkerCount": queue_dict.get("known_worker_count"),
         "description": queue.description,
         "user": build_user_ref(queue.creator),
         "group": build_group_ref(queue.resource.owner),

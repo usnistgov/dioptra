@@ -8,7 +8,7 @@
   >
     <q-icon
       class="worker-icon"
-      :name="count === 0 ? 'sym_o_warning' : 'sym_o_dns'"
+      :name="icon"
       size="18px"
     />
     <span class="q-ml-xs">{{ count ?? "?" }}</span>
@@ -21,13 +21,17 @@ import { computed } from "vue";
 
 const props = defineProps<{
   queueName?: string;
-  count?: number;
-  loading: boolean;
+  count?: number | null;
 }>();
 
+const icon = computed(() => {
+  if (props.count == null) return "sym_o_cloud_off";
+  return props.count === 0 ? "sym_o_warning" : "sym_o_dns";
+});
+
 const message = computed(() => {
-  if (props.count === undefined) {
-    return props.loading ? "Checking known workers listening to this queue…" : "Known worker count unavailable";
+  if (props.count == null) {
+    return "Known worker count unavailable";
   }
   return `${props.count} known ${props.count === 1 ? "worker" : "workers"} listening to queue "${props.queueName}"`;
 });

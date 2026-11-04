@@ -16,7 +16,7 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 """The schemas for serializing/deserializing Queue resources."""
 
-from marshmallow import Schema, ValidationError, fields
+from marshmallow import fields
 
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.schemas import (
@@ -49,6 +49,8 @@ class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
 class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
     """The snapshot reference schema for the data stored in a Queue resource."""
 
+    knownWorkerCount = fields.Integer(dump_only=True, allow_none=True)
+
     name = fields.String(
         attribute="name",
         metadata={"description": "Name of the Queue resource."},
@@ -73,6 +75,8 @@ QueueBaseSchema = generate_base_resource_schema("Queue", snapshot=True)
 class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):  # type: ignore
     """The schema for the data stored in a Queue resource."""
 
+    knownWorkerCount = fields.Integer(dump_only=True, allow_none=True)
+
 
 class QueuePageSchema(BasePageSchema):
     """The paged schema for the data stored in a Queue resource."""
@@ -81,48 +85,6 @@ class QueuePageSchema(BasePageSchema):
         QueueSchema,
         many=True,
         metadata={"description": "List of Queue resources in the current page."},
-    )
-
-
-class QueueWorkerStatusSchema(Schema):
-    workers = fields.Dict(
-        keys=fields.String(),
-        values=fields.Integer(),
-        attribute="workers",
-        allow_none=True,
-        metadata={
-            "description": (
-                "A dictionary mapping queue names to the number of known workers listening to that queue"
-            ),
-        },
-        load_default=dict,
-    )
-
-
-class DelimitedValues(fields.Field):
-    def __init__(self, *, delimiter: str = ",", **additional_metadata) -> None:
-        super().__init__(**additional_metadata)
-        self.delimiter = delimiter
-
-    def _deserialize(self, value, attr, data, **kwargs) -> list[str]:
-        try:
-            if value == "":
-                return []
-            return [s.strip() for s in value.split(self.delimiter) if s.strip()]
-        except Exception as e:
-            raise ValidationError(
-                f"{attr} is not a delimited list {value}. "
-                f"List format should be value1{self.delimiter}value2{self.delimiter}value3."
-            ) from e
-
-
-class QueueListSchema(Schema):
-    queueNames = DelimitedValues(
-        attribute="queue_names",
-        data_key="queueNames",
-        metadata={
-            "description": ("Comma-separated queue names to request worker status for.")
-        },
     )
 
 

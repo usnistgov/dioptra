@@ -31,6 +31,7 @@ from typing import Any
 import pytest
 from flask.testing import FlaskClient
 from pytest import MonkeyPatch
+from redis.exceptions import ConnectionError, TimeoutError
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
@@ -336,6 +337,10 @@ def assert_job_metrics_snapshots_matches_expectations(
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    "worker_count, redis_error",
+    [(0, None), (2, None), (None, ConnectionError), (None, TimeoutError)],
+)
 def test_create_job(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
@@ -343,6 +348,8 @@ def test_create_job(
     registered_experiments: dict[str, Any],
     registered_entrypoints: dict[str, Any],
     monkeypatch: MonkeyPatch,
+    worker_count: int | None,
+    redis_error: type[ConnectionError] | type[TimeoutError] | None,
 ) -> None:
     """Test that jobs can be correctly registered and retrieved using the API.
 
@@ -376,6 +383,14 @@ def test_create_job(
 
     monkeypatch.setattr(rq_service, "RQQueue", mock_rq.MockRQQueue)
 
+    def workers(queue):
+        if redis_error is not None:
+            raise redis_error("Redis unavailable")
+        assert worker_count is not None
+        return [object()] * worker_count
+
+    monkeypatch.setattr(rq_service.RQWorker, "all", workers)
+
     description = "The new job."
     queue_id = registered_queues["queue1"]["id"]
     experiment_id = registered_experiments["experiment1"]["id"]
@@ -393,6 +408,7 @@ def test_create_job(
         timeout=timeout,
         description=description,
     ).json()
+    assert job_response["queue"]["knownWorkerCount"] == worker_count
 
     """
     Validate the response matches the expected contents
@@ -438,6 +454,12 @@ def test_create_job(
     assert_retrieving_job_by_id_works(
         dioptra_client, job_id=job_response["id"], expected=job_response
     )
+
+    response = dioptra_client.experiments.jobs.get_by_id(
+        experiment_id, job_response["id"]
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == job_response
 
 
 def test_create_job_with_unused_no_swap_parameters(
@@ -1728,6 +1750,10 @@ def test_manage_job_snapshots(
         status="started",
     )
     modified_job = dioptra_client.jobs.get_by_id(job_id).json()
+
+    # Snapshot responses do not look up live worker counts.
+    job_to_change_status["queue"]["knownWorkerCount"] = None
+    modified_job["queue"]["knownWorkerCount"] = None
 
     # Run routine: resource snapshots tests
     routines.run_resource_snapshots_tests(

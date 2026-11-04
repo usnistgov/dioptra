@@ -30,8 +30,7 @@
       <QueueWorkerIndicator
         v-if="!showDrafts && !cellProps.row.deleted"
         :queueName="cellProps.row.name"
-        :count="workerCounts.get(cellProps.row.name)"
-        :loading="workersLoading"
+        :count="cellProps.row.knownWorkerCount"
       />
     </template>
     <template #body-cell-hasDraft="cellProps">
@@ -61,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import TableComponent from "@/components/TableComponent.vue";
 import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
@@ -69,7 +68,6 @@ import PageTitle from "@/components/PageTitle.vue";
 import { useRouter } from "vue-router";
 import { useTableUtils } from "@/services/useTableUtils";
 import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
-import { refreshWorkerCounts } from "@/services/refreshWorkerCounts";
 
 const router = useRouter();
 
@@ -97,14 +95,6 @@ const showDrafts = ref(false);
 
 const { rows, isLoading, showDeleted, tableRef, selected, showDeleteDialog, getData, deleteRow } =
   useTableUtils("queues");
-
-const workerCounts = ref(new Map());
-const workersLoading = ref(false);
-
-watch([rows, showDrafts], ([currentRows, drafts], _previousValues, onCleanup) => {
-  const queueNames = drafts ? [] : currentRows.filter((queue) => !queue.deleted).map((queue) => queue.name);
-  return refreshWorkerCounts(queueNames, workerCounts, workersLoading, onCleanup);
-});
 
 const editObjTags = ref({});
 

@@ -18,9 +18,12 @@ from typing import Final
 
 import structlog
 from redis import Redis
+from redis.exceptions import ConnectionError, TimeoutError
 from rq.queue import Queue as RQQueue
 from rq.worker import Worker as RQWorker
 from structlog.stdlib import BoundLogger
+
+from dioptra.restapi.errors import RedisUnavailableError
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -66,10 +69,9 @@ class RQServiceV1(object):
     def redis_queue(self, queue: str) -> RQQueue:
         return RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
 
-    def workers_per_queue(self, queue_list: list[str]) -> dict[str, int]:
-        """Count known RQ workers per queue, including workers running jobs."""
-        workers = {
-            queue: len(RQWorker.all(queue=self.redis_queue(queue)))
-            for queue in queue_list
-        }
-        return workers
+    def workers_for_queue(self, queue: str) -> int:
+        """Count known workers for a given queue name."""
+        try:
+            return len(RQWorker.all(queue=self.redis_queue(queue)))
+        except (ConnectionError, TimeoutError) as error:
+            raise RedisUnavailableError from error
