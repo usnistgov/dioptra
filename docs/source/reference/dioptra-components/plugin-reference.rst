@@ -106,7 +106,7 @@ Artifact tasks must be defined as classes that inherit from the ``ArtifactTaskIn
 
 **Parent Class Definition**
 
-    .. autoclass:: dioptra.sdk.api.artifact.ArtifactTaskInterface
+    .. autoclass:: dioptra.shared.artifacts.ArtifactTaskInterface
         :members:
 
 **Example Implementation**

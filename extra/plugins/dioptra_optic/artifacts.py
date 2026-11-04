@@ -25,7 +25,7 @@ import structlog
 import tensorflow as tf
 from structlog.stdlib import BoundLogger
 
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.shared.artifacts import ArtifactTaskInterface
 
 from .data import Dataset, DatasetMetadata
 

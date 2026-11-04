@@ -24,7 +24,7 @@ import pandas as pd
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.shared.artifacts import ArtifactTaskInterface
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

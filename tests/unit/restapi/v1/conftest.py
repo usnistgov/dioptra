@@ -505,7 +505,7 @@ def registered_artifact_plugins(
         group_id=auth_account["default_group_id"],
     ).get_json()
     contents = textwrap.dedent(
-        """from dioptra.sdk.api.artifact import ArtifactTaskInterface
+        """from dioptra.shared.artifacts import ArtifactTaskInterface
         from pathlib import Path
 
         class TestArtifactTask(ArtifactTaskInterface):

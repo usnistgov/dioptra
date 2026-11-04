@@ -23,8 +23,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any, NotRequired, Type, TypedDict, Union, cast
 
 import dioptra.pyplugs
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
 from dioptra.sdk.utilities.contexts import import_temp, sys_path_dirs
+from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine import util
 from dioptra.task_engine.exceptions import (
     ArtifactOutputNotFoundError,

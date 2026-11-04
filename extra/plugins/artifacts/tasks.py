@@ -25,7 +25,7 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 # [artifact-task-imports]
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.shared.artifacts import ArtifactTaskInterface
 from pathlib import Path
 from typing import Any
 # [end-artifact-task-imports]

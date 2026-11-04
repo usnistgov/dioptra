@@ -8,7 +8,7 @@ import numpy as np
 import structlog
 
 LOGGER = structlog.get_logger()
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.shared.artifacts import ArtifactTaskInterface
 
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
