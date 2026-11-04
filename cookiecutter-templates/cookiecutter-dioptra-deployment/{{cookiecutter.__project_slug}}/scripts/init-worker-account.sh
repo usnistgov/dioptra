@@ -23,5 +23,4 @@ curl -X POST http://restapi:5000/api/v1/users/ \
     -H 'Content-Type: application/json' \
     -d "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",
             \"password\": \"$DIOPTRA_WORKER_PASSWORD\",
-            \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\",
-            \"email\": \"dioptra@example.com\"}"
+            \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"

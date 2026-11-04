@@ -101,15 +101,15 @@ def context():
                 "tag": "latest",
                 "registry": "",
             },
-            "mc": {
-                "image": "mc",
-                "namespace": "minio",
+            "rc": {
+                "image": "rc",
+                "namespace": "rustfs",
                 "tag": "latest",
                 "registry": "",
             },
-            "minio": {
-                "image": "minio",
-                "namespace": "minio",
+            "rustfs": {
+                "image": "rustfs",
+                "namespace": "rustfs",
                 "tag": "latest",
                 "registry": "",
             },

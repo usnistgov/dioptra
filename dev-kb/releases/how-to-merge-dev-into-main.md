@@ -116,7 +116,7 @@ rm "$DEPLOYMENT_TEMPLATE.bak" "$DEPLOYMENT_TEST.bak" \
     README.md.bak examples/examples-setup-requirements.txt.bak
 ```
 
-Keep third-party image defaults (`postgres`, `redis`, `minio`, `minio/mc`, `pgadmin4`) unchanged unless an update was planned for this release.
+Keep third-party image defaults unchanged unless a separate update has been agreed. This retains `latest` for pgAdmin, Redis, RustFS, and its `rc` client, and the selected PostgreSQL major. RustFS and `rc` use `latest` so pulling upstream updates does not require a deployment-template change for each release. The commands change only the platform requirement in the examples; other requirements remain unchanged.
 
 Next, check whether `pyproject.toml` dependency declarations differ from `main`:
 

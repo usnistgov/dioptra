@@ -81,15 +81,15 @@
             "tag": "latest",
             "registry": ""
         },
-        "mc": {
-            "image": "mc",
-            "namespace": "minio",
-            "tag": "RELEASE.2023-10-14T01-57-03Z",
+        "rc": {
+            "image": "rc",
+            "namespace": "rustfs",
+            "tag": "latest",
             "registry": ""
         },
-        "minio": {
-            "image": "minio",
-            "namespace": "minio",
+        "rustfs": {
+            "image": "rustfs",
+            "namespace": "rustfs",
             "tag": "latest",
             "registry": ""
         },

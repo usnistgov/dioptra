@@ -36,8 +36,8 @@ CONTAINER_SSL_DIR="/ssl"
 INIT_ARGBASH_SERVICE="argbash"
 INIT_DB_SERVICE="db"
 INIT_FRONTEND_SERVICE="frontend-build"
-INIT_MC_SERVICE="mc"
-INIT_MINIO_SERVICE="minio"
+INIT_RC_SERVICE="rc"
+INIT_RUSTFS_SERVICE="rustfs"
 INIT_MLFLOW_TRACKING_SSL_SERVICE="mlflow-tracking-ssl"
 INIT_NAMED_VOLUMES_SERVICE="named-volumes"
 INIT_NGINX_SSL_SERVICE="nginx-ssl"
@@ -51,14 +51,14 @@ INIT_WORKER_ACCOUNT_SERVICE="init-dioptra-worker"
 DEFAULT_ARG_BRANCH="main"
 DEFAULT_ARG_ENABLE_NGINX_SSL="off"
 DEFAULT_ARG_ENABLE_POSTGRES_SSL="off"
-DEFAULT_ARG_SKIP_MINIO_SETUP="off"
+DEFAULT_ARG_SKIP_RUSTFS_SETUP="off"
 DEFAULT_ARG_PYTHON="$(command -v ${SCRIPT_DIRPATH}/.venv/bin/python 2&>/dev/null && echo "${SCRIPT_DIRPATH}/.venv/bin/python" || echo "python")"
 DEFAULT_ARG_WORKER_SSL_SERVICE="tfcpu"
 
 _arg_branch="${DEFAULT_ARG_BRANCH}"
 _arg_enable_nginx_ssl="${DEFAULT_ARG_ENABLE_NGINX_SSL}"
 _arg_enable_postgres_ssl="${DEFAULT_ARG_ENABLE_POSTGRES_SSL}"
-_arg_skip_minio_setup="${DEFAULT_ARG_SKIP_MINIO_SETUP}"
+_arg_skip_rustfs_setup="${DEFAULT_ARG_SKIP_RUSTFS_SETUP}"
 _arg_python="${DEFAULT_ARG_PYTHON}"
 _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 
@@ -69,7 +69,7 @@ _arg_worker_ssl_service="${DEFAULT_ARG_WORKER_SSL_SERVICE}"
 #   DEFAULT_ARG_BRANCH
 #   DEFAULT_ARG_PYTHON
 #   DEFAULT_ARG_WORKER_SSL_SERVICE
-# . DEFAULT_ARG_SKIP_MINIO_SETUP
+# . DEFAULT_ARG_SKIP_RUSTFS_SETUP
 #   SCRIPT_CMDNAME
 # Arguments:
 #   Error messages to log, a string
@@ -82,12 +82,12 @@ print_help() {
 		Utility that prepares the deployment initialization scripts.
 
 		Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-		                          [--skip-minio-setup] [--branch <arg>]
+		                          [--skip-rustfs-setup] [--branch <arg>]
 		                          [--worker-ssl-service [tfcpu|pytorchcpu]] [-h|--help]
 		        --enable-nginx-ssl: Enable the SSL-enabled configuration settings for nginx image
 		        --enable-postgres-ssl: Enable the SSL-enabled configuration settings for postgres
 		                               image
-		        --skip-minio-setup: Skip minio service setup. Useful when making configuration
+		        --skip-rustfs-setup: Skip rustfs service setup. Useful when making configuration
 		                            changes after initial deployment
 		        --branch: The Dioptra GitHub branch to use when syncing the built-in task plugins
 		                  and the frontend files (default: '${DEFAULT_ARG_BRANCH}')
@@ -224,8 +224,8 @@ parse_args() {
         _arg_enable_postgres_ssl="on"
         shift 1
         ;;
-      --skip-minio-setup)
-        _arg_skip_minio_setup="on"
+      --skip-rustfs-setup)
+        _arg_skip_rustfs_setup="on"
         shift 1
         ;;
       --branch)
@@ -377,19 +377,19 @@ start_db_service() {
 }
 
 ###########################################################################################
-# Starts a MinIO service as a background process
+# Starts a RustFS service as a background process
 #
 # Globals:
 #   DOCKER_COMPOSE_INIT_YML
-#   INIT_MINIO_SERVICE
+#   INIT_RUSTFS_SERVICE
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-start_minio_service() {
-  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" up -d "${INIT_MINIO_SERVICE}"
+start_rustfs_service() {
+  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" up -d --wait --wait-timeout 180 "${INIT_RUSTFS_SERVICE}"
 }
 
 ###########################################################################################
@@ -482,7 +482,7 @@ init_scripts() {
     "/scripts-src/git-clone.m4"
     "/scripts-src/globbed-copy.m4"
     "/scripts-src/init-frontend.sh"
-    "/scripts-src/init-minio.sh"
+    "/scripts-src/init-rustfs.sh"
     "/scripts-src/init-named-volumes.m4"
     "/scripts-src/init-worker-account.sh"
     "/scripts-src/manage-postgres-ssl.m4"
@@ -588,29 +588,29 @@ init_restapi_key() {
 }
 
 ###########################################################################################
-# Wrapper for the init-minio.sh utility script
+# Wrapper for the init-rustfs.sh utility script
 #
 # Globals:
 #   DOCKER_COMPOSE_INIT_YML
-#   INIT_MC_SERVICE
+#   INIT_RC_SERVICE
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-init_minio() {
+init_rustfs() {
   local args=(
-    "/scripts/init-minio.sh"
+    "/scripts/init-rustfs.sh"
   )
 
-  if [[ "${_arg_skip_minio_setup}" == "on" ]]; then
+  if [[ "${_arg_skip_rustfs_setup}" == "on" ]]; then
     return 0
   fi
 
   docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
     --rm \
-    "${INIT_MC_SERVICE}" \
+    "${INIT_RC_SERVICE}" \
     "${args[@]}"
 }
 
@@ -699,8 +699,8 @@ main() {
   init_extra_ca_certificates
   init_named_volumes
   init_restapi_key
-  start_minio_service
-  init_minio
+  start_rustfs_service
+  init_rustfs
   stop_services
   init_frontend
   start_db_service

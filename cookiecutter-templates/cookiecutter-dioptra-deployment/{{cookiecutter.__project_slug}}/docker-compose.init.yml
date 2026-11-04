@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-{% from "templates/macros/docker-compose.j2" import container_image, db_service, minio_service, mlflow_tracking_service, nfs_volume, restapi_service, service_networks -%}
+{% from "templates/macros/docker-compose.j2" import container_image, db_service, rustfs_service, mlflow_tracking_service, nfs_volume, restapi_service, service_networks -%}
 {% if cookiecutter.__containers.networks -%}
 networks:
   {% for network in cookiecutter.__containers.networks -%}
@@ -25,24 +25,7 @@ networks:
 
 {% endif -%}
 services:
-  minio:
-    image: {{ container_image(cookiecutter.__containers.minio) }}
-    restart: always
-    hostname: {{ cookiecutter.__project_slug }}-minio
-    command:
-      - server
-      - /data
-      - --console-address
-      - ":9001"
-    environment:
-      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-      MINIO_KMS_SECRET_KEY: "${MINIO_KMS_SECRET_KEY}"
-    networks:
-      - dioptra
-    volumes:
-      - "minio-certs:/root/.minio/certs:rw"
-      - "minio-data:/data:rw"
+  {{ rustfs_service(cookiecutter, "rustfs")|indent(2) }}
 
   db:
     image: postgres:{{ cookiecutter.postgres_container_tag }}
@@ -105,19 +88,23 @@ services:
     volumes:
       - "init-scripts:/scripts:ro"
 
-  mc:
-    image: {{ container_image(cookiecutter.__containers.mc) }}
-    hostname: {{ cookiecutter.__project_slug }}-mc
+  rc:
+    image: {{ container_image(cookiecutter.__containers.rc) }}
+    hostname: {{ cookiecutter.__project_slug }}-rc
+    # rustfs defaults to non-root
+    user: "0:0"
     entrypoint:
-      - "/bin/bash"
+      - "/bin/sh"
+    environment:
+      SSL_CERT_FILE: "/etc/ssl/certs/ca-certificates.crt"
+      SSL_CERT_DIR: "/etc/ssl/certs"
     {% if cookiecutter.__containers.networks -%}
     {{ service_networks(cookiecutter.__containers.networks)|indent(4) }}
     {% endif -%}
     volumes:
-      - "./config/minio:/s3-policy:ro"
+      - "./config/rustfs:/s3-policy:ro"
       - "./secrets:/secrets:ro"
-      - "minio-certs:/root/.mc/certs/CAs:ro"
-      - "init-repos:/init-repos:ro"
+      - "rc-ca-certificates:/etc/ssl/certs:ro"
       - "init-scripts:/scripts:ro"
 
   argbash:
@@ -133,7 +120,7 @@ services:
       - "file-copy.m4"
       - "git-clone.m4"
       - "globbed-copy.m4"
-      - "init-minio.sh"
+      - "init-rustfs.sh"
       - "init-named-volumes.m4"
       - "init-scripts.m4"
       - "manage-postgres-ssl.m4"
@@ -155,9 +142,9 @@ services:
       - "init-repos:/volumes/init-repos:rw"
       - "dbadmin-ca-certificates:/volumes/dbadmin-ca-certificates:rw"
       - "dbadmin-data:/volumes/dbadmin-data:rw"
-      - "mc-ca-certificates:/volumes/mc-ca-certificates:rw"
-      - "minio-certs:/volumes/minio-certs:rw"
-      - "minio-data:/volumes/minio-data:rw"
+      - "rc-ca-certificates:/volumes/rc-ca-certificates:rw"
+      - "rustfs-certs:/volumes/rustfs-certs:rw"
+      - "rustfs-data:/volumes/rustfs-data:rw"
       - "nginx-conf-d:/volumes/nginx-conf-d:rw"
       - "nginx-ca-certificates:/usr/local/share/ca-certificates:rw"
       - "nginx-etc-ssl:/volumes/nginx-etc-ssl:rw"
@@ -242,8 +229,8 @@ volumes:
     name: {{ cookiecutter.__project_slug }}_init-repos
   init-scripts:
     name: {{ cookiecutter.__project_slug }}_init-scripts
-  mc-ca-certificates:
-    name: {{ cookiecutter.__project_slug }}_mc-ca-certificates
+  rc-ca-certificates:
+    name: {{ cookiecutter.__project_slug }}_rc-ca-certificates
   dbadmin-ca-certificates:
     name: {{ cookiecutter.__project_slug }}_dbadmin-ca-certificates
   dbadmin-data:
@@ -252,10 +239,10 @@ volumes:
     name: {{ cookiecutter.__project_slug }}_mlflow-tracking-ca-certificates
   mlflow-tracking-etc-ssl:
     name: {{ cookiecutter.__project_slug }}_mlflow-tracking-etc-ssl
-  minio-certs:
-    name: {{ cookiecutter.__project_slug }}_minio-certs
-  minio-data:
-    name: {{ cookiecutter.__project_slug }}_minio-data
+  rustfs-certs:
+    name: {{ cookiecutter.__project_slug }}_rustfs-certs
+  rustfs-data:
+    name: {{ cookiecutter.__project_slug }}_rustfs-data
   nginx-ca-certificates:
     name: {{ cookiecutter.__project_slug }}_nginx-ca-certificates
   nginx-conf-d:
