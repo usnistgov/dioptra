@@ -512,10 +512,10 @@ These are the requirements you must satisfy regardless of whether you use the Di
 <td><p>Password for worker authentication with the REST API.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY_ID</span></code></p></td>
-<td><p>S3/MinIO access key (consumed by boto3/MLflow).</p></td>
+<td><p>S3/RustFS access key (consumed by boto3/MLflow).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AWS_SECRET_ACCESS_KEY</span></code></p></td>
-<td><p>S3/MinIO secret key (consumed by boto3/MLflow).</p></td>
+<td><p>S3/RustFS secret key (consumed by boto3/MLflow).</p></td>
 </tr>
 </tbody>
 </table>
@@ -545,7 +545,7 @@ Queue names are passed as positional arguments through the <code class="docutils
 </section>
 <section id="network">
 <h2><a class="toc-backref" href="#id3">Network</a><a class="headerlink" href="#network" title="Permalink to this headline">#</a></h2>
-<p>The worker container must join the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Docker network to communicate with other Dioptra services (Redis, MinIO, REST API, MLflow Tracking).</p>
+<p>The worker container must join the <code class="docutils literal notranslate"><span class="pre">dioptra</span></code> Docker network to communicate with other Dioptra services (Redis, RustFS, REST API, MLflow Tracking).</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">custom-worker</span><span class="p">:</span>
 <span class="w">    </span><span class="c1"># ...</span>

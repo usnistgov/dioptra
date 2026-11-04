@@ -508,7 +508,7 @@ Dioptra Workers are configured primarily through environment variables, which ar
 <li><p><strong>DIOPTRA_API</strong>: (string) The base URL of the Dioptra API service (e.g., <code class="docutils literal notranslate"><span class="pre">http://localhost:5000</span></code>).</p></li>
 <li><p><strong>RQ_REDIS_URI</strong>: (string, URI) The connection string for the Redis instance used by RQ (Redis Queue) to manage job distribution (e.g., <code class="docutils literal notranslate"><span class="pre">redis://localhost:6379/0</span></code>).</p></li>
 <li><p><strong>MLFLOW_TRACKING_URI</strong>: (string, URI) The URI for the MLflow Tracking server.</p></li>
-<li><p><strong>MLFLOW_S3_ENDPOINT_URL</strong>: (string, URL) The endpoint for S3-compatible storage (e.g. MinIO) used by MLflow to store large artifacts.</p></li>
+<li><p><strong>MLFLOW_S3_ENDPOINT_URL</strong>: (string, URL) The endpoint for S3-compatible storage (e.g. RustFS) used by MLflow to store large artifacts.</p></li>
 </ul>
 </section>
 <section id="optional-configuration">

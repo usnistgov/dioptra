@@ -483,6 +483,14 @@ document.write(`
   <section id="update-your-deployment">
 <span id="how-to-update-deployment"></span><h1>Update Your Deployment<a class="headerlink" href="#update-your-deployment" title="Permalink to this headline">#</a></h1>
 <p>This guide shows you how to apply configuration changes to your Dioptra deployment, whether from upstream template updates or local override file modifications.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The deployment template now uses RustFS instead of MinIO. Updating a
+MinIO-based deployment with this template does not migrate its stored
+artifacts or storage credentials. The RustFS initialization and rerun
+instructions below apply to fresh RustFS deployments and subsequent
+updates to those deployments.</p>
+</div>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
@@ -555,15 +563,15 @@ document.write(`
 <p>Run initialization as the user who owns the deployment files.
 The script preserves existing credentials and automatically repairs their permissions to owner-only access (<code class="docutils literal notranslate"><span class="pre">0600</span></code>).
 If it reports an incomplete or empty credential set, follow <a class="reference internal" href="recover-deployment-credentials.html#how-to-recover-deployment-credentials"><span class="std std-ref">Recover Deployment Credentials</span></a> before restarting services.</p>
-<p>When rerunning the script on an already-initialized deployment, it will freeze during the Minio setup step because those configurations have already been applied.
-Use the <code class="docutils literal notranslate"><span class="pre">--skip-minio-setup</span></code> option to skip this step:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--skip-minio-setup
+<p>RustFS initialization can be rerun: it preserves the existing bucket and skips policy attachments that are already present.
+Use the <code class="docutils literal notranslate"><span class="pre">--skip-rustfs-setup</span></code> option when you do not need to reconcile storage accounts and policies:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--skip-rustfs-setup
 </pre></div>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>If you previously enabled SSL/TLS, include those flags again:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl<span class="w"> </span>--skip-minio-setup
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl<span class="w"> </span>--skip-rustfs-setup
 </pre></div>
 </div>
 </div>

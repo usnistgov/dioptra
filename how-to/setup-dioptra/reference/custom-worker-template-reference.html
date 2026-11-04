@@ -578,7 +578,7 @@ See the <code class="docutils literal notranslate"><span class="pre">README.md</
 <dl class="simple">
 <dt><strong>aws-config</strong></dt><dd><p>AWS CLI configuration file copied to <code class="docutils literal notranslate"><span class="pre">~dioptra/.aws/config</span></code> in the final image.
 Sets the default AWS region (<code class="docutils literal notranslate"><span class="pre">us-east-1</span></code>), output format (<code class="docutils literal notranslate"><span class="pre">json</span></code>), and S3 signature version (<code class="docutils literal notranslate"><span class="pre">s3v4</span></code>).
-This is required for the worker to communicate with the S3-compatible storage backend (MinIO).</p>
+This is required for the worker to communicate with the S3-compatible storage backend (RustFS).</p>
 </dd>
 </dl>
 </section>
@@ -587,7 +587,7 @@ This is required for the worker to communicate with the S3-compatible storage ba
 <p>Shell script templates that are compiled during the Docker build.</p>
 <dl class="simple">
 <dt><strong>entrypoint-worker.m4</strong></dt><dd><p>Template for the container’s entrypoint script.
-The compiled script waits for dependent services (Redis, MinIO, database, REST API) to become available, then starts the <code class="docutils literal notranslate"><span class="pre">dioptra-worker-v1</span></code> process.</p>
+The compiled script waits for dependent services (Redis, RustFS, database, REST API) to become available, then starts the <code class="docutils literal notranslate"><span class="pre">dioptra-worker-v1</span></code> process.</p>
 </dd>
 <dt><strong>healthcheck-worker.m4</strong></dt><dd><p>Template for the container’s health check script.
 The compiled script verifies that the <code class="docutils literal notranslate"><span class="pre">dioptra-worker-v1</span></code> process is running.</p>

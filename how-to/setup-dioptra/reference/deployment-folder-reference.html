@@ -457,7 +457,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-tree">Folder Tree</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-directory">config/ Directory</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-db">config/db/</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-minio">config/minio/</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-rustfs">config/rustfs/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-nginx">config/nginx/</a></li>
 </ul>
 </li>
@@ -507,7 +507,7 @@ If you set this variable to a different value, the prefixes will change accordin
 ├── config/
 │   ├── db/
 │   │   └── init-db.sh
-│   ├── minio/
+│   ├── rustfs/
 │   │   └── mlflow-tracking-readwrite-policy.json
 │   └── nginx/
 │       ├── http_*.conf
@@ -525,20 +525,20 @@ If you set this variable to a different value, the prefixes will change accordin
 │   ├── templates/
 │   │   ├── dioptra.service.j2
 │   │   ├── dot-env.j2
-│   │   ├── minio-accounts.env.j2
+│   │   ├── rustfs-accounts.env.j2
 │   │   └── postgres-passwd.env.j2
 │   ├── copy-extra-ca-certificates.m4
 │   ├── file-copy.m4
 │   ├── generate_password_templates.py
 │   ├── git-clone.m4
 │   ├── globbed-copy.m4
-│   ├── init-minio.sh
+│   ├── init-rustfs.sh
 │   ├── init-named-volumes.m4
 │   ├── init-scripts.sh
 │   ├── manage-postgres-ssl.m4
 │   └── set-permissions.m4
 ├── secrets/
-│   ├── dioptra-deployment-minio-accounts.env
+│   ├── dioptra-deployment-rustfs-accounts.env
 │   └── postgres-passwd.env
 ├── ssl/
 │   ├── ca-certificates/
@@ -569,9 +569,9 @@ If you set this variable to a different value, the prefixes will change accordin
 </dd>
 </dl>
 </section>
-<section id="config-minio">
-<h3>config/minio/<a class="headerlink" href="#config-minio" title="Permalink to this headline">#</a></h3>
-<p>These JSON files define access policies for the Minio S3 storage service:</p>
+<section id="config-rustfs">
+<h3>config/rustfs/<a class="headerlink" href="#config-rustfs" title="Permalink to this headline">#</a></h3>
+<p>These JSON files define access policies for the RustFS S3 storage service:</p>
 <dl class="simple">
 <dt><strong>mlflow-tracking-readwrite-policy.json</strong></dt><dd><p>Configures a readwrite role for the <code class="docutils literal notranslate"><span class="pre">artifacts/</span></code> folder in the mlflow-tracking bucket.</p>
 </dd>
@@ -587,7 +587,7 @@ If you set this variable to a different value, the prefixes will change accordin
 <li><p><code class="docutils literal notranslate"><span class="pre">http_proxy.conf</span></code> - General reverse proxy settings, including request header modifications</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">http_restapi.conf</span></code> - Dioptra REST API service</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">http_mlflow.conf</span></code> - MLflow Tracking service</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">http_minio.conf</span></code> - Minio S3 service</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">http_rustfs.conf</span></code> - RustFS S3 service</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">http_dbadmin.conf</span></code> - pgadmin4 dashboard</p></li>
 </ul>
 </dd>
@@ -595,7 +595,7 @@ If you set this variable to a different value, the prefixes will change accordin
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">https_default.conf</span></code> - HTTPS defaults, including paths to server certificate and private key</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">https_proxy.conf</span></code> - Reverse proxy settings for HTTPS</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">https_restapi.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_mlflow.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_minio.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_dbadmin.conf</span></code> - HTTPS versions of each service</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">https_restapi.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_mlflow.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_rustfs.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_dbadmin.conf</span></code> - HTTPS versions of each service</p></li>
 </ul>
 </dd>
 <dt><strong>stream_db.conf</strong></dt><dd><p>Configures NGINX to proxy TCP requests to the PostgreSQL database. This is a simple passthrough; any SSL encryption must be enabled in the PostgreSQL service itself.</p>
@@ -672,7 +672,7 @@ If you set this variable to a different value, the prefixes will change accordin
 </dd>
 <dt><strong>dot-env.j2</strong></dt><dd><p>Template for generating the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file containing environment variables and passwords.</p>
 </dd>
-<dt><strong>minio-accounts.env.j2</strong></dt><dd><p>Template for generating Minio account credentials.</p>
+<dt><strong>rustfs-accounts.env.j2</strong></dt><dd><p>Template for generating RustFS account credentials.</p>
 </dd>
 <dt><strong>postgres-passwd.env.j2</strong></dt><dd><p>Template for generating PostgreSQL passwords.</p>
 </dd>
@@ -685,7 +685,7 @@ If you set this variable to a different value, the prefixes will change accordin
 </dd>
 <dt><strong>init-deployment.sh</strong> (see Root Directory section)</dt><dd><p>Main initialization script.</p>
 </dd>
-<dt><strong>init-minio.sh</strong></dt><dd><p>Sets Minio policies defined in <code class="docutils literal notranslate"><span class="pre">config/minio/</span></code>.</p>
+<dt><strong>init-rustfs.sh</strong></dt><dd><p>Sets RustFS policies defined in <code class="docutils literal notranslate"><span class="pre">config/rustfs/</span></code>.</p>
 </dd>
 <dt><strong>init-scripts.sh</strong></dt><dd><p>Translates <code class="docutils literal notranslate"><span class="pre">.m4</span></code> files into executable bash scripts using argbash.</p>
 </dd>
@@ -710,19 +710,19 @@ If you set this variable to a different value, the prefixes will change accordin
 <p>Files in this directory contain sensitive passwords. <strong>DO NOT commit these files to version control or share them.</strong></p>
 </div>
 <dl class="simple">
-<dt><strong>dioptra-deployment-minio-accounts.env</strong></dt><dd><p>Minio account credentials generated by the initialization script.</p>
+<dt><strong>dioptra-deployment-rustfs-accounts.env</strong></dt><dd><p>RustFS account credentials generated by the initialization script.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_USER</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_MLFLOW_TRACKING_USER</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_MLFLOW_TRACKING_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_MLFLOW_TRACKING_POLICIES</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_RESTAPI_USER</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_RESTAPI_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_RESTAPI_POLICIES</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_WORKER_USER</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_WORKER_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_WORKER_POLICIES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_ACCESS_KEY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_SECRET_KEY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_MLFLOW_TRACKING_USER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_MLFLOW_TRACKING_PASSWORD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_MLFLOW_TRACKING_POLICIES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_RESTAPI_USER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_RESTAPI_PASSWORD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_RESTAPI_POLICIES</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_WORKER_USER</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_WORKER_PASSWORD</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_WORKER_POLICIES</span></code></p></li>
 </ul>
 </dd>
 <dt><strong>postgres-passwd.env</strong></dt><dd><p>PostgreSQL passwords generated by the initialization script.</p>
@@ -740,6 +740,7 @@ If you set this variable to a different value, the prefixes will change accordin
 <section id="ssl-ca-certificates">
 <h3>ssl/ca-certificates/<a class="headerlink" href="#ssl-ca-certificates" title="Permalink to this headline">#</a></h3>
 <p>Place extra CA certificates here if your environment uses an internal certificate authority.
+Initialization also copies these certificates and the updated CA bundle into the <code class="docutils literal notranslate"><span class="pre">rustfs-certs</span></code> and <code class="docutils literal notranslate"><span class="pre">rc-ca-certificates</span></code> volumes for RustFS and its client.
 See <a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> for details.</p>
 </section>
 <section id="ssl-db">
@@ -778,9 +779,9 @@ These variables are referenced in <code class="docutils literal notranslate"><sp
 <li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_MLFLOW_TRACKING_DATABASE_URI</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_WORKER_USERNAME</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_WORKER_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_USER</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_ROOT_PASSWORD</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MINIO_KMS_SECRET_KEY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_ACCESS_KEY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_SECRET_KEY</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RUSTFS_KMS_STATIC_SECRET_KEY</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLFLOW_SERVER_ALLOWED_HOSTS</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLFLOW_TRACKING_AWS_ACCESS_KEY_ID</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLFLOW_TRACKING_AWS_SECRET_ACCESS_KEY</span></code></p></li>
@@ -864,7 +865,7 @@ See <a class="reference internal" href="../configure-setup/data-mounts.html#how-
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-tree">Folder Tree</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-directory">config/ Directory</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-db">config/db/</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-minio">config/minio/</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-rustfs">config/rustfs/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-nginx">config/nginx/</a></li>
 </ul>
 </li>
