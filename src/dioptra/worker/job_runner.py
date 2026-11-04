@@ -39,7 +39,6 @@ from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.client.worker import get_authenticated_worker_client
 from dioptra.pyplugs.contexts import import_temp
-from dioptra.sdk.utilities.contexts import env_vars
 from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.swaps import compile_swaps_config
@@ -49,6 +48,7 @@ from dioptra.task_engine.task_engine import (
     run_experiment,
 )
 from dioptra.task_engine.validation import SCHEMA_FILENAME, get_json_schema
+from dioptra.worker.contexts import env_vars
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
