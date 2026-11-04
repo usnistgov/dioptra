@@ -34,9 +34,10 @@ import structlog
 import yaml
 from structlog.stdlib import BoundLogger
 
-from dioptra.client import DioptraClient, connect_json_dioptra_client
+from dioptra.client import DioptraClient
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
+from dioptra.client.worker import get_authenticated_worker_client
 from dioptra.sdk.utilities.contexts import env_vars, import_temp
 from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine.issues import IssueSeverity
@@ -51,9 +52,6 @@ from dioptra.task_engine.validation import SCHEMA_FILENAME, get_json_schema
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 DIOPTRA_JOB_ID: Final[str] = "dioptra.jobId"
-ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
-ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
-ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
 ENV_MLFLOW_S3_ENDPOINT_URL: Final[str] = "MLFLOW_S3_ENDPOINT_URL"
 ENV_MLFLOW_TRACKING_URI: Final[str] = "MLFLOW_TRACKING_URI"
 
@@ -130,7 +128,7 @@ def main(
     context.mkdirs()
 
     # obtain a connection to the dioptra REST API
-    dioptra_client = _get_client(log)
+    dioptra_client = get_authenticated_worker_client(log, "json")
 
     try:
         # Set Dioptra Job status to "started"
@@ -237,32 +235,6 @@ def main(
     dioptra_client.experiments.jobs.set_status(
         experiment_id=experiment_id, job_id=job_id, status="finished"
     )
-
-
-def _get_client(log: BoundLogger) -> DioptraClient[dict[str, Any]]:
-    if (username := os.getenv(ENV_DIOPTRA_WORKER_USERNAME)) is None:
-        log.error(f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set")
-        raise ValueError(
-            f"{ENV_DIOPTRA_WORKER_USERNAME} environment variable is not set"
-        )
-
-    if (password := os.getenv(ENV_DIOPTRA_WORKER_PASSWORD)) is None:
-        log.error(f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set")
-        raise ValueError(
-            f"{ENV_DIOPTRA_WORKER_PASSWORD} environment variable is not set"
-        )
-
-    # Instantiate a Dioptra client and login using worker's authentication details
-    try:
-        client = connect_json_dioptra_client()
-
-    except ValueError:
-        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
-        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
-
-    client.auth.login(username=username, password=password)
-
-    return client
 
 
 def _validate_environment(log: BoundLogger) -> None:

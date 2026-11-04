@@ -19,13 +19,13 @@ import sys
 from collections.abc import Iterator, Mapping, MutableMapping
 from contextlib import contextmanager
 from logging import getLogger
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 import structlog
 
 from dioptra.client import DioptraClient
 from dioptra.client.base import DioptraResponseProtocol
-from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
+from dioptra.client.worker import get_authenticated_worker_client
 
 from .filters import LibraryFilter, OmitClientJobLoggingFilter
 from .handlers import DioptraJobLoggingHandler
@@ -73,11 +73,7 @@ def forward_job_logs_to_api(
     """
     logger = getLogger()
     if client is None:
-        # need to cast because return type can't be inferred at runtime
-        client = cast(
-            DioptraClient[DioptraResponseProtocol],
-            get_authenticated_worker_client(logger, "response"),
-        )
+        client = get_authenticated_worker_client(logger, "response")
 
     formatter = structlog.stdlib.ProcessorFormatter(
         processors=[

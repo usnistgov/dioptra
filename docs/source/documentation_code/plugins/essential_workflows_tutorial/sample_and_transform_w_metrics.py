@@ -94,7 +94,7 @@ def log_stats(input_array: np.ndarray, plugin_step_name: str) -> None:
 
     try:
         # Try and log metrics using Dioptra client 
-        from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
+        from dioptra.client.worker import get_authenticated_worker_client
 
         # Get the job ID and client
         job_id = os.environ["__JOB_ID"]

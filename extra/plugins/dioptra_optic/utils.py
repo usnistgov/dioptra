@@ -25,7 +25,7 @@ from keras.callbacks import Callback
 from keras.src.metrics.reduction_metrics import MeanMetricWrapper
 
 from dioptra import pyplugs
-from dioptra.sdk.utilities.auth_client import get_authenticated_worker_client
+from dioptra.client.worker import get_authenticated_worker_client
 
 LOGGER = structlog.get_logger()
 

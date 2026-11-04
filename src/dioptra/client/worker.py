@@ -16,20 +16,34 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import logging
 import os
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, overload
 
 from structlog.stdlib import BoundLogger
 
-from dioptra.client import (
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import (
     DioptraClient,
     connect_json_dioptra_client,
     connect_response_dioptra_client,
 )
-from dioptra.client.base import DioptraResponseProtocol
 
 ENV_DIOPTRA_API: Final[str] = "DIOPTRA_API"
 ENV_DIOPTRA_WORKER_USERNAME: Final[str] = "DIOPTRA_WORKER_USERNAME"
 ENV_DIOPTRA_WORKER_PASSWORD: Final[str] = "DIOPTRA_WORKER_PASSWORD"
+
+
+@overload
+def get_authenticated_worker_client(
+    log: logging.Logger | BoundLogger,
+    client_type: Literal["json"],
+) -> DioptraClient[dict[str, Any]]: ...
+
+
+@overload
+def get_authenticated_worker_client(
+    log: logging.Logger | BoundLogger,
+    client_type: Literal["response"] = "response",
+) -> DioptraClient[DioptraResponseProtocol]: ...
 
 
 def get_authenticated_worker_client(
