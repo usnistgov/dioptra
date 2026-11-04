@@ -38,7 +38,8 @@ from dioptra.client import DioptraClient
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.client.worker import get_authenticated_worker_client
-from dioptra.sdk.utilities.contexts import env_vars, import_temp
+from dioptra.pyplugs.contexts import import_temp
+from dioptra.sdk.utilities.contexts import env_vars
 from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine.issues import IssueSeverity
 from dioptra.task_engine.swaps import compile_swaps_config

@@ -18,6 +18,7 @@ import importlib
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterable, Iterator, List
 
 
 @contextmanager
@@ -34,3 +35,24 @@ def import_temp(package_name: str, path: Path):
         for name in list(sys.modules.keys()):
             if name.startswith(f"{package_name}."):
                 del sys.modules[name]
+
+
+@contextmanager
+def sys_path_dirs(dirs: Iterable[str] = (".",)) -> Iterator[None]:
+    sys_path_copy: List[str] = sys.path.copy()
+    dirs = [
+        str(Path(x).resolve())
+        for x in dirs
+        if x and Path(x).resolve().is_dir() and str(Path(x).resolve()) not in sys.path
+    ]
+
+    try:
+        sys.path = _remove_duplicate_paths([*sys.path[:1], *dirs, *sys.path[1:]])
+        yield
+
+    finally:
+        sys.path = sys_path_copy
+
+
+def _remove_duplicate_paths(dirs: Iterable[str]) -> List[str]:
+    return list(dict.fromkeys(dirs))

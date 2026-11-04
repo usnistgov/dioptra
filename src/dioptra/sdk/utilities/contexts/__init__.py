@@ -15,7 +15,5 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from ._env_vars import env_vars
-from ._import_temp import import_temp
-from ._sys_path_dirs import sys_path_dirs
 
-__all__ = ["sys_path_dirs", "env_vars", "import_temp"]
+__all__ = ["env_vars"]
