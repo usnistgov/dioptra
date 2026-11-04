@@ -16,12 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
 import argparse
-import json
 import os
-import tarfile
 from pathlib import Path, PurePosixPath
 from typing import (
     Any,
+    Callable,
     Final,
     Iterable,
     Mapping,
@@ -31,7 +30,6 @@ from typing import (
 
 import mlflow
 import structlog
-import yaml
 from structlog.stdlib import BoundLogger
 
 from dioptra.client import DioptraClient
@@ -41,7 +39,7 @@ from dioptra.client.worker import get_authenticated_worker_client
 from dioptra.pyplugs.contexts import import_temp
 from dioptra.shared.artifacts import ArtifactTaskInterface
 from dioptra.task_engine.issues import IssueSeverity
-from dioptra.task_engine.swaps import compile_swaps_config
+from dioptra.task_engine.swaps import CompiledSwapsConfig, compile_swaps_config
 from dioptra.task_engine.task_engine import (
     ArtifactOutputEntry,
     ArtifactTaskEntry,
@@ -49,40 +47,33 @@ from dioptra.task_engine.task_engine import (
 )
 from dioptra.task_engine.validation import SCHEMA_FILENAME, get_json_schema
 from dioptra.worker.contexts import env_vars
+from dioptra.worker.workspace import (
+    Context,
+)
+from dioptra.worker.workspace import (
+    load_job_yaml as _load_job_yaml,
+)
+from dioptra.worker.workspace import (
+    load_json as _load_json,
+)
+from dioptra.worker.workspace import (
+    save_args as _save_args,
+)
+from dioptra.worker.workspace import (
+    save_as_json as _save_as_json,
+)
+from dioptra.worker.workspace import (
+    save_job_yaml as _save_job_yaml,
+)
+from dioptra.worker.workspace import (
+    unpack as _unpack,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 DIOPTRA_JOB_ID: Final[str] = "dioptra.jobId"
 ENV_MLFLOW_S3_ENDPOINT_URL: Final[str] = "MLFLOW_S3_ENDPOINT_URL"
 ENV_MLFLOW_TRACKING_URI: Final[str] = "MLFLOW_TRACKING_URI"
-
-
-class Context(object):
-    def __init__(self) -> None:
-        self.working_dir = Path().resolve()
-        self.dioptra_dir = self.working_dir / ".dioptra"
-        self.serialize_dir = self.dioptra_dir / "serialize"
-        self.deserialize_dir = self.dioptra_dir / "deserialize"
-        self.plugins_dir = self.dioptra_dir / "plugins"
-        self.artifacts_dir = self.dioptra_dir / "artifacts"
-
-        self.parameters_file = self.working_dir / "parameters.json"
-        self.artifact_parameters_file = self.working_dir / "artifact_parameters.json"
-        self.args_file = self.dioptra_dir / "args.json"
-        self.artifacts_results_file = self.dioptra_dir / "artifacts.json"
-        self.artifact_plugins_file = self.serialize_dir / "artifact_plugins.json"
-        self.artifact_tasks_file = self.serialize_dir / "artifact_tasks.json"
-
-    def yaml_path(self, entrypoint_name: str) -> Path:
-        return Path(self.working_dir, f"{entrypoint_name}.yml")
-
-    def mkdirs(self) -> None:
-        # make the directories if needed
-        self.dioptra_dir.mkdir(exist_ok=True)
-        self.serialize_dir.mkdir(exist_ok=True)
-        self.deserialize_dir.mkdir(exist_ok=True)
-        self.plugins_dir.mkdir(exist_ok=True)
-        self.artifacts_dir.mkdir(exist_ok=True)
 
 
 def standalone() -> None:
@@ -331,6 +322,27 @@ def _register_artifacts(
         )
 
 
+def _execute_compiled_job(
+    compiled: CompiledSwapsConfig,
+    context: Context,
+    job_parameters: MutableMapping[str, Any],
+    artifact_parameters: MutableMapping[str, Any],
+    artifact_tasks: dict[str, ArtifactTaskEntry],
+) -> None:
+    """Invoke the engine with public diagnostics inside the caller's environment."""
+    with compiled.public_errors():
+        run_experiment(
+            experiment_desc=compiled.config,
+            global_parameters=job_parameters,
+            artifact_parameters=artifact_parameters,
+            artifact_tasks=artifact_tasks,
+            artifacts_dir=context.artifacts_dir,
+            plugins_dir=context.plugins_dir,
+            serialize_dir=context.serialize_dir,
+            deserialize_dir=context.deserialize_dir,
+        )
+
+
 def _run_job(
     context: Context,
     job_yaml: Mapping[str, Any],
@@ -351,17 +363,9 @@ def _run_job(
     """
     try:
         compiled = compile_swaps_config(job_yaml)
-        with compiled.public_errors():
-            run_experiment(
-                experiment_desc=compiled.config,
-                global_parameters=job_parameters,
-                artifact_parameters=artifact_parameters,
-                artifact_tasks=artifact_tasks,
-                artifacts_dir=context.artifacts_dir,
-                plugins_dir=context.plugins_dir,
-                serialize_dir=context.serialize_dir,
-                deserialize_dir=context.deserialize_dir,
-            )
+        _execute_compiled_job(
+            compiled, context, job_parameters, artifact_parameters, artifact_tasks
+        )
 
         log.info("=== Run succeeded ===")
 
@@ -406,16 +410,9 @@ def _run_tracked_job(
         # plug-ins might need the job id for things like metrics
         # should consider an alternate way to enable this functionality in the future
         compiled = compile_swaps_config(job_yaml)
-        with env_vars({"__JOB_ID": str(job_id)}), compiled.public_errors():
-            run_experiment(
-                experiment_desc=compiled.config,
-                global_parameters=job_parameters,
-                artifact_parameters=artifact_parameters,
-                artifact_tasks=artifact_tasks,
-                artifacts_dir=context.artifacts_dir,
-                plugins_dir=context.plugins_dir,
-                serialize_dir=context.serialize_dir,
-                deserialize_dir=context.deserialize_dir,
+        with env_vars({"__JOB_ID": str(job_id)}):
+            _execute_compiled_job(
+                compiled, context, job_parameters, artifact_parameters, artifact_tasks
             )
         _register_artifacts(
             group_id=group_id,
@@ -432,11 +429,13 @@ def _run_tracked_job(
         raise e
 
 
-def _build_artifact_tasks(
-    context: Context, plugins: Iterable[dict[str, Any]], log: BoundLogger
-) -> dict[str, ArtifactTaskEntry]:
-    result: dict[str, ArtifactTaskEntry] = {}
-
+def _visit_artifact_tasks(
+    context: Context,
+    plugins: Iterable[dict[str, Any]],
+    log: BoundLogger,
+    visit: Callable[[Any, dict[str, Any], dict[str, Any]], None],
+) -> None:
+    """Visit each artifact task while its temporary import context is active."""
     # run through the artifact plugins
     for plugin in plugins:
         plugin_name: str = plugin["name"]
@@ -454,11 +453,24 @@ def _build_artifact_tasks(
                         )
                         exit(1)
                     if issubclass(task, ArtifactTaskInterface):
-                        result[task.__name__] = ArtifactTaskEntry(
-                            task=task,
-                            plugin_snapshot_id=plugin["snapshotId"],
-                            task_id=artifact_task["id"],
-                        )
+                        visit(task, plugin, artifact_task)
+
+
+def _build_artifact_tasks(
+    context: Context, plugins: Iterable[dict[str, Any]], log: BoundLogger
+) -> dict[str, ArtifactTaskEntry]:
+    result: dict[str, ArtifactTaskEntry] = {}
+
+    def add_task(
+        task: Any, plugin: dict[str, Any], artifact_task: dict[str, Any]
+    ) -> None:
+        result[task.__name__] = ArtifactTaskEntry(
+            task=task,
+            plugin_snapshot_id=plugin["snapshotId"],
+            task_id=artifact_task["id"],
+        )
+
+    _visit_artifact_tasks(context, plugins, log, add_task)
     return result
 
 
@@ -467,86 +479,26 @@ def _create_engine_schema(
 ) -> None:
     task_names = []
     allof = []
-    # run through the artifact plugins
-    for plugin in plugins:
-        plugin_name: str = plugin["name"]
-        for file in plugin["files"]:
-            filename = Path(file["filename"]).stem
-            # only temporarily import - might clash with deserialization
-            with import_temp(
-                f"{plugin_name}.{filename}", context.serialize_dir
-            ) as plugin_file:
-                for artifact_task in file["tasks"]["artifacts"]:
-                    task = getattr(plugin_file, artifact_task["name"], None)
-                    if task is None:
-                        log.error(
-                            f"Failed to locate artifact task: {artifact_task['name']}"
-                        )
-                        exit(1)
-                    if issubclass(task, ArtifactTaskInterface):
-                        task_names.append(task.__name__)
-                        validation = task.validation()
-                        if validation is not None:
-                            allof.append(
-                                {
-                                    "if": {
-                                        "properties": {"name": {"const": task.__name__}}
-                                    },
-                                    "then": {
-                                        "properties": {
-                                            "args": {"properties": validation}
-                                        }
-                                    },
-                                }
-                            )
+
+    def add_schema(
+        task: Any, plugin: dict[str, Any], artifact_task: dict[str, Any]
+    ) -> None:
+        task_names.append(task.__name__)
+        validation = task.validation()
+        if validation is not None:
+            allof.append(
+                {
+                    "if": {"properties": {"name": {"const": task.__name__}}},
+                    "then": {"properties": {"args": {"properties": validation}}},
+                }
+            )
+
+    _visit_artifact_tasks(context, plugins, log, add_schema)
     # create final validation schema
     engine_schema = get_json_schema(default=True)
     engine_schema["$defs"]["artifact_task"]["properties"]["name"]["enum"] = task_names
     engine_schema["$defs"]["artifact_task"]["allOf"] = allof
     _save_as_json(filepath=context.dioptra_dir / SCHEMA_FILENAME, params=engine_schema)
-
-
-def _save_job_yaml(filepath: Path, job_yaml: Mapping[str, Any]) -> None:
-    with filepath.open("wt") as f:
-        yaml.safe_dump(data=job_yaml, stream=f)
-
-
-def _load_job_yaml(filepath: Path) -> Mapping[str, Any]:
-    with filepath.open("rt") as f:
-        return cast(Mapping[str, Any], yaml.safe_load(f))
-
-
-def _save_as_json(filepath: Path, params: Any) -> None:
-    with filepath.open("wt") as f:
-        json.dump(obj=params, fp=f)
-
-
-def _load_json(filepath: Path) -> Any:
-    with filepath.open("rt") as f:
-        return json.load(f)
-
-
-def _unpack(source: Path, dest: Path, log: BoundLogger) -> None:
-    # Unpack the (trusted) tar.gz file
-    try:
-        with tarfile.open(source, mode="r:*") as tar:
-            tar.extractall(path=dest, filter="data")
-    except Exception as e:
-        log.exception(f"Could not extract from tar file {source.as_posix()}")
-        raise e
-
-
-def _save_args(
-    filepath: Path, job_id: int, experiment_id: int, entrypoint_name: str
-) -> None:
-    _save_as_json(
-        filepath=filepath,
-        params={
-            "job_id": job_id,
-            "experiment_id": experiment_id,
-            "entrypoint_name": entrypoint_name,
-        },
-    )
 
 
 def _validate_yaml(
