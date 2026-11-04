@@ -23,7 +23,7 @@ import click
 from dioptra.restapi import create_app
 from dioptra.restapi.config import BaseConfig, DevelopmentConfig, load_config
 from dioptra.restapi.key_file import initialize_key, resolve_key_file
-from dioptra.sdk.utilities.logging import (
+from dioptra.shared.logging import (
     attach_stdout_stream_handler,
     configure_structlog,
     set_logging_level,

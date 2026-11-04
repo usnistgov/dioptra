@@ -21,7 +21,7 @@ import structlog
 from structlog.stdlib import BoundLogger
 
 import dioptra.sdk.utilities.run_dioptra_job as run_dioptra_job
-from dioptra.sdk.utilities.logging import forward_job_logs_to_api
+from dioptra.worker.logging import forward_job_logs_to_api
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 

@@ -16,19 +16,11 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import logging
 import sys
-from collections.abc import Iterator, Mapping, MutableMapping
-from contextlib import contextmanager
+from collections.abc import Mapping, MutableMapping
 from logging import getLogger
 from typing import Any, Callable
 
 import structlog
-
-from dioptra.client import DioptraClient
-from dioptra.client.base import DioptraResponseProtocol
-from dioptra.client.worker import get_authenticated_worker_client
-
-from .filters import LibraryFilter, OmitClientJobLoggingFilter
-from .handlers import DioptraJobLoggingHandler
 
 ProcessorType = Callable[
     [Any, str, MutableMapping[str, Any]],
@@ -58,55 +50,6 @@ def attach_stdout_stream_handler(
     handler.setFormatter(formatter)
     logging.captureWarnings(True)
     logger.addHandler(handler)
-
-
-@contextmanager
-def forward_job_logs_to_api(
-    job_id: str | int, client: DioptraClient[DioptraResponseProtocol] | None = None
-) -> Iterator[None]:
-    """Context manager for forwarding job logs to the Dioptra API.
-
-    Args:
-        job_id: The Dioptra job ID the logs are for.
-        client: An authenticated Dioptra client. If not provided, it will be created
-            using environment variables for authentication.
-    """
-    logger = getLogger()
-    if client is None:
-        client = get_authenticated_worker_client(logger, "response")
-
-    formatter = structlog.stdlib.ProcessorFormatter(
-        processors=[
-            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            structlog.dev.ConsoleRenderer(colors=False),
-        ],
-        foreign_pre_chain=[
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt="iso", utc=True),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.UnicodeDecoder(),
-        ],
-    )
-    library_filter = LibraryFilter(["git", "rq", "urllib3", "tests"])
-    omit_client_job_logging_filter = OmitClientJobLoggingFilter()
-
-    handler = DioptraJobLoggingHandler(
-        sender=client.jobs.append_logs_by_id, job_id=job_id
-    )
-    handler.setFormatter(formatter)
-    handler.addFilter(library_filter)
-    handler.addFilter(omit_client_job_logging_filter)
-
-    try:
-        logger.addHandler(handler)
-        yield
-
-    finally:
-        handler.close()
-        logger.removeHandler(handler)
 
 
 def configure_structlog_for_worker() -> None:

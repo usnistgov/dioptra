@@ -34,7 +34,7 @@ from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
-from dioptra.sdk.utilities.logging import forward_job_logs_to_api
+from dioptra.worker.logging import forward_job_logs_to_api
 
 from ..lib import actions, asserts, helpers, mock_rq, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works

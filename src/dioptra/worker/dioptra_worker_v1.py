@@ -24,7 +24,7 @@ import sys
 
 import rq.cli
 
-from dioptra.sdk.utilities.logging import (
+from dioptra.shared.logging import (
     attach_stdout_stream_handler,
     configure_structlog_for_worker,
     set_logging_level,

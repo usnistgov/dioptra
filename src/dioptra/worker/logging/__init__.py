@@ -14,18 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .config import (
-    attach_stdout_stream_handler,
-    configure_structlog,
-    configure_structlog_for_worker,
-    forward_job_logs_to_api,
-    set_logging_level,
-)
+from .config import forward_job_logs_to_api
 
 __all__ = [
-    "attach_stdout_stream_handler",
-    "configure_structlog",
-    "configure_structlog_for_worker",
     "forward_job_logs_to_api",
-    "set_logging_level",
 ]
