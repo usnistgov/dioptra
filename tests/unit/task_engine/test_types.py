@@ -19,7 +19,7 @@ Unit tests for the type classes.
 """
 import pytest
 
-from dioptra.sdk.exceptions.task_engine import InvalidTypeStructureDefinitionError
+from dioptra.task_engine.exceptions import InvalidTypeStructureDefinitionError
 from dioptra.task_engine.type_registry import TYPE_INTEGER, TYPE_STRING
 from dioptra.task_engine.types import (
     SimpleType,

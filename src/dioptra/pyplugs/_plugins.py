@@ -59,7 +59,7 @@ from typing import (
 import structlog
 from structlog.stdlib import BoundLogger
 
-from dioptra.sdk.exceptions import (
+from dioptra.pyplugs.exceptions import (
     UnknownPackageError,
     UnknownPluginError,
     UnknownPluginFunctionError,

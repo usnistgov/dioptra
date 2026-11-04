@@ -19,9 +19,9 @@ import pathlib
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Union
 
-from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import type_registry, type_validation, types, util
 from dioptra.task_engine.error_message import json_path_to_string
+from dioptra.task_engine.exceptions import BaseTaskEngineError
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 SCHEMA_FILENAME = "experiment_schema.json"

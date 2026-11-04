@@ -18,8 +18,11 @@ from collections.abc import Iterable
 from typing import Any, Optional
 
 import dioptra.task_engine.types
+from dioptra.shared.exceptions import BaseDioptraError
 
-from .base import BaseTaskEngineError
+
+class BaseTaskEngineError(BaseDioptraError):
+    """Base class for all declarative task engine errors."""
 
 
 class StepError(BaseTaskEngineError):

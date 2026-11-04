@@ -25,8 +25,8 @@ from dioptra.sdk.api.swappable_validation import (
     get_swappable_experiment_schema,
     get_swappable_json_schema_resources,
 )
-from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util, validation
+from dioptra.task_engine.exceptions import BaseTaskEngineError
 from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
 
 

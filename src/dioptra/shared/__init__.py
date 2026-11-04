@@ -14,16 +14,4 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Base classes for exceptions in the Dioptra package"""
-
-
-class BaseDioptraError(Exception):
-    """Base class for all Dioptra exceptions."""
-
-
-class BasePyPlugsException(BaseDioptraError):
-    """Base class for all PyPlugs exceptions."""
-
-
-class BaseTaskEngineError(BaseDioptraError):
-    """Base class for all declarative task engine errors."""
+"""Cross-cutting infrastructure shared by Dioptra components."""

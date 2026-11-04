@@ -24,7 +24,7 @@ import pytest
 import dioptra.pyplugs
 import dioptra.pyplugs._plugins
 import dioptra.task_engine.task_engine
-from dioptra.sdk.exceptions.task_engine import (
+from dioptra.task_engine.exceptions import (
     IllegalOutputReferenceError,
     IllegalPluginNameError,
     MissingGlobalParametersError,

@@ -24,7 +24,9 @@ from typing import Any, NotRequired, Type, TypedDict, Union, cast
 
 import dioptra.pyplugs
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
-from dioptra.sdk.exceptions.task_engine import (
+from dioptra.sdk.utilities.contexts import import_temp, sys_path_dirs
+from dioptra.task_engine import util
+from dioptra.task_engine.exceptions import (
     ArtifactOutputNotFoundError,
     IllegalOutputReferenceError,
     IllegalPluginNameError,
@@ -36,8 +38,6 @@ from dioptra.sdk.exceptions.task_engine import (
     TaskPluginNotFoundError,
     UnresolvableReferenceError,
 )
-from dioptra.sdk.utilities.contexts import import_temp, sys_path_dirs
-from dioptra.task_engine import util
 
 
 class ArtifactTaskEntry(TypedDict):

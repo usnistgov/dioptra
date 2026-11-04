@@ -21,11 +21,11 @@ from typing import Any, Optional, Tuple, Union
 import jsonschema.validators
 import referencing
 
-from dioptra.sdk.exceptions.task_engine import (
+from dioptra.task_engine.error_message import validation_error_to_message
+from dioptra.task_engine.exceptions import (
     StepNotFoundError,
     StepReferenceCycleError,
 )
-from dioptra.task_engine.error_message import validation_error_to_message
 
 
 def is_iterable(value: Any) -> bool:

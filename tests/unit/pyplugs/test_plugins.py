@@ -49,7 +49,7 @@ import pathlib
 import pytest
 
 from dioptra import pyplugs
-from dioptra.sdk.exceptions import (
+from dioptra.pyplugs.exceptions import (
     UnknownPackageError,
     UnknownPluginError,
     UnknownPluginFunctionError,
@@ -242,5 +242,4 @@ def test_call_factory(plugin_package):
     factory_call = call(plugin_name)
     pyplugs_call = pyplugs.call(plugin_package, plugin=plugin_name)
     assert factory_call == pyplugs_call
-
 

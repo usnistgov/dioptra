@@ -23,7 +23,8 @@ import graphlib
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Optional, Union, cast
 
-from dioptra.sdk.exceptions.task_engine import (
+from dioptra.task_engine import types
+from dioptra.task_engine.exceptions import (
     AnonymousSimpleTypeError,
     BuiltinTypeRedefinitionError,
     DioptraTypeError,
@@ -33,7 +34,6 @@ from dioptra.sdk.exceptions.task_engine import (
     TypeNotFoundError,
     TypeReferenceCycleError,
 )
-from dioptra.task_engine import types
 
 TYPE_ANY = types.SimpleType("any")
 TYPE_NUMBER = types.SimpleType("number")

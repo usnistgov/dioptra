@@ -29,7 +29,7 @@ from typing import Any, Optional, Union
 # module.  So each module needs to import the other.  So we need to be careful
 # how each module uses the other.  A "from X import Y" style import will not
 # work here.
-import dioptra.sdk.exceptions.task_engine
+import dioptra.task_engine.exceptions
 
 
 class StructureType(enum.Enum):
@@ -155,7 +155,7 @@ class TypeStructure:
         if self.struct_type is StructureType.MAPPING and not isinstance(
             self.struct_def, (Mapping, Sequence)
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
+            raise dioptra.task_engine.exceptions.InvalidTypeStructureDefinitionError(
                 "For mapping type structures, the definition must be"
                 " either a mapping (e.g. a dict) from property names to types,"
                 " or a 2-element list containing a key type followed by a value"
@@ -165,14 +165,14 @@ class TypeStructure:
         elif self.struct_type is StructureType.LIST and not isinstance(
             self.struct_def, Type
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
+            raise dioptra.task_engine.exceptions.InvalidTypeStructureDefinitionError(
                 "For a list type structure, the definition must be a type"
             )
 
         elif self.struct_type is StructureType.TUPLE and not isinstance(
             self.struct_def, Sequence
         ):
-            raise dioptra.sdk.exceptions.task_engine.InvalidTypeStructureDefinitionError(
+            raise dioptra.task_engine.exceptions.InvalidTypeStructureDefinitionError(
                 "For a tuple type structure, the definition must be a sequence of types"
             )
 

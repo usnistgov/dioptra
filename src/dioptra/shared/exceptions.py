@@ -14,10 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .pyplugs import UnknownPackageError, UnknownPluginError, UnknownPluginFunctionError
+"""Common base class for exceptions in the Dioptra package."""
 
-__all__ = [
-    "UnknownPackageError",
-    "UnknownPluginError",
-    "UnknownPluginFunctionError",
-]
+
+class BaseDioptraError(Exception):
+    """Base class for all Dioptra exceptions."""

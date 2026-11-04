@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from dioptra.sdk.exceptions.task_engine import (
+from dioptra.task_engine.exceptions import (
     AnonymousSimpleTypeError,
     BuiltinTypeRedefinitionError,
     DioptraTypeError,

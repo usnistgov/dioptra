@@ -44,7 +44,11 @@
 Custom exceptions used by PyPlugs for more helpful error messages
 """
 
-from .base import BasePyPlugsException
+from dioptra.shared.exceptions import BaseDioptraError
+
+
+class BasePyPlugsException(BaseDioptraError):
+    """Base class for all PyPlugs exceptions."""
 
 
 class UnknownPackageError(BasePyPlugsException):
