@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # This Software (Dioptra) is being made available as a public service by the
 # National Institute of Standards and Technology (NIST), an Agency of the United
 # States Department of Commerce. This software was developed in part by employees of
@@ -16,33 +16,32 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-shopt -s extglob
 set -euo pipefail ${DEBUG:+-x}
 
 ###########################################################################################
 # Global parameters
 ###########################################################################################
 
-{% set minio_account_names = ["MLFLOW_TRACKING", "RESTAPI", "WORKER"] -%}
-{% set minio_policy_names = [
+{% set rustfs_account_names = ["MLFLOW_TRACKING", "RESTAPI", "WORKER"] -%}
+{% set rustfs_policy_names = [
   "mlflow-tracking-readwrite",
 ] -%}
 INIT_REPOS_DIR="/init-repos"
-LOGNAME="Init MinIO"
-MINIO_ENDPOINT_ALIAS="minio"
+LOGNAME="Init RustFS"
+RUSTFS_ENDPOINT_ALIAS="rustfs"
 SECRETS_DIR="/secrets"
 S3_POLICY_DIR="/s3-policy"
 
-{% for minio_account_name in minio_account_names -%}
-MINIO_{{ minio_account_name }}_USER=""
-MINIO_{{ minio_account_name }}_PASSWORD=""
-MINIO_{{ minio_account_name }}_POLICIES=""
+{% for rustfs_account_name in rustfs_account_names -%}
+RUSTFS_{{ rustfs_account_name }}_USER=""
+RUSTFS_{{ rustfs_account_name }}_PASSWORD=""
+RUSTFS_{{ rustfs_account_name }}_POLICIES=""
 {% endfor -%}
-MINIO_ROOT_USER=""
-MINIO_ROOT_PASSWORD=""
+RUSTFS_ACCESS_KEY=""
+RUSTFS_SECRET_KEY=""
 
 # NOTE: Mutable global variable
-policies_reduced=()
+policies_reduced=""
 
 ###########################################################################################
 # Print the script help message
@@ -57,9 +56,9 @@ policies_reduced=()
 
 print_help() {
   cat <<-HELPMESSAGE
-		Utility that configures the MinIO accounts and policies.
+		Utility that configures the RustFS accounts and policies.
 
-		Usage: init-minio.sh [-h|--help]
+		Usage: init-rustfs.sh [-h|--help]
 		        -h, --help: Prints help
 	HELPMESSAGE
 }
@@ -106,7 +105,7 @@ log_info() {
 ###########################################################################################
 
 parse_args() {
-  while (({{ '"${#}"' }} > 0)); do
+  while [ {{ '"${#}"' }} -gt 0 ]; do
     case "${1}" in
       -h | --help)
         print_help
@@ -124,13 +123,13 @@ parse_args() {
 # Load account credentials into environment variables
 #
 # Globals:
-{% for minio_account_name in minio_account_names -%}
-#   MINIO_{{ minio_account_name }}_USER
-#   MINIO_{{ minio_account_name }}_PASSWORD
-#   MINIO_{{ minio_account_name }}_POLICIES
+{% for rustfs_account_name in rustfs_account_names -%}
+#   RUSTFS_{{ rustfs_account_name }}_USER
+#   RUSTFS_{{ rustfs_account_name }}_PASSWORD
+#   RUSTFS_{{ rustfs_account_name }}_POLICIES
 {% endfor -%}
-#   MINIO_ROOT_USER
-#   MINIO_ROOT_PASSWORD
+#   RUSTFS_ACCESS_KEY
+#   RUSTFS_SECRET_KEY
 #   SECRETS_DIR
 # Arguments:
 #   None
@@ -141,43 +140,43 @@ parse_args() {
 load_account_creds() {
   while IFS="=" read -r key value; do
     case "${key}" in
-      {% for minio_account_name in minio_account_names -%}
-      "MINIO_{{ minio_account_name }}_USER") MINIO_{{ minio_account_name }}_USER="$value" ;;
-      "MINIO_{{ minio_account_name }}_PASSWORD") MINIO_{{ minio_account_name }}_PASSWORD="$value" ;;
-      "MINIO_{{ minio_account_name }}_POLICIES") MINIO_{{ minio_account_name }}_POLICIES="$value" ;;
+      {% for rustfs_account_name in rustfs_account_names -%}
+      "RUSTFS_{{ rustfs_account_name }}_USER") RUSTFS_{{ rustfs_account_name }}_USER="$value" ;;
+      "RUSTFS_{{ rustfs_account_name }}_PASSWORD") RUSTFS_{{ rustfs_account_name }}_PASSWORD="$value" ;;
+      "RUSTFS_{{ rustfs_account_name }}_POLICIES") RUSTFS_{{ rustfs_account_name }}_POLICIES="$value" ;;
       {% endfor -%}
-      "MINIO_ROOT_USER") MINIO_ROOT_USER="$value" ;;
-      "MINIO_ROOT_PASSWORD") MINIO_ROOT_PASSWORD="$value" ;;
+      "RUSTFS_ACCESS_KEY") RUSTFS_ACCESS_KEY="$value" ;;
+      "RUSTFS_SECRET_KEY") RUSTFS_SECRET_KEY="$value" ;;
     esac
-  done < "${SECRETS_DIR}/{{ cookiecutter.__project_slug }}-minio-accounts.env"
+  done < "${SECRETS_DIR}/{{ cookiecutter.__project_slug }}-rustfs-accounts.env"
 }
 
 ###########################################################################################
-# Configure alias for accessing the MinIO endpoint
+# Configure alias for accessing the RustFS endpoint
 #
 # Globals:
-#   MINIO_ENDPOINT_ALIAS
-#   MINIO_ROOT_USER
-#   MINIO_ROOT_PASSWORD
+#   RUSTFS_ENDPOINT_ALIAS
+#   RUSTFS_ACCESS_KEY
+#   RUSTFS_SECRET_KEY
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-set_minio_alias() {
-  mc alias set \
-    "${MINIO_ENDPOINT_ALIAS}" \
-    "http://{{ cookiecutter.__project_slug }}-minio:9000" \
-    "${MINIO_ROOT_USER}" \
-    "${MINIO_ROOT_PASSWORD}"
+set_rustfs_alias() {
+  rc alias set \
+    "${RUSTFS_ENDPOINT_ALIAS}" \
+    "http://{{ cookiecutter.__project_slug }}-rustfs:9000" \
+    "${RUSTFS_ACCESS_KEY}" \
+    "${RUSTFS_SECRET_KEY}"
 }
 
 ###########################################################################################
 # Create the mlflow-tracking bucket
 #
 # Globals:
-#   MINIO_ENDPOINT_ALIAS
+#   RUSTFS_ENDPOINT_ALIAS
 # Arguments:
 #   None
 # Returns:
@@ -185,18 +184,18 @@ set_minio_alias() {
 ###########################################################################################
 
 create_buckets() {
-  mc mb --p \
-    "${MINIO_ENDPOINT_ALIAS}/mlflow-tracking"
+  rc mb --ignore-existing \
+    "${RUSTFS_ENDPOINT_ALIAS}/mlflow-tracking"
 }
 
 ###########################################################################################
-# Create the MinIO accounts
+# Create the RustFS accounts
 #
 # Globals:
-#   MINIO_ENDPOINT_ALIAS
-{% for minio_account_name in minio_account_names -%}
-#   MINIO_{{ minio_account_name }}_USER
-#   MINIO_{{ minio_account_name }}_PASSWORD
+#   RUSTFS_ENDPOINT_ALIAS
+{% for rustfs_account_name in rustfs_account_names -%}
+#   RUSTFS_{{ rustfs_account_name }}_USER
+#   RUSTFS_{{ rustfs_account_name }}_PASSWORD
 {% endfor -%}
 # Arguments:
 #   None
@@ -204,19 +203,19 @@ create_buckets() {
 #   None
 ###########################################################################################
 
-create_minio_accounts() {
-{%- for minio_account_name in minio_account_names %}
-  mc admin user add \
-    "${MINIO_ENDPOINT_ALIAS}" "{{ '${MINIO_' ~ minio_account_name ~ '_USER}' }}" \
-    "{{ '${MINIO_' ~ minio_account_name ~ '_PASSWORD}' }}"
+create_rustfs_accounts() {
+{%- for rustfs_account_name in rustfs_account_names %}
+  rc admin user add \
+    "${RUSTFS_ENDPOINT_ALIAS}" "{{ '${RUSTFS_' ~ rustfs_account_name ~ '_USER}' }}" \
+    "{{ '${RUSTFS_' ~ rustfs_account_name ~ '_PASSWORD}' }}"
 {% endfor -%}
 }
 
 ###########################################################################################
-# Create MinIO access policies
+# Create RustFS access policies
 #
 # Globals:
-#   MINIO_ENDPOINT_ALIAS
+#   RUSTFS_ENDPOINT_ALIAS
 #   S3_POLICY_DIR
 # Arguments:
 #   None
@@ -224,10 +223,10 @@ create_minio_accounts() {
 #   None
 ###########################################################################################
 
-create_minio_policies() {
-{%- for policy_name in minio_policy_names %}
-  mc admin policy create \
-    "${MINIO_ENDPOINT_ALIAS}" "{{ policy_name }}" "${S3_POLICY_DIR}/{{ policy_name }}-policy.json"
+create_rustfs_policies() {
+{%- for policy_name in rustfs_policy_names %}
+  rc admin policy create \
+    "${RUSTFS_ENDPOINT_ALIAS}" "{{ policy_name }}" "${S3_POLICY_DIR}/{{ policy_name }}-policy.json"
 {% endfor -%}
 }
 
@@ -246,10 +245,10 @@ create_minio_policies() {
 remove_elements_from_comma_delimited() {
   local input_list="${1}"
   local elements_to_delete="${2}"
-  local merged_list="$input_list,$elements_to_delete"
-  local updated_list_newline_sep=$(echo "${merged_list//,/$'\n'}" | sort | uniq -u)
-  local updated_list_comma_sep="${updated_list_newline_sep//$'\n'/,}"
-  echo "${updated_list_comma_sep}"
+  jq -nr --arg input "$input_list" --arg delete "$elements_to_delete" '
+    ($input | split(",") | map(select(length > 0)) | unique) -
+    ($delete | split(",")) | join(",")
+  '
 }
 
 ###########################################################################################
@@ -259,7 +258,7 @@ remove_elements_from_comma_delimited() {
 #   LOGNAME
 #   policies_reduced
 # Arguments:
-#   The current list of policy to user mappings, an array
+#   The current policy to user mappings, a JSON string
 #   The target policies for a user
 #   The target user
 # Returns:
@@ -267,66 +266,29 @@ remove_elements_from_comma_delimited() {
 ###########################################################################################
 
 remove_repeat_policies() {
-  local name=$1[@]
+  local mappings=$1
   local policies=$2
   local user=$3
-  local lines=("${!name}")
+  local attached_policies
 
-  local found_policy=false
-  local reading_users=false
-  local select_policy=""
-
-  # lines contains a policy -> user mapping
-  for i in "${lines[@]}"; do
-    # is this line of the input indicating a policy?
-    if grep -q "  Policy: " <<<"$i"; then
-      # since we found a new policy, do not search for users anymore
-      found_policy=false
-      reading_users=false
-      select_policy=""
-      # is this policy one of the ones we are trying to add?
-      for policy in $(echo "${policies}" | sed -n 1'p' | tr ',' '\n'); do
-        if [[ "  Policy: ${policy}" == $i ]]; then
-          # the next few lines will be a list of users
-          found_policy=true
-          #save the policy so we know to remove it if necessary
-          select_policy="${policy}"
-        fi
-      done
-      continue # continue to next line of input
-    fi
-
-    if [ "${found_policy}" = true ]; then
-      if [[ "    User Mappings:" == "$i" ]]; then
-        # this indicates the start of a list of users
-        reading_users=true
-        continue # continue to next line of input
-      fi
-    fi
-
-    if [ "${reading_users}" = true ] && [ "${found_policy}" = true ]; then
-      if [[ $(echo "$i" | sed 's/^ *//g' | sed 's/ *$//g') == "$user" ]]; then
-        # the user already has this policy! remove it from the list of policies
-        policies=$(remove_elements_from_comma_delimited $policies $select_policy)
-      fi
-    fi
-  done
-
-  # policies should not be comma separated
-  local policies_newline_sep=$(echo "$policies" | sed -e "s/,/\n/g")
-  if [ ! -z "${policies_newline_sep}" ]; then
-    IFS=$'\n' read -r -d '' -a policies_reduced < <( echo "${policies_newline_sep}" && printf '\0' )
+  attached_policies=$(printf '%s\n' "$mappings" | jq -r --arg user "$user" '
+    [.data.user_mappings[] | select(.user == $user) | .policies[]] | join(",")
+  ')
+  policies_reduced=$(remove_elements_from_comma_delimited "$policies" "$attached_policies")
+  if [ -n "${policies_reduced}" ]; then
+    # rc replaces the policy list, so retain existing attachments when adding policies.
+    policies_reduced=$(remove_elements_from_comma_delimited "${attached_policies},${policies_reduced}" "")
   fi
 }
 
 ###########################################################################################
-# Attach MinIO policies to user accounts
+# Attach RustFS policies to user accounts
 #
 # Globals:
-#   MINIO_ENDPOINT_ALIAS
-{% for minio_account_name in minio_account_names -%}
-#   MINIO_{{ minio_account_name }}_USER
-#   MINIO_{{ minio_account_name }}_POLICIES
+#   RUSTFS_ENDPOINT_ALIAS
+{% for rustfs_account_name in rustfs_account_names -%}
+#   RUSTFS_{{ rustfs_account_name }}_USER
+#   RUSTFS_{{ rustfs_account_name }}_POLICIES
 {% endfor -%}
 # Arguments:
 #   None
@@ -334,19 +296,20 @@ remove_repeat_policies() {
 #   None
 ###########################################################################################
 
-attach_minio_policies() {
-  local attached_policies=()
+attach_rustfs_policies() {
+  local attached_policies
 
-  IFS=$'\n' read -r -d '' -a attached_policies < <( mc admin policy entities ${MINIO_ENDPOINT_ALIAS} && printf '\0' )
-{% for minio_account_name in minio_account_names %}
-  remove_repeat_policies attached_policies \
-    "{{ '${MINIO_' ~ minio_account_name ~ '_POLICIES}' }}" "{{ '${MINIO_' ~ minio_account_name ~ '_USER}' }}"
+{% for rustfs_account_name in rustfs_account_names %}
+  attached_policies=$(rc --json admin policy entities "${RUSTFS_ENDPOINT_ALIAS}" \
+    --user="{{ '${RUSTFS_' ~ rustfs_account_name ~ '_USER}' }}")
+  remove_repeat_policies "${attached_policies}" \
+    "{{ '${RUSTFS_' ~ rustfs_account_name ~ '_POLICIES}' }}" "{{ '${RUSTFS_' ~ rustfs_account_name ~ '_USER}' }}"
 
-  if [[ ! -z "${policies_reduced[@]}" ]]; then
-    mc admin policy attach \
-      "${MINIO_ENDPOINT_ALIAS}" \
-      "${policies_reduced[@]}" \
-      --user="{{ '${MINIO_' ~ minio_account_name ~ '_USER}' }}"
+  if [ -n "${policies_reduced}" ]; then
+    rc admin policy attach \
+      "${RUSTFS_ENDPOINT_ALIAS}" \
+      "${policies_reduced}" \
+      --user="{{ '${RUSTFS_' ~ rustfs_account_name ~ '_USER}' }}"
   fi
 {% endfor -%}
 }
@@ -365,11 +328,11 @@ attach_minio_policies() {
 main() {
   parse_args "${@}"
   load_account_creds
-  set_minio_alias
+  set_rustfs_alias
   create_buckets
-  create_minio_accounts
-  create_minio_policies
-  attach_minio_policies
+  create_rustfs_accounts
+  create_rustfs_policies
+  attach_rustfs_policies
 }
 
 ###########################################################################################

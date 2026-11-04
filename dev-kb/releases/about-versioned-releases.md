@@ -107,6 +107,8 @@ Version releases trigger automated builds of downstream artifacts:
 - **PyPI packages**: Both stable and development releases are [published to PyPI](https://pypi.org/project/dioptra-platform), allowing users to install specific versions via pip
 - **Container images**: Docker images are built, tagged with the corresponding version numbers, and published to [GitHub Packages](https://github.com/orgs/usnistgov/packages?repo_name=dioptra)
 
+Several third-party image defaults use `latest`, including pgAdmin, Redis, RustFS, and its `rc` client. RustFS and `rc` use `latest` so pulling upstream updates does not require a deployment-template change for each release. PostgreSQL stays on a selected major version to avoid unexpected database migrations. Stable preparation reviews these defaults without replacing every `latest` tag or upgrading dependencies as a release prerequisite.
+
 These automated builds are one of the primary reasons for creating dev releases, as they make in-progress work available for testing in realistic deployment scenarios.
 
 ## Version Format Variations

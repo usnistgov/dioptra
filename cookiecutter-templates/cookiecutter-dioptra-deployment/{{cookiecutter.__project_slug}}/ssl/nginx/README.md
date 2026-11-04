@@ -28,13 +28,13 @@ dioptra-deployment-nginx:
         "http://localhost:30080",
         # "http://localhost:35000",
         # "http://localhost:35050/login",
-        # "http://localhost:39000",
-        # "http://localhost:39001",
+        # "http://localhost:39000/health/ready",
+        # "http://localhost:39001/rustfs/console/health",
         "https://localhost:30443",
         "https://localhost:35000",
         "https://localhost:35050/login",
-        "https://localhost:39000",
-        "https://localhost:39001",
+        "https://localhost:39000/health/ready",
+        "https://localhost:39001/rustfs/console/health",
       ]
   ports:
     - {{ "127.0.0.1:" if cookiecutter.nginx_expose_ports_on_localhost_only.lower() == "true" else "" }}80:30080/tcp

@@ -185,11 +185,11 @@ def test_nginx_server_name(rendered_folder):
     expected_name = EXPECTED_DEFAULTS["nginx_server_name"]
     conf_files = [
         "http_dbadmin.conf",
-        "http_minio.conf",
+        "http_rustfs.conf",
         "http_mlflow.conf",
         "http_restapi.conf",
         "https_dbadmin.conf",
-        "https_minio.conf",
+        "https_rustfs.conf",
         "https_mlflow.conf",
         "https_restapi.conf",
     ]
