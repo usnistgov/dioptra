@@ -134,3 +134,73 @@ def test_download_limit_counts_streamed_bytes(
     with pytest.raises(ValueError, match="download exceeds the size limit"):
         downloader._download(repository_http, ARCHIVE_URL, HOSTS, output, 4)
     assert output.getvalue() == b"1234"
+
+
+@pytest.mark.parametrize("host", ["gitlab.com", "gitlab.research.example"])
+@pytest.mark.parametrize(
+    ("ref", "encoded_ref"), [("", "main"), ("feature/import", "feature%2Fimport")]
+)
+def test_gitlab_resolution_keeps_requests_on_supplied_host(
+    host, ref, encoded_ref, repository_http, repository_response
+):
+    # Exercise the resolver contract without adding a host to the public allowlist.
+    base = f"https://{host}/api/v4/projects/group%2Fsubgroup%2Fproject"
+    repository_http.get.side_effect = [
+        repository_response({"visibility": "public", "default_branch": "main"}),
+        repository_response({"id": COMMIT}),
+        repository_response(b"gitlab archive bytes"),
+    ]
+
+    commit, archive_url, hosts = downloader._resolve_archive(
+        repository_http, host, "group/subgroup/project", ref
+    )
+    output = BytesIO()
+    downloader._download(repository_http, archive_url, hosts, output, 100)
+
+    assert commit == COMMIT
+    assert hosts == {host}
+    assert archive_url == (
+        f"{base}/repository/archive.tar.gz?sha={COMMIT}&include_lfs_blobs=false"
+    )
+    assert [request.args[0] for request in repository_http.get.call_args_list] == [
+        base,
+        f"{base}/repository/commits/{encoded_ref}",
+        archive_url,
+    ]
+    assert all(
+        request.kwargs["allow_redirects"] is False
+        for request in repository_http.get.call_args_list
+    )
+    assert output.tell() == 0
+    assert output.read() == b"gitlab archive bytes"
+
+
+def test_public_importer_still_rejects_unapproved_gitlab_host(repository_http):
+    with pytest.raises(ValueError, match="approved HTTPS host"):
+        downloader.download_repository_archive(
+            "https://gitlab.research.example/group/project", BytesIO()
+        )
+    repository_http.get.assert_not_called()
+
+
+def test_gitlab_metadata_redirect_cannot_cross_supplied_host(
+    repository_http, repository_response
+):
+    repository_http.get.side_effect = [
+        repository_response(
+            status=302,
+            headers={"Location": "https://gitlab.com/api/v4/projects/group%2Fproject"},
+        ),
+        repository_response({"visibility": "public", "default_branch": "main"}),
+        repository_response({"id": COMMIT}),
+    ]
+
+    with pytest.raises(ValueError, match="approved HTTPS host"):
+        downloader._resolve_archive(
+            repository_http, "gitlab.research.example", "group/project", ""
+        )
+
+    assert repository_http.get.call_count == 1
+    assert repository_http.get.call_args.args[0] == (
+        "https://gitlab.research.example/api/v4/projects/group%2Fproject"
+    )
