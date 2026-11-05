@@ -32,7 +32,6 @@ from dioptra.restapi.v1.experiments.service import (
     ExperimentIdService,
     ExperimentService,
 )
-from dioptra.restapi.v1.models.service import ModelIdService, ModelService
 from dioptra.restapi.v1.plugin_parameter_types.service import (
     PluginParameterTypeIdService,
     PluginParameterTypeService,
@@ -63,7 +62,6 @@ class ResourceService(object):
         artifact_service: ArtifactService,
         entrypoint_service: EntrypointService,
         experiment_service: ExperimentService,
-        model_service: ModelService,
         plugin_service: PluginService,
         plugin_id_file_service: PluginIdFileService,
         plugin_parameter_type_service: PluginParameterTypeService,
@@ -77,7 +75,6 @@ class ResourceService(object):
             artifact_service: An ArtifactService object
             entrypoint_service: An EntrypointService object
             experiment_service: An ExperimentService object
-            model_service: A ModelService object
             plugin_service: A PluginService object
             plugin_id_file_service: A PluginIdFileService object
             plugin_parameter_type_service: A PluginParameterTypeService object
@@ -88,7 +85,6 @@ class ResourceService(object):
             "artifact": artifact_service,
             "entry_point": entrypoint_service,
             "experiment": experiment_service,
-            "ml_model": model_service,
             "plugin": plugin_service,
             "plugin_file": plugin_id_file_service,
             "plugin_task_parameter_type": plugin_parameter_type_service,
@@ -145,7 +141,6 @@ class ResourceIdService(object):
         artifact_id_service: ArtifactIdService,
         entrypoint_id_service: EntrypointIdService,
         experiment_id_service: ExperimentIdService,
-        model_id_service: ModelIdService,
         plugin_id_service: PluginIdService,
         plugin_id_file_id_service: PluginIdFileIdService,
         plugin_parameter_type_id_service: PluginParameterTypeIdService,
@@ -159,7 +154,6 @@ class ResourceIdService(object):
             artifact_id_service: An ArtifactIdService object
             entrypoint_id_service: An EntrypointIdService object
             experiment_id_service: An ExperimentIdService object
-            model_id_service: A ModelIdService object
             plugin_id_service: A PluginIdService object
             plugin_id_file_id_service: A PluginIdFileIdService object
             plugin_parameter_type_id_service: A PluginParameterTypeIdService object
@@ -170,7 +164,6 @@ class ResourceIdService(object):
             "artifact": artifact_id_service,
             "entry_point": entrypoint_id_service,
             "experiment": experiment_id_service,
-            "ml_model": model_id_service,
             "plugin": plugin_id_service,
             "plugin_file": plugin_id_file_id_service,
             "plugin_task_parameter_type": plugin_parameter_type_id_service,

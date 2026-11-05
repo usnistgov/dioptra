@@ -149,11 +149,6 @@ const router = createRouter({
       ],
     },
     {
-      path: "/models",
-      component: () => import("../views/ModelsView.vue"),
-      name: "models",
-    },
-    {
       path: "/artifacts",
       meta: { type: "artifacts" },
       children: [

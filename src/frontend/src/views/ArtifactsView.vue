@@ -20,7 +20,6 @@
           ? openWindow.open(`/artifacts/${selected[0].id}`, '_blank')
           : router.push(`/artifacts/${selected[0].id}`)
     "
-    @delete="showDeleteDialog = true"
     @request="getData"
   >
     <template #body-cell-taskName="cellProps">
@@ -52,14 +51,7 @@
   <ArtifactsDialog
     v-model="showAddEditDialog"
     :editArtifact="selected.length && editing ? selected[0] : ''"
-    @addArtifact="addArtifact"
     @updateArtifact="updateArtifact"
-  />
-  <DeleteDialog
-    v-model="showDeleteDialog"
-    type="Model"
-    :name="selected.length ? selected[0].description : ''"
-    @submit="deleteModel"
   />
   <AssignTagsDialog
     v-model="showTagsDialog"
@@ -71,7 +63,6 @@
 <script setup>
 import TableComponent from "@/components/TableComponent.vue";
 import ArtifactsDialog from "@/dialogs/ArtifactsDialog.vue";
-import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import { ref, watch } from "vue";
 import * as api from "@/services/dataApi";
 import * as notify from "../notify";
@@ -92,7 +83,7 @@ watch(showAddEditDialog, (newVal) => {
   if (!newVal) editing.value = false;
 });
 
-const { rows, isLoading, tableRef, selected, showDeleteDialog, getData } = useTableUtils("artifacts");
+const { rows, isLoading, tableRef, selected, getData } = useTableUtils("artifacts");
 
 const columns = [
   { name: "id", label: "ID", align: "left", field: "id", sortable: true },
@@ -113,33 +104,6 @@ const columns = [
   { name: "lastModifiedOn", label: "Last Modified", align: "left", field: "lastModifiedOn", sortable: true },
   { name: "download", label: "Download", align: "center" },
 ];
-
-async function addArtifact(name, group, description) {
-  try {
-    const res = await api.addItem("models", {
-      name,
-      description,
-      group,
-    });
-    showAddEditDialog.value = false;
-    notify.success(`Successfully created '${res.data.name}'`);
-    tableRef.value.refreshTable();
-  } catch (err) {
-    notify.error(err.response.data.message);
-  }
-}
-
-async function deleteModel() {
-  try {
-    await api.deleteItem("models", selected.value[0].id);
-    notify.success(`Successfully deleted '${selected.value[0].description}'`);
-    showDeleteDialog.value = false;
-    selected.value = [];
-    tableRef.value.refreshTable();
-  } catch (err) {
-    notify.error(err.response.data.message);
-  }
-}
 
 async function updateArtifact(id, description) {
   try {

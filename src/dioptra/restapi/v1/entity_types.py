@@ -26,8 +26,6 @@ class EntityType(Enum):
     EXPERIMENT = "experiment", "Experiment"
     GROUP = "group", "Group"
     JOB = "job", "Job"
-    ML_MODEL = "ml_model", "ML Model"
-    ML_MODEL_VERSION = "ml_model_version", "ML Model Version"
     NONE = "none", "Entity of Type NONE"
     PLUGIN = "plugin", "Plugin"
     PLUGIN_FILE = "plugin_file", "Plugin File"
