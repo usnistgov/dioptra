@@ -28,6 +28,7 @@ from injector import inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.routes import V1_PLUGIN_FILES_ROUTE, V1_PLUGINS_ROUTE
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
@@ -68,8 +69,6 @@ from .schema import (
     PluginSchema,
 )
 from .service import (
-    PLUGIN_FILE_SEARCHABLE_FIELDS,
-    PLUGIN_SEARCHABLE_FIELDS,
     PluginIdFileIdService,
     PluginIdFileService,
     PluginIdService,
@@ -90,7 +89,7 @@ PluginFileSnapshotsResource = generate_nested_resource_snapshots_endpoint(
     resource_type=EntityType.PLUGIN_FILE,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_FILE_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.FILE_SEARCHABLE_FIELDS,
     page_schema=PluginFilePageSchema,
     build_fn=utils.build_plugin_file,
 )
@@ -134,6 +133,7 @@ class PluginEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         plugins, total_num_plugins = self._plugin_service.get(
             group_id=group_id,
@@ -142,6 +142,7 @@ class PluginEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
         return utils.build_paging_envelope(
@@ -156,7 +157,7 @@ class PluginEndpoint(Resource):
             total_num_elements=total_num_plugins,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -202,7 +203,7 @@ class PluginIdEndpoint(Resource):
         )
         plugin = cast(
             utils.PluginWithFilesDict,
-            self._plugin_id_service.get(id, error_if_not_found=True, log=log),
+            self._plugin_id_service.get(id, log=log),
         )
         return utils.build_plugin(plugin)
 
@@ -233,7 +234,6 @@ class PluginIdEndpoint(Resource):
                 id,
                 name=parsed_obj["name"],
                 description=parsed_obj["description"],
-                error_if_not_found=True,
                 log=log,
             ),
         )
@@ -275,6 +275,7 @@ class PluginIdFilesEndpoint(Resource):
         page_length = parsed_query_params["page_length"]
         sort_by_string = parsed_query_params["sort_by"]
         descending = parsed_query_params["descending"]
+        show_deleted = parsed_query_params["show_deleted"]
 
         plugin_files, total_num_plugin_files = self._plugin_id_file_service.get(
             plugin_id=id,
@@ -283,6 +284,7 @@ class PluginIdFilesEndpoint(Resource):
             page_length=page_length,
             sort_by_string=sort_by_string,
             descending=descending,
+            show_deleted=show_deleted,
             log=log,
         )
 
@@ -298,7 +300,7 @@ class PluginIdFilesEndpoint(Resource):
             total_num_elements=total_num_plugin_files,
             sort_by=sort_by_string,
             descending=descending,
-            show_deleted=None,
+            show_deleted=show_deleted,
         )
 
     @login_required
@@ -369,9 +371,7 @@ class PluginIdFileIdEndpoint(Resource):
         )
         plugin_file = cast(
             utils.PluginFileDict,
-            self._plugin_file_id_service.get(
-                id, plugin_file_id=fileId, error_if_not_found=True, log=log
-            ),
+            self._plugin_file_id_service.get(id, plugin_file_id=fileId, log=log),
         )
         return utils.build_plugin_file(plugin_file)
 
@@ -409,7 +409,6 @@ class PluginIdFileIdEndpoint(Resource):
                 function_tasks=parsed_obj["tasks"].get("functions", []),
                 artifact_tasks=parsed_obj["tasks"].get("artifacts", []),
                 description=parsed_obj["description"],
-                error_if_not_found=True,
                 log=log,
             ),
         )
@@ -417,8 +416,8 @@ class PluginIdFileIdEndpoint(Resource):
 
 
 @api.route("/<int:id>/snapshots/<int:snapshotId>/files/bundle")
-@api.param("id", "ID for the Entrypoint resource.")
-@api.param("snapshotId", "Snapshot ID for the Entrypoint resource.")
+@api.param("id", "ID for the Plugin resource.")
+@api.param("snapshotId", "Snapshot ID for the Plugin resource.")
 class PluginSnapshotIdFileBundleEndpoint(Resource):
     @inject
     def __init__(
@@ -445,7 +444,7 @@ class PluginSnapshotIdFileBundleEndpoint(Resource):
         """
         log = LOGGER.new(
             request_id=str(uuid.uuid4()),
-            resource="EntrypointSnapshotPluginsBundle",
+            resource="PluginSnapshotFilesBundle",
             request_type="GET",
             id=id,
             snapshot_id=snapshotId,
@@ -491,6 +490,7 @@ PluginIdDraftResource = generate_resource_id_draft_endpoint(
 PluginFileDraftResource = generate_nested_resource_drafts_endpoint(
     api,
     resource_type=EntityType.PLUGIN_FILE,
+    base_resource_type=EntityType.PLUGIN,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     base_resource_route=V1_PLUGINS_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
@@ -504,6 +504,7 @@ PluginFileDraftIdResource = generate_nested_resource_drafts_id_endpoint(
 PluginFileIdDraftResource = generate_nested_resource_id_draft_endpoint(
     api,
     resource_type=EntityType.PLUGIN_FILE,
+    base_resource_type=EntityType.PLUGIN,
     resource_route=V1_PLUGIN_FILES_ROUTE,
     request_schema=PluginFileSchema(exclude=["groupId"]),
 )
@@ -519,7 +520,7 @@ PluginSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Plugin,
     resource_type=EntityType.PLUGIN,
     route_prefix=V1_PLUGINS_ROUTE,
-    searchable_fields=PLUGIN_SEARCHABLE_FIELDS,
+    searchable_fields=PluginRepository.SEARCHABLE_FIELDS,
     page_schema=PluginPageSchema,
     build_fn=build_plugin,
 )

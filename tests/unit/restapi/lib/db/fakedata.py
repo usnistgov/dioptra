@@ -286,8 +286,8 @@ class FakeData(object):
             output_parameters=[output_parameter],
         )
 
-        init_plugin_file.parents.append(plugin.resource)
-        plugin_file.parents.append(plugin.resource)
+        models.PluginPluginFile(plugin=plugin, plugin_file=init_plugin_file)
+        models.PluginPluginFile(plugin=plugin, plugin_file=plugin_file)
 
         return FakePlugin(
             plugin=plugin,

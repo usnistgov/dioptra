@@ -23,6 +23,7 @@ without raising exceptions.
 from collections.abc import Iterable, Mapping
 
 import sqlalchemy as sa
+from sqlalchemy.orm import aliased
 
 import dioptra.restapi.db.models as m
 import dioptra.restapi.errors as e
@@ -127,7 +128,9 @@ def group_exists(
 
 
 def resource_exists(
-    session: CompatibleSession[S], resource: m.Resource | m.ResourceSnapshot | int
+    session: CompatibleSession[S],
+    resource: m.Resource | m.ResourceSnapshot | int,
+    resource_type: EntityType | None = None,
 ) -> ExistenceResult:
     """
     Check whether the given resource exists in the database, and if so, whether
@@ -138,6 +141,7 @@ def resource_exists(
         resource: A resource, snapshot (something with a .resource_id
             attribute we can use to identify a resource), or resource_id
             integer primary key value
+        resource_type: If provided, require that the resource has this type
 
     Returns:
         One of the ExistenceResult enum values
@@ -163,6 +167,8 @@ def resource_exists(
                 )
             )
         )
+        if resource_type is not None:
+            stmt = stmt.where(m.Resource.resource_type == resource_type.db_table_name)
 
         # This really ought to only produce at most one value
         locks = session.scalars(stmt).all()
@@ -465,6 +471,7 @@ def assert_resource_exists(
     session: CompatibleSession[S],
     resource: m.Resource | m.ResourceSnapshot | int,
     deletion_policy: DeletionPolicy,
+    resource_type: EntityType | None = None,
 ) -> None:
     """
     Check whether the given resource exists in the database.  This function
@@ -483,6 +490,7 @@ def assert_resource_exists(
         resource: A resource, snapshot, or resource_id integer primary key
             value
         deletion_policy: One of the DeletionPolicy enum values
+        resource_type: If provided, require that the resource has this type
 
     Raises:
         EntityDoesNotExistError: if the resource does not exist in the database
@@ -492,14 +500,14 @@ def assert_resource_exists(
         EntityDeletedError: if the resource is deleted, but policy was to find
             a non-deleted resource
     """
-    existence_result = resource_exists(session, resource)
+    existence_result = resource_exists(session, resource, resource_type)
 
     resource_id = get_resource_id(resource)
 
     assert_exists(
         deletion_policy,
         existence_result,
-        get_resource_type(resource),
+        resource_type or get_resource_type(resource),
         resource_id,
         resource_id=resource_id,
     )
@@ -868,6 +876,39 @@ def assert_draft_does_not_exist(
         raise e.DraftAlreadyExistsError(resource_type, draft_id)
 
 
+def assert_resource_registered(
+    session: CompatibleSession[S],
+    parent_id: int,
+    child_id: int,
+    *,
+    parent_type: EntityType,
+    child_type: EntityType,
+) -> None:
+    """Require a typed parent-child registration, regardless of deletion status.
+
+    Raises:
+        EntityNotRegisteredError: If the requested registration does not exist.
+    """
+    parent = aliased(m.Resource)
+    child = aliased(m.Resource)
+    dependencies = m.resource_dependencies_table
+    registration = (
+        sa.select(dependencies.c.parent_resource_id)
+        .join(parent, parent.resource_id == dependencies.c.parent_resource_id)
+        .join(child, child.resource_id == dependencies.c.child_resource_id)
+        .where(
+            parent.resource_id == parent_id,
+            child.resource_id == child_id,
+            parent.resource_type == parent_type.db_table_name,
+            child.resource_type == child_type.db_table_name,
+        )
+    )
+    if not session.scalar(sa.select(registration.exists())):
+        raise e.EntityNotRegisteredError(
+            parent_type.db_table_name, parent_id, child_type.db_table_name, child_id
+        )
+
+
 def assert_can_create_resource(
     session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
 ):
@@ -908,7 +949,11 @@ def assert_can_create_resource(
 
 
 def assert_can_create_snapshot(
-    session: CompatibleSession[S], snap: m.ResourceSnapshot, resource_type: EntityType
+    session: CompatibleSession[S],
+    snap: m.ResourceSnapshot,
+    resource_type: EntityType,
+    *,
+    creator_deletion_policy: DeletionPolicy = DeletionPolicy.NOT_DELETED,
 ):
     """
     Check whether the given snapshot may be created, of an existing resource.
@@ -918,6 +963,7 @@ def assert_can_create_snapshot(
     Args:
         session: An SQLAlchemy session
         snap: A ResourceSnapshot object with the desired snapshot settings
+        creator_deletion_policy: Whether the snapshot creator may be deleted.
         resource_type: the resource_type value for the type of resource being
             created.  Used to verify type settings on the snapshot and resource
             objects.
@@ -927,7 +973,8 @@ def assert_can_create_snapshot(
         EntityDoesNotExistError: if the resource or snapshot creator
             user does not exist, or if any child resource does not exist
         EntityDeletedError: if the resource is deleted, snapshot creator user
-            is deleted, or if all child resources exist but some are deleted
+            is deleted and excluded by policy, or if all child resources exist
+            but some are deleted
         ReadOnlyLockError: if the resource exists and has a read-only lock
         UserNotInGroupError: if the snapshot creator user is not a member
             of the group who owns the resource
@@ -937,7 +984,7 @@ def assert_can_create_snapshot(
     assert_resource_exists(session, snap, DeletionPolicy.NOT_DELETED)
     assert_snapshot_does_not_exist(session, snap)
     assert_resource_modifiable(session, snap)
-    assert_user_exists(session, snap.creator, DeletionPolicy.NOT_DELETED)
+    assert_user_exists(session, snap.creator, creator_deletion_policy)
     assert_user_in_group(session, snap.creator, snap.resource.owner)
     assert_resource_children_exist(session, snap, DeletionPolicy.NOT_DELETED)
     assert_resource_type(session, snap, resource_type)
@@ -1274,6 +1321,7 @@ def assert_snapshot_name_available(
 
 
 __all__ = [
+    "assert_resource_registered",
     "assert_can_create_resource",
     "assert_can_create_snapshot",
     "assert_draft_does_not_exist",

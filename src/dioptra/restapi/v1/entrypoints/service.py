@@ -37,23 +37,22 @@ from dioptra.restapi.db.repository.utils import (
     assert_user_in_group,
 )
 from dioptra.restapi.db.repository.utils.common import DeletionPolicy
-from dioptra.restapi.db.unit_of_work import UnitOfWork, UnitOfWorkService
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     EmptyGraphError,
     EntityDoesNotExistError,
-    EntityRelationshipDoesNotExistError,
     EntrypointSwapsRenderError,
     EntrypointValidationError,
     InvalidYamlError,
     TasksNotFoundError,
 )
+from dioptra.restapi.service_context import ServiceContext, ServiceContextService
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.entrypoints.task_engine_yaml import (
     build_task_engine_dict,
     coerce_entrypoint_default_param_types,
 )
-from dioptra.restapi.v1.plugins.service import PluginIdsService
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 from dioptra.restapi.v1.shared.views import (
     get_plugin_plugin_files_from_plugin_snapshot_ids,
@@ -175,7 +174,6 @@ class EntrypointService(object):
     @inject
     def __init__(
         self,
-        plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
         uow: UnitOfWork,
     ) -> None:
@@ -184,11 +182,9 @@ class EntrypointService(object):
         All arguments are provided via dependency injection.
 
         Args:
-            plugin_ids_service: A PluginIdsService object.
             swaps_validation_service: A SwapsValidationService object.
             uow: A UnitOfWork instance
         """
-        self._plugin_ids_service = plugin_ids_service
         self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
@@ -283,47 +279,26 @@ class EntrypointService(object):
             creator=current_user,
         )
 
-        plugins = [
-            plugin["plugin"]
-            for plugin in self._plugin_ids_service.get(
-                list(set(plugin_ids)), error_if_not_found=True
-            )
-        ]
-        artifact_plugins = [
-            artifact_plugin["plugin"]
-            for artifact_plugin in self._plugin_ids_service.get(
-                list(set(artifact_plugin_ids)), error_if_not_found=True
-            )
-        ]
-
-        new_entrypoint.entry_point_plugins = [
-            models.EntryPointPlugin(new_entrypoint, plugin=plugin) for plugin in plugins
-        ]
-
-        new_entrypoint.entry_point_artifact_plugins = [
-            models.EntryPointArtifactPlugin(new_entrypoint, plugin=artifact_plugin)
-            for artifact_plugin in artifact_plugins
-        ]
-
-        self._swaps_validation_service.raise_validation_errors(
-            group_id=group_id,
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            parameters=parameters,
-            artifact_parameters=artifact_parameters,
-            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=on_save,
-            log=log,
-        )
-
         with self._uow(commit):
             self._uow.entrypoint_repo.create(new_entrypoint)
             queues = self._uow.entrypoint_repo.create_queues(
                 new_entrypoint, queues=queue_ids
             )
-            self._uow.entrypoint_repo.create_plugins(
-                new_entrypoint,
-                plugins=_deduplicate_plugin_resources(plugins, artifact_plugins),
+            plugins = self._uow.entrypoint_repo.create_entrypoint_plugins(
+                new_entrypoint, plugins=list(set(plugin_ids))
+            )
+            self._uow.entrypoint_repo.create_entrypoint_artifact_plugins(
+                new_entrypoint, plugins=list(set(artifact_plugin_ids))
+            )
+            self._swaps_validation_service.raise_validation_errors(
+                group_id=group_id,
+                task_graph=task_graph,
+                artifact_graph=artifact_graph,
+                parameters=parameters,
+                artifact_parameters=artifact_parameters,
+                plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+                on_save=on_save,
+                log=log,
             )
 
         log.debug(
@@ -416,15 +391,15 @@ class EntrypointService(object):
         return list(entrypoint_dicts.values()), total_num_entrypoints
 
 
-class EntrypointIdService(UnitOfWorkService):
+class EntrypointIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
     @inject
     def __init__(
         self,
-        plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
+        context: ServiceContext,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the entrypoint service.
@@ -433,9 +408,9 @@ class EntrypointIdService(UnitOfWorkService):
 
         Args:
         """
-        self._plugin_ids_service = plugin_ids_service
-        self._swaps_validation_service = swaps_validation_service
+        super().__init__(context)
         self._uow = uow
+        self._swaps_validation_service = swaps_validation_service
 
     @contextmanager
     def validate_modify(
@@ -620,31 +595,6 @@ class EntrypointIdService(UnitOfWorkService):
                 models.EntryPointPlugin(entry_point=new_entrypoint, plugin=plugin)
                 for plugin in plugins
             ]
-        elif plugin_ids is None:
-            plugins = _copy_plugins(
-                plugins=entrypoint.entry_point_plugins,
-                target_entrypoint=new_entrypoint,
-            )
-        else:
-            plugin_id_set = set(plugin_ids)
-            plugins = _copy_plugins(
-                plugins=(
-                    plugin
-                    for plugin in entrypoint.entry_point_plugins
-                    if plugin.plugin.resource_id not in plugin_id_set
-                ),
-                target_entrypoint=new_entrypoint,
-            )
-            for plugin in self._plugin_ids_service.get(
-                list(plugin_id_set), error_if_not_found=True
-            ):
-                new_plugin = models.EntryPointPlugin(
-                    entry_point=new_entrypoint, plugin=plugin["plugin"]
-                )
-                new_entrypoint.entry_point_plugins.append(new_plugin)
-                plugins.append(new_plugin.plugin)
-
-        if replacing_bindings:
             artifact_plugins = selected_artifact_plugins
             new_entrypoint.entry_point_artifact_plugins = [
                 models.EntryPointArtifactPlugin(
@@ -652,49 +602,67 @@ class EntrypointIdService(UnitOfWorkService):
                 )
                 for plugin in artifact_plugins
             ]
-        elif artifact_plugin_ids is None:
-            artifact_plugins = _copy_artifact_plugins(
-                artifact_plugins=entrypoint.entry_point_artifact_plugins,
-                target_entrypoint=new_entrypoint,
-            )
-        else:
-            artifact_plugin_id_set = set(artifact_plugin_ids)
-            artifact_plugins = _copy_artifact_plugins(
-                artifact_plugins=(
-                    plugin
-                    for plugin in entrypoint.entry_point_artifact_plugins
-                    if plugin.plugin.resource_id not in artifact_plugin_id_set
-                ),
-                target_entrypoint=new_entrypoint,
-            )
-            for plugin in self._plugin_ids_service.get(
-                list(artifact_plugin_id_set), error_if_not_found=True
-            ):
-                new_plugin = models.EntryPointArtifactPlugin(
-                    entry_point=new_entrypoint, plugin=plugin["plugin"]
-                )
-                new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
-                artifact_plugins.append(new_plugin.plugin)
-
-        self._swaps_validation_service.raise_validation_errors(
-            group_id=entrypoint.resource.group_id,
-            task_graph=task_graph,
-            artifact_graph=artifact_graph,
-            parameters=parameters,
-            artifact_parameters=artifact_parameters,
-            plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
-            on_save=on_save,
-            log=log,
-        )
 
         with self._uow(commit):
             queues = self._uow.entrypoint_repo.set_queues(new_entrypoint, queue_ids)
-            self._uow.entrypoint_repo.set_plugins(
-                new_entrypoint,
-                _deduplicate_plugin_resources(plugins, artifact_plugins),
-            )
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
 
+            if replacing_bindings:
+                plugins = selected_plugins
+            elif plugin_ids is None:
+                plugins = list(
+                    self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                        entrypoint, new_entrypoint
+                    )
+                )
+            else:
+                plugin_id_set = set(plugin_ids)
+                plugins = list(
+                    self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                        entrypoint,
+                        new_entrypoint,
+                        exclude_plugin_ids=plugin_id_set,
+                    )
+                )
+                plugins.extend(
+                    self._uow.entrypoint_repo.create_entrypoint_plugins(
+                        new_entrypoint, plugin_id_set
+                    )
+                )
+
+            if replacing_bindings:
+                artifact_plugins = selected_artifact_plugins
+            elif artifact_plugin_ids is None:
+                artifact_plugins = list(
+                    self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                        entrypoint, new_entrypoint
+                    )
+                )
+            else:
+                artifact_plugin_id_set = set(artifact_plugin_ids)
+                artifact_plugins = list(
+                    self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                        entrypoint,
+                        new_entrypoint,
+                        exclude_plugin_ids=artifact_plugin_id_set,
+                    )
+                )
+                artifact_plugins.extend(
+                    self._uow.entrypoint_repo.create_entrypoint_artifact_plugins(
+                        new_entrypoint, artifact_plugin_id_set
+                    )
+                )
+
+            self._swaps_validation_service.raise_validation_errors(
+                group_id=entrypoint.resource.group_id,
+                task_graph=task_graph,
+                artifact_graph=artifact_graph,
+                parameters=parameters,
+                artifact_parameters=artifact_parameters,
+                plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+                on_save=on_save,
+                log=log,
+            )
         log.debug(
             "Entrypoint modification successful",
             entrypoint_id=entrypoint_id,
@@ -780,7 +748,7 @@ class EntrypointIdService(UnitOfWorkService):
         return {"status": "Success", "id": [entrypoint_id]}
 
 
-class EntrypointSnapshotIdService(UnitOfWorkService):
+class EntrypointSnapshotIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by
     their unique id."""
 
@@ -830,18 +798,11 @@ class EntrypointSnapshotIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        # change this to new repo method
-        # should not call other service methods from a service method
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for entry_point_plugin in entry_point.entry_point_plugins
-            for plugin_plugin_file in entry_point_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_artifact_plugin_files(
         self,
@@ -861,16 +822,11 @@ class EntrypointSnapshotIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("get plugin files", resource_snapshot_id=entrypoint_snapshot_id)
 
-        entry_point = self.get(
-            entrypoint_id=entrypoint_id,
-            entrypoint_snapshot_id=entrypoint_snapshot_id,
-            log=log,
+        return self._uow.entrypoint_repo.get_artifact_plugin_files(
+            entrypoint_id,
+            entrypoint_snapshot_id,
+            DeletionPolicy.NOT_DELETED,
         )
-        return [
-            plugin_plugin_file
-            for artifact_plugin in entry_point.entry_point_artifact_plugins
-            for plugin_plugin_file in artifact_plugin.plugin.plugin_plugin_files
-        ]
 
     def get_group_plugin_parameter_types(
         self, group_id: int, **kwargs
@@ -906,7 +862,6 @@ class EntrypointIdPluginsService(object):
     @inject
     def __init__(
         self,
-        plugin_ids_service: PluginIdsService,
         swaps_validation_service: SwapsValidationService,
         uow: UnitOfWork,
     ) -> None:
@@ -915,11 +870,9 @@ class EntrypointIdPluginsService(object):
         All arguments are provided via dependency injection.
 
         Args:
-            plugin_ids_service: A PluginIdsService object.
             swaps_validation_service: Full validation for prospective entrypoint snapshots.
             uow: A UnitOfWork instance
         """
-        self._plugin_ids_service = plugin_ids_service
         self._swaps_validation_service = swaps_validation_service
         self._uow = uow
 
@@ -993,33 +946,24 @@ class EntrypointIdPluginsService(object):
             creator=current_user,
         )
 
-        # copy over the existing plugins (except the ones which need to be updated)
-        plugins = _copy_plugins(
-            plugins=filter(
-                lambda p: p.plugin.resource_id not in plugin_id_set,
-                entrypoint.entry_point_plugins,
-            ),
-            target_entrypoint=new_entrypoint,
-        )
-
-        # now add to the existing plugins (gets the latest version)
-        for plugin in self._plugin_ids_service.get(plugin_ids, error_if_not_found=True):
-            new_plugin = models.EntryPointPlugin(
-                entry_point=new_entrypoint, plugin=plugin["plugin"]
-            )
-            new_entrypoint.entry_point_plugins.append(new_plugin)
-            plugins.append(new_plugin.plugin)
-
-        # artifact plugins stay the same, task plugins are changing
-        _copy_artifact_plugins(
-            artifact_plugins=entrypoint.entry_point_artifact_plugins,
-            target_entrypoint=new_entrypoint,
-        )
-
         with self._uow():
-            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
-            self._uow.entrypoint_repo.add_plugins(new_entrypoint, plugin_ids)
+            # copy over the existing plugins (except the ones which need to be updated)
+            self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                entrypoint,
+                new_entrypoint,
+                exclude_plugin_ids=plugin_id_set,
+            )
+
+            # artifact plugins stay the same, task plugins are changing
+            self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                entrypoint,
+                new_entrypoint,
+            )
+            self._uow.entrypoint_repo.create_entrypoint_plugins(
+                new_entrypoint, plugin_ids
+            )
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
 
         log.debug(
             "Plugins appended to Entrypoint successfully",
@@ -1030,14 +974,16 @@ class EntrypointIdPluginsService(object):
         return _get_entrypoint_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdPluginsIdService(UnitOfWorkService):
+class EntrypointIdPluginsIdService(ServiceContextService):
     """The service methods for creating and managing entrypoints by their unique id."""
 
     @inject
     def __init__(
-        self, swaps_validation_service: SwapsValidationService, uow: UnitOfWork
+        self,
+        swaps_validation_service: SwapsValidationService,
+        context: ServiceContext,
     ) -> None:
-        super().__init__(uow)
+        super().__init__(context)
         self._swaps_validation_service = swaps_validation_service
 
     def get(
@@ -1060,25 +1006,16 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED
+        entrypoint_plugin = self._uow.entrypoint_repo.get_one_entrypoint_plugin(
+            entrypoint_id,
+            plugin_id,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        plugin = [
-            entry_point_plugin.plugin
-            for entry_point_plugin in entrypoint.entry_point_plugins
-            if plugin_id == entry_point_plugin.plugin.resource_id
-        ]
-
-        if not plugin:
-            raise EntityRelationshipDoesNotExistError(
-                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
-                entrypoint_id=entrypoint_id,
-                plugin_id=plugin_id,
-            )
-
         return utils.PluginWithFilesDict(
-            plugin=plugin[0], plugin_files=plugin[0].plugin_files, has_draft=None
+            plugin=entrypoint_plugin.plugin,
+            plugin_files=entrypoint_plugin.plugin.plugin_files,
+            has_draft=None,
         )
 
     def delete(
@@ -1104,20 +1041,12 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         entrypoint = self._uow.entrypoint_repo.get_one(
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
-
         assert_user_in_group(self._uow.session, current_user, entrypoint.resource.owner)
-        # should this be a no-op? i.e. return success and don't make a new snapshot
-        # the other repo implementations changed resource deletion to be a no-op if not
-        # found instead of raising an error
-        plugin_ids = {
-            plugin.plugin.resource_id for plugin in entrypoint.entry_point_plugins
-        }
-        if plugin_id not in plugin_ids:
-            raise EntityRelationshipDoesNotExistError(
-                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
-                entrypoint_id=entrypoint_id,
-                plugin_id=plugin_id,
-            )
+        self._uow.entrypoint_repo.get_one_entrypoint_plugin(
+            entrypoint_id,
+            plugin_id,
+            DeletionPolicy.NOT_DELETED,
+        )
 
         # create a new snapshot with the plugin removed
         new_entrypoint = models.EntryPoint(
@@ -1133,30 +1062,18 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
             creator=current_user,
         )
 
-        artifact_plugins = _copy_artifact_plugins(
-            artifact_plugins=entrypoint.entry_point_artifact_plugins,
-            target_entrypoint=new_entrypoint,
-        )
-
-        # copy all plugins but the one targeted for deletion
-        _copy_plugins(
-            plugins=filter(
-                lambda p: p.plugin.resource_id != plugin_id,
-                entrypoint.entry_point_plugins,
-            ),
-            target_entrypoint=new_entrypoint,
-        )
-
         with self._uow():
-            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
-            # if the removed plugin is also an artifact plugin do not remove the
-            # resource dependency relationship
-            artifact_plugin_ids = {
-                artifact_plugin.resource_id for artifact_plugin in artifact_plugins
-            }
-            if plugin_id not in artifact_plugin_ids:
-                self._uow.entrypoint_repo.unlink_plugin(new_entrypoint, plugin_id)
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
+            self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                entrypoint,
+                new_entrypoint,
+            )
+            self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                entrypoint,
+                new_entrypoint,
+                exclude_plugin_ids={plugin_id},
+            )
+            self._swaps_validation_service.validate_snapshot(new_entrypoint, log)
 
         log.debug(
             "Plugin removed from entrypoint",
@@ -1167,23 +1084,10 @@ class EntrypointIdPluginsIdService(UnitOfWorkService):
         return {"status": "Success", "id": [plugin_id]}
 
 
-class EntrypointIdArtifactPluginsService(object):
+class EntrypointIdArtifactPluginsService(ServiceContextService):
     """
     The service methods for creating and managing artifact plugins for an entrypoint.
     """
-
-    @inject
-    def __init__(self, plugin_ids_service: PluginIdsService, uow: UnitOfWork) -> None:
-        """Initialize the entrypoint service.
-
-        All arguments are provided via dependency injection.
-
-        Args:
-            plugin_ids_service: A PluginIdsService object.
-            uow: A UnitOfWork instance
-        """
-        self._plugin_ids_service = plugin_ids_service
-        self._uow = uow
 
     def get(self, entrypoint_id: int, **kwargs) -> list[utils.PluginWithFilesDict]:
         """Fetch the artifact plugin snapshots for an entrypoint by its unique id.
@@ -1249,33 +1153,23 @@ class EntrypointIdArtifactPluginsService(object):
             creator=current_user,
         )
 
-        # plugins stay the same, artifact plugins are changing
-        _copy_plugins(
-            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
-        )
-
-        # copy over existing artifact plugins (except the ones which need to be updated)
-        artifact_plugins = _copy_artifact_plugins(
-            artifact_plugins=filter(
-                lambda a: a.plugin.resource_id not in artifact_plugin_id_set,
-                entrypoint.entry_point_artifact_plugins,
-            ),
-            target_entrypoint=new_entrypoint,
-        )
-
-        # now add to the existing artifact plugins (gets the latest version)
-        for plugin in self._plugin_ids_service.get(
-            artifact_plugin_ids, error_if_not_found=True
-        ):
-            new_plugin = models.EntryPointArtifactPlugin(
-                entry_point=new_entrypoint, plugin=plugin["plugin"]
-            )
-            new_entrypoint.entry_point_artifact_plugins.append(new_plugin)
-            artifact_plugins.append(new_plugin.plugin)
-
         with self._uow():
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
-            self._uow.entrypoint_repo.add_plugins(new_entrypoint, artifact_plugin_ids)
+            # plugins stay the same, artifact plugins are changing
+            self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                entrypoint,
+                new_entrypoint,
+            )
+
+            # copy over existing artifact plugins (except the ones which need to be updated)
+            self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                entrypoint,
+                new_entrypoint,
+                exclude_plugin_ids=artifact_plugin_id_set,
+            )
+            self._uow.entrypoint_repo.create_entrypoint_artifact_plugins(
+                new_entrypoint, artifact_plugin_ids
+            )
 
         log.debug(
             "Artifact Plugins appended to Entrypoint successfully",
@@ -1286,7 +1180,7 @@ class EntrypointIdArtifactPluginsService(object):
         return _get_entrypoint_artifact_plugin_snapshots(new_entrypoint)
 
 
-class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
+class EntrypointIdArtifactPluginsIdService(ServiceContextService):
     """The service methods for creating and managing the artifact plugins for a specific
     entrypoint by their unique id."""
 
@@ -1311,26 +1205,15 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get entrypoint by id", entrypoint_id=entrypoint_id)
 
-        entrypoint = self._uow.entrypoint_repo.get_one(
-            entrypoint_id, DeletionPolicy.NOT_DELETED
+        artifact_plugin = self._uow.entrypoint_repo.get_one_entrypoint_artifact_plugin(
+            entrypoint_id,
+            artifact_plugin_id,
+            DeletionPolicy.NOT_DELETED,
         )
 
-        artifact_plugin = [
-            entry_point_artifact_plugin.plugin
-            for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
-            if artifact_plugin_id == entry_point_artifact_plugin.plugin.resource_id
-        ]
-
-        if not artifact_plugin:
-            raise EntityRelationshipDoesNotExistError(
-                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
-                entrypoint_id=entrypoint_id,
-                plugin_id=artifact_plugin_id,
-            )
-
         return utils.PluginWithFilesDict(
-            plugin=artifact_plugin[0],
-            plugin_files=artifact_plugin[0].plugin_files,
+            plugin=artifact_plugin.plugin,
+            plugin_files=artifact_plugin.plugin.plugin_files,
             has_draft=None,
         )
 
@@ -1357,17 +1240,11 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         entrypoint = self._uow.entrypoint_repo.get_one(
             entrypoint_id, DeletionPolicy.NOT_DELETED
         )
-
-        artifact_plugin_ids = {
-            artifact_plugin.plugin.resource_id
-            for artifact_plugin in entrypoint.entry_point_artifact_plugins
-        }
-        if artifact_plugin_id not in artifact_plugin_ids:
-            raise EntityRelationshipDoesNotExistError(
-                [EntityType.ENTRY_POINT, EntityType.PLUGIN],
-                entrypoint_id=entrypoint_id,
-                artifact_plugin_id=artifact_plugin_id,
-            )
+        self._uow.entrypoint_repo.get_one_entrypoint_artifact_plugin(
+            entrypoint_id,
+            artifact_plugin_id,
+            DeletionPolicy.NOT_DELETED,
+        )
 
         # create a new snapshot with the artifact plugin removed
         new_entrypoint = models.EntryPoint(
@@ -1383,28 +1260,17 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
             creator=current_user,
         )
 
-        # plugins stay the same, artifact plugins are changing
-        plugins = _copy_plugins(
-            plugins=entrypoint.entry_point_plugins, target_entrypoint=new_entrypoint
-        )
-
-        # copy over artifact plugins but the one targeted for deletion
-        _copy_artifact_plugins(
-            artifact_plugins=filter(
-                lambda a: a.plugin.resource_id != artifact_plugin_id,
-                entrypoint.entry_point_artifact_plugins,
-            ),
-            target_entrypoint=new_entrypoint,
-        )
-
         with self._uow():
             self._uow.entrypoint_repo.create_snapshot(new_entrypoint)
-            # if the removed artifact plugin is also a plugin do not remove the
-            # resource dependency relationship
-            if artifact_plugin_id not in plugins:
-                self._uow.entrypoint_repo.unlink_plugin(
-                    new_entrypoint, artifact_plugin_id
-                )
+            self._uow.entrypoint_repo.copy_entrypoint_plugins(
+                entrypoint,
+                new_entrypoint,
+            )
+            self._uow.entrypoint_repo.copy_entrypoint_artifact_plugins(
+                entrypoint,
+                new_entrypoint,
+                exclude_plugin_ids={artifact_plugin_id},
+            )
 
         log.debug(
             "Artifact Plugin removed from entrypoint",
@@ -1415,7 +1281,7 @@ class EntrypointIdArtifactPluginsIdService(UnitOfWorkService):
         return {"status": "Success", "id": [artifact_plugin_id]}
 
 
-class EntrypointIdQueuesService(UnitOfWorkService):
+class EntrypointIdQueuesService(ServiceContextService):
     """The service methods for managing queues attached to an entrypoint."""
 
     def get(self, entrypoint_id: int, **kwargs) -> list[models.Queue]:
@@ -1523,7 +1389,7 @@ class EntrypointIdQueuesService(UnitOfWorkService):
         return {"status": "Success", "id": queue_ids}
 
 
-class EntrypointIdQueuesIdService(UnitOfWorkService):
+class EntrypointIdQueuesIdService(ServiceContextService):
     """The service methods for removing a queue attached to an entrypoint."""
 
     def delete(self, entrypoint_id: int, queue_id, **kwargs) -> dict[str, Any]:
@@ -1546,7 +1412,7 @@ class EntrypointIdQueuesIdService(UnitOfWorkService):
         return {"status": "Success", "id": [queue_id]}
 
 
-class EntrypointNameService(UnitOfWorkService):
+class EntrypointNameService(ServiceContextService):
     """The service methods for managing entrypoints by their name."""
 
     def get(self, name: str, group_id: int, **kwargs) -> models.EntryPoint | None:
@@ -1567,7 +1433,7 @@ class EntrypointNameService(UnitOfWorkService):
         )
 
 
-class EntrypointConfigService(UnitOfWorkService):
+class EntrypointConfigService(object):
     """Service to retrieve a rendered YAML configuration for an Entrypoint."""
 
     @inject
@@ -1674,7 +1540,7 @@ class EntrypointConfigService(UnitOfWorkService):
         return config
 
 
-class DynamicGlobalParametersService(UnitOfWorkService):
+class DynamicGlobalParametersService(object):
     @inject
     def __init__(
         self,
@@ -1762,7 +1628,7 @@ class DynamicGlobalParametersService(UnitOfWorkService):
         }
 
 
-class SwapsValidationService(UnitOfWorkService):
+class SwapsValidationService(object):
     """Validate proposed entrypoint graphs, including swap definitions.
 
     All arguments are provided via dependency injection.
@@ -1770,6 +1636,10 @@ class SwapsValidationService(UnitOfWorkService):
     Args:
         uow: A UnitOfWork instance.
     """
+
+    @inject
+    def __init__(self, uow: UnitOfWork) -> None:
+        self._uow = uow
 
     def swaps_graph_validation(
         self,
@@ -2292,7 +2162,7 @@ class SwapsValidationService(UnitOfWorkService):
         return validation_results
 
 
-class SwapsRetrievalService(UnitOfWorkService):
+class SwapsRetrievalService(object):
     """Service for retrieving available swaps for an entrypoint snapshot.
 
     Currently this implementation returns an empty mapping. It can be extended to
@@ -2474,60 +2344,6 @@ def _get_entrypoint_artifact_plugin_snapshots(
         )
         for entry_point_artifact_plugin in entrypoint.entry_point_artifact_plugins
     ]
-
-
-def _copy_plugins(
-    plugins: Iterable[models.EntryPointPlugin], target_entrypoint: models.EntryPoint
-) -> list[models.Plugin]:
-    target_entrypoint.entry_point_plugins = [
-        models.EntryPointPlugin(
-            entry_point=target_entrypoint,
-            plugin=plugin.plugin,
-        )
-        for plugin in plugins
-    ]
-    # return a unique list of plugin resources
-    return list(
-        {
-            plugin.plugin.resource_id: plugin.plugin
-            for plugin in target_entrypoint.entry_point_plugins
-        }.values()
-    )
-
-
-def _copy_artifact_plugins(
-    artifact_plugins: Iterable[models.EntryPointArtifactPlugin],
-    target_entrypoint: models.EntryPoint,
-) -> list[models.Plugin]:
-    target_entrypoint.entry_point_artifact_plugins = [
-        models.EntryPointArtifactPlugin(
-            entry_point=target_entrypoint,  # pyright: ignore
-            plugin=artifact_plugin.plugin,  # pyright: ignore
-        )
-        for artifact_plugin in artifact_plugins
-    ]
-    # return a unique list of artifact plugin resources
-    return list(
-        {
-            artifact_plugin.plugin.resource_id: artifact_plugin.plugin
-            for artifact_plugin in target_entrypoint.entry_point_artifact_plugins
-        }.values()
-    )
-
-
-def _deduplicate_plugin_resources(
-    plugins: list[models.Plugin],
-    artifact_plugins: list[models.Plugin],
-) -> list[models.Plugin]:
-    """
-    De-duplicates two lists of Plugin resources and returns a combined list.
-
-    Returns:
-        A de-duplicated list of Plugin resources
-    """
-    return list(
-        {plugin.resource_id: plugin for plugin in plugins + artifact_plugins}.values()
-    )
 
 
 def _create_parameters(

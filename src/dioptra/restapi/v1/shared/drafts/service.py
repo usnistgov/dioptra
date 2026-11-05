@@ -21,7 +21,7 @@ from typing import Any, cast
 
 import structlog
 from flask_login import current_user
-from injector import inject
+from injector import NoInject, inject
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import models
@@ -49,6 +49,7 @@ class ResourceDraftsService(object):
         self,
         resource_type: EntityType,
         uow: UnitOfWork,
+        base_resource_type: NoInject[EntityType | None] = None,
     ) -> None:
         """Initialize the draft service.
 
@@ -58,6 +59,7 @@ class ResourceDraftsService(object):
             group_id_service: A GroupIdService object.
         """
         self._resource_type = resource_type
+        self._base_resource_type = base_resource_type
         self._uow = uow
 
     def get(
@@ -105,6 +107,7 @@ class ResourceDraftsService(object):
             base_resource_id,
             page_index,
             page_length,
+            base_resource_type=self._base_resource_type,
         )
 
         return drafts, total_num_drafts
@@ -151,14 +154,11 @@ class ResourceDraftsService(object):
             current_user,
         )
 
-        try:
-            self._uow.drafts_repo.create_draft_resource(draft)
-        except Exception:
-            self._uow.rollback()
-            raise
-
-        if commit:
-            self._uow.commit()
+        with self._uow(commit):
+            self._uow.drafts_repo.create_draft_resource(
+                draft,
+                expected_base_resource_type=self._base_resource_type,
+            )
 
         log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
@@ -256,13 +256,13 @@ class ResourceDraftsIdService(object):
         if draft is None:
             return None
 
-        current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
-        # TODO: sanity check the payload?
-        draft.payload["resource_data"] = payload
-        draft.last_modified_on = current_timestamp
+        with self._uow(commit):
+            current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+            # TODO: sanity check the payload?
+            draft.payload["resource_data"] = payload
+            draft.last_modified_on = current_timestamp
 
         if commit:
-            self._uow.commit()
             log.debug("Draft modification successful", draft_resource_id=draft_id)
 
         return draft
@@ -279,7 +279,7 @@ class ResourceDraftsIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         try:
-            with self._uow:
+            with self._uow():
                 self._uow.drafts_repo.delete(
                     draft_id,
                     creator=current_user.user_id,
@@ -299,8 +299,14 @@ class ResourceIdDraftService(object):
     """The service methods for managing the draft for an existing resource."""
 
     @inject
-    def __init__(self, resource_type: EntityType, uow: UnitOfWork):
+    def __init__(
+        self,
+        resource_type: EntityType,
+        uow: UnitOfWork,
+        base_resource_type: NoInject[EntityType | None] = None,
+    ):
         self._resource_type = resource_type
+        self._base_resource_type = base_resource_type
         self._uow = uow
 
     def get(
@@ -333,6 +339,7 @@ class ResourceIdDraftService(object):
             # a service.
             current_user,
             resource_id,
+            resource_type=self._resource_type,
         )
 
         if draft is None and error_if_not_found:
@@ -341,6 +348,7 @@ class ResourceIdDraftService(object):
         num_other_drafts = self._uow.drafts_repo.get_num_draft_modifications(
             resource_id,
             current_user,
+            resource_type=self._resource_type,
         )
 
         return draft, num_other_drafts
@@ -387,6 +395,7 @@ class ResourceIdDraftService(object):
             # a service.
             resource,
             current_user,
+            resource_type=self._resource_type,
         )
 
         draft_payload = {
@@ -403,14 +412,13 @@ class ResourceIdDraftService(object):
             creator=current_user,
         )
 
-        try:
-            self._uow.drafts_repo.create_draft_modification(draft)
-        except Exception:
-            self._uow.rollback()
-            raise
+        with self._uow(commit):
+            self._uow.drafts_repo.create_draft_modification(
+                draft,
+                expected_base_resource_type=self._base_resource_type,
+            )
 
         if commit:
-            self._uow.commit()
             log.debug("Draft creation successful", resource_id=draft.draft_resource_id)
 
         return draft, num_other_drafts
@@ -457,12 +465,13 @@ class ResourceIdDraftService(object):
             )
 
         try:
-            self._uow.drafts_repo.update(
-                draft,
-                payload["resource_data"],
-                payload["resource_snapshot_id"],
-                creator=current_user.user_id,
-            )
+            with self._uow(commit):
+                self._uow.drafts_repo.update(
+                    draft,
+                    payload["resource_data"],
+                    payload["resource_snapshot_id"],
+                    creator=current_user.user_id,
+                )
         except TypeError as error:
             self._uow.rollback()
             log.exception("Draft modification failed", resource_id=resource_id)
@@ -474,7 +483,6 @@ class ResourceIdDraftService(object):
             raise
 
         if commit:
-            self._uow.commit()
             log.debug("Draft modification successful", resource_id=resource_id)
 
         return draft, num_other_drafts
@@ -496,7 +504,7 @@ class ResourceIdDraftService(object):
         )
         draft_id = draft.draft_resource_id
         try:
-            with self._uow:
+            with self._uow():
                 self._uow.drafts_repo.delete(
                     draft,
                     creator=current_user.user_id,

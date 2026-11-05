@@ -14,8 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index, and_, select
-from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Index
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dioptra.restapi.db.db import (
     bigint,
@@ -27,7 +27,7 @@ from dioptra.restapi.db.db import (
     text_,
 )
 
-from .resources import Resource, ResourceSnapshot, resource_dependencies_table
+from .resources import ResourceSnapshot
 
 # -- ORM Classes -----------------------------------------------------------------------
 
@@ -79,23 +79,11 @@ class PluginFile(ResourceSnapshot):
     filename: Mapped[text_] = mapped_column(nullable=False, index=True)
     contents: Mapped[optionalstr]
 
-    # Derived fields (read-only)
-    plugin_id: Mapped[bigint] = column_property(
-        select(Resource.resource_id)
-        .join(
-            resource_dependencies_table,
-            and_(
-                Resource.resource_id
-                == resource_dependencies_table.c.parent_resource_id,
-                resource_dependencies_table.c.child_resource_id == resource_id,
-            ),
-        )
-        .limit(1)
-        .correlate_except(Resource)
-        .scalar_subquery()
-    )
-
     # Relationships
+    plugin_plugin_files: Mapped[list["PluginPluginFile"]] = relationship(
+        init=False,
+        back_populates="plugin_file",
+    )
     tasks: Mapped[list["PluginTask"]] = relationship(
         init=False, back_populates="file", lazy="joined"
     )
@@ -128,8 +116,12 @@ class PluginPluginFile(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    plugin: Mapped["Plugin"] = relationship(lazy="joined")
-    plugin_file: Mapped["PluginFile"] = relationship(lazy="joined")
+    plugin: Mapped["Plugin"] = relationship(
+        lazy="joined", back_populates="plugin_plugin_files"
+    )
+    plugin_file: Mapped["PluginFile"] = relationship(
+        lazy="joined", back_populates="plugin_plugin_files"
+    )
 
 
 class PluginTask(db.Model):  # type: ignore[name-defined]
