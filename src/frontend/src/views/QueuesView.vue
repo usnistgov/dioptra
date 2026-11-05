@@ -26,6 +26,13 @@
     "
     @create="router.push('/queues/new')"
   >
+    <template #name-suffix="cellProps">
+      <QueueWorkerIndicator
+        v-if="!showDrafts && !cellProps.row.deleted"
+        :queueName="cellProps.row.name"
+        :count="cellProps.row.knownWorkerCount"
+      />
+    </template>
     <template #body-cell-hasDraft="cellProps">
       <q-btn
         v-show="!cellProps.row.deleted"
@@ -60,6 +67,7 @@ import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import PageTitle from "@/components/PageTitle.vue";
 import { useRouter } from "vue-router";
 import { useTableUtils } from "@/services/useTableUtils";
+import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
 
 const router = useRouter();
 

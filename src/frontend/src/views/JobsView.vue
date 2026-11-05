@@ -31,6 +31,11 @@
   >
     <template #body-cell-status="cellProps">
       <JobStatus :status="cellProps.row.status" />
+      <QueueWorkerIndicator
+        v-if="cellProps.row.status === 'queued'"
+        :queueName="cellProps.row.queue?.name"
+        :count="cellProps.row.queue?.knownWorkerCount"
+      />
     </template>
   </TableComponent>
 
@@ -67,6 +72,7 @@ import DeleteDialog from "@/dialogs/DeleteDialog.vue";
 import ArtifactsDialog from "@/dialogs/ArtifactsDialog.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
 import JobStatus from "@/components/JobStatus.vue";
+import QueueWorkerIndicator from "@/components/QueueWorkerIndicator.vue";
 import { useTableUtils } from "@/services/useTableUtils";
 
 const openWindow = window;

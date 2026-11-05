@@ -26,9 +26,10 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError
+from dioptra.restapi.errors import EntityDoesNotExistError, RedisUnavailableError
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
+from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -38,7 +39,7 @@ class QueueService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(self, uow: UnitOfWork, rq_service: RQServiceV1) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
@@ -47,6 +48,7 @@ class QueueService(object):
             uow: A UnitOfWork instance
         """
         self._uow = uow
+        self._rq_service = rq_service
 
     def create(
         self,
@@ -144,10 +146,21 @@ class QueueService(object):
             DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED,
         )
 
-        queues_dict: dict[int, utils.QueueDict] = {
-            queue.resource_id: utils.QueueDict(queue=queue, has_draft=False)
-            for queue in queues
-        }
+        queues_dict: dict[int, utils.QueueDict] = {}
+        redis_unavailable = False
+        for queue in queues:
+            worker_count: int | None = None
+            if not redis_unavailable:
+                try:
+                    worker_count = self._rq_service.workers_for_queue(queue.name)
+                except RedisUnavailableError:
+                    redis_unavailable = True
+
+            queues_dict[queue.resource_id] = utils.QueueDict(
+                queue=queue,
+                has_draft=False,
+                known_worker_count=worker_count,
+            )
 
         resource_ids_with_drafts = self._uow.drafts_repo.has_draft_modifications(
             queues,
@@ -163,7 +176,7 @@ class QueueIdService(object):
     """The service methods for registering and managing queues by their unique id."""
 
     @inject
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(self, uow: UnitOfWork, rq_service: RQServiceV1) -> None:
         """Initialize the queue service.
 
         All arguments are provided via dependency injection.
@@ -172,6 +185,7 @@ class QueueIdService(object):
             uow: A UnitOfWork instance
         """
         self._uow = uow
+        self._rq_service = rq_service
 
     def get(
         self,
@@ -211,7 +225,17 @@ class QueueIdService(object):
             current_user,
         )
 
-        return utils.QueueDict(queue=queue, has_draft=has_draft)
+        worker_count: int | None
+        try:
+            worker_count = self._rq_service.workers_for_queue(queue.name)
+        except RedisUnavailableError:
+            worker_count = None
+
+        return utils.QueueDict(
+            queue=queue,
+            has_draft=has_draft,
+            known_worker_count=worker_count,
+        )
 
     def modify(
         self,

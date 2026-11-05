@@ -73,6 +73,14 @@ def io_file_service(dependency_injector) -> IOFileService:
     return dependency_injector.get(IOFileService)
 
 
+@pytest.fixture(autouse=True)
+def mock_queue_workers(monkeypatch: MonkeyPatch) -> None:
+    """Keep API tests independent of Redis; worker-count tests override this."""
+    from dioptra.restapi.v1.shared import rq_service
+
+    monkeypatch.setattr(rq_service.RQWorker, "all", lambda queue: [])
+
+
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 5:00am", auto_tick_seconds=1)
 def registered_users(client: FlaskClient) -> dict[str, Any]:

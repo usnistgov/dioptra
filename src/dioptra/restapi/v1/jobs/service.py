@@ -44,6 +44,7 @@ from dioptra.restapi.errors import (
     JobInvalidStatusTransitionError,
     JobMlflowRunAlreadySetError,
     JobParameterMissingError,
+    RedisUnavailableError,
     SortParameterValidationError,
     SwapChoiceError,
     UnspecifiedSwapsError,
@@ -362,6 +363,7 @@ class JobService(object):
             job=new_job,
             artifacts=[],
             has_draft=False,
+            queue_known_worker_count=queue_dict.get("known_worker_count"),
             swap_task_names=_build_swap_task_name_lookup(
                 new_job, self._swaps_retrieval_service, log
             ),
@@ -585,7 +587,7 @@ class JobService(object):
 
         jobs = list(db.session.scalars(jobs_stmt).all())
         return (
-            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            _build_job_dict(jobs, self._swaps_retrieval_service, log, self._rq_service),
             total_num_jobs,
         )
 
@@ -594,8 +596,11 @@ class JobIdService(object):
     """The service methods for registering and managing jobs by their unique id."""
 
     @inject
-    def __init__(self, swaps_retrieval_service: SwapsRetrievalService) -> None:
+    def __init__(
+        self, swaps_retrieval_service: SwapsRetrievalService, rq_service: RQServiceV1
+    ) -> None:
         self._swaps_retrieval_service = swaps_retrieval_service
+        self._rq_service = rq_service
 
     def get(
         self,
@@ -640,10 +645,17 @@ class JobIdService(object):
         )
         artifacts = list(db.session.scalars(artifacts_stmt).all())
 
+        worker_count: int | None
+        try:
+            worker_count = self._rq_service.workers_for_queue(job.queue_job.queue.name)
+        except RedisUnavailableError:
+            worker_count = None
+
         return utils.JobDict(
             job=job,
             artifacts=artifacts,
             has_draft=False,
+            queue_known_worker_count=worker_count,
             swap_task_names=_build_swap_task_name_lookup(
                 job, self._swaps_retrieval_service, log
             ),
@@ -1000,6 +1012,7 @@ class ExperimentJobService(object):
         experiment_id_service: ExperimentIdService,
         job_service: JobService,
         swaps_retrieval_service: SwapsRetrievalService,
+        rq_service: RQServiceV1,
     ) -> None:
         """Initialize the ExperimentIdJob service.
 
@@ -1012,6 +1025,7 @@ class ExperimentJobService(object):
         self._experiment_id_service = experiment_id_service
         self._job_service = job_service
         self._swaps_retrieval_service = swaps_retrieval_service
+        self._rq_service = rq_service
 
     def create(
         self,
@@ -1157,7 +1171,7 @@ class ExperimentJobService(object):
 
         jobs = list(db.session.scalars(jobs_stmt).all())
         return (
-            _build_job_dict(jobs, self._swaps_retrieval_service, log),
+            _build_job_dict(jobs, self._swaps_retrieval_service, log, self._rq_service),
             total_num_jobs,
         )
 
@@ -1749,12 +1763,22 @@ def _build_job_dict(
     jobs: list[models.Job],
     swaps_retrieval_service: SwapsRetrievalService,
     logger: BoundLogger,
+    rq_service: RQServiceV1,
 ) -> list[utils.JobDict]:
+    queue_names = {job.queue_job.queue.name for job in jobs}
+    worker_counts: dict[str, int | None] = dict.fromkeys(queue_names)
+    for name in queue_names:
+        try:
+            worker_counts[name] = rq_service.workers_for_queue(name)
+        except RedisUnavailableError:
+            break
+
     job_dicts: dict[int, utils.JobDict] = {
         job.resource_id: utils.JobDict(
             job=job,
             artifacts=[],
             has_draft=False,
+            queue_known_worker_count=worker_counts[job.queue_job.queue.name],
             swap_task_names=_build_swap_task_name_lookup(
                 job, swaps_retrieval_service, logger
             ),

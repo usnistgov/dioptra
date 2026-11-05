@@ -49,6 +49,8 @@ class QueueRefSchema(QueueRefBaseSchema):  # type: ignore
 class QueueSnapshotRefSchema(QueueSnapshotRefBaseSchema):  # type: ignore
     """The snapshot reference schema for the data stored in a Queue resource."""
 
+    knownWorkerCount = fields.Integer(dump_only=True, allow_none=True)
+
     name = fields.String(
         attribute="name",
         metadata={"description": "Name of the Queue resource."},
@@ -72,6 +74,8 @@ QueueBaseSchema = generate_base_resource_schema("Queue", snapshot=True)
 
 class QueueSchema(QueueMutableFieldsSchema, QueueBaseSchema):  # type: ignore
     """The schema for the data stored in a Queue resource."""
+
+    knownWorkerCount = fields.Integer(dump_only=True, allow_none=True)
 
 
 class QueuePageSchema(BasePageSchema):

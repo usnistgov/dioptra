@@ -25,6 +25,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
+from redis.exceptions import ConnectionError, TimeoutError
 from structlog.testing import capture_logs
 
 from dioptra.client.base import DioptraResponseProtocol
@@ -67,6 +68,7 @@ def assert_queue_response_contents_matches_expectations(
         "description",
         "tags",
         "deleted",
+        "knownWorkerCount",
     }
     assert set(response.keys()) == expected_keys
 
@@ -74,6 +76,7 @@ def assert_queue_response_contents_matches_expectations(
     assert isinstance(response["id"], int)
     assert isinstance(response["snapshot"], int)
     assert isinstance(response["name"], str)
+    assert response["knownWorkerCount"] is None
     assert isinstance(response["description"], str)
     assert isinstance(response["createdOn"], str)
     assert isinstance(response["snapshotCreatedOn"], str)
@@ -153,7 +156,8 @@ def assert_retrieving_queues_works(
 
     assert_retrieving_resource_works(
         dioptra_client=dioptra_client.queues,
-        expected=expected,
+        # GET performs a live lookup; the default mock has no known workers.
+        expected=[{**queue, "knownWorkerCount": 0} for queue in expected],
         group_id=group_id,
         sort_by=sort_by,
         descending=descending,
@@ -299,7 +303,9 @@ def test_create_queue(
         },
     )
     assert_retrieving_queue_by_id_works(
-        dioptra_client, queue_id=queue1_expected["id"], expected=queue1_expected
+        dioptra_client,
+        queue_id=queue1_expected["id"],
+        expected={**queue1_expected, "knownWorkerCount": 0},
     )
 
 
@@ -319,6 +325,62 @@ def test_queue_get_all(
     """
     queue_expected_list = list(registered_queues.values())
     assert_retrieving_queues_works(dioptra_client, expected=queue_expected_list)
+
+
+@pytest.mark.parametrize(
+    "worker_count, redis_error",
+    [(0, None), (2, None), (None, ConnectionError), (None, TimeoutError)],
+)
+def test_queue_worker_counts(
+    dioptra_client, registered_queues, monkeypatch, worker_count, redis_error
+):
+    """List and detail responses include each queue's current worker count."""
+    from dioptra.restapi.v1.shared import rq_service
+
+    first = registered_queues["queue1"]
+    checked_names = []
+
+    def workers(queue):
+        checked_names.append(queue.name)
+        if redis_error is not None:
+            raise redis_error("Redis unavailable")
+        return [object()] * worker_count if queue.name == first["name"] else []
+
+    monkeypatch.setattr(rq_service.RQWorker, "all", workers)
+    response = dioptra_client.queues.get()
+    assert response.status_code == HTTPStatus.OK
+    assert len(checked_names) == (1 if redis_error else len(registered_queues))
+    for queue in response.json()["data"]:
+        expected = worker_count if redis_error or queue["id"] == first["id"] else 0
+        assert queue["knownWorkerCount"] == expected
+        detail = dioptra_client.queues.get_by_id(queue["id"])
+        assert detail.status_code == HTTPStatus.OK
+        assert detail.json()["knownWorkerCount"] == expected
+
+
+def test_queue_worker_count_is_live(dioptra_client, registered_queues, monkeypatch):
+    """Worker changes do not create snapshots or become saved queue data."""
+    from dioptra.restapi.v1.shared import rq_service
+
+    queue = registered_queues["queue1"]
+    for count in (2, 0):
+        monkeypatch.setattr(
+            rq_service.RQWorker, "all", lambda queue, count=count: [object()] * count
+        )
+        response = dioptra_client.queues.get_by_id(queue["id"])
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()["knownWorkerCount"] == count
+        assert response.json()["snapshot"] == queue["snapshot"]
+
+    response = dioptra_client.queues.snapshots.get_by_id(
+        queue["id"], snapshot_id=queue["snapshot"]
+    )
+    assert response.status_code == HTTPStatus.OK
+    # Snapshot responses omit the current resource's draft metadata.
+    assert response.json()["knownWorkerCount"] is None
+    assert response.json() == {
+        key: value for key, value in queue.items() if key != "hasDraft"
+    }
 
 
 @pytest.mark.parametrize(
@@ -487,6 +549,7 @@ def test_rename_queue(
         name=updated_queue_name,
         description=queue_to_rename["description"],
     ).json()
+    assert modified_queue["knownWorkerCount"] is None
     assert_queue_name_matches_expected_name(
         dioptra_client, queue_id=queue_to_rename["id"], expected_name=updated_queue_name
     )
