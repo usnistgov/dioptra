@@ -43,6 +43,34 @@ Collections of resources can be distributed via git repositories or by sharing
 files manually. The resourceImport workflow can import from a repository or
 archive file. See the API Reference for details.
 
+Archive resource limits
+=======================
+
+Uploaded tar archives and downloaded repository snapshots use the same bounded
+extractor. The defaults are 100 MiB for the input archive, 50 MiB per file,
+500 MiB of file contents and 10,000 extracted entries. Links, sparse files,
+unsafe paths and duplicate files are rejected.
+
+Extended metadata is checked before the tar parser reads its body. Each PAX,
+global PAX or GNU long-name/long-link record may occupy at most 1 MiB, including
+its 512-byte header and padded body. Their combined budget is 16 MiB. At most
+30,000 raw headers are processed, including records that the parser does not
+yield as extracted entries. An additional expanded-stream budget accounts for
+file contents, metadata and padding.
+
+Parsing and extraction run in a separate process under a 120-second deadline,
+including process startup. On timeout, the caller kills and waits for the worker
+before cleaning the import directory. Extraction writes only into the import's
+temporary staging directory; resources are registered after successful extraction,
+and failed imports retain the existing transaction rollback behavior.
+
+Preparing the local input copy uses cooperative deadline checks and requires a
+local, nonblocking file or stream. The workflow downloads/uploads its input before
+starting this extraction budget. The byte limits do not impose a universal process
+memory cap on compression libraries. Deployments must allow the Python interpreter
+to start a child process. Python callers can pass an ``ArchiveLimits`` instance to
+``IOFileService.safe_extract_archive`` to select stricter or larger budgets.
+
 TOML Configuration Format
 =========================
 
