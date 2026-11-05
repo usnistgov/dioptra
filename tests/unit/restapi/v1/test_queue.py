@@ -338,7 +338,10 @@ def test_queue_worker_counts(
     from dioptra.restapi.v1.shared import rq_service
 
     first = registered_queues["queue1"]
+    checked_names = []
+
     def workers(queue):
+        checked_names.append(queue.name)
         if redis_error is not None:
             raise redis_error("Redis unavailable")
         return [object()] * worker_count if queue.name == first["name"] else []
@@ -346,6 +349,7 @@ def test_queue_worker_counts(
     monkeypatch.setattr(rq_service.RQWorker, "all", workers)
     response = dioptra_client.queues.get()
     assert response.status_code == HTTPStatus.OK
+    assert len(checked_names) == (1 if redis_error else len(registered_queues))
     for queue in response.json()["data"]:
         expected = worker_count if redis_error or queue["id"] == first["id"] else 0
         assert queue["knownWorkerCount"] == expected

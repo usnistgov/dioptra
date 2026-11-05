@@ -147,12 +147,15 @@ class QueueService(object):
         )
 
         queues_dict: dict[int, utils.QueueDict] = {}
-        worker_count: int | None
+        redis_unavailable = False
         for queue in queues:
-            try:
-                worker_count = self._rq_service.workers_for_queue(queue.name)
-            except RedisUnavailableError:
-                worker_count = None
+            worker_count: int | None = None
+            if not redis_unavailable:
+                try:
+                    worker_count = self._rq_service.workers_for_queue(queue.name)
+                except RedisUnavailableError:
+                    redis_unavailable = True
+
             queues_dict[queue.resource_id] = utils.QueueDict(
                 queue=queue,
                 has_draft=False,

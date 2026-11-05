@@ -1766,12 +1766,12 @@ def _build_job_dict(
     rq_service: RQServiceV1,
 ) -> list[utils.JobDict]:
     queue_names = {job.queue_job.queue.name for job in jobs}
-    worker_counts: dict[str, int | None] = {}
+    worker_counts: dict[str, int | None] = dict.fromkeys(queue_names)
     for name in queue_names:
         try:
             worker_counts[name] = rq_service.workers_for_queue(name)
         except RedisUnavailableError:
-            worker_counts[name] = None
+            break
 
     job_dicts: dict[int, utils.JobDict] = {
         job.resource_id: utils.JobDict(
