@@ -27,7 +27,15 @@ from flask_restx import Api, Namespace, Resource
 from marshmallow import Schema, ValidationError, fields
 
 from dioptra.restapi.patches import register_enum_swagger_mapping
-from dioptra.restapi.v1.jobs.schema import JobLogRecordsSchema, JobLogSeverity
+
+
+class DummyStatus(enum.Enum):
+    READY = "ready"
+    DONE = "done"
+
+
+class DummyStatusSchema(Schema):
+    status = fields.Enum(DummyStatus, required=True)
 
 
 def test_swagger_documents_enum_field() -> None:
@@ -96,26 +104,22 @@ def test_enum_swagger_serializes_defaults(by_value: bool) -> None:
     assert properties["example"] == ("done" if by_value else "DONE")
 
 
-@pytest.mark.parametrize("severity", list(JobLogSeverity))
-def test_log_severity_still_loads_as_enum(severity: JobLogSeverity) -> None:
-    """The documentation mapping leaves the service's enum input unchanged."""
+@pytest.mark.parametrize("status", list(DummyStatus))
+def test_status_still_loads_as_enum(status: DummyStatus) -> None:
+    """The documentation mapping preserves enum loading and dumping."""
     register_enum_swagger_mapping()
-    payload = {
-        "data": [{"severity": severity.name, "loggerName": "test", "message": "ok"}]
-    }
-    schema = JobLogRecordsSchema()
+    payload = {"status": status.name}
+    schema = DummyStatusSchema()
     loaded = schema.load(payload)
-    assert loaded["data"][0]["severity"] is severity
+    assert loaded["status"] is status
     assert schema.dump(loaded) == payload
 
 
-@pytest.mark.parametrize("severity", [None, "INVALID"])
-def test_log_severity_remains_required_and_validated(severity: str | None) -> None:
-    """Missing and unknown severities continue to fail validation."""
+@pytest.mark.parametrize("status", [None, "INVALID"])
+def test_status_remains_required_and_validated(status: str | None) -> None:
+    """Missing and unknown enum choices continue to fail validation."""
     register_enum_swagger_mapping()
-    record = {"loggerName": "test", "message": "ok"}
-    if severity is not None:
-        record["severity"] = severity
+    payload = {} if status is None else {"status": status}
     with pytest.raises(ValidationError) as error:
-        JobLogRecordsSchema().load({"data": [record]})
-    assert "severity" in error.value.messages["data"][0]
+        DummyStatusSchema().load(payload)
+    assert "status" in error.value.messages
