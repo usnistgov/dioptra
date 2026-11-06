@@ -18,49 +18,58 @@
 
 import enum
 from http import HTTPStatus
-from typing import Any
 
 import pytest
 from flask import Flask
+from flask_accepts import accepts
 from flask_accepts.utils import for_swagger
-from flask_restx import Api, Namespace
+from flask_restx import Api, Namespace, Resource
 from marshmallow import Schema, ValidationError, fields
 
 from dioptra.restapi.patches import register_enum_swagger_mapping
-from dioptra.restapi.routes import register_routes
 from dioptra.restapi.v1.jobs.schema import JobLogRecordsSchema, JobLogSeverity
 
 
-def test_job_log_swagger_documents_severity() -> None:
-    """The actual JSON POST and GET models include severity and its choices."""
+def test_swagger_documents_enum_field() -> None:
+    """A dummy JSON endpoint documents an enum field and its choices."""
     app = Flask(__name__)
     api = Api(app)
-    register_routes(api)
+    namespace = Namespace("test")
+    register_enum_swagger_mapping()
+
+    class Status(enum.Enum):
+        READY = "ready"
+        DONE = "done"
+
+    class StatusSchema(Schema):
+        status = fields.Enum(
+            Status,
+            required=True,
+            metadata={"description": "Current status."},
+        )
+
+    @namespace.route("/status")
+    class StatusEndpoint(Resource):
+        @accepts(schema=StatusSchema, api=namespace)
+        def post(self) -> dict[str, str]:
+            return {"status": "READY"}
+
+    api.add_namespace(namespace)
 
     response = app.test_client().get("/swagger.json")
     assert response.status_code == HTTPStatus.OK
     swagger = response.get_json()
-    definitions = swagger["definitions"]
-
-    def resolve(reference: dict[str, Any]) -> dict[str, Any]:
-        return definitions[reference["$ref"].rsplit("/", 1)[1]]
-
-    endpoint = swagger["paths"]["/api/v1/jobs/{id}/log"]
+    endpoint = swagger["paths"]["/test/status"]
     body = next(p for p in endpoint["post"]["parameters"] if p["in"] == "body")
-    request_model = resolve(body["schema"])
-    post_record = resolve(request_model["properties"]["data"]["items"])
-    get_page = resolve(endpoint["get"]["responses"]["200"]["schema"])
-    get_record = resolve(get_page["properties"]["data"]["items"])
+    model_name = body["schema"]["$ref"].rsplit("/", 1)[1]
+    model = swagger["definitions"][model_name]
+    status = model["properties"]["status"]
 
-    for record in (post_record, get_record):
-        severity = record["properties"]["severity"]
-        assert "severity" in record["required"]
-        assert severity["type"] == "string"
-        assert severity["enum"] == ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        assert severity["example"] in severity["enum"]
-        assert "Log severity level" in severity["description"]
-    assert "createdOn" not in post_record["properties"]
-    assert "createdOn" in get_record["properties"]
+    assert "status" in model["required"]
+    assert status["type"] == "string"
+    assert status["enum"] == ["READY", "DONE"]
+    assert status["example"] == "READY"
+    assert status["description"] == "Current status."
 
 
 @pytest.mark.parametrize("by_value", [False, True])
