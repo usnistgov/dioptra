@@ -21,6 +21,8 @@
 
 from flask_restx import Api
 
+from .patches import register_enum_swagger_mapping
+
 V1_ROOT = "api/v1"
 
 V1_ARTIFACTS_ROUTE = "artifacts"
@@ -45,6 +47,8 @@ def register_routes(api: Api) -> None:
     Args:
         api: The main REST |Api| object.
     """
+    register_enum_swagger_mapping()
+
     from .v1.artifacts.controller import api as artifacts_api
     from .v1.auth.controller import api as auth_api
     from .v1.entrypoints.controller import api as entrypoints_api
