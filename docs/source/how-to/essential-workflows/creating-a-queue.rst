@@ -20,14 +20,14 @@
 Create Queues
 ========================
 
-This how-to explains how to build :ref:`Queues <explanation-queues-and-workers>` in Dioptra. Queues logically represent a 
-queue of jobs for workers to pull from. 
+This how-to explains how to create :ref:`Queues <explanation-queues-and-workers>` in Dioptra. A Queue is a group-owned API
+resource whose name determines the Redis queue used to dispatch jobs to workers.
 
 .. note::
-   In order for a queue to be effective, :ref:`Workers <explanation-queues-and-workers>`
-   which listen on that queue are necessary.
+   In order for a queue to process jobs, a :ref:`Worker <explanation-queues-and-workers>` must poll the same queue name.
 
-   If the worker is already created and running, check what queue name it is using and create if it doesn't exist.
+   If the worker is already running, check which queue name it polls and create an API Queue with the same name if one does
+   not exist in the intended group.
 
    If the queue you created has no worker, then you will need to start one, as the jobs sent to that queue will not be
    processed without a worker.
@@ -53,7 +53,8 @@ Prerequisites
 Queue Creation Workflow
 -----------------------
 
-Follow these steps to create and register a new queue. You can perform these actions via the Graphical User Interface (GUI) or programmatically using the Python Client.
+Follow these steps to create and register a new queue. You can perform these actions through the GUI or programmatically
+using the Python client.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -67,16 +68,15 @@ Register a queue for a specific group, with a name and a description.
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Queues** tab. Click **Create**. Enter a *name* and, optionally, a *description*, select a *group* for the queue, then click **Confirm**.
-      
-      .. note:: 
-          Dioptra does not currently support the creation of additional groups. All resources are under the same default public group.
+      Before creating the queue, use the header group switcher or the Groups page to select the intended active group. In
+      the Dioptra GUI, navigate to the **Queues** tab and select **Create**. The read-only **Group** field shows the active
+      group that will own the queue. Enter a *name* and, optionally, a *description*, and then select **Submit**.
 
    .. group-tab:: Python Client
 
       **Client Method:**
 
-      Use the client to create the queue.
+      Use the client to create the queue, passing the owning group explicitly as ``group_id``.
 
       .. automethod:: dioptra.client.queues.QueuesCollectionClient.create
          :noindex:
@@ -90,8 +90,7 @@ Step 2: Associate your Queue with Existing Entrypoints
 
    .. group-tab:: GUI
 
-      In the Dioptra GUI, navigate to the **Entrypoints** tab. Click one
-      of the existing entrypoints to add the newly created queue to.
+      In the Dioptra GUI, navigate to the **Entrypoints** tab. Select an existing entrypoint in the same group as the queue.
       
       Under **Basic Info**, select the queue you just created for **Queues**.
       Click **Submit Entrypoint** when finished.
@@ -108,7 +107,7 @@ Step 2: Associate your Queue with Existing Entrypoints
 
 .. rst-class:: fancy-header header-seealso
 
-See Also 
+See Also
 --------
 
 * :ref:`Queues and Workers Explanation <explanation-queues-and-workers>` - Understand what queues and workers are for.

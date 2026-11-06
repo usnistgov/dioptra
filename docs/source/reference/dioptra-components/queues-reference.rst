@@ -46,8 +46,9 @@ This section describes the attributes that define a Queue.
 Required Attributes
 ~~~~~~~~~~~~~~~~~~~
 
-* **Name**: (string) The name of the queue. 
-* **Group**: (integer ID) The Group that owns this Queue and controls access permissions.
+* **Name**: (string) The name of the queue, unique within its owning Group. Different Groups may use the same Queue name.
+* **Group**: (integer ID) The Group that owns this Queue. All current Groups are public; authenticated users can access
+  their Queues without direct membership.
 * **Description**: (string) A description of the queue.
 
 
@@ -61,6 +62,14 @@ The following attributes are automatically assigned by the system and cannot be 
 - **ID**: Unique identifier assigned upon creation.
 - **Created On**: Timestamp indicating when the Experiment was created.
 - **Last Modified On**: Timestamp indicating when the Experiment was last modified.
+
+Runtime Routing
+---------------
+
+Queue resources have distinct IDs, but job routing uses the Queue name without a Group ID prefix. Queues with the
+same name in different Groups share the same Redis/RQ destination within a Redis database. Group ownership does not
+isolate worker pools; use distinct Queue names and matching worker subscriptions when separate worker pools are needed.
+See :ref:`reference-workers` for worker configuration details.
 
 .. _reference-queues-registration-interfaces:
 

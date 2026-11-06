@@ -28,8 +28,8 @@ from dioptra.restapi.v1.schemas import (
     ResourceTypeQueryParametersSchema,
     SearchQueryParametersSchema,
     SortByGetQueryParametersSchema,
+    UserRefSchema,
 )
-from dioptra.restapi.v1.users.schema import UserRefSchema
 
 
 class TagRefSchema(Schema):

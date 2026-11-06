@@ -26,6 +26,7 @@ from sqlalchemy import func, select
 from structlog.stdlib import BoundLogger
 
 from dioptra.restapi.db import db, models
+from dioptra.restapi.db.unit_of_work import UnitOfWork
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     EntityDoesNotExistError,
@@ -147,7 +148,7 @@ class TagService(object):
         filters = []
 
         if group_id is not None:
-            filters.append(models.Resource.group_id == group_id)
+            filters.append(models.Tag.group_id == group_id)
 
         if search_string:
             filters.append(
@@ -193,6 +194,7 @@ class TagIdService(object):
     def __init__(
         self,
         tag_name_service: "TagNameService",
+        unit_of_work: UnitOfWork,
     ) -> None:
         """Initialize the tag id service.
 
@@ -200,8 +202,10 @@ class TagIdService(object):
 
         Args:
             tag_name_service: A TagNameService object.
+            unit_of_work: A UnitOfWork object.
         """
         self._tag_name_service = tag_name_service
+        self._uow = unit_of_work
 
     def get(
         self,
@@ -271,6 +275,7 @@ class TagIdService(object):
             return None
 
         group_id = tag.group_id
+        self._uow.group_repo.get_one(group_id)
         if name != tag.name:
             duplicate = self._tag_name_service.get(name, group_id=group_id, log=log)
             if duplicate is not None:

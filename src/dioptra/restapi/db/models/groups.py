@@ -17,7 +17,7 @@
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, select
+from sqlalchemy import ForeignKey, Index, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from dioptra.restapi.db.db import bigint, datetimetz, db, intpk, text_
@@ -35,10 +35,12 @@ if TYPE_CHECKING:
 
 class Group(db.Model):  # type: ignore[name-defined]
     __tablename__ = "groups"
+    __table_args__ = (Index("ix_groups_user_id_name", "user_id", "name", unique=True),)
 
     # Database fields
     group_id: Mapped[intpk] = mapped_column(init=False)
     name: Mapped[text_] = mapped_column(nullable=False)
+    public: Mapped[bool] = mapped_column(kw_only=True, nullable=False, default=True)
     user_id: Mapped[bigint] = mapped_column(
         ForeignKey("users.user_id"), init=False, nullable=False, index=True
     )
@@ -57,7 +59,9 @@ class Group(db.Model):  # type: ignore[name-defined]
     )
 
     # Relationships
-    creator: Mapped["User"] = relationship(back_populates="created_groups")
+    creator: Mapped["User"] = relationship(
+        back_populates="created_groups", lazy="joined", innerjoin=True
+    )
     members: Mapped[list["GroupMember"]] = relationship(
         init=False, back_populates="group"
     )

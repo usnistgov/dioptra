@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the tag entity. The tests ensure that the tags can be
 registered, renamed, deleted, and queried as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -28,7 +29,7 @@ import pytest
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
-from ..lib import helpers
+from ..lib import actions, helpers
 from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
@@ -67,6 +68,9 @@ def assert_tag_response_contents_matches_expectations(
     # Validate the GroupRef structure
     assert isinstance(response["group"]["id"], int)
     assert isinstance(response["group"]["name"], str)
+    assert isinstance(response["group"]["user"]["id"], int)
+    assert isinstance(response["group"]["user"]["username"], str)
+    assert isinstance(response["group"]["user"]["url"], str)
     assert isinstance(response["group"]["url"], str)
     assert response["group"]["id"] == expected_contents["group_id"]
 
@@ -201,6 +205,22 @@ def assert_cannot_rename_tag_with_existing_name(
 
 
 # -- Tests -----------------------------------------------------------------------------
+
+
+def test_cannot_rename_tag_in_deleted_group(client, auth_account, dioptra_client):
+    group_response = actions.register_group(client, name="archived-tags")
+    assert group_response.status_code == HTTPStatus.OK
+    group_id = group_response.get_json()["id"]
+    tag_response = dioptra_client.tags.create(group_id=group_id, name="original")
+    assert tag_response.status_code == HTTPStatus.OK
+    tag_id = tag_response.json()["id"]
+
+    response = client.delete(f"/api/v1/groups/{group_id}")
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.tags.modify_by_id(tag_id=tag_id, name="renamed")
+    assert response.status_code == HTTPStatus.LOCKED
+    assert client.get(f"/api/v1/tags/{tag_id}").get_json()["name"] == "original"
 
 
 def test_create_tag(

@@ -90,6 +90,26 @@ def test_drafts_cannot_update_another_creators_draft(
     assert draft.payload == original
 
 
+@pytest.mark.parametrize("by_id", [False, True])
+def test_drafts_cannot_update_in_deleted_group(
+    db_session, drafts_repo, draft_stuff, by_id
+):
+    draft = draft_stuff["draft_resources"][0]
+    original = draft.payload.copy()
+    db_session.add(m.GroupLock("delete", draft.target_owner))
+    db_session.flush()
+
+    with pytest.raises(e.EntityDeletedError):
+        drafts_repo.update(
+            draft.draft_resource_id if by_id else draft,
+            {"draft": "updated"},
+            creator=draft.creator,
+        )
+
+    db_session.expire_all()
+    assert draft.payload == original
+
+
 @pytest.fixture
 def draft_stuff(db_session: DBSession, fake_data, draft_content):
     """
@@ -437,6 +457,7 @@ def test_drafts_create_draft_resource_user_not_in_group(
 ):
     acct1 = fake_data.account()
     acct2 = fake_data.account()
+    acct1.group.public = False
 
     db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
     db_session.commit()
@@ -450,6 +471,27 @@ def test_drafts_create_draft_resource_user_not_in_group(
 
     with pytest.raises(e.UserNotInGroupError):
         drafts_repo.create_draft_resource(draft)
+
+
+def test_drafts_create_draft_resource_user_not_in_group_public_group(
+    db_session: DBSession, drafts_repo, draft_content, fake_data
+):
+    acct1 = fake_data.account()
+    acct2 = fake_data.account()
+    acct1.group.public = True
+
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group])
+    db_session.commit()
+
+    draft = m.DraftResource(
+        "queue",
+        draft_content,
+        acct1.group,
+        acct2.user,
+    )
+
+    drafts_repo.create_draft_resource(draft)
+    db_session.commit()
 
 
 def test_drafts_create_draft_resource_already_exists(
@@ -745,6 +787,7 @@ def test_drafts_create_draft_modification_user_not_in_group(
 
     acct1 = fake_data.account()
     acct2 = fake_data.account()
+    acct1.group.public = False
     queue = fake_data.queue(acct1.user, acct1.group)
 
     db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
@@ -769,6 +812,38 @@ def test_drafts_create_draft_modification_user_not_in_group(
 
     with pytest.raises(e.UserNotInGroupError):
         drafts_repo.create_draft_modification(draft)
+
+
+def test_drafts_create_draft_modification_user_not_in_group_public_group(
+    db_session: DBSession, drafts_repo, fake_data
+):
+    acct1 = fake_data.account()
+    acct2 = fake_data.account()
+    acct1.group.public = True
+    queue = fake_data.queue(acct1.user, acct1.group)
+
+    db_session.add_all([acct1.user, acct1.group, acct2.user, acct2.group, queue])
+    db_session.commit()
+
+    toplevel_data = {
+        "resource_data": {
+            "draft": "stuff",
+            "number": 5,
+        },
+        "resource_id": queue.resource_id,
+        "resource_snapshot_id": queue.resource_snapshot_id,
+        "base_resource_id": None,
+    }
+
+    draft = m.DraftResource(
+        "queue",
+        toplevel_data,
+        acct1.group,
+        acct2.user,
+    )
+
+    drafts_repo.create_draft_modification(draft)
+    db_session.commit()
 
 
 def test_drafts_create_draft_modification_draft_already_exists(

@@ -73,6 +73,9 @@ import * as api from "@/services/dataApi";
 import * as notify from "../notify";
 import PageTitle from "@/components/PageTitle.vue";
 import AssignTagsDialog from "@/dialogs/AssignTagsDialog.vue";
+import { useLoginStore } from "@/stores/LoginStore";
+
+const store = useLoginStore();
 
 const selected = ref([]);
 const editing = ref(false);
@@ -87,13 +90,17 @@ watch(showAddEditDialog, (newVal) => {
 });
 
 const models = ref([]);
+let latestModelsRequest = 0;
 
 async function getModels(pagination) {
+  const requestId = ++latestModelsRequest;
   try {
     const res = await api.getData("models", pagination);
+    if (requestId !== latestModelsRequest) return;
     models.value = res.data.data;
     tableRef.value.updateTotalRows(res.data.totalNumResults);
   } catch (err) {
+    if (requestId !== latestModelsRequest) return;
     console.log("err = ", err);
     notify.error(err.response.data.message);
   }
@@ -107,12 +114,12 @@ const columns = [
   { name: "tags", label: "Tags", align: "left", field: "tags", sortable: false },
 ];
 
-async function addModel(name, group, description) {
+async function addModel(name, description) {
   try {
     const res = await api.addItem("models", {
       name,
       description,
-      group,
+      group: store.loggedInGroup.id,
     });
     showAddEditDialog.value = false;
     notify.success(`Successfully created '${res.data.name}'`);

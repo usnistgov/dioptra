@@ -26,8 +26,15 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.db import models
 from dioptra.restapi.db.repository.utils import DeletionPolicy
 from dioptra.restapi.db.unit_of_work import UnitOfWork
-from dioptra.restapi.errors import EntityDoesNotExistError, EntityExistsError
+from dioptra.restapi.errors import (
+    EntityDoesNotExistError,
+    EntityExistsError,
+    QueryParameterValidationError,
+)
 from dioptra.restapi.v1.entity_types import EntityType
+from dioptra.restapi.v1.plugin_parameter_types.service import (
+    BuiltinPluginParameterTypeService,
+)
 from dioptra.restapi.v1.shared.search_parser import parse_search_text
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -54,6 +61,7 @@ class GroupService(object):
         self,
         group_member_service: "GroupMemberService",
         group_manager_service: "GroupManagerService",
+        builtin_plugin_parameter_type_service: BuiltinPluginParameterTypeService,
         uow: UnitOfWork,
     ) -> None:
         """Initialize the group service.
@@ -67,12 +75,16 @@ class GroupService(object):
         """
         self._group_member_service = group_member_service
         self._group_manager_service = group_manager_service
+        self._builtin_plugin_parameter_type_service = (
+            builtin_plugin_parameter_type_service
+        )
         self._uow = uow
 
     def create(
         self,
         name: str,
         creator: models.User,
+        public: bool = True,
         commit: bool = True,
         **kwargs,
     ) -> models.Group:
@@ -91,8 +103,18 @@ class GroupService(object):
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
-        new_group = models.Group(name=name, creator=creator)
+        if not public:
+            raise QueryParameterValidationError("public", "must be true", public=public)
+
+        new_group = models.Group(name=name, creator=creator, public=True)
+        new_group.public = True
         self._uow.group_repo.create(new_group)
+        self._builtin_plugin_parameter_type_service.create_all(
+            user=creator,
+            group=new_group,
+            commit=False,
+            log=log,
+        )
 
         if commit:
             self._uow.commit()
@@ -105,6 +127,7 @@ class GroupService(object):
         search_string: str,
         page_index: int,
         page_length: int,
+        show_deleted: bool = False,
         **kwargs,
     ) -> tuple[list[models.Group], int]:
         """Fetch a list of groups, optionally filtering by search string and paging
@@ -114,6 +137,7 @@ class GroupService(object):
             search_string: A search string used to filter results.
             page_index: The index of the first group to be returned.
             page_length: The maximum number of groups to be returned.
+            show_deleted: Whether to include deleted groups in the result set.
 
         Returns:
             A tuple containing a list of groups and the total number of groups matching
@@ -126,9 +150,15 @@ class GroupService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get list of groups")
 
+        deletion_policy = (
+            DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        )
         search_struct = parse_search_text(search_string)
         groups, total_num_groups = self._uow.group_repo.get_by_filters_paged(
-            search_struct, page_index, page_length
+            search_struct,
+            page_index,
+            page_length,
+            deletion_policy=deletion_policy,
         )
 
         return list(groups), total_num_groups
@@ -152,7 +182,11 @@ class GroupIdService(object):
         self._uow = uow
 
     def get(
-        self, group_id: int, error_if_not_found: bool = False, **kwargs
+        self,
+        group_id: int,
+        error_if_not_found: bool = False,
+        show_deleted: bool = False,
+        **kwargs,
     ) -> models.Group | None:
         """Fetch a group by its unique id.
 
@@ -160,6 +194,7 @@ class GroupIdService(object):
             group_id: The unique id of the group.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
+            show_deleted: Include deleted groups for read-only archive browsing.
 
         Returns:
             The group object if found, otherwise None.
@@ -171,7 +206,9 @@ class GroupIdService(object):
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Lookup group by unique id", group_id=group_id)
 
-        group = self._uow.group_repo.get(group_id, DeletionPolicy.NOT_DELETED)
+        group = self._uow.group_repo.get(
+            group_id, DeletionPolicy.ANY if show_deleted else DeletionPolicy.NOT_DELETED
+        )
 
         if group is None:
             if error_if_not_found:
@@ -185,6 +222,7 @@ class GroupIdService(object):
         self,
         group_id: int,
         name: str,
+        acting_user: models.User,
         error_if_not_found: bool = False,
         commit: bool = True,
         **kwargs,
@@ -194,6 +232,7 @@ class GroupIdService(object):
         Args:
             group_id: The ID of the group to be modified.
             name: The new name for the group.
+            acting_user: The user requesting the modification.
             error_if_not_found: If True, raise an error if the group is not found.
                 Defaults to False.
             commit: If True, commit the transaction. Defaults to True.
@@ -216,8 +255,14 @@ class GroupIdService(object):
 
             return None
 
-        duplicate = self._uow.group_repo.get_by_name(name, DeletionPolicy.ANY)
-        if duplicate is not None:
+        self._uow.group_repo.assert_group_owner(group, acting_user)
+
+        duplicate = self._uow.group_repo.get_by_name_and_user(
+            name,
+            group.user_id,
+            DeletionPolicy.ANY,
+        )
+        if duplicate is not None and duplicate.group_id != group.group_id:
             raise EntityExistsError(EntityType.GROUP, duplicate.group_id, name=name)
 
         current_timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -229,11 +274,14 @@ class GroupIdService(object):
 
         return group
 
-    def delete(self, group_id: int, **kwargs) -> dict[str, Any]:
-        """Permanently deletes the group by ID.
+    def delete(
+        self, group_id: int, acting_user: models.User, **kwargs
+    ) -> dict[str, Any]:
+        """Soft-delete the group and its resources by ID.
 
         Args:
             group_id: The ID of the group to be deleted.
+            acting_user: The user requesting the deletion.
 
         Returns:
             A dictionary containing the delete group success message if the group is
@@ -243,6 +291,9 @@ class GroupIdService(object):
         log.debug("Delete group", group_id=group_id)
 
         group = self._uow.group_repo.get_one(group_id, DeletionPolicy.NOT_DELETED)
+
+        self._uow.group_repo.assert_group_owner(group, acting_user)
+        self._uow.group_repo.assert_user_owns_multiple_groups(acting_user)
 
         with self._uow:
             self._uow.group_repo.delete(group)

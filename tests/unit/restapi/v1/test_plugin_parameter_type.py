@@ -20,6 +20,7 @@ This module contains a set of tests that validate the CRUD operations and additi
 functionalities for the plugin parameter type entity. The tests ensure that the plugin
 parameter types can be submitted and retrieved as expected through the REST API.
 """
+
 from http import HTTPStatus
 from typing import Any
 
@@ -29,8 +30,8 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 
 from ..lib import helpers, routines
-from ..test_utils import assert_retrieving_resource_works
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
+from ..test_utils import assert_retrieving_resource_works
 
 # -- Assertions ------------------------------------------------------------------------
 
@@ -144,6 +145,7 @@ def assert_plugin_parameter_type_is_not_found(
     """
     response = dioptra_client.plugin_parameter_types.get_by_id(id)
     assert response.status_code == HTTPStatus.NOT_FOUND
+
 
 def assert_plugin_parameter_type_is_deleted(
     dioptra_client: DioptraClient[DioptraResponseProtocol], id: int
@@ -354,7 +356,9 @@ def test_get_all_plugin_parameter_types(
     """
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
-        dioptra_client=dioptra_client, expected=plugin_param_type_expected_list
+        dioptra_client=dioptra_client,
+        expected=plugin_param_type_expected_list,
+        group_id=auth_account["default_group_id"],
     )
 
 
@@ -451,6 +455,7 @@ def test_plugin_parameter_type_sort(
         sort_by=sort_by,
         descending=descending,
         expected=expected_plugin_parameter_types,
+        group_id=auth_account["default_group_id"],
     )
 
 
@@ -473,6 +478,7 @@ def test_plugin_parameter_type_search_query(
         dioptra_client,
         expected=[registered_plugin_parameter_types["string"]],
         search="name:string",
+        group_id=auth_account["default_group_id"],
     )
     assert_retrieving_plugin_parameter_types_works(
         dioptra_client,
@@ -481,10 +487,14 @@ def test_plugin_parameter_type_search_query(
             registered_plugin_parameter_types["plugin_param_type3"],
         ],
         search="*model*",
+        group_id=auth_account["default_group_id"],
     )
     plugin_param_type_expected_list = list(registered_plugin_parameter_types.values())
     assert_retrieving_plugin_parameter_types_works(
-        dioptra_client, expected=plugin_param_type_expected_list, search="*"
+        dioptra_client,
+        expected=plugin_param_type_expected_list,
+        search="*",
+        group_id=auth_account["default_group_id"],
     )
 
 
@@ -546,15 +556,17 @@ def test_plugin_parameter_type_show_deleted(
         registered_plugin_parameter_types["integer"]["id"],
         registered_plugin_parameter_types["boolean"]["id"],
         registered_plugin_parameter_types["any"]["id"],
-
     }
 
-    routines.run_show_deleted_tests(
-        client=dioptra_client.plugin_parameter_types,
-        delete_id=plugin_type_to_delete["id"],
-        expected_ids_without_show_deleted=expected_without,
-        expected_ids_with_show_deleted=expected_with,
+    dioptra_client.plugin_parameter_types.delete_by_id(plugin_type_to_delete["id"])
+    response_without = dioptra_client.plugin_parameter_types.get(
+        group_id=auth_account["default_group_id"]
     )
+    response_with = dioptra_client.plugin_parameter_types.get(
+        group_id=auth_account["default_group_id"], show_deleted=True
+    )
+    assert {item["id"] for item in response_without.json()["data"]} == expected_without
+    assert {item["id"] for item in response_with.json()["data"]} == expected_with
 
 
 def test_create_plugin_parameter_type(
@@ -729,7 +741,7 @@ def test_modify_plugin_parameter_type(
     assert_cannot_rename_invalid_plugin_parameter_type(
         dioptra_client,
         id=plugin_param_type2["id"],
-        json_payload={"name": 42, "description": None, "structure": dict()},
+        json_payload={"name": 42, "description": None, "structure": {}},
     )
 
     # Attempt to rename a Plugin Parameter Type to an existing name
