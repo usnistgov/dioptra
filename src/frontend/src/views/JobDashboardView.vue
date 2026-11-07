@@ -342,7 +342,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch, nextTick, onMounted } from "vue";
+import { ref, computed, inject, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import PageTitle from "@/components/PageTitle.vue";
 import * as api from "@/services/dataApi";
 import { useRoute, useRouter } from "vue-router";
@@ -521,6 +521,11 @@ function clearLogsInterval() {
     logsIntervalId = null;
   }
 }
+
+// clear polling when leaving page
+onBeforeUnmount(() => {
+  clearLogsInterval();
+});
 
 async function setupLogsPolling() {
   clearLogsInterval();
