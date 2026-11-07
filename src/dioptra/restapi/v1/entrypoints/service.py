@@ -312,6 +312,9 @@ class EntrypointService(object):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            artifact_plugin_snapshot_ids=[
+                plugin.resource_snapshot_id for plugin in artifact_plugins
+            ],
             on_save=on_save,
             log=log,
         )
@@ -683,6 +686,9 @@ class EntrypointIdService(UnitOfWorkService):
             parameters=parameters,
             artifact_parameters=artifact_parameters,
             plugin_ids=[plugin.resource_snapshot_id for plugin in plugins],
+            artifact_plugin_snapshot_ids=[
+                plugin.resource_snapshot_id for plugin in artifact_plugins
+            ],
             on_save=on_save,
             log=log,
         )
@@ -1834,6 +1840,31 @@ class SwapsValidationService(UnitOfWorkService):
 
         return collected_no_tasks_found
 
+    def validate_artifact_task_references(
+        self,
+        artifact_outputs: dict[str, Any],
+        plugin_plugin_files: list[models.PluginPluginFile],
+    ) -> list[ValidationIssue]:
+        """Check output task names against the selected artifact plugin snapshots."""
+        registered_tasks = {
+            task.plugin_task_name
+            for pair in plugin_plugin_files
+            for task in pair.plugin_file.tasks
+            if isinstance(task, models.ArtifactTask)
+        }
+        return [
+            ValidationIssue(
+                type_=IssueType.SEMANTIC,
+                severity=IssueSeverity.ERROR,
+                message=(
+                    f"In artifact output '{name}', artifact task with name "
+                    f"'{output['task']['name']}' not found in registered artifact tasks."
+                ),
+            )
+            for name, output in artifact_outputs.items()
+            if output["task"]["name"] not in registered_tasks
+        ]
+
     def validate_swap_outputs(
         self, pre_rendered_task_graph: dict[str, Any], task_lookup_dict: dict[str, Any]
     ) -> tuple[list[ValidationIssue], dict[str, Any]]:
@@ -1987,6 +2018,7 @@ class SwapsValidationService(UnitOfWorkService):
         entrypoint_artifacts: list[dict[str, Any]],
         plugin_snapshot_ids: list[int],
         rendered_validation: bool = False,
+        artifact_plugin_snapshot_ids: list[int] | None = None,
         **kwargs,
     ) -> dict[str, Any]:
         """Validation for a proposed entrypoint graph.
@@ -2012,6 +2044,8 @@ class SwapsValidationService(UnitOfWorkService):
             entrypoint_parameters: A list of entrypoint parameters.
             entrypoint_artifacts: A list of entrypoint artifacts parameters.
             plugin_snapshot_ids: A list of plugin snapshot IDs needed for the entrypoint.
+            artifact_plugin_snapshot_ids: Selected artifact plugin snapshot IDs used
+                to resolve artifact output task names.
             rendered_validation: Whether to perform in-depth validation by looping over any swaps to render the task graph.
         Returns:
             A dictionary containing the following fields:
@@ -2136,7 +2170,19 @@ class SwapsValidationService(UnitOfWorkService):
                 pre_rendered_task_graph=swaps_yaml,
                 task_lookup_dict=task_lookup_dict,
             )
-            pre_render_issues = task_reference_issues + swap_output_issues
+            artifact_plugin_files = (
+                get_plugin_plugin_files_from_plugin_snapshot_ids(
+                    plugin_snapshot_ids=artifact_plugin_snapshot_ids, logger=log
+                )
+                if artifact_plugin_snapshot_ids
+                else []
+            )
+            artifact_reference_issues = self.validate_artifact_task_references(
+                task_engine_dict.get("artifact_outputs", {}), artifact_plugin_files
+            )
+            pre_render_issues = (
+                task_reference_issues + swap_output_issues + artifact_reference_issues
+            )
 
             #### Pre-render semantic validation complete
 
@@ -2240,6 +2286,10 @@ class SwapsValidationService(UnitOfWorkService):
             plugin_ids=[
                 p.plugin.resource_snapshot_id for p in entrypoint.entry_point_plugins
             ],
+            artifact_plugin_snapshot_ids=[
+                p.plugin.resource_snapshot_id
+                for p in entrypoint.entry_point_artifact_plugins
+            ],
             group_id=entrypoint.resource.group_id,
             log=log,
             on_save=True,
@@ -2255,6 +2305,7 @@ class SwapsValidationService(UnitOfWorkService):
         group_id: int,
         log: BoundLogger,
         on_save: bool = False,
+        artifact_plugin_snapshot_ids: list[int] | None = None,
     ) -> dict[str, Any]:
 
         validation_results = self.validate(
@@ -2264,6 +2315,7 @@ class SwapsValidationService(UnitOfWorkService):
             entrypoint_parameters=parameters,
             entrypoint_artifacts=artifact_parameters,
             plugin_snapshot_ids=plugin_ids,
+            artifact_plugin_snapshot_ids=artifact_plugin_snapshot_ids,
             rendered_validation=on_save,
             log=log,
         )
