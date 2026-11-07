@@ -545,7 +545,7 @@ def _load_artifact_parameters(
 
     Raises:
         NonIterableTaskOutputError: If a task with multiple outputs returns a scalar.
-        SystemExit: If the selected artifact task cannot be found in its module.
+        RuntimeError: If the selected artifact task cannot be found in its module.
     """
     log = _get_logger()
 
@@ -565,11 +565,10 @@ def _load_artifact_parameters(
                 getattr(artifact_task, task_info["task_name"], None),
             )
             if task is None:
-                log.error(
+                raise RuntimeError(
                     f"Failed to locate artifact task: {task_info['task_name']} in "
                     f"plugin: {plugin_name} for artifact parameter: {name}"
                 )
-                exit(1)
             artifact_name = PurePosixPath(info["artifact_path"]).name
             value = task.deserialize(
                 working_dir=artifacts_dir / artifact_dir, path=artifact_name
