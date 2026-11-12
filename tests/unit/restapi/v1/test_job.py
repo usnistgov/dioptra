@@ -26,7 +26,9 @@ import logging
 import math
 import textwrap
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, call
 
 import pytest
 from flask.testing import FlaskClient
@@ -34,6 +36,7 @@ from pytest import MonkeyPatch
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.sdk.utilities import run_dioptra_job
 from dioptra.sdk.utilities.logging import forward_job_logs_to_api
 
 from ..lib import actions, asserts, helpers, mock_rq, routines
@@ -2126,3 +2129,100 @@ def test_job_log_sort(
     returned_severities = [log["severity"] for log in returned["data"]]
 
     assert returned_severities == expected
+
+
+@pytest.mark.parametrize("failure_stage", ["schema", "task_lookup", "artifact_input"])
+def test_missing_artifact_task_marks_job_failed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure_stage: str
+) -> None:
+    """Missing artifact classes must fail the job instead of leaving it started."""
+    monkeypatch.chdir(tmp_path)
+    context = run_dioptra_job.Context()
+    context.mkdirs()
+    client = MagicMock()
+    logger = MagicMock()
+    mlflow = MagicMock()
+    monkeypatch.setattr(run_dioptra_job, "_get_client", MagicMock(return_value=client))
+    monkeypatch.setattr(run_dioptra_job, "_validate_environment", MagicMock())
+    monkeypatch.setattr(run_dioptra_job, "_unpack", MagicMock())
+    monkeypatch.setattr(run_dioptra_job, "mlflow", mlflow)
+    client.jobs.get_by_id.return_value = {
+        "group": {"id": 1},
+        "entrypoint": {"id": 2, "snapshotId": 3, "name": "greeting"},
+    }
+    client.jobs.get_config.return_value = {
+        "tasks": {"hello": {"plugin": "greeting.tasks.hello"}},
+        "graph": {"greeting_step": {"task": "hello"}},
+    }
+    client.jobs.get_parameters.return_value = {}
+
+    artifact_parameters = {}
+    if failure_stage == "artifact_input":
+        client.entrypoints.snapshots.get_artifact_plugins.return_value = []
+        package_name = "1_2"
+        plugin_dir = context.deserialize_dir / package_name
+        artifact_parameters = {
+            "greeting_input": {
+                "artifact_id": 4,
+                "artifact_snapshot_id": 5,
+                "artifact_uri": "greeting.txt",
+                "artifact_task": {
+                    "plugin_id": 1,
+                    "plugin_snapshot_id": 2,
+                    "file_name": "tasks.py",
+                    "task_name": "TextArtifactTask_updated",
+                    "outputs": [{"name": "contents"}],
+                },
+            }
+        }
+    else:
+        package_name = f"artifact_failure_{failure_stage}"
+        plugin_dir = context.serialize_dir / package_name
+        client.entrypoints.snapshots.get_artifact_plugins.return_value = [
+            {
+                "name": package_name,
+                "snapshotId": 2,
+                "files": [
+                    {
+                        "filename": "tasks.py",
+                        "tasks": {
+                            "artifacts": [{"id": 1, "name": "TextArtifactTask_updated"}]
+                        },
+                    }
+                ],
+            }
+        ]
+        if failure_stage == "task_lookup":
+            # Reach the later lookup independently of the earlier schema check.
+            monkeypatch.setattr(run_dioptra_job, "_create_engine_schema", MagicMock())
+
+    plugin_dir.mkdir()
+    (plugin_dir / "__init__.py").write_text("", encoding="utf-8")
+    # Metadata references the renamed task, but the Python code has the old name.
+    (plugin_dir / "tasks.py").write_text(
+        "class TextArtifactTask:\n    pass\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        run_dioptra_job,
+        "_download_artifacts",
+        MagicMock(return_value=artifact_parameters),
+    )
+
+    with pytest.raises(
+        RuntimeError, match="Failed to locate artifact task: TextArtifactTask_updated"
+    ):
+        run_dioptra_job.main(job_id=26, experiment_id=11, logger=logger)
+
+    assert client.experiments.jobs.set_status.call_args_list == [
+        call(experiment_id=11, job_id=26, status="started"),
+        call(experiment_id=11, job_id=26, status="failed"),
+    ]
+    if failure_stage == "artifact_input":
+        assert logger.exception.call_args_list == [
+            call("=== Run failed ==="),
+            call("Job failed."),
+        ]
+        mlflow.end_run.assert_called_once_with("FAILED")
+    else:
+        logger.exception.assert_called_once_with("Job failed.")
+        mlflow.start_run.assert_not_called()

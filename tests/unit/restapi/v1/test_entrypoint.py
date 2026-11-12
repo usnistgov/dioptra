@@ -5054,6 +5054,157 @@ def test_get_swaps_success(
 
 
 
+@pytest.fixture
+def artifact_output_entrypoint(
+    proposed_entrypoint: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
+) -> dict[str, Any]:
+    """Provide a valid graph with a registered artifact output task."""
+    return {
+        **proposed_entrypoint,
+        "artifactPlugins": [
+            registered_artifact_plugins["artifact_plugin"]["plugin_id"]
+        ],
+        "artifactGraph": yaml.safe_dump(
+            {
+                "greeting": {
+                    "contents": "$selected",
+                    "task": {"name": "TestArtifactTask"},
+                }
+            }
+        ),
+    }
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize("validate_only", [False, True])
+@pytest.mark.parametrize(
+    "task_name", ["TestArtifactTask", "TestArtifactTask_updated", "task1"]
+)
+def test_entrypoint_artifact_output_task_references(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    artifact_output_entrypoint: dict[str, Any],
+    modifying: bool,
+    validate_only: bool,
+    task_name: str,
+) -> None:
+    """Reject artifact outputs whose names do not resolve to registered artifact tasks."""
+    if task_name == "task1":
+        # A function task remains invalid even in an artifact-role plugin.
+        artifact_output_entrypoint["artifactPlugins"].extend(
+            artifact_output_entrypoint["plugins"]
+        )
+    entrypoint_id, payload = _prepare_entrypoint_request(
+        dioptra_client, artifact_output_entrypoint, modifying
+    )
+    outputs = yaml.safe_load(payload["artifactGraph"])
+    outputs["greeting"]["task"]["name"] = task_name
+    payload["artifactGraph"] = yaml.safe_dump(outputs)
+    response = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=validate_only
+    )
+    if task_name == "TestArtifactTask":
+        assert response.status_code == HTTPStatus.OK, response.text
+    else:
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+        result = response.json()
+        assert result["error"] == "EntrypointValidationError"
+        assert result["detail"]["reason"]["swap_issues"] == [
+            "semantic.error: In artifact output 'greeting', artifact task with name "
+            f"'{task_name}' not found in registered artifact tasks."
+        ]
+
+
+@pytest.mark.parametrize("modifying", [False, True])
+@pytest.mark.parametrize("validate_only", [False, True])
+def test_entrypoint_artifact_output_requires_artifact_plugin_binding(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    artifact_output_entrypoint: dict[str, Any],
+    modifying: bool,
+    validate_only: bool,
+) -> None:
+    """An artifact task in only the function plugin selection cannot resolve."""
+    entrypoint_id, payload = _prepare_entrypoint_request(
+        dioptra_client, artifact_output_entrypoint, modifying
+    )
+    if modifying:
+        payload["pluginSnapshotIds"].extend(payload["artifactPluginSnapshotIds"])
+        payload["artifactPluginSnapshotIds"] = []
+    else:
+        payload["plugins"].extend(payload["artifactPlugins"])
+        payload["artifactPlugins"] = []
+    response = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=validate_only
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    assert "TestArtifactTask' not found" in str(
+        response.json()["detail"]["reason"]["swap_issues"]
+    )
+
+
+@pytest.mark.parametrize("validate_only", [False, True])
+def test_entrypoint_artifact_task_rename_uses_selected_snapshot(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    artifact_output_entrypoint: dict[str, Any],
+    registered_artifact_plugins: dict[str, Any],
+    registered_plugin_parameter_types: dict[str, Any],
+    validate_only: bool,
+) -> None:
+    """Allow the old pin, reject a stale name with the new pin, and accept a fix."""
+    entrypoint_id, payload = _prepare_entrypoint_request(
+        dioptra_client, artifact_output_entrypoint, True
+    )
+    plugin = registered_artifact_plugins["artifact_plugin"]
+    plugin_file = plugin["plugin_file"]
+    response = dioptra_client.plugins.files.modify_by_id(
+        plugin_id=plugin["plugin_id"],
+        plugin_file_id=plugin_file["id"],
+        filename=plugin_file["filename"],
+        contents=plugin_file["contents"].replace(
+            "TestArtifactTask", "TestArtifactTask_updated"
+        ),
+        artifact_tasks=[
+            {
+                "name": "TestArtifactTask_updated",
+                "outputParams": [
+                    {
+                        "name": "contents",
+                        "parameterType": registered_plugin_parameter_types["string"][
+                            "id"
+                        ],
+                    }
+                ],
+            }
+        ],
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+
+    # Publishing a new task does not invalidate the entrypoint's existing pin.
+    response = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=validate_only
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+
+    latest = dioptra_client.plugins.get_by_id(plugin["plugin_id"]).json()["snapshot"]
+    assert latest != payload["artifactPluginSnapshotIds"][0]
+    payload["artifactPluginSnapshotIds"] = [latest]
+    response = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=validate_only
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    assert "TestArtifactTask' not found" in str(
+        response.json()["detail"]["reason"]["swap_issues"]
+    )
+
+    payload["artifactGraph"] = payload["artifactGraph"].replace(
+        "TestArtifactTask", "TestArtifactTask_updated"
+    )
+    response = _request_entrypoint_candidate(
+        dioptra_client, payload, entrypoint_id, validate_only=validate_only
+    )
+    assert response.status_code == HTTPStatus.OK, response.text
+
+
 def test_get_no_swaps_success(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],

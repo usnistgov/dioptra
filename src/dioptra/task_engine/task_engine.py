@@ -548,11 +548,10 @@ def _load_artifact_parameters(
                 getattr(artifact_task, task_info["task_name"], None),
             )
             if task is None:
-                log.error(
+                raise RuntimeError(
                     f"Failed to locate artifact task: {task_info['task_name']} in "
                     f"plugin: {plugin_name} for artifact parameter: {name}"
                 )
-                exit(1)
             uri_name = PurePosixPath(info["artifact_uri"]).name
             value = value = task.deserialize(
                 working_dir=artifacts_dir / artifact_dir, path=uri_name

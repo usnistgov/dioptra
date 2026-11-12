@@ -476,10 +476,9 @@ def _build_artifact_tasks(
                 for artifact_task in file["tasks"]["artifacts"]:
                     task = getattr(plugin_file, artifact_task["name"], None)
                     if task is None:
-                        log.error(
+                        raise RuntimeError(
                             f"Failed to locate artifact task: {artifact_task['name']}"
                         )
-                        exit(1)
                     if issubclass(task, ArtifactTaskInterface):
                         result[task.__name__] = ArtifactTaskEntry(
                             task=task,
@@ -506,10 +505,9 @@ def _create_engine_schema(
                 for artifact_task in file["tasks"]["artifacts"]:
                     task = getattr(plugin_file, artifact_task["name"], None)
                     if task is None:
-                        log.error(
+                        raise RuntimeError(
                             f"Failed to locate artifact task: {artifact_task['name']}"
                         )
-                        exit(1)
                     if issubclass(task, ArtifactTaskInterface):
                         task_names.append(task.__name__)
                         validation = task.validation()
