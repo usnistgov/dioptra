@@ -25,6 +25,8 @@ from urllib.parse import urlparse, urlunparse
 import requests
 from requests_toolbelt import MultipartEncoder
 
+from dioptra.sdk.utilities.tls import validate_key_exchange
+
 from .base import (
     APIConnectionError,
     DioptraClientError,
@@ -35,6 +37,7 @@ from .base import (
     JSONDecodeError,
     StatusCodeError,
 )
+from .transport import HybridSession
 
 LOGGER = logging.getLogger(__name__)
 
@@ -222,13 +225,18 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
 
     DOWNLOAD_CHUNK_SIZE: ClassVar[int] = 10 * 1024
 
-    def __init__(self, address: str) -> None:
+    def __init__(self, address: str, *, key_exchange: str = "default") -> None:
         """Initialize the Dioptra API session object.
 
         Args:
             address: The base URL of the API endpoints.
+            key_exchange: ``default`` retains Requests behavior. ``hybrid-required``
+                requires TLS 1.3 with X25519MLKEM768 and restricts redirects to the
+                exact HTTPS API origin. Unsupported runtimes fail on connect.
+                Certificate verification and environment CA inputs remain enabled.
         """
         self._scheme, self._netloc, self._path, _, _, _ = urlparse(address)
+        self._key_exchange = validate_key_exchange(key_exchange)
         self._session: requests.Session | None = None
 
     @property
@@ -239,7 +247,11 @@ class BaseDioptraRequestsSession(DioptraSession[T], ABC, Generic[T]):
     def connect(self) -> None:
         """Connect to the API using a requests Session."""
         if self._session is None:
-            self._session = requests.Session()
+            self._session = (
+                HybridSession(self.url)
+                if self._key_exchange == "hybrid-required"
+                else requests.Session()
+            )
 
     def close(self) -> None:
         """Close the connection to the API by closing the requests Session."""

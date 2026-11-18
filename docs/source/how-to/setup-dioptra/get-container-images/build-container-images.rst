@@ -169,6 +169,6 @@ See Also
 --------
 
 * :ref:`how-to-prepare-deployment` - Set up a deployment using your built images
-* :ref:`how-to-adding-certificates` - Add CA certificates to a running deployment
+* :ref:`how-to-adding-certificates` - Configure deployment and workstation certificate trust
 * :ref:`how-to-gpu-enabled-workers` - Configure GPU workers in your deployment
 * :ref:`how-to-get-container-images-registry-prefix` - Understanding registry prefixes

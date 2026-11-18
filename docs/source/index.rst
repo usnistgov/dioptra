@@ -122,6 +122,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    reference/api-reference-restapi
    reference/api-configuration-reference
    reference/dioptra-api-reference
+   reference/dioptra-ssl-reference
    reference/api-application-factory-reference
    reference/resource-import-reference
    reference/resource-search-language-reference

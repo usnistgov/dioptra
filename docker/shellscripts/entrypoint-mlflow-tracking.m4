@@ -143,6 +143,9 @@ start_mlflow_server() {
 
 parse_commandline "${@}"
 set_parsed_globals
+if [[ "${DIOPTRA_SSL_MANAGED:-0}" == "1" ]]; then
+  /usr/local/bin/check-ssl-material.sh
+fi
 wait_for_services
 start_mlflow_server
 # ] <-- needed because of Argbash

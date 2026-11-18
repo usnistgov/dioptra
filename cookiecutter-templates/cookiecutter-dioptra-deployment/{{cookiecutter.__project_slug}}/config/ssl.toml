@@ -1,0 +1,19 @@
+schema_version = 1
+
+[public]
+host = {{ cookiecutter.nginx_server_name | tojson }}
+
+[transport]
+key_exchange = "default"
+
+[restapi]
+source = "generated"
+dns_sans = []
+ip_sans = []
+trust_files = []
+
+[nginx]
+source = "generated"
+dns_sans = []
+ip_sans = []
+trust_files = []

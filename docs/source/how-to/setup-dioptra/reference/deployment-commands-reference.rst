@@ -53,7 +53,8 @@ Starting Dioptra
          sudo systemctl start dioptra
          sudo systemctl enable dioptra  # Start on boot
 
-Once started, access the frontend at ``http://localhost/`` (or ``https://localhost/`` if SSL/TLS is enabled).
+Open the HTTPS address reported by initialization, such as ``https://localhost/`` or ``https://localhost:53443/`` when using a custom port.
+If your browser does not trust the deployment CA, follow :ref:`how-to-adding-certificates` before logging in.
 
 Stopping Dioptra
 ----------------
@@ -112,11 +113,13 @@ Viewing Logs
 
    docker compose logs
 
-**Specific service** (e.g., REST API):
+**Specific service** (for example, REST API):
 
 .. code:: sh
 
-   docker compose logs <deployment-name>-restapi
+   docker compose logs SERVICE_NAME
+
+Replace ``SERVICE_NAME`` with a service name shown by ``docker compose ps``.
 
 **Follow logs in real-time:**
 
@@ -169,7 +172,9 @@ Restarting Services
 
       .. code:: sh
 
-         docker compose restart <deployment-name>-restapi
+         docker compose restart SERVICE_NAME
+
+      Replace ``SERVICE_NAME`` with a service name shown by ``docker compose ps``.
 
    .. tab-item:: systemd
 
@@ -178,6 +183,23 @@ Restarting Services
       .. code:: sh
 
          sudo systemctl restart dioptra
+
+Certificate Maintenance
+-----------------------
+
+Check the deployment's certificate configuration and files without changing them:
+
+.. code:: sh
+
+   python3 scripts/manage_ssl.py validate
+
+See the following guides for certificate maintenance:
+
+* :ref:`how-to-replace-deployment-certificates`
+* :ref:`how-to-replace-deployment-ca`
+* :ref:`how-to-recover-certificate-operation`
+
+See :ref:`reference-manage-ssl` for command options.
 
 .. seealso::
 

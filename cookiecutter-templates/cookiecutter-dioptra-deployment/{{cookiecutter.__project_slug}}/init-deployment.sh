@@ -31,28 +31,23 @@ DOCKER_COMPOSE_INIT_YML="${SCRIPT_DIRPATH}/docker-compose.init.yml"
 GENERATE_PASSWORD_TEMPLATES_SCRIPT="${SCRIPT_DIRPATH}/scripts/generate_password_templates.py"
 
 CONTAINER_DB_PORT="5432"
-CONTAINER_SSL_DIR="/ssl"
+SERVICE_WAIT_TIMEOUT_SECONDS=120
 
 INIT_ARGBASH_SERVICE="argbash"
 INIT_DB_SERVICE="db"
 INIT_FRONTEND_SERVICE="frontend-build"
 INIT_RC_SERVICE="rc"
 INIT_RUSTFS_SERVICE="rustfs"
-INIT_MLFLOW_TRACKING_SSL_SERVICE="mlflow-tracking-ssl"
 INIT_NAMED_VOLUMES_SERVICE="named-volumes"
-INIT_NGINX_SSL_SERVICE="nginx-ssl"
-INIT_PYTORCHCPU_SSL_SERVICE="pytorchcpu-ssl"
 INIT_RESTAPI_KEY_SERVICE="init-restapi-key"
 INIT_RESTAPI_SERVICE="restapi"
-INIT_RESTAPI_SSL_SERVICE="restapi-ssl"
-INIT_TFCPU_SSL_SERVICE="tfcpu-ssl"
 INIT_WORKER_ACCOUNT_SERVICE="init-dioptra-worker"
 
 DEFAULT_ARG_BRANCH="main"
-DEFAULT_ARG_ENABLE_NGINX_SSL="off"
+DEFAULT_ARG_ENABLE_NGINX_SSL="on"
 DEFAULT_ARG_ENABLE_POSTGRES_SSL="off"
 DEFAULT_ARG_SKIP_RUSTFS_SETUP="off"
-DEFAULT_ARG_PYTHON="$(command -v ${SCRIPT_DIRPATH}/.venv/bin/python 2&>/dev/null && echo "${SCRIPT_DIRPATH}/.venv/bin/python" || echo "python")"
+DEFAULT_ARG_PYTHON="$(command -v ${SCRIPT_DIRPATH}/.venv/bin/python 2 &>/dev/null && echo "${SCRIPT_DIRPATH}/.venv/bin/python" || echo "python")"
 DEFAULT_ARG_WORKER_SSL_SERVICE="tfcpu"
 
 _arg_branch="${DEFAULT_ARG_BRANCH}"
@@ -184,14 +179,14 @@ validate_python_cmd() {
 
 validate_worker_ssl_service() {
   case "${1}" in
-    tfcpu | pytorchcpu)
-      return 0
-      ;;
-    *)
-      log_error "Unrecognized value ${1} for --worker-ssl-service, must be either" \
-        "'tfcpu' or 'pytorchcpu', exiting..."
-      exit 1
-      ;;
+  tfcpu | pytorchcpu)
+    return 0
+    ;;
+  *)
+    log_error "Unrecognized value ${1} for --worker-ssl-service, must be either" \
+      "'tfcpu' or 'pytorchcpu', exiting..."
+    exit 1
+    ;;
   esac
 }
 
@@ -212,40 +207,40 @@ validate_worker_ssl_service() {
 parse_args() {
   while (({{ '"${#}"' }} > 0)); do
     case "${1}" in
-      -h | --help)
-        print_help
-        exit 0
-        ;;
-      --enable-nginx-ssl)
-        _arg_enable_nginx_ssl="on"
-        shift 1
-        ;;
-      --enable-postgres-ssl)
-        _arg_enable_postgres_ssl="on"
-        shift 1
-        ;;
-      --skip-rustfs-setup)
-        _arg_skip_rustfs_setup="on"
-        shift 1
-        ;;
-      --branch)
-        _arg_branch="${2}"
-        shift 2
-        ;;
-      --python)
-        validate_python_cmd "${2}"
-        _arg_python="${2}"
-        shift 2
-        ;;
-      --worker-ssl-service)
-        validate_worker_ssl_service "${2}"
-        _arg_worker_ssl_service="${2}"
-        shift 2
-        ;;
-      *)
-        log_error "Unrecognized argument ${1}, exiting..."
-        exit 1
-        ;;
+    -h | --help)
+      print_help
+      exit 0
+      ;;
+    --enable-nginx-ssl)
+      _arg_enable_nginx_ssl="on"
+      shift 1
+      ;;
+    --enable-postgres-ssl)
+      _arg_enable_postgres_ssl="on"
+      shift 1
+      ;;
+    --skip-rustfs-setup)
+      _arg_skip_rustfs_setup="on"
+      shift 1
+      ;;
+    --branch)
+      _arg_branch="${2}"
+      shift 2
+      ;;
+    --python)
+      validate_python_cmd "${2}"
+      _arg_python="${2}"
+      shift 2
+      ;;
+    --worker-ssl-service)
+      validate_worker_ssl_service "${2}"
+      _arg_worker_ssl_service="${2}"
+      shift 2
+      ;;
+    *)
+      log_error "Unrecognized argument ${1}, exiting..."
+      exit 1
+      ;;
     esac
   done
 }
@@ -293,6 +288,7 @@ python_cmd() {
 # Globals:
 #   DOCKER_COMPOSE_INIT_YML
 #   INIT_RESTAPI_SERVICE
+#   SERVICE_WAIT_TIMEOUT_SECONDS
 # Arguments:
 #   Name of services, one or more strings
 # Returns:
@@ -310,35 +306,8 @@ wait_for_services() {
       "${INIT_RESTAPI_SERVICE}" \
       "${service}" \
       "-t" \
-      "0"
+      "${SERVICE_WAIT_TIMEOUT_SECONDS}"
   done
-}
-
-###########################################################################################
-# Add additional certificate authorities to one of the deployment's services
-#
-# Globals:
-#   CONTAINER_SSL_DIR
-#   DOCKER_COMPOSE_INIT_YML
-# Arguments:
-#   Name of the service, a string
-# Returns:
-#   None
-###########################################################################################
-
-add_extra_ca_certificates() {
-  local service_name="${1}"
-  local args=(
-    "/scripts/copy-extra-ca-certificates.sh"
-    "--ca-directory"
-    "${CONTAINER_SSL_DIR}/ca-certificates"
-    "--update"
-  )
-
-  docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
-    --rm \
-    "${service_name}" \
-    "${args[@]}"
 }
 
 ###########################################################################################
@@ -485,6 +454,7 @@ init_scripts() {
     "/scripts-src/init-rustfs.sh"
     "/scripts-src/init-named-volumes.m4"
     "/scripts-src/init-worker-account.sh"
+    "/scripts-src/init_worker_account.py"
     "/scripts-src/manage-postgres-ssl.m4"
     "/scripts-src/set-permissions.m4"
   )
@@ -493,44 +463,6 @@ init_scripts() {
     --rm \
     "${INIT_ARGBASH_SERVICE}" \
     "${args[@]}"
-}
-
-###########################################################################################
-# Copy additional certificate authorities into the deployment's named volumes
-#
-# Globals:
-#   INIT_NGINX_SSL_SERVICE
-#   INIT_MLFLOW_TRACKING_SSL_SERVICE
-#   INIT_RESTAPI_SSL_SERVICE
-#   INIT_TFCPU_SSL_SERVICE
-#   INIT_PYTORCHCPU_SSL_SERVICE
-#   _arg_worker_ssl_service
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-init_extra_ca_certificates() {
-  local services=(
-    "${INIT_NGINX_SSL_SERVICE}"
-    "${INIT_MLFLOW_TRACKING_SSL_SERVICE}"
-    "${INIT_RESTAPI_SSL_SERVICE}"
-  )
-
-  if [[ "${_arg_worker_ssl_service}" == "tfcpu" ]]; then
-    services+=("${INIT_TFCPU_SSL_SERVICE}")
-  elif [[ "${_arg_worker_ssl_service}" == "pytorchcpu" ]]; then
-    services+=("${INIT_PYTORCHCPU_SSL_SERVICE}")
-  else
-    log_error "Unsupported value '${_arg_worker_ssl_service}' passed to" \
-      "--worker-ssl-service, exiting..."
-    exit 1
-  fi
-
-  for service in "${services[@]}"; do
-    add_extra_ca_certificates "${service}"
-  done
 }
 
 ###########################################################################################
@@ -556,9 +488,7 @@ init_named_volumes() {
     "${_arg_branch}"
   )
 
-  if [[ "${_arg_enable_nginx_ssl}" == "on" ]]; then
-    args+=("--enable-nginx-ssl")
-  fi
+  args+=("--enable-nginx-ssl")
 
   if [[ "${_arg_enable_postgres_ssl}" == "on" ]]; then
     args+=("--enable-postgres-ssl")
@@ -632,7 +562,7 @@ init_worker_account() {
     "/scripts/init-worker-account.sh"
   )
 
-  wait_for_services "${INIT_RESTAPI_SERVICE}:5000"
+  wait_for_services "{{ cookiecutter.__project_slug }}-restapi:5000"
 
   docker_compose -f "${DOCKER_COMPOSE_INIT_YML}" run \
     --rm \
@@ -682,7 +612,201 @@ init_frontend() {
 }
 
 ###########################################################################################
-# The top-level function in the script
+# Require the selected runtime containers to be absent before initialization.
+#
+# Globals:
+#   SCRIPT_DIRPATH
+# Arguments:
+#   None
+# Returns:
+#   Exits nonzero if the deployment has not been torn down.
+###########################################################################################
+
+require_runtime_teardown() {
+  PYTHONPATH="${SCRIPT_DIRPATH}/scripts${PYTHONPATH:+:${PYTHONPATH}}" \
+    python_cmd -m ssl_support.preflight "${SCRIPT_DIRPATH}"
+}
+
+###########################################################################################
+# Tear down services started for initialization without deleting persistent volumes.
+#
+# Globals:
+#   DOCKER_COMPOSE_INIT_YML
+# Arguments:
+#   Whether initialization services are owned, on or off
+#   Whether runtime services are owned, on or off
+# Returns:
+#   0 if both required teardowns succeed; 1 if either fails.
+###########################################################################################
+
+teardown_owned_services() {
+  local init_services_owned="${1}" runtime_services_owned="${2}"
+  local teardown_failed="off"
+
+  if [[ "${runtime_services_owned}" == "on" ]]; then
+    if ! {{ cookiecutter.docker_compose_path }} down; then
+      log_error "Runtime teardown failed. Retain the deployment files and run {{ cookiecutter.docker_compose_path }} down before retrying."
+      {{ cookiecutter.docker_compose_path }} stop || log_error "Runtime stop also failed."
+      teardown_failed="on"
+    fi
+  fi
+  if [[ "${init_services_owned}" == "on" ]]; then
+    if ! {{ cookiecutter.docker_compose_path }} -f "${DOCKER_COMPOSE_INIT_YML}" down; then
+      log_error "Initialization-service teardown failed. Retain the deployment files and tear down docker-compose.init.yml before retrying."
+      {{ cookiecutter.docker_compose_path }} -f "${DOCKER_COMPOSE_INIT_YML}" stop || log_error "Initialization-service stop also failed."
+      teardown_failed="on"
+    fi
+  fi
+
+  # Attempt both teardowns before returning a failure.
+  if [[ "${teardown_failed}" == "on" ]]; then
+    return 1
+  fi
+}
+
+###########################################################################################
+# Run the EXIT cleanup and preserve the initialization failure status.
+#
+# Globals:
+#   None
+# Arguments:
+#   Initialization exit status, an integer
+#   Whether initialization services are owned, on or off
+#   Whether runtime services are owned, on or off
+# Returns:
+#   Exits 1 if cleanup fails, otherwise exits with the incoming status.
+###########################################################################################
+
+finish_initialization() {
+  local initialization_status="${1}" init_services_owned="${2}" runtime_services_owned="${3}"
+  trap - EXIT
+
+  if ! teardown_owned_services "${init_services_owned}" "${runtime_services_owned}"; then
+    exit 1
+  fi
+  exit "${initialization_status}"
+}
+
+###########################################################################################
+# Register cleanup with explicit ownership before a step can start services.
+#
+# Globals:
+#   None
+# Arguments:
+#   Whether initialization services are owned, on or off
+#   Whether runtime services are owned, on or off
+# Returns:
+#   None
+###########################################################################################
+
+set_initialization_cleanup() {
+  # EXIT may run after Bash has unwound a failed function's locals. Capture the
+  # ownership arguments now; expand the failure status only when the trap runs.
+  local cleanup_command
+  printf -v cleanup_command 'finish_initialization $? %q %q' "${1}" "${2}"
+  trap "${cleanup_command}" EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+}
+
+###########################################################################################
+# Start the normal deployment for live verification and worker registration.
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   Exits nonzero if Compose cannot start the services.
+###########################################################################################
+
+start_runtime_services() {
+  docker_compose up -d
+}
+
+###########################################################################################
+# Wait for the API and require live verification of installed certificates.
+#
+# Globals:
+#   SCRIPT_DIRPATH
+# Arguments:
+#   None
+# Returns:
+#   Exits nonzero if readiness or certificate validation fails.
+###########################################################################################
+
+validate_certificates() {
+  wait_for_services "{{ cookiecutter.__project_slug }}-restapi:5000"
+  python_cmd "${SCRIPT_DIRPATH}/scripts/manage_ssl.py" validate
+}
+
+###########################################################################################
+# Prepare isolated public trust stores for setup-time downloads.
+#
+# Globals:
+#   SCRIPT_DIRPATH
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+bootstrap_certificate_trust() {
+  python_cmd "${SCRIPT_DIRPATH}/scripts/bootstrap_ssl_trust.py"
+}
+
+###########################################################################################
+# Install and validate certificates offline without starting runtime services.
+#
+# Globals:
+#   SCRIPT_DIRPATH
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+init_certificates() {
+  python_cmd "${SCRIPT_DIRPATH}/scripts/manage_ssl.py" init
+}
+
+###########################################################################################
+# Own setup services and clean them up on completion, failure or interruption.
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   Exits with the initialization status, or 1 if teardown fails.
+###########################################################################################
+
+initialize_deployment() {
+  set_initialization_cleanup off off
+
+  init_templates
+  set_initialization_cleanup on off
+  init_scripts
+  bootstrap_certificate_trust
+  init_named_volumes
+  init_restapi_key
+  start_rustfs_service
+  init_rustfs
+  stop_services
+  init_frontend
+  start_db_service
+  manage_postgres_ssl
+  stop_services
+  init_certificates
+  set_initialization_cleanup on on
+  start_runtime_services
+  validate_certificates
+  init_worker_account
+  finish_initialization 0 on on
+}
+
+###########################################################################################
+# Parse options, check teardown prerequisites and initialize the deployment.
 #
 # Globals:
 #   None
@@ -694,20 +818,8 @@ init_frontend() {
 
 main() {
   parse_args "${@}"
-  init_templates
-  init_scripts
-  init_extra_ca_certificates
-  init_named_volumes
-  init_restapi_key
-  start_rustfs_service
-  init_rustfs
-  stop_services
-  init_frontend
-  start_db_service
-  manage_postgres_ssl
-  start_restapi_service
-  init_worker_account
-  stop_services
+  require_runtime_teardown
+  initialize_deployment
 }
 
 ###########################################################################################

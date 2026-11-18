@@ -1417,6 +1417,7 @@ dependencies = [
     { name = "async-timeout" },
     { name = "boto3" },
     { name = "click" },
+    { name = "cryptography" },
     { name = "entrypoints" },
     { name = "flask" },
     { name = "flask-accepts" },
@@ -1518,7 +1519,6 @@ dev = [
     { name = "pytoml" },
     { name = "tomli" },
     { name = "tox" },
-    { name = "types-cryptography" },
     { name = "types-freezegun" },
     { name = "types-jsonschema" },
     { name = "types-mypy-extensions" },
@@ -1567,6 +1567,7 @@ requires-dist = [
     { name = "async-timeout", specifier = ">=4.0.0" },
     { name = "boto3", specifier = ">=1.16.0" },
     { name = "click", specifier = ">=8.0.0,<9" },
+    { name = "cryptography", specifier = ">=50.0.2" },
     { name = "entrypoints", specifier = ">=0.3" },
     { name = "flask", specifier = ">=2.0.0" },
     { name = "flask-accepts", specifier = ">=0.17.0" },
@@ -1575,7 +1576,7 @@ requires-dist = [
     { name = "flask-migrate", specifier = ">=2.5.0" },
     { name = "flask-restx", specifier = ">=0.5.1" },
     { name = "flask-sqlalchemy", specifier = ">=2.4.0" },
-    { name = "gunicorn", specifier = ">=20.0.0" },
+    { name = "gunicorn", specifier = ">=26.2.0" },
     { name = "injector", specifier = ">=0.18.0" },
     { name = "jsonschema", specifier = ">=4.17.0" },
     { name = "marshmallow", specifier = ">=3.9.0,<4" },
@@ -1596,7 +1597,7 @@ requires-dist = [
     { name = "python-json-logger", specifier = ">=2.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "redis", specifier = ">=3.5.0" },
-    { name = "requests", specifier = ">=2.25,<3" },
+    { name = "requests", specifier = ">=2.34.2,<3" },
     { name = "requests-toolbelt", specifier = ">=1.0.0" },
     { name = "rq", specifier = ">=1.5.0" },
     { name = "scikit-learn", marker = "extra == 'worker'", specifier = ">=1.8.0" },
@@ -1653,7 +1654,6 @@ dev = [
     { name = "pytoml", specifier = ">=0.1.21" },
     { name = "tomli", specifier = ">=2.2.1" },
     { name = "tox", specifier = ">=4.25.0" },
-    { name = "types-cryptography", specifier = ">=3.3.23.2" },
     { name = "types-freezegun", specifier = ">=1.1.10" },
     { name = "types-jsonschema", specifier = ">=4.24.0.20250528" },
     { name = "types-mypy-extensions", specifier = ">=1.1.0.20250425" },
@@ -8008,15 +8008,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/bb/dbb844365103e4dc6ea52cdae0946c3ca55a7b8587e6f351710d7ee5bb78/types_cffi-2.1.0.20260827.tar.gz", hash = "sha256:53d1604771ad4ff09a1a90d6f6980ab36bebb6c39476dcc5bbf4896fa510d736", size = 18150, upload-time = "2026-08-27T12:07:21.754Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0c/fc/690c243ddac627901f1448f5cb29ca3b5463774a00ac932862c60d7ce5cf/types_cffi-2.1.0.20260827-py3-none-any.whl", hash = "sha256:851b6ffa5b962c577a2330b98ac0b60c56c904d086726276946388f58a0cffaf", size = 20525, upload-time = "2026-08-27T12:07:20.836Z" },
-]
-
-[[package]]
-name = "types-cryptography"
-version = "3.3.23.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/18/05/a57fe8bbed10fe4b739fac6e16c4e80c5199ce2f74ae67fa7d7f6e3750da/types-cryptography-3.3.23.2.tar.gz", hash = "sha256:09cc53f273dd4d8c29fa7ad11fefd9b734126d467960162397bc5e3e604dea75", size = 15461, upload-time = "2022-11-08T18:29:28.012Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/36/92dfe7e5056694e78caefd05b383140c74c7fcbfc63d26ee514c77f2d8a2/types_cryptography-3.3.23.2-py3-none-any.whl", hash = "sha256:b965d548f148f8e87f353ccf2b7bd92719fdf6c845ff7cedf2abb393a0643e4f", size = 30223, upload-time = "2022-11-08T18:29:26.848Z" },
 ]
 
 [[package]]

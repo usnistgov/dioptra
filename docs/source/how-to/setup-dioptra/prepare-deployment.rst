@@ -20,17 +20,16 @@
 Prepare Your Deployment
 =======================
 
-This guide explains how to create and configure a Dioptra deployment using the cruft template system.
-After completing these steps, you will have a deployment folder ready to start.
+This guide explains how to create, configure, and start a Dioptra deployment.
 
 Prerequisites
 -------------
 
 * Python 3.11+ virtual environment with the ``cruft`` package installed (``pip install cruft``)
 * `Docker Engine <https://docs.docker.com/engine/install/>`__ and `Docker Compose <https://docs.docker.com/compose/install/>`__ installed
-* :ref:`how-to-get-container-images` - Container images available (downloaded or built)
-* A terminal with access to the deployment target directory
-* A POSIX deployment environment with the :ref:`required filesystem support <reference-init-deployment-credentials>`
+* Dioptra container images, downloaded or built following :ref:`how-to-get-container-images`.
+* Permission to create and manage the deployment directory.
+* A POSIX deployment environment with the :ref:`required filesystem support <reference-init-deployment-requirements>`
 
 Deployment Setup
 ----------------
@@ -40,12 +39,14 @@ Deployment Setup
 Step 1: Create the Deployment Directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create the folder where you plan to keep your deployment and change into it so that it becomes your working directory.
+Create the directory where you plan to keep your deployment and change into it:
 
 .. code:: sh
 
-   mkdir -p /path/to/deployments/folder
-   cd /path/to/deployments/folder
+   mkdir -p "DEPLOYMENTS_DIRECTORY"
+   cd "DEPLOYMENTS_DIRECTORY"
+
+Replace ``DEPLOYMENTS_DIRECTORY`` with the path to your deployment parent directory.
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -58,35 +59,35 @@ Run cruft to apply the Dioptra Deployment template. There are four different met
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment
 
 **Method 2: Use all default template values**
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
 
 **Method 3: Use defaults except for specific values**
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
      --extra-context '{"datasets_directory": "~/datasets"}'
 
-**Method 4: Use defaults except for values in a config file**
+**Method 4: Use values from a config file**
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
      --extra-context-file overrides.json
 
 .. note::
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+   Replace ``BRANCH_NAME`` with the Dioptra branch that matches your container images (for example, ``main`` for releases or ``dev`` for development builds).
 
 .. tip::
 
@@ -97,15 +98,15 @@ Run cruft to apply the Dioptra Deployment template. There are four different met
 Step 3: Configure Template Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you selected Method 1 (interactive prompts), you will be asked to set configuration variables.
-In most cases, the default value is appropriate.
+If you selected Method 1, enter the configuration variables at the prompts.
+You can accept the defaults when they fit your environment.
 
 Key variables include:
 
 - **deployment_name:** A name to associate with the deployment (default: ``Dioptra deployment``)
 - **container_registry:** Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See :ref:`how-to-get-container-images-registry-prefix` for details. (default: ``ghcr.io/usnistgov``)
 - **container_tag:** Should match the tags of your Dioptra container images (default: ``dev``)
-- **nginx_server_name:** Domain name, IP address, or ``_`` for local deployments (default: ``dioptra.example.org``)
+- **nginx_server_name:** Hostname or IP address used to access Dioptra (default: ``localhost``). Change it if you will use a different hostname or IP address.
 - **num_tensorflow_cpu_workers / num_pytorch_cpu_workers:** Number of CPU workers (default: ``1`` each)
 - **datasets_directory:** Host directory to mount at ``/dioptra/data`` in workers (default: *empty*)
 
@@ -118,21 +119,37 @@ Key variables include:
 Step 4: Initialize the Deployment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run the initialization script to generate passwords, copy configuration files, prepare the named volumes, and initialize the persistent API signing key.
+Change into the rendered deployment directory, using its actual name:
 
 .. code:: sh
 
-   cd dioptra-deployment  # Or your deployment folder name
-   ./init-deployment.sh --branch <branch-name>
+   cd dioptra-deployment
+
+If you want to use your own server certificates, follow :ref:`how-to-enabling-ssl-tls` before initialization.
+
+If you are rerunning initialization, tear down the existing deployment first:
+
+.. code:: sh
+
+   docker compose down
+
+Keep the named volumes by omitting ``--volumes``.
+Stopped containers must also be removed before initialization.
 
 .. note::
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+   When running initialization inside a developer container, HTTPS verification may fail because the SSL manager cannot reach nginx at the default address.
+   See :ref:`Reaching nginx from a developer container <how-to-compose-overrides-nginx-connection>` to configure the connection address.
 
-Run initialization as the user who owns the deployment files.
-If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.
+Run the initializer as the user who owns the deployment files, using the branch that matches your container images:
 
-The script automates password generation, certificate bundling, volume preparation, RustFS account setup, and built-in plugin syncing.
+.. code:: sh
+
+   ./init-deployment.sh --branch BRANCH_NAME
+
+.. note::
+
+   Replace ``BRANCH_NAME`` with the Dioptra branch that matches your container images (for example, ``main`` for releases or ``dev`` for development builds).
 
 .. admonition:: Learn More
 
@@ -140,7 +157,23 @@ The script automates password generation, certificate bundling, volume preparati
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Start Dioptra
+Step 5: Save Certificate Details and Configure Trust
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wait for initialization to finish successfully.
+The initializer starts services for HTTPS verification and worker registration, then tears them down while retaining deployment data.
+Save the reported HTTPS address, public CA certificate path, and SHA-256 fingerprint for configuring browser trust.
+
+If initialization reports an incomplete or empty credential set, follow :ref:`how-to-recover-deployment-credentials` before continuing.
+If it reports an interrupted certificate operation, follow :ref:`how-to-recover-certificate-operation`.
+
+Retain a protected backup of the :ref:`certificate files and installation state <reference-deployment-certificate-backups>`.
+
+If your browser does not already trust the deployment's CA, complete Steps B1–B3 in the :ref:`workstation instructions <how-to-trust-public-issuer>` to obtain, verify, and import the CA certificate.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 6: Start Dioptra
 ~~~~~~~~~~~~~~~~~~~~~
 
 Start all Dioptra services:
@@ -149,7 +182,7 @@ Start all Dioptra services:
 
    docker compose up -d
 
-Once the containers are running, open your web browser and navigate to ``http://localhost/`` (or ``https://localhost/`` if SSL/TLS is enabled).
+Open the HTTPS address reported by initialization, such as ``https://localhost/``.
 
 Verify all services are running:
 
@@ -175,6 +208,7 @@ See Also
 **How-To Guides:**
 
 * :ref:`how-to-update-deployment` - Update your deployment when new template versions are available
+* :ref:`how-to-replace-deployment-certificates` - Replace certificates before expiry
 
 **Reference Documentation:**
 
@@ -187,6 +221,6 @@ See Also
 * :ref:`how-to-using-docker-compose-overrides` - Use override files for customizations
 * :ref:`how-to-data-mounts` - Mount data volumes into worker containers
 * :ref:`how-to-gpu-enabled-workers` - Configure GPU workers
-* :ref:`how-to-adding-certificates` - Add custom CA certificates
-* :ref:`how-to-enabling-ssl-tls` - Enable SSL/TLS encryption
+* :ref:`how-to-adding-certificates` - Configure deployment and workstation certificate trust
+* :ref:`how-to-enabling-ssl-tls` - Supply API or nginx certificates
 * :ref:`how-to-integrating-custom-containers` - Add custom containers

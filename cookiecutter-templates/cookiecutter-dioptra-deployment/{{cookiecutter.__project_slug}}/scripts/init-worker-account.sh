@@ -16,11 +16,44 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-shopt -s extglob
-set -euo pipefail ${DEBUG:+-x}
+# Credentials are read by Python; do not expose them through shell tracing.
+set +x
+set -euo pipefail
 
-curl -X POST http://restapi:5000/api/v1/users/ \
-    -H 'Content-Type: application/json' \
-    -d "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",
-            \"password\": \"$DIOPTRA_WORKER_PASSWORD\",
-            \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"
+###########################################################################################
+# Run worker-account registration using the Python helper beside this script.
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+register_worker_account() {
+  local script_directory
+  script_directory="$(dirname -- "${BASH_SOURCE[0]}")"
+  exec python3 "${script_directory}/init_worker_account.py"
+}
+
+###########################################################################################
+# The top-level function in the script
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+main() {
+  register_worker_account
+}
+
+###########################################################################################
+# Main script
+###########################################################################################
+
+main

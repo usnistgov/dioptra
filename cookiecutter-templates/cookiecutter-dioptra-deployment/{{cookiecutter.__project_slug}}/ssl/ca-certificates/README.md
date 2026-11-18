@@ -1,27 +1,7 @@
-# Extra CA Certificates (Optional)
+# Public CA certificates
 
-**This folder is for CA certificates only, not server certificates or private keys.** For server certificates, see the [ssl/db/](../db/) and [ssl/nginx/](../nginx/) folders.
+This folder contains public root CA certificates trusted by Dioptra's services. Do not place private keys here.
 
-**These CA certificates are bundled and made available to the deployment containers at runtime.**
+When Dioptra generates certificates, initialization saves the public CA certificate as `dioptra-local-ca.crt`. Additional CA certificates must use PEM format, with one certificate per `.crt` file.
 
-Most users do not need to add anything to this folder. If you are unsure whether you need custom CA certificates, try starting the deployment without them first. If the `init-deployment.sh` script or one of the running containers logs an HTTPS or SSL error, that is a sign you need to add certificates here.
-
-## When you might need this
-
-Some network environments use their own certificate authority (CA) to manage encrypted traffic. This is common in corporate or institutional networks where:
-
-- HTTPS traffic is intercepted, decrypted, and re-encrypted by a network proxy before reaching your machine.
-- Internal resources that the containers need to access are signed by the organization's own CA rather than a publicly trusted one.
-- Self-signed certificates are used to encrypt communications between the containers themselves.
-
-In these situations, the containers cannot verify HTTPS connections unless you provide the appropriate CA certificate.
-
-## How to add certificates
-
-1. Obtain the CA certificate file(s) from your network administrator.
-2. Copy each certificate into this folder.
-3. Each file must meet these requirements:
-   - **PEM format**: The file contents are base64-encoded text between `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` lines.
-   - **One certificate per file**: Do not bundle multiple certificates into a single file.
-   - **`.crt` file extension**: If your certificate file has a different extension (such as `.pem`), rename it to `.crt`.
-4. Run `./init-deployment.sh` to bundle the certificates and make them available to the containers.
+See [Configure Certificate Trust](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/adding-certificates.html) for adding CA certificates and configuring browser or Python-client trust. If you supply your own server certificates, see [Configure SSL/TLS Certificates](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html) for selecting their CA certificates in `config/ssl.toml`.

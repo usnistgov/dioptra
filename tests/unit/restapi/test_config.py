@@ -34,6 +34,7 @@ def configuration_environment(monkeypatch):
 def overrides(signing_key_file, tmp_path):
     return {
         "SECRET_KEY_FILE": signing_key_file,
+        "DIOPTRA_TLS_ALLOWED_AUTHORITIES": ["localhost"],
         "SQLALCHEMY_DATABASE_URI": "sqlite://",
         "MLFLOW_TRACKING_URI": tmp_path.resolve().as_uri(),
         "RQ_REDIS_URI": "redis://localhost:6399/2",
@@ -105,6 +106,7 @@ def test_invalid_environment_boolean(value, overrides, monkeypatch):
         ("DEBUG", "false"),
         ("TESTING", 1),
         ("LOGIN_DISABLED", "0"),
+        ("SESSION_COOKIE_SECURE", 0),
         ("REMEMBER_COOKIE_SECURE", 0),
         ("DIOPTRA_MAX_PAGE_SIZE", True),
         ("DIOPTRA_MAX_PAGE_SIZE", "100"),
@@ -317,6 +319,73 @@ def test_production_rejects_bypasses_even_when_testing(name, overrides):
     setattr(settings, name, True)
     with pytest.raises(ValueError, match=name):
         create_app(settings=settings, injector=Injector())
+
+
+@pytest.mark.skipif(
+    config._is_windows(), reason="Production startup requires a POSIX host."
+)
+@pytest.mark.parametrize("mode,secure", [("dev", False), ("prod", True)])
+@pytest.mark.parametrize("testing", [False, True])
+def test_cookie_defaults_follow_explicit_mode(mode, secure, testing, overrides):
+    """Select cookie security from the explicit mode even when testing is enabled.
+
+    Production must protect both authentication cookies. Development keeps local
+    HTTP usable, and TESTING must not change either mode's cookie defaults.
+    """
+    settings = load_config(mode, overrides={**overrides, "TESTING": testing})
+    assert settings.SESSION_COOKIE_SECURE is secure
+    assert settings.REMEMBER_COOKIE_SECURE is secure
+
+
+@pytest.mark.skipif(
+    config._is_windows(), reason="Production startup requires a POSIX host."
+)
+@pytest.mark.parametrize("name", ["SESSION_COOKIE_SECURE", "REMEMBER_COOKIE_SECURE"])
+@pytest.mark.parametrize("testing", [False, True])
+def test_production_rejects_insecure_cookie_overrides(name, testing, overrides):
+    """Reject disabled production cookie security in both factory input forms.
+
+    A caller may supply typed overrides or mutate previously resolved settings.
+    Application construction must reject both attempts, including under TESTING.
+    """
+    with pytest.raises(ValueError, match=name):
+        load_config("prod", overrides={**overrides, "TESTING": testing, name: False})
+    settings = load_config("prod", overrides={**overrides, "TESTING": testing})
+    setattr(settings, name, False)
+    with pytest.raises(ValueError, match=name):
+        create_app(settings=settings, injector=Injector())
+
+
+@pytest.mark.skipif(
+    config._is_windows(), reason="Production startup requires a POSIX host."
+)
+@pytest.mark.parametrize("value", ["false", "0"])
+def test_production_rejects_insecure_cookie_environment(value, overrides, monkeypatch):
+    """Reject a disabling environment input before reading the signing key.
+
+    A deliberate key-reader failure identifies incorrect validation ordering.
+    Insecure production cookie settings must fail before filesystem access.
+    """
+
+    def unexpected_read(*args, **kwargs):
+        pytest.fail("Rejected production settings must not read a key")
+
+    monkeypatch.setenv("DIOPTRA_REMEMBER_COOKIE_SECURE", value)
+    monkeypatch.setattr(config, "read_key", unexpected_read)
+    with pytest.raises(ValueError, match="REMEMBER_COOKIE_SECURE"):
+        load_config("prod", overrides=overrides)
+
+
+@pytest.mark.parametrize("name", ["SESSION_COOKIE_SECURE", "REMEMBER_COOKIE_SECURE"])
+@pytest.mark.parametrize("secure", [False, True])
+def test_development_cookie_overrides_remain_available(name, secure, overrides):
+    """Allow explicit development callers to select either cookie security value.
+
+    Production policy must not prevent local HTTP development or a developer's
+    deliberate use of Secure cookies when exercising HTTPS locally.
+    """
+    settings = load_config("dev", overrides={**overrides, name: secure})
+    assert getattr(settings, name) is secure
 
 
 @pytest.mark.parametrize("testing", [False, True])
@@ -564,3 +633,41 @@ def test_redis_uri_parser_preserves_supported_forms(uri, overrides):
         load_config("dev", overrides={**overrides, "RQ_REDIS_URI": uri}).RQ_REDIS_URI
         == uri
     )
+
+
+@pytest.mark.skipif(
+    config._is_windows(), reason="Production startup requires a POSIX host."
+)
+@pytest.mark.parametrize(
+    "value", [None, [], "localhost", ["bad/host"], ["localhost:0"], [1]]
+)
+def test_production_requires_explicit_valid_authorities(value, overrides):
+    """Reject absent or malformed HTTP authority configuration before serving.
+
+    Native certificate paths cannot substitute for the independent request-host
+    allowlist. Testing mode must not bypass this production requirement.
+    """
+    overrides["DIOPTRA_TLS_ALLOWED_AUTHORITIES"] = value
+    with pytest.raises(ValueError, match="DIOPTRA_TLS_ALLOWED_AUTHORITIES"):
+        load_config("prod", overrides=overrides)
+
+
+@pytest.mark.skipif(
+    config._is_windows(), reason="Production startup requires a POSIX host."
+)
+def test_authority_environment_json_and_typed_precedence(overrides, monkeypatch):
+    """Parse only JSON arrays and retain the shared explicit-override precedence."""
+    monkeypatch.setenv(
+        "DIOPTRA_TLS_ALLOWED_AUTHORITIES", '["PUBLIC.test:8443", "[::1]"]'
+    )
+    assert load_config("prod", overrides=overrides).DIOPTRA_TLS_ALLOWED_AUTHORITIES == [
+        "localhost"
+    ]
+    del overrides["DIOPTRA_TLS_ALLOWED_AUTHORITIES"]
+    assert load_config("prod", overrides=overrides).DIOPTRA_TLS_ALLOWED_AUTHORITIES == [
+        "PUBLIC.test:8443",
+        "[::1]",
+    ]
+    monkeypatch.setenv("DIOPTRA_TLS_ALLOWED_AUTHORITIES", "not-json")
+    with pytest.raises(ValueError, match="JSON array"):
+        load_config("prod", overrides=overrides)

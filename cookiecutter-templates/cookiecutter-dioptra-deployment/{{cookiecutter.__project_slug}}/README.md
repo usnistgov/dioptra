@@ -4,12 +4,14 @@ A collection of scripts, configuration files, and Docker Compose files for initi
 
 ## Quick start
 
+Dioptra generates the required certificates during initialization. To use your own certificates, follow [Configure SSL/TLS Certificates](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html) before initializing the deployment.
+
 Open a terminal and run the following to initialize and start Dioptra.
 
 ```sh
 cd {{ cookiecutter.__project_slug }}
 
-# Initialize passwords, volumes, and the persistent API signing key
+# Initialize the deployment
 # Replace "main" with the branch that matches your container images if different
 ./init-deployment.sh --branch main
 
@@ -17,11 +19,13 @@ cd {{ cookiecutter.__project_slug }}
 {{ cookiecutter.docker_compose_path }} up -d
 ```
 
-Initialization runs `dioptra-api init-key` inside the REST API image without requiring Dioptra on the host. The signing key is stored in `{{ cookiecutter.__project_slug }}_restapi-data` at `/work/data/restapi/secret-key`, separate from certificate storage. Normal and bootstrap API services mount that volume read-only. Rerunning initialization preserves a valid key and repairs its permissions when needed.
+See [Initialization Script Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/init-deployment-script-reference.html) for initialization options and behavior.
 
 Use a fresh deployment when adopting this configuration and remove the retired `DIOPTRA_DEPLOY_SECRET_KEY` setting. Initialization does not convert previous deployment state.
 
-Once the containers are running, open your web browser and navigate to `http://localhost/`.
+Open the HTTPS address reported by initialization. If your browser does not trust the deployment CA, follow [Configure Certificate Trust](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/adding-certificates.html#how-to-trust-public-issuer) before logging in.
+
+Keep a protected backup of the certificate files and configuration listed in [Certificate Backups](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/deployment-folder-reference.html#reference-deployment-certificate-backups).
 
 To stop Dioptra:
 
@@ -33,10 +37,11 @@ To stop Dioptra:
 
 | File / Directory                       | Purpose                                                                   |
 | -------------------------------------- | ------------------------------------------------------------------------- |
-| `config/`                              | Service configuration files (Postgres, RustFS, NGINX)                      |
+| `config/`                              | Service and certificate configuration files                      |
 | `envs/`                                | Environment variable files for each Dioptra service                       |
-| `scripts/`                             | Initialization and helper scripts used by `init-deployment.sh`            |
+| `scripts/`                             | Deployment initialization scripts and `manage_ssl.py` for certificate maintenance            |
 | `secrets/`                             | Generated secret files (passwords) -- do not commit to git                |
+| `.ssl-private/`                        | Generated CA, certificate installation records, and recovery files        |
 | `ssl/`                                 | CA certificates and server certificate/key pairs for SSL/TLS              |
 | `systemd/`                             | Generated systemd service file for Linux deployments                      |
 | `docker-compose.yml`                   | Main Compose file defining all Dioptra services                           |
@@ -56,12 +61,18 @@ For detailed instructions, see the Dioptra documentation:
 - [Initialization Script Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/init-deployment-script-reference.html) (command-line options)
 - [Deployment Template Reference](https://pages.nist.gov/dioptra/how-to/setup-dioptra/reference/deployment-template-reference.html) (template variables)
 
+**Certificate maintenance:**
+
+- [Replace Deployment Certificates](https://pages.nist.gov/dioptra/how-to/setup-dioptra/replace-deployment-certificates.html)
+- [Replace the Deployment Certificate Authority](https://pages.nist.gov/dioptra/how-to/setup-dioptra/replace-deployment-ca.html)
+- [Recover an Interrupted Certificate Operation](https://pages.nist.gov/dioptra/how-to/setup-dioptra/recover-certificate-operation.html)
+
 **Optional customizations:**
 
 - [Docker Compose Overrides](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html)
 - [Mount Data Volumes](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/data-mounts.html)
 - [GPU-Enabled Workers](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html)
-- [Add CA Certificates](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/adding-certificates.html)
-- [Enable SSL/TLS](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html)
+- [Configure Certificate Trust](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/adding-certificates.html)
+- [Configure SSL/TLS Certificates](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html)
 - [Create a Custom Worker Container](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/creating-custom-workers.html)
 - [Integrate Custom Containers](https://pages.nist.gov/dioptra/how-to/setup-dioptra/configure-setup/integrating-custom-containers.html)
