@@ -52,13 +52,17 @@ def get_authenticated_worker_client(
     client: DioptraClient[DioptraResponseProtocol] | DioptraClient[dict[str, Any]]
     try:
         if client_type == "json":
-            client = connect_json_dioptra_client()
+            client = connect_json_dioptra_client(
+                key_exchange=os.getenv("DIOPTRA_TLS_KEY_EXCHANGE", "default")
+            )
         else:
-            client = connect_response_dioptra_client()
+            client = connect_response_dioptra_client(
+                key_exchange=os.getenv("DIOPTRA_TLS_KEY_EXCHANGE", "default")
+            )
 
-    except ValueError:
-        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
-        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
+    except ValueError as exc:
+        log.error("Dioptra client configuration is invalid")
+        raise ValueError(f"Dioptra client configuration is invalid: {exc}") from exc
 
     client.auth.login(username=username, password=password)
 

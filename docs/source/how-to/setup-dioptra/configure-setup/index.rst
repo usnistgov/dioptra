@@ -21,7 +21,8 @@ Customize Your Setup
 ====================
 
 These guides explain optional customizations for your Dioptra deployment.
-Apply these after completing the :ref:`how-to-prepare-deployment` guide.
+Use them at the relevant step of :ref:`how-to-prepare-deployment`.
+Prepare supplied certificates and additional trust inputs before initialization.
 
 .. container:: wide-lightly-shaded
 

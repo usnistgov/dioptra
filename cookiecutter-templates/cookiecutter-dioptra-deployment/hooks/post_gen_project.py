@@ -32,3 +32,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     remove_temp_dirs(TEMP_DIRS)
     remove_temp_files(TEMP_FILES)
+    Path("envs/tls.env").chmod(0o640)

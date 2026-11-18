@@ -24,3 +24,7 @@ max_requests = 1000
 timeout = 60
 graceful_timeout = 60
 keepalive = 10
+
+# The container receives only its own validated serving pair.
+certfile = "/etc/dioptra/tls/server.crt"
+keyfile = "/etc/dioptra/tls/server.key"

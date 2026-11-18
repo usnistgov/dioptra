@@ -63,8 +63,15 @@ log_info() {
 check_url_status() {
   local url="${1}"
   local http_code
+  local connect=()
+  if [[ "${url}" == https://localhost:* ]]; then
+    local identity="${DIOPTRA_PUBLIC_HOST:?DIOPTRA_PUBLIC_HOST is required}"
+    if [[ "${identity}" == *:* ]]; then identity="[${identity}]"; fi
+    url="${url/localhost/${identity}}"
+    connect=(--noproxy '*' --connect-to '::127.0.0.1:')
+  fi
 
-  if ! http_code=$(curl -o /dev/null --insecure -s -w "%{http_code}\n" ${url}); then
+  if ! http_code=$(curl --disable "${connect[@]}" -o /dev/null --silent --show-error -w "%{http_code}\n" "${url}"); then
     log_error "Polling of ${url} with curl failed."
     exit 1
   fi
@@ -89,6 +96,23 @@ check_url_status() {
 #   None
 ###########################################################################################
 
+# Verify the configured public identity through loopback, without requiring a
+# localhost SAN in supplied material. Only the API/UI health route uses this.
+check_restapi_health() {
+  local identity="${DIOPTRA_PUBLIC_HOST:?DIOPTRA_PUBLIC_HOST is required}"
+  if [[ "${identity}" == *:* ]]; then
+    identity="[${identity}]"
+  fi
+  local code
+  code=$(curl --disable --fail --silent --show-error --noproxy '*' \
+    --connect-to '::127.0.0.1:' \
+    "https://${identity}:30443/health" -o /dev/null -w '%{http_code}')
+  if [[ "${code}" != "200" ]]; then
+    log_error "API HTTPS health returned status code ${code}."
+    exit 1
+  fi
+}
+
 healthcheck_urls() {
   for url in "${_arg_urls[@]}"; do
     check_url_status "${url}"
@@ -107,6 +131,7 @@ healthcheck_urls() {
 ###########################################################################################
 
 main() {
+  check_restapi_health
   healthcheck_urls
 }
 

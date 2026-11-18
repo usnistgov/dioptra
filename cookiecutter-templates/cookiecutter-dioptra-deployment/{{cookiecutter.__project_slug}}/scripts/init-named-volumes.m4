@@ -24,7 +24,6 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([secrets-dir],[],[Path to secrets directory mounted from host],[/secrets])
 # ARG_OPTIONAL_SINGLE([ssl-dir],[],[Path to ssl directory mounted from host],[/ssl])
 # ARG_OPTIONAL_SINGLE([clone-branch],[],[The dioptra branch to clone and use for syncing task plugins],[main])
-# ARG_OPTIONAL_SINGLE([chown-rc],[],[File ownership setting for the rc initializer],[root:root])
 # ARG_OPTIONAL_SINGLE([chown-rustfs],[],[File ownership setting for the user in the rustfs image],[10001:10001])
 # ARG_OPTIONAL_SINGLE([chown-mlflow],[],[File ownership setting for the non-root user in mlflow-tracking image],[39000:100])
 # ARG_OPTIONAL_SINGLE([chown-nginx],[],[File ownership setting for the non-root user in nginx image],[39000:100])
@@ -36,13 +35,9 @@ exit 11 #)Created by argbash-init v2.8.1
 # ARG_OPTIONAL_SINGLE([postgres-initdb-d-dir],[],[Path to the directory for the postgres-docker-entrypoint-initdb-d named volume],[/volumes/postgres-docker-entrypoint-initdb-d])
 # ARG_OPTIONAL_SINGLE([postgres-etc-postgresql-dir],[],[Path to the directory for the postgres-etc-postgresql named volume],[/volumes/postgres-etc-postgresql])
 # ARG_OPTIONAL_SINGLE([postgres-var-certs-dir],[],[Path to the directory for the postgres-var-certs named volume],[/volumes/postgres-var-certs])
-# ARG_OPTIONAL_SINGLE([rc-ca-certificates-dir],[],[Path to the directory for the rc-ca-certificates named volume],[/volumes/rc-ca-certificates])
-# ARG_OPTIONAL_SINGLE([rustfs-certs-dir],[],[Path to the directory for the rustfs-certs named volume],[/volumes/rustfs-certs])
 # ARG_OPTIONAL_SINGLE([rustfs-data-dir],[],[Path to the directory for the rustfs-data named volume],[/volumes/rustfs-data])
-# ARG_OPTIONAL_SINGLE([dbadmin-certs-dir],[],[Path to the directory for the dbadmin-certs named volume],[/volumes/dbadmin-ca-certificates])
 # ARG_OPTIONAL_SINGLE([dbadmin-data-dir],[],[Path to the directory for the dbadmin-data named volume],[/volumes/dbadmin-data])
 # ARG_OPTIONAL_SINGLE([nginx-conf-d-dir],[],[Path to the directory for the nginx-conf-d named volume],[/volumes/nginx-conf-d])
-# ARG_OPTIONAL_SINGLE([nginx-etc-ssl-dir],[],[Path to the directory for the nginx-etc-ssl named volume],[/volumes/nginx-etc-ssl])
 # ARG_OPTIONAL_SINGLE([restapi-data-dir],[],[Path to the directory for the restapi-data named volume],[/volumes/restapi-data])
 # ARG_OPTIONAL_SINGLE([redis-data-dir],[],[Path to the directory for the redis-data named volume],[/volumes/redis-data])
 # ARG_OPTIONAL_BOOLEAN([enable-nginx-ssl],[],[Enable the SSL-enabled configuration settings for nginx image])
@@ -140,25 +135,6 @@ clear_dir() {
 }
 
 ###########################################################################################
-# Wrapper for the copy-extra-ca-certificates.sh utility script
-#
-# Globals:
-#   _arg_scripts_dir
-# Arguments:
-#   Positional arguments for the script, one or more strings
-# Returns:
-#   None
-###########################################################################################
-
-copy_extra_ca_certificates() {
-  if ! "${_arg_scripts_dir}/copy-extra-ca-certificates.sh" "${@}"; then
-    log_error "Encountered an error when executing" \
-      "${_arg_scripts_dir}/copy-extra-ca-certificates.sh, exiting..."
-    exit 1
-  fi
-}
-
-###########################################################################################
 # Wrapper for the file-copy.sh utility script
 #
 # Globals:
@@ -240,9 +216,7 @@ set_permissions() {
 # Globals:
 #   _arg_chown_nginx
 #   _arg_config_dir
-#   _arg_ssl_dir
 #   _arg_nginx_conf_d_dir
-#   _arg_nginx_etc_ssl_dir
 #   _arg_enable_nginx_ssl
 # Arguments:
 #   None
@@ -251,20 +225,30 @@ set_permissions() {
 ###########################################################################################
 
 prepare_nginx_volumes() {
-  clear_dir "${_arg_nginx_conf_d_dir}/*"
+  local config_file
+  local managed_config=""
+
+  # manage_ssl.py owns the API HTTPS file, including its recorded permissions.
+  # Other nginx configuration remains initialized here on every run.
+  if [[ "${_arg_enable_nginx_ssl}" == "on" ]]; then
+    managed_config="https_restapi.conf"
+  fi
+  if ! find "${_arg_nginx_conf_d_dir}" -mindepth 1 -maxdepth 1 \
+    ! -name "${managed_config}" -exec rm -rf -- {} +; then
+    log_error "Clearing unmanaged nginx configuration failed"
+    exit 1
+  fi
 
   set_permissions --dir-chmod "0755" --chown "${_arg_chown_nginx}" \
     "${_arg_nginx_conf_d_dir}"
 
   if [[ "${_arg_enable_nginx_ssl}" == "on" ]]; then
-    globbed_copy --chmod "0644" --chown "${_arg_chown_nginx}" \
-      "${_arg_config_dir}/nginx" "${_arg_nginx_conf_d_dir}" 'https_*.conf'
-
-    globbed_copy --chmod "0644" --chown "${_arg_chown_nginx}" \
-      "${_arg_ssl_dir}/nginx" "${_arg_nginx_etc_ssl_dir}" '*.crt'
-
-    globbed_copy --chmod "0600" --chown "${_arg_chown_nginx}" \
-      "${_arg_ssl_dir}/nginx" "${_arg_nginx_etc_ssl_dir}" '*.key'
+    for config_file in "${_arg_config_dir}"/nginx/https_*.conf; do
+      [[ -f "${config_file}" ]] || continue
+      [[ "${config_file##*/}" == "https_restapi.conf" ]] && continue
+      file_copy --chmod "0644" --chown "${_arg_chown_nginx}" \
+        "${config_file}" "${_arg_nginx_conf_d_dir}/${config_file##*/}"
+    done
   else
     globbed_copy --chmod "0644" --chown "${_arg_chown_nginx}" \
       "${_arg_config_dir}/nginx" "${_arg_nginx_conf_d_dir}" 'http_*.conf'
@@ -320,9 +304,6 @@ prepare_postgres_volumes() {
 #
 # Globals:
 #   _arg_chown_rustfs
-#   _arg_ssl_dir
-#   _arg_nginx_etc_ssl_dir
-#   _arg_rustfs_certs_dir
 #   _arg_rustfs_data_dir
 # Arguments:
 #   None
@@ -333,32 +314,6 @@ prepare_postgres_volumes() {
 prepare_rustfs_volumes() {
   set_permissions --dir-chmod "0700" --chown "${_arg_chown_rustfs}" \
     "${_arg_rustfs_data_dir}"
-
-  set_permissions --dir-chmod "0755" --chown "${_arg_chown_rustfs}" \
-    "${_arg_rustfs_certs_dir}"
-
-  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_rustfs}" \
-    --ca-directory "${_arg_ssl_dir}/ca-certificates" \
-    --output "${_arg_rustfs_certs_dir}"
-
-  file_copy --chmod "0644" --chown "${_arg_chown_rustfs}" \
-    "${_arg_nginx_etc_ssl_dir}/certs/ca-certificates.crt" \
-    "${_arg_rustfs_certs_dir}/ca-certificates.crt"
-}
-
-###########################################################################################
-# Prepares the named volumes used by the mlflow-tracking image
-#
-# Globals:
-#   None
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-prepare_mlflow_volumes() {
-  return 0
 }
 
 ###########################################################################################
@@ -366,8 +321,6 @@ prepare_mlflow_volumes() {
 #
 # Globals:
 #   _arg_chown_dbadmin
-#   _arg_nginx_etc_ssl_dir
-#   _arg_dbadmin_certs_dir
 #   _arg_dbadmin_data_dir
 # Arguments:
 #   None
@@ -378,13 +331,6 @@ prepare_mlflow_volumes() {
 prepare_dbadmin_volumes() {
   set_permissions --dir-chmod "0700" --chown "${_arg_chown_dbadmin}" \
     "${_arg_dbadmin_data_dir}"
-
-  set_permissions --dir-chmod "0755" --chown "${_arg_chown_dbadmin}" \
-    "${_arg_dbadmin_certs_dir}"
-
-  file_copy --chmod "0644" --chown "${_arg_chown_dbadmin}" \
-    "${_arg_nginx_etc_ssl_dir}/certs/ca-certificates.crt" \
-    "${_arg_dbadmin_certs_dir}/cacert.pem"
 }
 
 ###########################################################################################
@@ -422,33 +368,6 @@ prepare_restapi_volumes() {
 }
 
 ###########################################################################################
-# Prepares the certificate trust store used by the rc initializer
-#
-# Globals:
-#   _arg_chown_rc
-#   _arg_ssl_dir
-#   _arg_nginx_etc_ssl_dir
-#   _arg_rc_ca_certificates_dir
-# Arguments:
-#   None
-# Returns:
-#   None
-###########################################################################################
-
-prepare_rc_volumes() {
-  set_permissions --dir-chmod "0755" --chown "${_arg_chown_rc}" \
-    "${_arg_rc_ca_certificates_dir}"
-
-  copy_extra_ca_certificates --chmod "0644" --chown "${_arg_chown_rc}" \
-    --ca-directory "${_arg_ssl_dir}/ca-certificates" \
-    --output "${_arg_rc_ca_certificates_dir}"
-
-  file_copy --chmod "0644" --chown "${_arg_chown_rc}" \
-    "${_arg_nginx_etc_ssl_dir}/certs/ca-certificates.crt" \
-    "${_arg_rc_ca_certificates_dir}/ca-certificates.crt"
-}
-
-###########################################################################################
 # Prepare a shallow clone of the dioptra GitHub repo
 #
 # Globals:
@@ -482,11 +401,9 @@ main() {
   prepare_nginx_volumes
   prepare_postgres_volumes
   prepare_rustfs_volumes
-  prepare_mlflow_volumes
   prepare_restapi_volumes
   prepare_redis_volumes
   prepare_dbadmin_volumes
-  prepare_rc_volumes
   prepare_dioptra_repo_clone
 }
 

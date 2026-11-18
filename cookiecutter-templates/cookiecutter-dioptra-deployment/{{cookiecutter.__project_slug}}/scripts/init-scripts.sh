@@ -28,7 +28,7 @@ LOGNAME="Init Scripts"
 DEFAULT_ARG_OUTPUT="/scripts"
 
 _arg_m4_files=()
-_arg_sh_files=()
+_arg_copy_files=()
 _arg_output="${DEFAULT_ARG_OUTPUT}"
 
 ###########################################################################################
@@ -47,9 +47,9 @@ print_help() {
 Utility that prepares the deployment initialization scripts.
 
 Usage: ${SCRIPT_CMDNAME} [-o|--output <arg>] [-h|--help] ...
-        ...: One or more paths to files with extension '.m4' and '.sh'. Files with the
+        ...: One or more paths to files with extension '.m4', '.sh' or '.py'. Files with the
              extension '.m4' will be processed using argbash while files with the
-             extension '.sh' are just copied.
+             extensions '.sh' and '.py' are just copied.
         -o, --output: Target directory for processed scripts (default: '${DEFAULT_ARG_OUTPUT}')
         -h, --help: Prints help
 HELPMESSAGE
@@ -107,7 +107,7 @@ extract_basename() {
     basename_args+=("${2}")
   fi
 
-  if ! file_stem="$(basename ${basename_args[@]})"; then
+  if ! file_stem="$(basename "${basename_args[@]}")"; then
     log_error "Unable to extract file stem from path ${basename_args[0]}, exiting..."
     exit 1
   fi
@@ -132,7 +132,7 @@ extract_dirname() {
   local filepath="${1}"
   local directory_name
 
-  if ! directory_name="$(dirname ${filepath})"; then
+  if ! directory_name="$(dirname "${filepath}")"; then
     log_error "Unable to extract directory name from path ${filepath}, exiting..."
     exit 1
   fi
@@ -155,8 +155,9 @@ extract_dirname() {
 
 standardize_path() {
   local filepath="${1}"
-  local directory_name="$(extract_dirname ${filepath})"
-  local file_stem="$(extract_basename ${filepath})"
+  local directory_name file_stem
+  directory_name="$(extract_dirname "${filepath}")"
+  file_stem="$(extract_basename "${filepath}")"
   local standardized_path
 
   if [[ "${directory_name}" == "/" && "${file_stem}" == "/" ]]; then
@@ -178,7 +179,7 @@ standardize_path() {
 # Globals:
 #   _arg_output
 #   _arg_m4_files
-#   _arg_sh_files
+#   _arg_copy_files
 # Arguments:
 #   Script arguments, an array
 # Returns:
@@ -193,15 +194,15 @@ parse_args() {
         exit 0
         ;;
       -o | --output)
-        _arg_output="$(standardize_path ${2})"
+        _arg_output="$(standardize_path "${2}")"
         shift 2
         ;;
       *.m4)
-        _arg_m4_files+=("$(standardize_path ${1})")
+        _arg_m4_files+=("$(standardize_path "${1}")")
         shift 1
         ;;
-      *.sh)
-        _arg_sh_files+=("$(standardize_path ${1})")
+      *.sh | *.py)
+        _arg_copy_files+=("$(standardize_path "${1}")")
         shift 1
         ;;
       *)
@@ -318,7 +319,7 @@ process_m4_files() {
   local target_filepath
 
   for m4_file in "${_arg_m4_files[@]}"; do
-    target_filename="$(extract_basename ${m4_file} .m4).sh"
+    target_filename="$(extract_basename "${m4_file}" .m4).sh"
 
     if [[ "${_arg_output}" == "/" ]]; then
       target_filepath="/${target_filename}"
@@ -331,23 +332,23 @@ process_m4_files() {
 }
 
 ###########################################################################################
-# Process the provided sh files
+# Copy the provided Bash and Python scripts without changing their contents
 #
 # Globals:
 #   _arg_output
-#   _arg_sh_files
+#   _arg_copy_files
 # Arguments:
 #   None
 # Returns:
 #   None
 ###########################################################################################
 
-process_sh_files() {
+process_copy_files() {
   local target_filename
   local target_filepath
 
-  for sh_file in "${_arg_sh_files[@]}"; do
-    target_filename="$(extract_basename ${sh_file})"
+  for script_file in "${_arg_copy_files[@]}"; do
+    target_filename="$(extract_basename "${script_file}")"
 
     if [[ "${_arg_output}" == "/" ]]; then
       target_filepath="/${target_filename}"
@@ -355,7 +356,7 @@ process_sh_files() {
       target_filepath="${_arg_output}/${target_filename}"
     fi
 
-    copy_script "${sh_file}" "${target_filepath}"
+    copy_script "${script_file}" "${target_filepath}"
   done
 }
 
@@ -373,7 +374,7 @@ process_sh_files() {
 main() {
   parse_args "${@}"
   process_m4_files
-  process_sh_files
+  process_copy_files
   set_chmod_permissions
   set_chown_permissions
 }

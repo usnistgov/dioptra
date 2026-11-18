@@ -17,138 +17,204 @@
 
 .. _how-to-enabling-ssl-tls:
 
-Enable SSL/TLS in NGINX and Postgres
-====================================
+Configure SSL/TLS Certificates
+==============================
 
-This guide explains how to enable SSL/TLS encryption for the NGINX reverse proxy and PostgreSQL database services in your Dioptra deployment.
+Dioptra generates certificates automatically during :ref:`deployment setup <how-to-prepare-deployment>`.
+Use this guide to provide your own certificates for the API, nginx, or both before initializing the deployment.
+For an already initialized deployment, follow :ref:`how-to-replace-deployment-certificates`.
 
 Prerequisites
 -------------
 
-* :ref:`how-to-prepare-deployment` - A configured Dioptra deployment (before running ``init-deployment.sh``)
-* :ref:`how-to-using-docker-compose-overrides` - Override file created
-* SSL certificate and private key files for each service you want to secure
-* (Optional) :ref:`how-to-adding-certificates` - If using an internal CA
+* A deployment directory created by following :ref:`how-to-prepare-deployment`, before running ``init-deployment.sh``.
+* OpenSSL for inspecting certificate names and expiration dates.
 
-SSL/TLS Configuration
----------------------
+Have these files ready for each service whose certificate you will provide:
 
-.. rst-class:: header-on-a-card header-steps
+* A PEM file containing your server certificate and any required intermediate certificates. Look for a download described as a **full certificate chain**, such as ``fullchain.pem``.
+* The private key associated with that server certificate.
+* The root certificate from your certificate authority (CA), which Dioptra uses to verify the server certificate.
 
-Step 1: Obtain Certificate Files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+See :ref:`reference-certificate-policy` for certificate requirements.
 
-You will need a server certificate (``server.crt``) and private key (``server.key``) for each service.
-These can be:
+Certificate Setup
+--------------------------
 
-- Obtained from a certificate authority (CA)
-- Generated using Let's Encrypt
-- Self-signed certificates (for testing only)
+Run commands from the deployment root.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Copy Certificates to the Deployment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Choose Which Certificates to Provide
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The certificate and key files **must** be named ``server.crt`` and ``server.key`` when copying them to the deployment directories.
+Open ``config/ssl.toml``.
+Set ``source = "supplied"`` in ``[restapi]``, ``[nginx]``, or both, depending on which certificates you will provide.
+List the corresponding root CA certificate in ``trust_files``.
 
-**For NGINX:**
+For example, to let Dioptra generate the API certificate while you provide the nginx certificate, update these fields in the existing sections:
 
-.. code:: sh
+.. code:: toml
 
-   cp /path/to/your/nginx-certificate.crt ./ssl/nginx/server.crt
-   cp /path/to/your/nginx-private-key.key ./ssl/nginx/server.key
+   [restapi]
+   source = "generated"
+   trust_files = []
 
-**For Postgres:**
+   [nginx]
+   source = "supplied"
+   trust_files = ["ssl/ca-certificates/root-ca.crt"]
 
-.. code:: sh
-
-   cp /path/to/your/db-certificate.crt ./ssl/db/server.crt
-   cp /path/to/your/db-private-key.key ./ssl/db/server.key
-
-You can use different certificate-key pairs for each service.
-
-.. rst-class:: header-on-a-card header-steps
-
-Step 3: Configure NGINX for SSL/TLS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you are enabling SSL/TLS in NGINX, add the SSL port and update the health check in ``docker-compose.override.yml``.
-
-Open ``docker-compose.override.yml`` and add the following configuration for the NGINX service:
-
-.. code:: yaml
-
-   services:
-     <deployment-name>-nginx:
-       healthcheck:
-         test:
-           [
-             "CMD",
-             "/usr/local/bin/healthcheck.sh",
-             "http://localhost:30080",
-             "https://localhost:30443",
-             "https://localhost:35000",
-             "https://localhost:35050/login",
-             "https://localhost:39000/health/ready",
-             "https://localhost:39001/rustfs/console/health",
-           ]
-       ports:
-         - "127.0.0.1:443:30443/tcp"
-
-.. note::
-
-   Replace ``<deployment-name>`` with your deployment's slugified name (default: ``dioptra-deployment``).
-
-.. note::
-
-   The ``ports:`` list in the override file **appends** to the existing ports in ``docker-compose.yml``.
-   You only need to specify the new HTTPS port (443:30443).
-   The ``healthcheck:`` configuration **replaces** the existing health check to use HTTPS endpoints.
+Leave ``source = "generated"`` for services whose certificates Dioptra will generate.
+Keep the other settings unchanged.
+See :ref:`reference-ssl-toml` for field definitions and path rules.
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Run the Initialization Script with SSL Flags
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Combine Separate Certificate Files (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run the initialization script with the appropriate SSL flags:
+If you already have a full-chain PEM file, continue to :ref:`Step 3 <how-to-check-initial-certificate-files>`.
 
-**Enable NGINX SSL only:**
-
-.. code:: sh
-
-   ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl
-
-**Enable Postgres SSL only:**
+If your provider supplies the server certificate and intermediate certificates separately, combine them into one PEM file with the server certificate first:
 
 .. code:: sh
 
-   ./init-deployment.sh --branch <branch-name> --enable-postgres-ssl
+   cat "SERVER_CERT_PATH" "INTERMEDIATE_CERTS_PATH" > server-chain.pem
 
-**Enable both NGINX and Postgres SSL:**
+Replace ``SERVER_CERT_PATH`` with the server certificate file and ``INTERMEDIATE_CERTS_PATH`` with the intermediate certificate file supplied by your provider.
+Use the resulting ``server-chain.pem`` as ``CHAIN_PATH`` in the following steps.
+If both services need combined files, use a different output filename for each, such as ``restapi-chain.pem`` and ``nginx-chain.pem``.
+
+.. _how-to-check-initial-certificate-files:
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Check Certificate Names and Expiration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For each certificate you will provide, display the server certificate's names and expiration date:
 
 .. code:: sh
 
-   ./init-deployment.sh --branch <branch-name> --enable-nginx-ssl --enable-postgres-ssl
+   openssl x509 -in "CHAIN_PATH" -noout -subject -issuer -dates \
+     -ext subjectAltName
 
-.. important::
+Replace ``CHAIN_PATH`` with the path to your full-chain PEM file.
+Check the Subject Alternative Name (SAN) entries for the service:
 
-   You must specify the ``--enable-nginx-ssl`` and ``--enable-postgres-ssl`` options **each time** you run the ``init-deployment.sh`` script.
-   If you omit them on a subsequent run, SSL/TLS will be disabled for the services.
+* For the API, check for its internal DNS name, ``<deployment-slug>-restapi``, such as ``dioptra-deployment-restapi``.
+* For nginx, check for the DNS name or IP address in ``public.host`` in ``config/ssl.toml``. Confirm that this is the address you will use in your browser URL.
 
-.. note::
+Also check for any additional names or addresses listed in the service's ``dns_sans`` and ``ip_sans`` settings.
+DNS names must appear as DNS entries and IP addresses as IP address entries.
+Check that the certificate's expiration date meets the :ref:`certificate requirements <reference-certificate-policy>`.
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+.. rst-class:: header-on-a-card header-steps
 
-.. admonition:: Learn More
+Step 4: Copy the Certificate Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   See the ``README.md`` files in the ``ssl/db/`` and ``ssl/nginx/`` folders for additional details about certificate requirements.
+Copy the files into the deployment directory.
+For nginx, run:
 
-.. rst-class:: header-on-a-card header-seealso
+.. code:: sh
+
+   install -m 0644 "CHAIN_PATH" ssl/nginx/server.crt
+   install -m 0600 "KEY_PATH" ssl/nginx/server.key
+   install -m 0644 "ROOT_CA_PATH" ssl/ca-certificates/root-ca.crt
+
+Replace ``CHAIN_PATH``, ``KEY_PATH`` and ``ROOT_CA_PATH`` with the paths to your full certificate chain, private key and root CA certificate.
+The ``install`` command copies each file with the specified permissions, including owner-only access for the private key.
+For the API, use ``ssl/restapi/server.crt`` and ``ssl/restapi/server.key`` as the first two destinations.
+Use separate private keys for the API and nginx.
+
+If the API and nginx use different root certificates, give each root certificate a separate filename in ``ssl/ca-certificates/``.
+Check that each service's ``trust_files`` setting names its root certificate's destination, relative to the deployment directory.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 5: Prepare PostgreSQL Certificates (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you do not want TLS for PostgreSQL, skip this step and continue to :ref:`Step 6 <how-to-initialize-with-supplied-certificates>`.
+
+Copy the PostgreSQL server certificate and its matching private key into the deployment directory:
+
+.. code:: sh
+
+   install -m 0644 "DB_CERT_PATH" ssl/db/server.crt
+   install -m 0600 "DB_KEY_PATH" ssl/db/server.key
+
+Replace ``DB_CERT_PATH`` with the path to the server certificate file, including any required intermediate certificates, and ``DB_KEY_PATH`` with the path to its private key.
+See ``ssl/db/README.md`` in the deployment directory for certificate file requirements.
+
+.. _how-to-initialize-with-supplied-certificates:
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 6: Initialize the Deployment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Run the initializer.
+If you provided PostgreSQL certificates in Step 5, add ``--enable-postgres-ssl`` to the following command.
+Otherwise, omit that option.
+
+.. code:: sh
+
+   ./init-deployment.sh --branch BRANCH_NAME
+
+Replace ``BRANCH_NAME`` with the Dioptra branch matching your container images.
+If you enabled PostgreSQL TLS, include ``--enable-postgres-ssl`` each time you rerun the initializer.
+
+Wait for initialization to report success before continuing.
+If it reports an interrupted certificate operation, follow :ref:`how-to-recover-certificate-operation`.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 7: Check the Installed Certificates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Check the installed certificates:
+
+.. code:: sh
+
+   python3 scripts/manage_ssl.py validate
+
+Confirm that validation succeeds with no unavailable checks.
+Note the reported expiration dates so you can replace the certificates before they expire.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 8: Start the Services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Start the deployment services:
+
+.. code:: sh
+
+   docker compose up -d
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 9: Configure Client Trust (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your browser or Python client does not already trust the CA that issued the server certificate, follow the :ref:`workstation <how-to-trust-public-issuer>` or :ref:`Python client <how-to-configure-python-trust>` instructions to verify its fingerprint and configure trust.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 10: Verify Access
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Open the deployment's HTTPS address and confirm that the frontend loads without certificate warnings.
+If you already have an account, log in to check authenticated access.
+For external Python clients, follow the :ref:`client connection and login checks <how-to-set-up-the-python-client>`.
+
+.. rst-class:: fancy-header header-seealso
 
 See Also
 --------
 
-* :ref:`how-to-using-docker-compose-overrides` - Docker Compose override file basics
-* :ref:`how-to-adding-certificates` - Add custom CA certificates
-* :ref:`how-to-prepare-deployment` - Full deployment customization
+* :ref:`reference-certificate-policy` lists certificate requirements.
+* :ref:`reference-init-deployment-script` describes initialization and reruns.
+* :ref:`how-to-replace-deployment-certificates` covers replacing certificates after initialization.

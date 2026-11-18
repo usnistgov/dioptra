@@ -38,6 +38,7 @@ from structlog.stdlib import BoundLogger
 from dioptra.restapi.utils import setup_injection
 
 from .__version__ import __version__ as DIOPTRA_VERSION
+from .authorities import AuthorityCheckedFlask
 from .config import BaseConfig, load_config
 from .db import db
 from .patches import monkey_patch_flask_restx
@@ -102,7 +103,10 @@ def create_app(
 
     monkey_patch_flask_restx()
 
-    app: Flask = Flask(__name__)
+    application_type = (
+        AuthorityCheckedFlask if settings.CONFIG_NAME == "prod" else Flask
+    )
+    app: Flask = application_type(__name__)
     app.config.from_object(settings)
     app.extensions["dioptra_settings"] = settings
 

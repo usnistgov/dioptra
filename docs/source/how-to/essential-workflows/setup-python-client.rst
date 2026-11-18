@@ -36,23 +36,30 @@ Client Setup Workflow
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 1: Configure the Client (Optional)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Configure the HTTPS Address
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Optionally set the environment variable for the Dioptra REST API address. This will allow you to configure the client once across multiple instantiations.
-
-The REST API is configured as part of the :ref:`Dioptra deployment <how-to-prepare-deployment>`. By default it will be `http://localhost:80`.
+Set ``DIOPTRA_API`` to the deployment's HTTPS address, such as ``https://localhost``.
+Include its port if needed, for example ``https://dioptra.example.org:53443``.
 
 .. admonition:: Initialize Client
     :class: code-panel console
 
     .. code-block:: bash
 
-        export DIOPTRA_API="<host>:<port>"
+        export DIOPTRA_API="https://localhost"
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 2: Initialize Client
+Step 2: Configure Certificate Trust (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your Python environment does not already trust the deployment's CA, follow the :ref:`Python-client instructions in Configure Certificate Trust <how-to-configure-python-trust>`.
+Then return here to initialize the client.
+
+.. rst-class:: header-on-a-card header-steps
+
+Step 3: Initialize Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are two Dioptra clients to choose from: the JSON client with returns dictionaries and will raise an exception if a non-200 response is recived, and the Response client which returns Response objects and does not raise exceptions.
@@ -73,7 +80,7 @@ Choose your preferred client, then in your python interpreter, run the following
                 # the client will use the DIOPTRA_API environment variable by default
                 client = connect_json_dioptra_client()
                 # otherwise you can pass address manually:
-                # client = connect_json_dioptra_client(address="<host>:<port>")
+                # client = connect_json_dioptra_client(address="https://localhost")
 
         *Full Client Method Documentation:*
 
@@ -92,7 +99,7 @@ Choose your preferred client, then in your python interpreter, run the following
                 # the client will use the DIOPTRA_API environment variable by default
                 client = connect_response_dioptra_client()
                 # otherwise you can pass address manually:
-                # client = connect_response_dioptra_client(address="<host>:<port>")
+                # client = connect_response_dioptra_client(address="https://localhost")
 
         *Full Client Method Documentation:*
 
@@ -101,7 +108,7 @@ Choose your preferred client, then in your python interpreter, run the following
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 3: Register User
+Step 4: Register User
 ~~~~~~~~~~~~~~~~~~~~~
 
 In your python interpreter, set the username and password, then use the client to register a new user:
@@ -165,7 +172,7 @@ In your python interpreter, set the username and password, then use the client t
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 4: Log In
+Step 5: Log In
 ~~~~~~~~~~~~~~
 
 In your python interpreter, run the following code:
@@ -210,7 +217,7 @@ In your python interpreter, run the following code:
 
 .. rst-class:: header-on-a-card header-steps
 
-Step 5: Retrieve the IDs of Resources (optional)
+Step 6: Retrieve the IDs of Resources (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are many resource IDs you will need for access to downstream methods in the client.
