@@ -66,6 +66,7 @@ def test_project_generation(context, result):
     assert result.exception is None
     assert result.project_path.name == context["__project_slug"]
     assert result.project_path.is_dir()
+    assert not (result.project_path / "docker-compose.override.yml").exists()
 
     check_temp_paths_are_removed(result)
 

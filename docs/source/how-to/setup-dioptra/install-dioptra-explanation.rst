@@ -91,3 +91,6 @@ Follow the steps detailed in the guides below to install Dioptra.
        prepare-deployment
        update-deployment
        recover-deployment-credentials
+       replace-deployment-certificates
+       replace-deployment-ca
+       recover-certificate-operation

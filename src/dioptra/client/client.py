@@ -135,6 +135,8 @@ class DioptraClient(Generic[T]):
 
 def connect_response_dioptra_client(
     address: str | None = None,
+    *,
+    key_exchange: str = "default",
 ) -> DioptraClient[DioptraResponseProtocol]:
     """Connect a client to the Dioptra API that returns response objects.
 
@@ -147,6 +149,9 @@ def connect_response_dioptra_client(
             web GUI, e.g. "https://dioptra.example.org". Note that the
             "/api/<apiVersion>" suffix is omitted. If None, then the DIOPTRA_API
             environment variable will be checked and used.
+        key_exchange: ``default`` uses ordinary Requests TLS. ``hybrid-required``
+            requires TLS 1.3 and X25519MLKEM768 on a capable Python runtime,
+            preserves CA environment inputs, and rejects cross-origin redirects.
 
     Returns:
         A Dioptra client.
@@ -158,12 +163,16 @@ def connect_response_dioptra_client(
     from .sessions import DioptraRequestsSession
 
     return DioptraClient[DioptraResponseProtocol](
-        session=DioptraRequestsSession(_build_api_address(address))
+        session=DioptraRequestsSession(
+            _build_api_address(address), key_exchange=key_exchange
+        )
     )
 
 
 def connect_json_dioptra_client(
     address: str | None = None,
+    *,
+    key_exchange: str = "default",
 ) -> DioptraClient[dict[str, Any]]:
     """Connect a client to the Dioptra API that returns JSON-like Python dictionaries.
 
@@ -175,6 +184,9 @@ def connect_json_dioptra_client(
             web GUI, e.g. "https://dioptra.example.org". Note that the
             "/api/<apiVersion>" suffix is omitted. If None, then the DIOPTRA_API
             environment variable will be checked and used.
+        key_exchange: ``default`` uses ordinary Requests TLS. ``hybrid-required``
+            requires TLS 1.3 and X25519MLKEM768 on a capable Python runtime,
+            preserves CA environment inputs, and rejects cross-origin redirects.
 
     Returns:
         A Dioptra client.
@@ -186,7 +198,9 @@ def connect_json_dioptra_client(
     from .sessions import DioptraRequestsSessionJson
 
     return DioptraClient[dict[str, Any]](
-        session=DioptraRequestsSessionJson(_build_api_address(address))
+        session=DioptraRequestsSessionJson(
+            _build_api_address(address), key_exchange=key_exchange
+        )
     )
 
 

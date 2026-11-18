@@ -38,6 +38,7 @@ RUN sed -i -e "s/https/http/g" /etc/apt/sources.list.d/cuda-ubuntu2204-x86_64.li
     apt-get -y upgrade && \
     apt-get install -yq --no-install-recommends \
     ca-certificates \
+    openssl \
     curl \
     git \
     gnupg \
@@ -215,5 +216,7 @@ ENV VIRTUAL_ENV=${VIRTUAL_ENV}
 
 USER ${DIOPTRA_UID}
 WORKDIR ${DIOPTRA_WORKDIR}
+COPY --chown=root:root --chmod=0755 docker/shellscripts/check-ssl-material.sh /usr/local/bin/check-ssl-material.sh
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 VOLUME ["/etc/ssl", "/usr/local/share/ca-certificates"]
