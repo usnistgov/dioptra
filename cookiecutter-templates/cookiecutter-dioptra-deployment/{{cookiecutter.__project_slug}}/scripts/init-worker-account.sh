@@ -19,8 +19,114 @@
 shopt -s extglob
 set -euo pipefail ${DEBUG:+-x}
 
-curl -X POST http://restapi:5000/api/v1/users/ \
-    -H 'Content-Type: application/json' \
-    -d "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",
-            \"password\": \"$DIOPTRA_WORKER_PASSWORD\",
-            \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"
+###########################################################################################
+# Global parameters
+###########################################################################################
+
+LOGNAME="Init Worker Account"
+RESTAPI_USERS_URL="http://restapi:5000/api/v1/users/"
+
+###########################################################################################
+# Print an error log message to stderr
+#
+# Globals:
+#   LOGNAME
+# Arguments:
+#   Error messages to log, one or more strings
+# Returns:
+#   None
+###########################################################################################
+
+log_error() {
+  echo "${LOGNAME}: ERROR -" "${@}" 1>&2
+}
+
+###########################################################################################
+# Print an informational log message to stdout
+#
+# Globals:
+#   LOGNAME
+# Arguments:
+#   Info messages to log, one or more strings
+# Returns:
+#   None
+###########################################################################################
+
+log_info() {
+  echo "${LOGNAME}: INFO -" "${@}"
+}
+
+###########################################################################################
+# Register the Dioptra worker user account with the REST API
+#
+# The users endpoint answers 200 when it creates the account and 409 when the username is
+# already taken, which is the case when the deployment is initialized again. Any other
+# answer, or no answer at all, stops the initialization so that a deployment is never
+# left without a worker account.
+#
+# Globals:
+#   DIOPTRA_WORKER_PASSWORD
+#   DIOPTRA_WORKER_USERNAME
+#   RESTAPI_USERS_URL
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+register_worker_account() {
+  local response
+  local status
+  local body
+
+  if ! response="$(
+    curl --silent --show-error -X POST "${RESTAPI_USERS_URL}" \
+      -H 'Content-Type: application/json' \
+      -w '\n%{http_code}' \
+      -d "{\"username\": \"$DIOPTRA_WORKER_USERNAME\",
+              \"password\": \"$DIOPTRA_WORKER_PASSWORD\",
+              \"confirmPassword\": \"$DIOPTRA_WORKER_PASSWORD\"}"
+  )"; then
+    log_error "Could not reach the REST API at ${RESTAPI_USERS_URL}, exiting..."
+    exit 1
+  fi
+
+  status="${response##*$'\n'}"
+  body="${response%$'\n'*}"
+
+  case "${status}" in
+    2??)
+      log_info "Registered the worker account ${DIOPTRA_WORKER_USERNAME}"
+      ;;
+    409)
+      log_info "The worker account ${DIOPTRA_WORKER_USERNAME} already exists," \
+        "its password was not changed"
+      ;;
+    *)
+      log_error "Registering the worker account ${DIOPTRA_WORKER_USERNAME} failed" \
+        "with HTTP status ${status}: ${body}"
+      exit 1
+      ;;
+  esac
+}
+
+###########################################################################################
+# The top-level function in the script
+#
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+###########################################################################################
+
+main() {
+  register_worker_account
+}
+
+###########################################################################################
+# Main script
+###########################################################################################
+
+main
