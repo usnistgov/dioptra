@@ -289,14 +289,29 @@ def test_register_artifact_with_missing_mlflow_run_returns_not_found(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
-    registered_mlflowrun_incomplete: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run_id = registered_mlflowrun_incomplete["job1"]["mlflowRunId"]
+    """Verify artifact registration reports an unavailable run as not found.
+
+    The job has a persisted run association, but the tracking server cannot
+    retrieve that run. The API reports the missing run without registering
+    an artifact it cannot verify.
+    """
+    run_id = registered_mlflowrun["job1"]["mlflowRunId"]
 
     def missing_run(
         self: mock_mlflow.MockMlflowClient, run_id: str
     ) -> mock_mlflow.MockMlflowRun:
+        """Raise the tracking error for a previously assigned run ID.
+
+        Args:
+            self: The test tracking client receiving the lookup.
+            run_id: The run requested by the artifact service.
+
+        Raises:
+            MlflowException: The test scenario simulates a missing run.
+        """
         raise mlflow.exceptions.MlflowException("Run not found")
 
     monkeypatch.setattr(mock_mlflow.MockMlflowClient, "get_run", missing_run)

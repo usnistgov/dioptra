@@ -21,7 +21,6 @@ import json
 import os
 import tarfile
 import textwrap
-import uuid
 from contextlib import ExitStack
 from hashlib import sha256
 from http import HTTPStatus
@@ -45,6 +44,8 @@ from dioptra.client import (
     DioptraFile,
     select_one_or_more_files,
 )
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -847,49 +848,23 @@ def registered_jobs(
 
 
 @pytest.fixture
-@freeze_time("Apr 1st, 2025 2:00pm", auto_tick_seconds=1)
 def registered_mlflowrun(
-    client: FlaskClient,
-    mockup_mlflow: MlflowClient,
-    auth_account: dict[str, Any],
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    run_ids = []
-    # should be able to do this without creating an experiment
-    # leaving it here for now
-    experiment_id = mlflow.create_experiment("experiment1")
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    mlflowruns = {"job1": run_ids[0], "job2": run_ids[1], "job3": run_ids[2]}
+    """Retrieve the MLflow bindings allocated during ordinary job submission.
 
-    responses = actions.post_mlflowruns(
-        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
-    )
+    Args:
+        dioptra_client: API client for the fixture application.
+        registered_jobs: Submitted jobs keyed by their fixture names.
 
-    return responses
-
-
-@pytest.fixture
-@freeze_time("Apr 1st, 2025 2:10pm", auto_tick_seconds=1)
-def registered_mlflowrun_incomplete(
-    client: FlaskClient,
-    auth_account: dict[str, Any],
-    registered_jobs: dict[str, Any],
-) -> dict[str, Any]:
-    mlflowruns = {
-        "job1": uuid.uuid4(),
-        "job2": uuid.uuid4(),
-    }  # leave job3 out so we can use that in test_mlflowrun()
-
-    responses = actions.post_mlflowruns(
-        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
-    )
-
-    return responses
+    Returns:
+        The run responses keyed by job fixture name.
+    """
+    return {
+        name: dioptra_client.jobs.get_mlflow_run_id(job["id"]).json()
+        for name, job in registered_jobs.items()
+    }
 
 
 @pytest.fixture

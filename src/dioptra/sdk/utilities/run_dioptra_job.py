@@ -28,6 +28,7 @@ from typing import (
     MutableMapping,
     cast,
 )
+from uuid import UUID
 
 import mlflow
 import structlog
@@ -411,23 +412,32 @@ def _run_tracked_job(
     artifact_tasks: dict[str, ArtifactTaskEntry],
     logger: BoundLogger,
 ) -> None:
-    """Run the job and start tracking the run in MLflow tracking server.
+    """Execute a job with tracking and artifact publication in its assigned run.
 
     Args:
-        dioptra_client: A client for interacting with the Dioptra service.
-        plugins_dir: Path to the plugins directory
-        job_yaml: A declarative experiment description, as a mapping
-        job_parameters: Global parameters for this run, as a mapping from
-            parameter name to value
-        logger: A structlog logger instance. If not provided, a new logger
-            will be created
+        group_id: The group that owns the job and its registered artifacts.
+        job_id: The Dioptra job ID used for tracking and output registration.
+        entrypoint_name: The name under which to log the job's configuration.
+        dioptra_client: The authenticated client for reading the run and
+            registering artifacts with Dioptra.
+        context: Paths used for the job's task code, inputs, and outputs.
+        job_yaml: The job's declarative experiment configuration.
+        job_parameters: Resolved values for global task parameters.
+        artifact_parameters: Prepared inputs from existing artifacts.
+        artifact_tasks: Serializer tasks available to the task graph.
+        logger: Logger for the executing job.
+
+    Raises:
+        ValueError: The job has no run association or the ID is not a UUID.
+        StatusCodeError: Dioptra rejects the run lookup or artifact registration.
+        MlflowException: The assigned run cannot be resumed or tracking fails.
     """
-    active_run = mlflow.start_run()
+    run_id = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id).get("mlflowRunId")
+    if not isinstance(run_id, str):
+        raise ValueError(f"Job {job_id} has no usable MLflow run ID.")
+    mlflow.start_run(run_id=UUID(run_id).hex)
 
     try:
-        dioptra_client.jobs.set_mlflow_run_id(
-            job_id=job_id, mlflow_run_id=active_run.info.run_id
-        )
         mlflow.set_tag(DIOPTRA_JOB_ID, job_id)
         mlflow.log_dict(cast(dict[str, Any], job_yaml), entrypoint_name)
         mlflow.log_params(cast(dict[str, Any], job_parameters))

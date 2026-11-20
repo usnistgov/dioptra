@@ -263,6 +263,25 @@ class MockMlflowClient(object):
             "Mocking mlflow.tracking.MlflowClient instance",
         )
 
+    def create_run(self, experiment_id: str) -> MockMlflowRun:
+        """Allocate a run in the test tracking store.
+
+        Args:
+            experiment_id: Numeric ID of the selected tracking experiment.
+
+        Returns:
+            The new run. Later lookups in the test store use its generated ID.
+        """
+        return _create_run(run_uuid=uuid.uuid4(), experiment_id=int(experiment_id))
+
+    def delete_run(self, run_id: str) -> None:
+        """Remove a run from the test tracking store.
+
+        Args:
+            run_id: ID of the run to remove.
+        """
+        MockState.registered_runs.pop(run_id, None)
+
     def get_run(self, run_id: str) -> MockMlflowRun:
         # Note: In Mlflow, this function would usually throw an MlflowException
         # if the run id is not found. For simplicity this is left out in favor of
