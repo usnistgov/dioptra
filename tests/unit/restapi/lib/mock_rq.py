@@ -15,7 +15,6 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 
-import uuid
 from typing import Any, Dict, Optional, Union
 
 import structlog
@@ -29,10 +28,19 @@ class MockRQJob(object):
         self,
         id: str = "4520511d-678b-4966-953e-af2d0edcea32",
         queue: Optional[str] = None,
-        job_timeout: Optional[str] = None,
+        job_timeout: Optional[int] = None,
         cmd_kwargs: Optional[Dict[str, Any]] = None,
         depends_on: Optional[Union[str, "MockRQJob"]] = None,
     ) -> None:
+        """Store the prepared job data used by the test queue.
+
+        Args:
+            id: Job identifier on the queue.
+            queue: Name of the target queue.
+            job_timeout: Execution time limit in seconds.
+            cmd_kwargs: Keyword arguments for the worker function.
+            depends_on: Optional job that must run first.
+        """
         LOGGER.info(
             "Mocking rq.job.Job instance",
             id=id,
@@ -92,16 +100,36 @@ class MockRQQueue(object):
         self.name = kwargs.get("name") or args[0]
         self.default_timeout = kwargs.get("default_timeout")
 
-    def enqueue(self, *args, **kwargs) -> MockRQJob:
-        LOGGER.info("Mocking rq.Queue.enqueue() function", args=args, kwargs=kwargs)
-        job_id = kwargs.get("job_id", str(uuid.uuid4()))
-        cmd_kwargs = kwargs.get("kwargs")
-        depends_on = kwargs.get("depends_on")
-        job_timeout = kwargs.get("job_timeout")
+    def create_job(
+        self, func: str, *, kwargs: dict[str, Any], job_id: str, timeout: int | None
+    ) -> MockRQJob:
+        """Prepare a job without connecting to Redis.
+
+        Args:
+            func: Qualified name of the function the worker will execute.
+            kwargs: Keyword arguments for the worker function.
+            job_id: ID used to identify the job on the queue.
+            timeout: Execution time limit in seconds, or None for the queue default.
+
+        Returns:
+            A test job with the requested payload and execution time limit.
+        """
+        LOGGER.info("Mocking rq.Queue.create_job() function", func=func)
         return MockRQJob(
             id=job_id,
             queue=self.name,
-            job_timeout=job_timeout,
-            cmd_kwargs=cmd_kwargs,
-            depends_on=depends_on,
+            job_timeout=self.default_timeout if timeout is None else timeout,
+            cmd_kwargs=kwargs,
         )
+
+    def enqueue_job(self, job: MockRQJob) -> MockRQJob:
+        """Acknowledge a test job without connecting to Redis.
+
+        Args:
+            job: Prepared job to simulate delivering.
+
+        Returns:
+            The acknowledged job.
+        """
+        LOGGER.info("Mocking rq.Queue.enqueue_job() function", job_id=job.id)
+        return job

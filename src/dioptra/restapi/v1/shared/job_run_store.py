@@ -32,6 +32,8 @@ from dioptra.restapi.errors import (
     MlflowRunNotFoundError,
 )
 
+DEFAULT_MLFLOW_EXPERIMENT_ID = "0"
+
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
@@ -43,6 +45,22 @@ class ArtifactFile:
 
 
 class JobRunStoreProtocol(Protocol):
+    def create_job_run(self) -> str:
+        """Allocate a run for a Dioptra job.
+
+        Returns:
+            The hexadecimal ID of the new run in the Default MLflow experiment.
+        """
+        ...
+
+    def delete_job_run(self, run_id: str) -> None:
+        """Discard a run after its job transaction has rolled back.
+
+        Args:
+            run_id: Hexadecimal ID of the unbound MLflow run.
+        """
+        ...
+
     def download_artifacts(
         self, artifact_uri: str, path: str | None, destination: Path
     ) -> Path:
@@ -96,6 +114,24 @@ class JobRunStoreProtocol(Protocol):
 class MlFlowJobRunStore:
     def __init__(self, client: MlflowClient):
         self._client = client
+
+    def create_job_run(self) -> str:
+        """Allocate a run for a Dioptra job.
+
+        Returns:
+            The hexadecimal ID of the new run in the Default MLflow experiment.
+        """
+        run = self._client.create_run(DEFAULT_MLFLOW_EXPERIMENT_ID)
+        run_id: str = run.info.run_id
+        return run_id
+
+    def delete_job_run(self, run_id: str) -> None:
+        """Discard a run after its job transaction has rolled back.
+
+        Args:
+            run_id: Hexadecimal ID of the unbound MLflow run.
+        """
+        self._client.delete_run(run_id)
 
     def download_artifacts(
         self, artifact_uri: str, path: str | None, destination: Path

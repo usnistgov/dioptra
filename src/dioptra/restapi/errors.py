@@ -550,15 +550,6 @@ class JobArtifactParameterMissingError(DioptraError):
         )
 
 
-class JobMlflowRunAlreadySetError(DioptraError):
-    """The requested job already has an mlflow run id set."""
-
-    def __init__(self):
-        super().__init__(
-            "The requested job already has an mlflow run id set. It may not be changed."
-        )
-
-
 class JobMlflowRunNotSetError(DioptraError):
     """The requested job does not have an mlflow run id set."""
 

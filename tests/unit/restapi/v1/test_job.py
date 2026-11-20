@@ -241,41 +241,6 @@ def assert_job_is_not_found(
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def assert_job_status_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
-) -> None:
-    response = dioptra_client.jobs.get_status(job_id)
-    assert (
-        response.status_code == HTTPStatus.OK and response.json()["status"] == expected
-    )
-
-
-def assert_job_mlflowrun_matches_expectations(
-    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
-) -> None:
-    import uuid
-
-    response = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id)
-    assert (
-        response.status_code == HTTPStatus.OK
-        and uuid.UUID(response.json()["mlflowRunId"]).hex == expected
-    )
-
-
-def assert_job_mlflowrun_already_set(
-    dioptra_client: DioptraClient[DioptraResponseProtocol],
-    job_id: int,
-    mlflow_run_id: str,
-) -> None:
-    response = dioptra_client.jobs.set_mlflow_run_id(
-        job_id=job_id, mlflow_run_id=mlflow_run_id
-    )
-    assert (
-        response.status_code == HTTPStatus.BAD_REQUEST
-        and response.json()["error"] == "JobMlflowRunAlreadySetError"
-    )
-
-
 def assert_job_metrics_validation_error(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     job_id: int,
@@ -1249,27 +1214,25 @@ def test_create_job_using_entrypoint_snapshot_id(
 
 def test_mlflowrun(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
-    registered_mlflowrun_incomplete: dict[str, Any],
 ):
-    import uuid
+    """Verify that two submissions receive distinct server-allocated runs.
 
-    job_uuid = uuid.uuid4().hex
+    The jobs use the same experiment, entrypoint and inputs. Each job receives
+    a different run so repeated submissions track outputs independently. Both
+    supported read routes expose the same association for a given job.
+    """
+    run_ids = set()
+    for job in registered_jobs.values():
+        run = dioptra_client.jobs.get_mlflow_run_id(job["id"]).json()
+        experiment_run = dioptra_client.experiments.jobs.get_mlflow_run_id(
+            job["experiment"]["id"], job["id"]
+        ).json()
+        assert run["mlflowRunId"]
+        assert run == experiment_run
+        run_ids.add(run["mlflowRunId"])
 
-    # explicitly use job3 because we did not set a mlflowrun on this job
-
-    mlflowrun_response = dioptra_client.jobs.set_mlflow_run_id(  # noqa: F841
-        job_id=registered_jobs["job3"]["id"], mlflow_run_id=job_uuid
-    ).json()
-
-    assert_job_mlflowrun_matches_expectations(
-        dioptra_client, job_id=registered_jobs["job3"]["id"], expected=job_uuid
-    )
-
-    assert_job_mlflowrun_already_set(
-        dioptra_client, job_id=registered_jobs["job1"]["id"], mlflow_run_id=job_uuid
-    )
+    assert len(run_ids) == len(registered_jobs)
 
 
 def test_metrics(
@@ -1672,7 +1635,7 @@ def test_job_get_status(
     """
     job_to_check = registered_jobs["job1"]
     status = "queued"
-    assert_job_status_matches_expectations(
+    asserts.assert_job_status_matches_expectations(
         dioptra_client, job_id=job_to_check["id"], expected=status
     )
 
@@ -1697,7 +1660,7 @@ def test_modify_job_status(
     dioptra_client.experiments.jobs.set_status(
         experiment_id=experiment_id, job_id=job_id, status=new_status
     )
-    assert_job_status_matches_expectations(
+    asserts.assert_job_status_matches_expectations(
         dioptra_client, job_id=job_to_change_status["id"], expected=new_status
     )
 

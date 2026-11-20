@@ -19,12 +19,17 @@ from typing import Final
 import structlog
 from redis import Redis
 from rq.queue import Queue as RQQueue
+from rq.utils import parse_timeout
 from structlog.stdlib import BoundLogger
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 TIMEOUT_24_HOURS: Final[int] = 24 * 3600
 RUN_V1_DIOPTRA_JOB_FUNC: Final[str] = "dioptra.rq.tasks.run_v1_dioptra_job"
+
+
+class JobEnqueueRejectedError(Exception):
+    """RQ could not prepare a job locally, before any attempt to enqueue it."""
 
 
 class RQServiceV1(object):
@@ -37,7 +42,23 @@ class RQServiceV1(object):
         experiment_id: int,
         queue: str,
         timeout: str | None = None,
-    ):
+    ) -> None:
+        """Submit an existing Dioptra job to the named RQ queue.
+
+        The payload contains the job and experiment IDs. The worker uses those
+        identifiers to fetch its saved configuration and run from the API.
+
+        Args:
+            job_id: ID of the committed Dioptra job.
+            experiment_id: ID of the experiment containing the job.
+            queue: Name of the target RQ queue.
+            timeout: RQ execution time limit. An empty value uses 24 hours.
+
+        Raises:
+            JobEnqueueRejectedError: Local preparation failed before delivery.
+            Exception: RQ failed during the enqueue attempt. Redis may have accepted
+                the job even though the caller received an exception.
+        """
         log: BoundLogger = LOGGER.new()
 
         cmd_kwargs = {
@@ -53,10 +74,19 @@ class RQServiceV1(object):
             timeout=timeout,
         )
 
-        q = RQQueue(queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis)
-        q.enqueue(
-            RUN_V1_DIOPTRA_JOB_FUNC,
-            kwargs=cmd_kwargs,
-            job_id=str(job_id),
-            job_timeout=timeout if timeout else TIMEOUT_24_HOURS,
-        )
+        try:
+            rq_queue = RQQueue(
+                queue, default_timeout=TIMEOUT_24_HOURS, connection=self._redis
+            )
+            rq_job = rq_queue.create_job(
+                RUN_V1_DIOPTRA_JOB_FUNC,
+                kwargs=cmd_kwargs,
+                job_id=str(job_id),
+                timeout=parse_timeout(timeout or None),
+            )
+        except Exception as error:
+            raise JobEnqueueRejectedError(
+                "The queue service could not prepare the job for enqueueing."
+            ) from error
+
+        rq_queue.enqueue_job(rq_job)
