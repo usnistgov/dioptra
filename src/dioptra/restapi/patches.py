@@ -14,6 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import enum
 import hashlib
 import inspect
 from typing import Any
@@ -25,6 +26,39 @@ EXPECTED_SERIALIZE_OPERATION_SHA256_HASH = "57241f0a33ed5e1771e5032d1e6f69946851
 PATCHED_SERIALIZE_OPERATION_SHA256_HASH = "8a51bc04c8dcb81820548d9de53a9606faf0681ffc3684102744c69fbd076437"  # fmt: skip
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
+
+
+def register_enum_swagger_mapping() -> None:
+    """Document Dioptra's enum fields as strings with explicit choices.
+
+    Register before importing controllers: flask-accepts builds Swagger models
+    when the accepts/responds decorators are evaluated. See Dioptra issue #924.
+    """
+    from flask_accepts.utils import _ma_field_to_fr_field, type_map
+    from flask_restx import Namespace
+    from flask_restx import fields as swagger_fields
+    from marshmallow import fields
+
+    def map_enum(
+        field: fields.Enum,
+        api: Namespace,
+        model_name: str,
+        operation: str,
+    ) -> swagger_fields.String:
+        choices = [
+            member.value if field.by_value else member.name for member in field.enum
+        ]
+        options = _ma_field_to_fr_field(field)
+        # Marshmallow defaults may be enum members rather than JSON values.
+        for key in ("default", "example"):
+            value = options.get(key)
+            if isinstance(value, enum.Enum):
+                options[key] = value.value if field.by_value else value.name
+        options["enum"] = choices
+        options.setdefault("example", choices[0])
+        return swagger_fields.String(**options)
+
+    type_map[fields.Enum] = map_enum
 
 
 def monkey_patch_flask_restx() -> None:
