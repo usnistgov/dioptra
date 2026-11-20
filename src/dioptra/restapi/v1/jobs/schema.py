@@ -23,6 +23,8 @@ import re
 import nh3
 from marshmallow import Schema, ValidationError, fields, post_dump, post_load, validate
 from marshmallow.decorators import validates_schema
+from rq.exceptions import TimeoutFormatError
+from rq.utils import parse_timeout
 
 from dioptra.restapi.v1.artifacts.schema import ArtifactRefSchema
 from dioptra.restapi.v1.entrypoints.schema import EntrypointConfigResponseSchema
@@ -48,7 +50,8 @@ class JobMlflowRunSchema(Schema):
 
     mlflowRunId = fields.UUID(
         attribute="mlflow_run_id",
-        metadata={"description": "UUID for the associated Mlflow Run."},
+        metadata={"description": "UUID for the associated MLflow run."},
+        dump_only=True,
     )
 
 
@@ -200,16 +203,37 @@ class JobStatusSchema(JobIdSchema):
     status = fields.String(
         attribute="status",
         validate=validate.OneOf(
-            ["queued", "started", "deferred", "finished", "failed", "reset"],
+            ["queued", "started", "deferred", "finished", "failed"],
         ),
         metadata={
             "description": "The current status of the job. The allowed values are: "
-            "queued, started, deferred, finished, failed, reset.",
+            "queued, started, deferred, finished, failed.",
         },
     )
 
 
 JobBaseSchema = generate_base_resource_schema("Job", snapshot=True)
+
+
+def _validate_job_timeout(value: str) -> None:
+    """Validate a submission's execution time limit using RQ's timeout format.
+
+    An empty value defers to the queue default.
+
+    Args:
+        value: The execution timeout string supplied in the request.
+
+    Raises:
+        ValidationError: The timeout cannot be parsed by RQ or resolves to zero.
+    """
+    try:
+        seconds = parse_timeout(value or None)
+    except TimeoutFormatError as error:
+        raise ValidationError(
+            "Use an integer or a duration such as 30s, 5m, 2h, or 1d."
+        ) from error
+    if seconds == 0:
+        raise ValidationError("Use a nonzero timeout, or -1 for no time limit.")
 
 
 class JobArtifactValueSchema(Schema):
@@ -324,6 +348,7 @@ class JobSchema(JobBaseSchema):  # type: ignore
     timeout = fields.String(
         attribute="timeout",
         load_default="24h",
+        validate=_validate_job_timeout,
         metadata={
             "description": "The maximum alloted time for a job before it times out and "
             "is stopped. If omitted, the job timeout will default to 24 hours.",

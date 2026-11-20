@@ -18,14 +18,16 @@
 
 import datetime
 import math
-from collections.abc import Iterable
-from typing import Any, Final, cast
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
+from typing import Any, Final, Protocol, cast
+from uuid import UUID
 
 import structlog
 import yaml
 from flask_login import current_user
 from injector import inject
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -35,6 +37,7 @@ from dioptra.restapi.db.models.jobs import Job, JobSwap
 from dioptra.restapi.errors import (
     BackendDatabaseError,
     DioptraError,
+    DioptraServerError,
     EntityDoesNotExistError,
     EntityNotRegisteredError,
     EntrypointSwapsRenderError,
@@ -42,7 +45,6 @@ from dioptra.restapi.errors import (
     JobArtifactParameterMissingError,
     JobInvalidParameterNameError,
     JobInvalidStatusTransitionError,
-    JobMlflowRunAlreadySetError,
     JobParameterMissingError,
     SortParameterValidationError,
     SwapChoiceError,
@@ -61,7 +63,7 @@ from dioptra.restapi.v1.experiments.service import ExperimentIdService
 from dioptra.restapi.v1.groups.service import GroupIdService
 from dioptra.restapi.v1.queues.service import QueueIdService
 from dioptra.restapi.v1.shared.job_run_store import JobRunStoreProtocol
-from dioptra.restapi.v1.shared.rq_service import RQServiceV1
+from dioptra.restapi.v1.shared.rq_service import JobEnqueueRejectedError, RQServiceV1
 from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 from dioptra.restapi.v1.type_coercions import (
     check_artifact_param_type_mismatch,
@@ -103,13 +105,169 @@ SORTABLE_LOG_FIELDS: Final[dict[str, Any]] = {
     "logger_name": models.JobLog.logger_name,
     "created_on": models.JobLog.created_on,
 }
-JOB_STATUS_TRANSITIONS: Final[dict[str, Any]] = {
-    "queued": {"started", "deferred", "reset"},
-    "started": {"finished", "failed", "reset"},
-    "deferred": {"started", "reset"},
-    "failed": {"reset"},
-    "finished": {"reset"},
+JOB_STATUS_TRANSITIONS: Final[dict[str, set[str]]] = {
+    "queued": {"started", "deferred"},
+    "started": {"finished", "failed"},
+    "deferred": {"started"},
 }
+
+
+class DbSessionProtocol(Protocol):
+    """Session operations needed to persist a job and its run association."""
+
+    def flush(self) -> None:
+        """Write staged changes to the current transaction."""
+        ...
+
+    def commit(self) -> None:
+        """Commit the current transaction."""
+        ...
+
+    def rollback(self) -> None:
+        """Roll back the current transaction."""
+        ...
+
+
+@contextmanager
+def job_run_transaction(
+    job_run_store: JobRunStoreProtocol, db_session: DbSessionProtocol, log: BoundLogger
+) -> Iterator[UUID]:
+    """Allocate a run and commit the job changes that bind it.
+
+    On entry, create an MLflow run and give its ID to the caller. The caller
+    uses the database session to associate the job with that ID. On normal
+    exit, flush and commit the session before returning control to the caller.
+
+    If staging fails, try to delete the new run after rollback succeeds.
+    If commit raises, keep the run because the database may already have
+    saved the association.
+
+    Args:
+        job_run_store: Store that creates and deletes job runs.
+        db_session: Session containing the job changes.
+        log: Logger for recording backend errors.
+
+    Yields:
+        ID of the newly allocated run in the Default MLflow experiment.
+
+    Raises:
+        DioptraServerError: Run allocation, persistence, or commit failed. A run
+            may exist and a commit error may leave the binding persisted.
+    """
+    try:
+        run_id = UUID(job_run_store.create_job_run())
+    except Exception as error:
+        log.error("Could not allocate MLflow run", error_type=type(error).__name__)
+        _rollback_job_changes(db_session, log)
+        raise DioptraServerError("Could not allocate an MLflow run.") from error
+
+    try:
+        yield run_id
+        db_session.flush()
+    except Exception as error:
+        log.error(
+            "Could not stage the job and run association",
+            mlflow_run_id=run_id.hex,
+            error_type=type(error).__name__,
+        )
+        if _rollback_job_changes(db_session, log):
+            try:
+                job_run_store.delete_job_run(run_id.hex)
+            except Exception as cleanup_error:
+                log.error(
+                    "Could not delete unbound MLflow run",
+                    mlflow_run_id=run_id.hex,
+                    error_type=type(cleanup_error).__name__,
+                )
+        raise DioptraServerError(
+            "Could not save the job and its MLflow run."
+        ) from error
+
+    try:
+        db_session.commit()
+    except Exception as error:
+        log.error(
+            "Could not confirm the job and run association commit",
+            mlflow_run_id=run_id.hex,
+            error_type=type(error).__name__,
+        )
+        _rollback_job_changes(db_session, log)
+        raise DioptraServerError(
+            "Could not confirm that the job and its MLflow run were saved."
+        ) from error
+
+
+def _rollback_job_changes(db_session: DbSessionProtocol, log: BoundLogger) -> bool:
+    """Attempt to roll back the current job transaction and log any error.
+
+    Args:
+        db_session: Session containing the job changes.
+        log: Logger for recording rollback errors.
+
+    Returns:
+        True if the session acknowledged rollback, otherwise False. This
+        does not establish the outcome of an earlier commit attempt.
+    """
+    try:
+        db_session.rollback()
+    except Exception as error:
+        log.error("Could not roll back job changes", error_type=type(error).__name__)
+        return False
+    return True
+
+
+def _get_current_job(job_id: int) -> Job:
+    """Read the latest snapshot of a job available for use.
+
+    Args:
+        job_id: The job's resource ID.
+
+    Returns:
+        The current job snapshot.
+
+    Raises:
+        EntityDoesNotExistError: The job does not exist or has been deleted.
+    """
+    stmt = (
+        select(models.Job)
+        .join(models.Resource)
+        .where(
+            models.Job.resource_id == job_id,
+            models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
+            models.Resource.is_deleted == False,  # noqa: E712
+        )
+    )
+    job = db.session.scalars(stmt).first()
+
+    if job is None:
+        raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
+    return job
+
+
+def _add_job_status_snapshot(job: Job, status: str) -> Job:
+    """Stage a new lifecycle snapshot while preserving the job's associations.
+
+    The caller validates the status transition and commits the transaction.
+
+    Args:
+        job: Existing job snapshot from which to copy job details.
+        status: Lifecycle status to set on the new snapshot.
+
+    Returns:
+        The new snapshot added to the current database session.
+    """
+    snapshot = models.Job(
+        timeout=job.timeout,
+        status=status,
+        description=job.description,
+        resource=job.resource,
+        creator=job.creator,
+    )
+    db.session.add(snapshot)
+    snapshot.entry_point_job = job.entry_point_job
+    snapshot.experiment_job = job.experiment_job
+    snapshot.queue_job = job.queue_job
+    return snapshot
 
 
 class JobService(object):
@@ -125,17 +283,21 @@ class JobService(object):
         artifact_snapshot_id_service: ArtifactSnapshotIdService,
         swaps_retrieval_service: SwapsRetrievalService,
         rq_service: RQServiceV1,
+        job_run_store: JobRunStoreProtocol,
     ) -> None:
         """Initialize the job service.
 
         All arguments are provided via dependency injection.
 
         Args:
-            experiment_id_service: An ExperimentIdService object.
-            queue_id_service: A QueueIdService object.
-            entrypoint_id_service: An EntrypointIdService object.
-            group_id_service: A GroupIdService object.
-            rq_service: An RQServiceV1 object.
+            experiment_id_service: Service for looking up the owning experiment.
+            queue_id_service: Service for looking up a job's queue.
+            entrypoint_id_service: Service for looking up the selected entrypoint.
+            group_id_service: Service for looking up groups for job queries.
+            artifact_snapshot_id_service: Service for resolving artifact inputs.
+            swaps_retrieval_service: Service for resolving entrypoint swap choices.
+            rq_service: Queue service used after committing a new job.
+            job_run_store: Store for allocating the submitted job's run.
         """
         self._experiment_id_service = experiment_id_service
         self._queue_id_service = queue_id_service
@@ -144,6 +306,7 @@ class JobService(object):
         self._group_id_service = group_id_service
         self._rq_service = rq_service
         self._swaps_retrieval_service = swaps_retrieval_service
+        self._job_run_store = job_run_store
 
     def create(
         self,
@@ -158,7 +321,10 @@ class JobService(object):
         swaps: list[dict[str, str]] | None = None,
         **kwargs,
     ) -> utils.JobDict:
-        """Create a new job.
+        """Submit a new job with a server-allocated MLflow run.
+
+        Validate the submission before allocating a run. Commit the queued job
+        and its run association together, then submit the job to RQ.
 
         Args:
             experiment_id: The unique id for the experiment this job is under.
@@ -169,20 +335,23 @@ class JobService(object):
                 configure the job.
             description: The description of the job.
             timeout: The length of time the job will run before timing out.
-            group_id: The group that will own the job.
+            entrypoint_snapshot_id: Specific version to use instead of the latest.
+            swaps: Task choices for the entrypoint's swap definitions.
+            **kwargs: Optional request logger under ``log``.
 
         Returns:
-            The newly created job object.
+            The created job and its metadata after RQ acknowledges it.
 
         Raises:
-            EntityExistsError: If a job with the given name already exists.
-            EntityDoesNotExistError: if any of the values in artifact_value_ids does not
-                correspond with an Artifact
+            EntityDoesNotExistError: A referenced resource does not exist.
+            EntityNotRegisteredError: The experiment or entrypoint lacks a required
+                resource association.
+            DioptraError: The job's entrypoint configuration or inputs are invalid.
+            DioptraServerError: Allocation, persistence, or enqueue failed or could
+                not be confirmed. An error after persistence can leave a job and
+                its run available to a worker.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
-
-        # Set the default status
-        status = "queued"
 
         # Validate the provided experiment_id and fetch the ORM object
         experiment_dict = self._experiment_id_service.get(
@@ -285,7 +454,7 @@ class JobService(object):
 
         new_job = models.Job(
             timeout=timeout,
-            status=status,
+            status="queued",
             description=description,
             resource=job_resource,
             creator=current_user,
@@ -347,16 +516,22 @@ class JobService(object):
             queue=queue,
         )
 
-        db.session.commit()
-        self._rq_service.submit(
-            job_id=new_job.resource_id,
-            experiment_id=experiment_id,
-            queue=queue.name,
-            timeout=timeout,
+        queue_name = queue.name
+        # Exiting this block commits the job and its run ID before enqueueing.
+        with job_run_transaction(self._job_run_store, db.session, log) as run_id:
+            # Flush to obtain the resource ID for the association's primary key.
+            db.session.flush()
+            job_id = new_job.resource_id
+            db.session.add(
+                models.JobMlflowRun(job_resource_id=job_id, mlflow_run_id=run_id)
+            )
+
+        self._enqueue_committed_job(
+            new_job, job_id, experiment_id, queue_name, timeout, log
         )
         log.debug(
             "Job registration successful",
-            job_id=new_job.resource_id,
+            job_id=job_id,
         )
         return utils.JobDict(
             job=new_job,
@@ -366,6 +541,107 @@ class JobService(object):
                 new_job, self._swaps_retrieval_service, log
             ),
         )
+
+    def _enqueue_committed_job(
+        self,
+        job: Job,
+        job_id: int,
+        experiment_id: int,
+        queue_name: str,
+        timeout: str,
+        log: BoundLogger,
+    ) -> None:
+        """Enqueue a committed job and report post-commit submission failures.
+
+        A definite rejection triggers a best-effort status and log update. When
+        delivery is uncertain, a worker may already have started and the API
+        leaves the lifecycle status alone.
+
+        Args:
+            job: The committed queued job snapshot.
+            job_id: The job's resource ID, captured before commit.
+            experiment_id: The ID of the experiment that contains the job.
+            queue_name: The RQ queue on which to schedule execution.
+            timeout: The RQ execution time limit.
+            log: Logger for the current submission.
+
+        Raises:
+            DioptraServerError: RQ rejected the job or its acceptance is
+                uncertain. The response identifies the committed job.
+        """
+        try:
+            self._rq_service.submit(
+                job_id=job_id,
+                experiment_id=experiment_id,
+                queue=queue_name,
+                timeout=timeout,
+            )
+        except JobEnqueueRejectedError as error:
+            log.error(
+                "Queue rejected job before delivery",
+                job_id=job_id,
+                error_type=type(error.__cause__).__name__,
+            )
+            reason = f"{error} ({type(error.__cause__).__name__})"
+            self._record_enqueue_rejection(job, job_id, reason, log)
+            raise DioptraServerError(
+                f"Job {job_id} was saved but could not be queued.",
+                detail={"jobId": job_id, "submissionOutcome": "not_queued"},
+            ) from error
+        except Exception as error:
+            log.error(
+                "Could not confirm queue acceptance",
+                job_id=job_id,
+                error_type=type(error).__name__,
+            )
+            raise DioptraServerError(
+                f"Could not confirm whether job {job_id} was queued. Submitting "
+                "another job can execute the same work twice.",
+                detail={
+                    "jobId": job_id,
+                    "submissionOutcome": "queue_acceptance_unknown",
+                },
+            ) from error
+
+    def _record_enqueue_rejection(
+        self, job: Job, job_id: int, reason: str, log: BoundLogger
+    ) -> None:
+        """Commit a failed snapshot and log entry for a job that was never enqueued.
+
+        This update is best-effort. A persistence exception is logged without
+        replacing the submission error reported to the caller.
+
+        Args:
+            job: The committed queued job snapshot.
+            job_id: The job's resource ID, captured before commit.
+            reason: Operator-readable description of the local rejection.
+            log: Logger for the current submission.
+        """
+        try:
+            _add_job_status_snapshot(job, "failed")
+            db.session.add(
+                models.JobLog(
+                    severity=JobLogSeverity.ERROR.name,
+                    logger_name=__name__,
+                    message=reason,
+                    job_resource=job.resource,
+                )
+            )
+            db.session.commit()
+        except Exception as error:
+            log.error(
+                "Could not record queue rejection",
+                job_id=job_id,
+                error_type=type(error).__name__,
+            )
+            try:
+                db.session.rollback()
+            except Exception as rollback_error:
+                log.error(
+                    "Could not roll back the rejection write",
+                    job_id=job_id,
+                    error_type=type(rollback_error).__name__,
+                )
 
     def _build_job_swaps(
         self,
@@ -602,33 +878,22 @@ class JobIdService(object):
         job_id: int,
         **kwargs,
     ) -> utils.JobDict:
-        """Fetch a job by its unique id.
+        """Get the latest snapshot and related read data for a job.
 
         Args:
-            job_id: The unique id of the job.
+            job_id: The job's resource ID.
+            **kwargs: Optional request logger under ``log``.
 
         Returns:
-            The job object if found, otherwise None.
+            The job snapshot, registered artifacts, and task names for its swaps.
 
         Raises:
-            EntityDoesNotExistError: If the job is not found
+            EntityDoesNotExistError: The job does not exist or has been deleted.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
         log.debug("Get job by id", job_id=job_id)
 
-        stmt = (
-            select(models.Job)
-            .join(models.Resource)
-            .where(
-                models.Job.resource_id == job_id,
-                models.Job.resource_snapshot_id == models.Resource.latest_snapshot_id,
-                models.Resource.is_deleted == False,  # noqa: E712
-            )
-        )
-        job = db.session.scalars(stmt).first()
-
-        if job is None:
-            raise EntityDoesNotExistError(EntityType.JOB, job_id=job_id)
+        job = _get_current_job(job_id)
 
         artifacts_stmt = (
             select(models.Artifact)
@@ -1289,16 +1554,26 @@ class ExperimentJobIdStatusService(object):
         commit: bool = True,
         **kwargs,
     ) -> dict[str, Any] | None:
-        """Modify a Job's status by unique id
+        """Apply a permitted lifecycle transition to an experiment's job.
+
+        Save each transition as a new job snapshot.
 
         Args:
             experiment_id: The unique id of the experiment.
             job_id: The unique id of the job.
-            status: The new status of the job.
-            commit: If True, commit the transaction. Defaults to True.
+            status: The resulting status in a permitted lifecycle transition.
+            commit: If true, persist the snapshot before returning. Otherwise the
+                caller owns the pending transaction.
+            **kwargs: Optional request logger under ``log``.
 
         Returns:
-            The status message job object if found, otherwise an error message.
+            The job ID and resulting status.
+
+        Raises:
+            EntityDoesNotExistError: The job does not belong to the experiment or
+                one of the resources does not exist.
+            JobInvalidStatusTransitionError: The requested transition is invalid
+                for the current status.
         """
 
         log: BoundLogger = kwargs.get("log", LOGGER.new())
@@ -1309,25 +1584,8 @@ class ExperimentJobIdStatusService(object):
 
         if status not in JOB_STATUS_TRANSITIONS.get(job.status, set()):
             raise JobInvalidStatusTransitionError
-        if status == "reset":
-            db.session.execute(
-                delete(models.JobMlflowRun).where(
-                    models.JobMlflowRun.job_resource_id == job_id
-                )
-            )
-            status = "queued"
 
-        new_job = models.Job(
-            timeout=job.timeout,
-            status=status,
-            description=job.description,
-            resource=job.resource,
-            creator=job.creator,
-        )
-        db.session.add(new_job)
-        new_job.entry_point_job = job.entry_point_job
-        new_job.experiment_job = job.experiment_job
-        new_job.queue_job = job.queue_job
+        new_job = _add_job_status_snapshot(job, status)
 
         if commit:
             db.session.commit()
@@ -1341,7 +1599,7 @@ class ExperimentJobIdStatusService(object):
 
 
 class ExperimentJobIdMlflowrunService(object):
-    """The service methods for managing the mlflow run id of a job by unique id."""
+    """Read an assigned MLflow run ID for a job."""
 
     @inject
     def __init__(
@@ -1385,55 +1643,9 @@ class ExperimentJobIdMlflowrunService(object):
         )
         return {"mlflow_run_id": mlflow_run_id}
 
-    def create(
-        self,
-        experiment_id: int,
-        job_id: int,
-        mlflow_run_id: str,
-        commit: bool = True,
-        **kwargs,
-    ) -> dict[str, Any] | None:
-        """Set a Job's mlflow run id by unique id
-
-        Args:
-            experiment_id: The unique id of the experiment.
-            job_id: The unique id of the job.
-            mlflow_run_id: The unique id of the mlflow run.
-            commit: If True, commit the transaction. Defaults to True.
-
-        Returns:
-            The status message job object if found, otherwise an error message.
-        """
-
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
-        )
-
-        job_dict = self._experiment_job_id_service.get(experiment_id, job_id, log=log)
-        job = job_dict["job"]
-
-        if job.mlflow_run is not None:
-            raise JobMlflowRunAlreadySetError
-
-        job.mlflow_run = models.JobMlflowRun(
-            job_resource_id=job.resource_id,
-            mlflow_run_id=mlflow_run_id,
-        )
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Setting Job mlflow run id successful",
-                job_id=job_id,
-                mlflow_run_id=mlflow_run_id,
-            )
-
-        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
-
 
 class JobIdMlflowrunService(object):
-    """The service methods for managing the mlflow run id of a job by unique id."""
+    """Read an assigned MLflow run ID for a job."""
 
     @inject
     def __init__(
@@ -1473,50 +1685,6 @@ class JobIdMlflowrunService(object):
         job = job_dict["job"]
 
         return job.mlflow_run.mlflow_run_id.hex if job.mlflow_run is not None else None
-
-    def create(
-        self,
-        job_id: int,
-        mlflow_run_id: str,
-        commit: bool = True,
-        **kwargs,
-    ) -> dict[str, Any] | None:
-        """Set a Job's mlflow run id by unique id
-
-        Args:
-            job_id: The unique id of the job.
-            mlflow_run_id: The unique id of the mlflow run.
-            commit: If True, commit the transaction. Defaults to True.
-
-        Returns:
-            The status message job object if found, otherwise an error message.
-        """
-
-        log: BoundLogger = kwargs.get("log", LOGGER.new())
-        log.debug(
-            "Set the job's mlflow run id", job_id=job_id, mlflow_run_id=mlflow_run_id
-        )
-
-        job_dict = self._job_id_service.get(job_id, log=log)
-        job = job_dict["job"]
-
-        if job.mlflow_run is not None:
-            raise JobMlflowRunAlreadySetError
-
-        job.mlflow_run = models.JobMlflowRun(
-            job_resource_id=job.resource_id,
-            mlflow_run_id=mlflow_run_id,
-        )
-
-        if commit:
-            db.session.commit()
-            log.debug(
-                "Setting Job mlflow run id successful",
-                job_id=job_id,
-                mlflow_run_id=mlflow_run_id,
-            )
-
-        return {"mlflow_run_id": job.mlflow_run.mlflow_run_id.hex}
 
 
 class ExperimentMetricsService(object):

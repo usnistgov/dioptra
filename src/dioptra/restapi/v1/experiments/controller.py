@@ -457,26 +457,6 @@ class ExperimentIdJobIdMlflowrunEndpoint(Resource):
             experiment_id=id, job_id=jobId, log=log
         )
 
-    @login_required
-    @accepts(schema=JobMlflowRunSchema, api=api)
-    @responds(schema=JobMlflowRunSchema, api=api)
-    def post(self, id: int, jobId: int):
-        """Sets the mlflow run id for a Job"""
-        log = LOGGER.new(
-            request_id=str(uuid.uuid4()),
-            resource="ExperimentIdJobIdMlflowrunEndpoint",
-            request_type="POST",
-            experiment_id=id,
-            job_id=jobId,
-        )
-        parsed_obj = request.parsed_obj  # type: ignore
-        return self._experiment_job_id_mlflowrun_service.create(
-            experiment_id=id,
-            job_id=jobId,
-            mlflow_run_id=parsed_obj["mlflow_run_id"],
-            log=log,
-        )
-
 
 @api.route("/<int:id>/metrics")
 @api.param("id", "ID for the Experiment resource.")

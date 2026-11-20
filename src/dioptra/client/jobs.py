@@ -186,22 +186,6 @@ class JobsCollectionClient(CollectionClient[T]):
         """
         return self._session.get(self.url, str(job_id), MLFLOW_RUN)
 
-    def set_mlflow_run_id(self, job_id: str | int, mlflow_run_id: str) -> T:
-        """Sets the MLflow run id for a job.
-
-        Args:
-            job_id: The job id, an integer.
-            mlflow_run_id: The UUID as a string for the associated MLflow run.
-
-        Returns:
-            The response from the Dioptra API.
-        """
-        json_ = {
-            "mlflowRunId": mlflow_run_id,
-        }
-
-        return self._session.post(self.url, str(job_id), MLFLOW_RUN, json_=json_)
-
     def get_parameters(self, job_id: str | int) -> T:
         """Gets the parameters for a job.
 
