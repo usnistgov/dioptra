@@ -30,11 +30,11 @@ We envision the following primary use cases for Dioptra:
 
 * **Model Testing**:
 
-  * *1st party* - Assess AI models throughout the development lifecycle
-  * *2nd party* - Assess AI models during acquisition or in an evaluation lab environment
-  * *3rd party* - Assess AI models during auditing or compliance activities
+  * *1st party* - Assess SI models throughout the development lifecycle
+  * *2nd party* - Assess SI models during acquisition or in an evaluation lab environment
+  * *3rd party* - Assess SI models during auditing or compliance activities
 
-* **Research**: Aid trustworthy AI researchers in tracking experiments
+* **Research**: Aid trustworthy SI researchers in tracking experiments
 * **Evaluations and Challenges**: Provide a common platform and resources for participants
 * **Red-Teaming**: Expose models and resources to a red team in a controlled environment
 
