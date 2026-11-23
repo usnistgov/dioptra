@@ -26,9 +26,6 @@ Glossary
       An acronym for the term *Application Programming Interface*, which refers to an interface that allows two applications to talk to one another.
       More recently, the term has been used as a shorthand for a *Web API*, see https://en.wikipedia.org/wiki/Web_API for further details.
 
-   AI
-      An acronym for the term *Artificial Intelligence*.
-
    AML
       An acronym for the term *Adversarial Machine Learning*.
 
@@ -56,6 +53,9 @@ Glossary
 
    SDK
       An acronym for the term *Software Development Kit*, which refers to a collection of software development tools in one installable package.
+
+   SI
+      An acronym for the term *Super Intelligence*.
 
    URI
       An acronym for the term *Uniform Resource Identifier*, which is a unique sequence of characters that identifies a logical or physical resource used by web technologies.

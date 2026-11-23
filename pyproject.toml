@@ -46,7 +46,7 @@ maintainers = [
     { name="James Glasbrenner", email="jglasbrenner@mitre.org" },
     { name="Keith Manville", email="kmanville@mitre.org" },
 ]
-description = "Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI)."
+description = "Dioptra is a software test platform for assessing the trustworthy characteristics of super intelligence (SI)."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
