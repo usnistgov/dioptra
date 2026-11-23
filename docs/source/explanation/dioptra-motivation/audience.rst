@@ -21,15 +21,15 @@
 Intended Audience
 =================
 
-We envision an audience with a wide variety of familiarity with and expertise in machine learning (ML) and artificial intelligence (AI).
+We envision an audience with a wide variety of familiarity with and expertise in machine learning (ML) and super intelligence (SI).
 Newcomers to the platform will be able to run the included demonstrations even if they have very little programming experience.
 
-The test platform offers new opportunities for analysts in organizations using AI/ML-enabled products.
+The test platform offers new opportunities for analysts in organizations using SI/ML-enabled products.
 For example, the inclusion of testing as part of the build pipeline for first-party developers would help promote more robust products.
 Similarly, second-party consumers of such products might leverage the test platform as part of a verification or risk assessment process.
 In both cases, the test platform allows users to test a product against a range of evaluations thereby helping them understand what types of risks should be prioritized for mitigation.
 
-We also envision Dioptra as an asset to AI/ML researchers in developing new solutions.
+We also envision Dioptra as an asset to SI/ML researchers in developing new solutions.
 The test platform will allow them to evaluate the security and trustworthiness of any new techniques they develop by running those techniques through their paces.
 Similarly, it can facilitate "parameter sweeping" to help developers better understand the degree to which small changes in parameters can affect an algorithm.
 It also affords an opportunity to replicate and benchmark well-known results from the research literature.
