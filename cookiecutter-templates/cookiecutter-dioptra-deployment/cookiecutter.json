@@ -13,6 +13,7 @@
     "__restapi_https_port": "443",
     "__db_admin_username": "postgres",
     "__db_admin_database": "postgres",
+    "__mlflow_artifact_base_uri": "s3://mlflow-tracking/artifacts",
     "pgadmin_default_email": "dioptra@example.com",
     "num_tensorflow_cpu_workers": "1",
     "num_tensorflow_gpu_workers": "0",

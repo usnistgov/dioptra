@@ -239,7 +239,7 @@ volumes:
     - --host
     - "0.0.0.0"
     - --default-artifact-root
-    - "s3://mlflow-tracking/artifacts"
+    - "{{ cookiecutter.__mlflow_artifact_base_uri }}"
     - --backend-store-uri
     - {{ '$${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}' }}
     - --wait-for

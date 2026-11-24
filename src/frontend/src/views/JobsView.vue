@@ -44,8 +44,8 @@
   <ArtifactsDialog
     v-model="showArtifactsDialog"
     :editArtifact="''"
-    :expId="route.params.id"
-    :jobId="jobId"
+    :groupId="selected[0]?.group.id"
+    :jobId="selected[0]?.id"
   />
 
   <AssignTagsDialog
@@ -149,8 +149,6 @@ async function getJobs(pagination, showDrafts) {
 const showArtifactsDialog = ref(false);
 const showTagsDialog = ref(false);
 const editObjTags = ref({});
-
-const jobId = ref("");
 
 function pushToJobRoute() {
   if (route.name === "experimentJobs") {

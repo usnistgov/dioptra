@@ -135,21 +135,20 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         self,
         group_id: str | int,
         job_id: str | int,
-        artifact_uri: str,
+        artifact_path: str,
         plugin_snapshot_id: str | int | None = None,
         task_id: str | int | None = None,
         description: str | None = None,
     ) -> T:
-        """Creates an artifact and associates with an existing Job.
+        """Register a file or directory uploaded to an existing job's run.
 
-            Both plugin_snapshot_id and must be None or not None. If None, then the
-            artifact is unavailable for use as input into another job and may only be
-            downloaded.
+        Supply both the plugin snapshot ID and task ID to make the artifact
+        usable as an input to a later job.
 
         Args:
             group_id: The id of the group that will own the artifact.
             job_id: The id of the job that produced this artifact.
-            artifact_uri: The URI pointing to the location of the artifact.
+            artifact_path: The path relative to the producing run's artifact directory.
             plugin_snapshot_id: the plugin snapshot id of the plugin
                 containing the artifact task used to serialize/deserialize the artifact,
                 defaults to None.
@@ -164,7 +163,7 @@ class ArtifactsCollectionClient(CollectionClient[T]):
         json_: dict[str, Any] = {
             "group": int(group_id),
             "job": int(job_id),
-            "artifactUri": artifact_uri,
+            "artifactPath": artifact_path,
         }
 
         if plugin_snapshot_id is not None:

@@ -21,6 +21,7 @@ from urllib.parse import urlencode, urlunparse
 
 from marshmallow import Schema
 
+from dioptra.restapi import errors
 from dioptra.restapi.db import models
 from dioptra.restapi.routes import V1_ROOT
 
@@ -943,23 +944,43 @@ def build_artifact_value(artifact: models.Artifact) -> dict[str, Any]:
     }
 
 
+def require_artifact_location(artifact: models.Artifact) -> models.ArtifactLocation:
+    """Return the location shared by the artifact's snapshots.
+
+    Args:
+        artifact: Current or historical snapshot of the artifact resource.
+
+    Returns:
+        The artifact's recorded location and its producing storage prefix.
+
+    Raises:
+        JobStoreError: If either record is missing.
+    """
+    location = artifact.location
+    if location is None or location.storage_prefix is None:
+        raise errors.JobStoreError("The artifact has no complete storage location.")
+    return location
+
+
 def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
     """Build an Artifact response dictionary.
 
     Args:
-        artifact_dict: The Artifact object to convert into a ModelVeArtifactrsion
-            response dictionary.
+        artifact_dict: Artifact snapshot and its draft status.
 
     Returns:
         The Artifact response dictionary.
+
+    Raises:
+        JobStoreError: If the artifact has no stored location.
     """
     artifact = artifact_dict["artifact"]
+    location = require_artifact_location(artifact)
     has_draft = artifact_dict.get("has_draft")
 
     data = {
         "id": artifact.resource_id,
         "snapshot_id": artifact.resource_snapshot_id,
-        "uri": artifact.uri,
         "description": artifact.description,
         "user": build_user_ref(artifact.creator),
         "group": build_group_ref(artifact.resource.owner),
@@ -970,7 +991,7 @@ def build_artifact(artifact_dict: ArtifactDict) -> dict[str, Any]:
         == artifact.resource_snapshot_id,
         "tags": [build_tag_ref(tag) for tag in artifact.tags],
         "job_id": artifact.job_id,
-        "artifact_uri": artifact.uri,
+        "artifact_path": location.relative_path,
         "is_dir": artifact.is_dir,
         "file_size": artifact.file_size,
         "deleted": artifact.resource.is_deleted,

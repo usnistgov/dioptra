@@ -109,6 +109,9 @@ class _ConfigSchema(Schema):
     )
     RQ_REDIS_URI = _String(required=True, validate=[validate.Length(min=1), _redis_uri])
     MLFLOW_TRACKING_URI = _String(required=True, validate=validate.Length(min=1))
+    DIOPTRA_ARTIFACT_BASE_URI = _String(
+        required=True, allow_none=True, validate=validate.Length(min=1)
+    )
     DIOPTRA_RESTAPI_LOG_AS_JSON = _Boolean(required=True)
     DIOPTRA_RESTAPI_LOG_LEVEL = _String(
         required=True, validate=validate.OneOf(list(logging.getLevelNamesMapping()))
@@ -143,6 +146,7 @@ class BaseConfig:
     DIOPTRA_MAX_PAGE_SIZE = 1000
     RQ_REDIS_URI = "redis://"
     MLFLOW_TRACKING_URI: str | None = None
+    DIOPTRA_ARTIFACT_BASE_URI: str | None = None
     DIOPTRA_RESTAPI_LOG_AS_JSON = False
     DIOPTRA_RESTAPI_LOG_LEVEL = "INFO"
     _resolved = False
@@ -205,6 +209,7 @@ _ENVIRONMENT_SETTINGS = {
     "DIOPTRA_MAX_PAGE_SIZE": "DIOPTRA_MAX_PAGE_SIZE",
     "RQ_REDIS_URI": "RQ_REDIS_URI",
     "MLFLOW_TRACKING_URI": "MLFLOW_TRACKING_URI",
+    "DIOPTRA_ARTIFACT_BASE_URI": "DIOPTRA_ARTIFACT_BASE_URI",
     "DIOPTRA_RESTAPI_LOG_AS_JSON": "DIOPTRA_RESTAPI_LOG_AS_JSON",
     "DIOPTRA_RESTAPI_LOG_LEVEL": "DIOPTRA_RESTAPI_LOG_LEVEL",
 }

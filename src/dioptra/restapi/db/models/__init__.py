@@ -14,7 +14,7 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-from .artifacts import Artifact
+from .artifacts import Artifact, ArtifactLocation, ArtifactStoragePrefix
 from .entry_points import (
     EntryPoint,
     EntryPointArtifactOutputParameter,
@@ -77,6 +77,8 @@ from .users import User
 
 __all__ = [
     "Artifact",
+    "ArtifactLocation",
+    "ArtifactStoragePrefix",
     "ArtifactTask",
     "DraftResource",
     "EntryPoint",

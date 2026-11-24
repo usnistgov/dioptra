@@ -23,7 +23,7 @@ from marshmallow import Schema, fields
 from marshmallow.exceptions import ValidationError
 from structlog.stdlib import BoundLogger
 
-from dioptra.restapi.utils import validate_artifact_url
+from dioptra.restapi.utils import validate_artifact_path
 from dioptra.restapi.v1.file_types import FileTypes
 from dioptra.restapi.v1.plugins.schema import ArtifactTaskSchema
 from dioptra.restapi.v1.schemas import (
@@ -79,7 +79,7 @@ class ArtifactFileSchema(ArtifactFileMetadataSchema):
 
     relativePath = fields.String(
         attribute="relative_path",
-        metadata={"description": "Relative path to the Artifact URI."},
+        metadata={"description": "Path relative to the registered Artifact directory."},
         dump_only=True,
     )
 
@@ -159,13 +159,13 @@ class ArtifactSchema(
 ):
     """The schema for the data stored in an Artifact resource."""
 
-    # Not URL since this version of validate_url allows mlflow specific schemes
-    artifactUri = fields.String(
-        attribute="artifact_uri",
+    artifactPath = fields.String(
+        attribute="artifact_path",
         metadata={
-            "description": "URL pointing to the location of the Artifact resource."
+            "description": "Path of the uploaded artifact relative to the producing run."
         },
-        validate=validate_artifact_url,
+        required=True,
+        validate=validate_artifact_path,
     )
     jobId = fields.Int(
         attribute="job_id",

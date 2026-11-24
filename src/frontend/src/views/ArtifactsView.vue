@@ -52,7 +52,6 @@
   <ArtifactsDialog
     v-model="showAddEditDialog"
     :editArtifact="selected.length && editing ? selected[0] : ''"
-    @addArtifact="addArtifact"
     @updateArtifact="updateArtifact"
   />
   <DeleteDialog
@@ -113,21 +112,6 @@ const columns = [
   { name: "lastModifiedOn", label: "Last Modified", align: "left", field: "lastModifiedOn", sortable: true },
   { name: "download", label: "Download", align: "center" },
 ];
-
-async function addArtifact(name, group, description) {
-  try {
-    const res = await api.addItem("models", {
-      name,
-      description,
-      group,
-    });
-    showAddEditDialog.value = false;
-    notify.success(`Successfully created '${res.data.name}'`);
-    tableRef.value.refreshTable();
-  } catch (err) {
-    notify.error(err.response.data.message);
-  }
-}
 
 async function deleteModel() {
   try {

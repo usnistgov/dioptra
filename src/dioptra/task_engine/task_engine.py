@@ -530,6 +530,23 @@ def _load_artifact_parameters(
     artifacts_dir: Path,
     artifact_parameters: MutableMapping[str, Any],
 ) -> dict[str, Any]:
+    """Deserialize the artifact snapshots selected for this job.
+
+    The worker stages each snapshot in its own directory using the basename
+    of its run-relative path. Each deserializer receives that name and location.
+
+    Args:
+        deserialize_dir: Directory containing the selected artifact task modules.
+        artifacts_dir: Directory containing the staged snapshots.
+        artifact_parameters: Selected inputs keyed by parameter name.
+
+    Returns:
+        Deserialized values keyed by parameter name and output name.
+
+    Raises:
+        NonIterableTaskOutputError: If a task with multiple outputs returns a scalar.
+        SystemExit: If the selected artifact task cannot be found in its module.
+    """
     log = _get_logger()
 
     result: dict[str, dict[str, Any]] = {}
@@ -553,38 +570,36 @@ def _load_artifact_parameters(
                     f"plugin: {plugin_name} for artifact parameter: {name}"
                 )
                 exit(1)
-            uri_name = PurePosixPath(info["artifact_uri"]).name
-            value = value = task.deserialize(
-                working_dir=artifacts_dir / artifact_dir, path=uri_name
+            artifact_name = PurePosixPath(info["artifact_path"]).name
+            value = task.deserialize(
+                working_dir=artifacts_dir / artifact_dir, path=artifact_name
             )
-            result[name] = {}
             num_expected_outputs = len(outputs)
             if num_expected_outputs == 1:
-                result[name][outputs[0]["name"]] = value
-            else:
-                # Task plugin return value must be iterable.
-                if not util.is_iterable(value):
-                    raise NonIterableTaskOutputError(value, f"artifacts.{name}")
+                result[name] = {outputs[0]["name"]: value}
+                continue
 
-                # Support more general iterables as return values from tasks, which may
-                # not be len()-able.  If we can get a length, then we can sanity check
-                # the number of output names given against the number of output values
-                # produced by the task, and produce a warning if they don't match.
-                try:
-                    num_outputs = len(value)
-                except TypeError:
-                    num_outputs = None
+            if not util.is_iterable(value):
+                raise NonIterableTaskOutputError(value, f"artifacts.{name}")
 
-                if num_outputs is not None and num_outputs != num_expected_outputs:
-                    log.warning(
-                        "Different numbers of outputs and expected outputs for "
-                        'artifact parameter "%s": %d != %d',
-                        name,
-                        num_outputs,
-                        num_expected_outputs,
-                    )
-                for param, output_value in zip(outputs, value):
-                    result[name][param["name"]] = output_value
+            # Some deserializers return generators that cannot report a length.
+            try:
+                num_outputs = len(value)
+            except TypeError:
+                num_outputs = None
+
+            if num_outputs is not None and num_outputs != num_expected_outputs:
+                log.warning(
+                    "Different numbers of outputs and expected outputs for "
+                    'artifact parameter "%s": %d != %d',
+                    name,
+                    num_outputs,
+                    num_expected_outputs,
+                )
+            result[name] = {
+                param["name"]: output_value
+                for param, output_value in zip(outputs, value)
+            }
 
     return result
 

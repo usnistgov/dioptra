@@ -360,25 +360,19 @@ class DioptraFlaskClientSession(DioptraSession[DioptraResponseProtocol]):
                     f"{output_path.parent}"
                 ) from err
 
-        kwargs: dict[str, Any] = {}
-
-        if params:
-            kwargs["params"] = params
-
-        response = self._session.get(self.build_url(endpoint, *parts), **kwargs)
-
-        if not is_2xx(response.status_code):
-            LOGGER.debug(
-                "HTTP error code returned: status_code=%s  method=%s  url=%s  text=%s",
-                response.status_code,
-                response.request.method,
-                response.request.url,
-                response.text,
-            )
-            raise StatusCodeError(response.status_code, response.text)
-
-        with output_path.open(mode="wb") as f:
-            f.write(response.get_data(as_text=False))
+        with self._session.get(
+            self.build_url(endpoint, *parts), query_string=params
+        ) as response:
+            if not is_2xx(response.status_code):
+                LOGGER.debug(
+                    "HTTP error code returned: status_code=%s  method=%s  url=%s  text=%s",
+                    response.status_code,
+                    response.request.method,
+                    response.request.url,
+                    response.text,
+                )
+                raise StatusCodeError(response.status_code, response.text)
+            output_path.write_bytes(response.get_data())
 
         return output_path
 
