@@ -22,6 +22,7 @@ import structlog
 from flask_login import current_user
 from injector import inject
 from sqlalchemy import Integer, Select, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from structlog.stdlib import BoundLogger
 
@@ -49,13 +50,15 @@ from dioptra.restapi.v1.shared.search_parser import construct_sql_query_filters
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 SEARCHABLE_FIELDS: Final[dict[str, Any]] = {
-    "artifactUri": lambda x: models.Artifact.uri.like(x, escape="/"),
+    "artifactPath": lambda x: models.Artifact.location.has(
+        models.ArtifactLocation.relative_path.like(x, escape="/")
+    ),
     "description": lambda x: models.Artifact.description.like(x, escape="/"),
     "tag": lambda x: models.Artifact.tags.any(models.Tag.name.like(x, escape="/")),
 }
 SORTABLE_FIELDS: Final[dict[str, Any]] = {
     "id": models.Resource.resource_id,
-    "uri": models.Artifact.uri,
+    "artifactPath": models.ArtifactLocation.relative_path,
     "createdOn": models.Artifact.created_on,
     "lastModifiedOn": models.Resource.last_modified_on,
     "description": models.Artifact.description,
@@ -133,9 +136,11 @@ class ArtifactService(object):
         All arguments are provided via dependency injection.
 
         Args:
-            artifact_uri_service: An ArtifactUriService object.
-            job_id_service: A JobIdService object.
-            group_id_service: A GroupIdService object.
+            job_id_service: Service that retrieves the producing job.
+            job_id_mlflowrun_service: Service that reads the job's current run binding.
+            group_id_service: Service that resolves the artifact-owning group.
+            artifact_task_helper: Helper that resolves the optional artifact task.
+            job_run_store: Store that verifies the uploaded entry for the producing run.
         """
         self._job_id_service = job_id_service
         self._group_id_service = group_id_service
@@ -145,7 +150,7 @@ class ArtifactService(object):
 
     def create(
         self,
-        uri: str,
+        artifact_path: str,
         description: str,
         group_id: int,
         job_id: int,
@@ -154,68 +159,79 @@ class ArtifactService(object):
         commit: bool = True,
         **kwargs,
     ) -> utils.ArtifactDict:
-        """Create a new artifact.
+        """Register an uploaded file or directory under its producing run.
 
-            Both plugin_snapshot_id and must be None or not None. If None, then the
-            artifact is unavailable for use as input into another job and may only be
-            downloaded.
+        Each snapshot reads the file or directory uploaded by this job. To use
+        the artifact as input to another job, register its artifact task too.
+
+        Note:
+            Resetting a job during development starts a new run. Existing
+            artifacts continue to use the files from the run that produced them.
+
         Args:
-            uri: The uri of the artifact. This must be globally unique.
-            description: The description of the artifact.
-            group_id: The group that will own the artifact.
-            job_id: the job which owns/produced this artifact
-            plugin_snapshot_id: the plugin snapshot id of the plugin
-                containing the artifact task used to serialize/deserialize the artifact,
-                defaults to None.
-            task_id: the task id of the plugin artifact task used to
-                serialize/deserialize the artifact, defaults to None
-            commit: If True, commit the transaction. Defaults to True.
+            artifact_path: Canonical path relative to the producing run.
+            description: Description of the artifact.
+            group_id: Group that will own the artifact.
+            job_id: Job that produced the artifact.
+            plugin_snapshot_id: Plugin snapshot that contains the artifact task.
+            task_id: Artifact task for serialization and deserialization, if supplied.
+                Requires the plugin snapshot ID.
+            commit: Whether to commit the registration in this call.
+            **kwargs: Optional structured logger supplied as `log`.
 
         Returns:
-            utils.ArtifactDict: The newly created artifact object.
+            Newly registered artifact and its draft status.
 
         Raises:
-            EntityExistsError: If the artifact already exists.
-            MLFlowError: If the mlflow run id does not exist.
+            EntityDoesNotExistError: If the job, group or associated task is missing.
+            EntityExistsError: If this path is already registered for the run.
+            JobMlflowRunNotSetError: If the producing job has no bound run.
+            MlflowRunNotFoundError: If MLflow cannot find the bound run.
+            JobStoreError: If the uploaded entry could not be verified.
+            DioptraError: If the optional task association is invalid.
         """
         log: BoundLogger = kwargs.get("log", LOGGER.new())
 
         job_dict = self._job_id_service.get(job_id, log=log)
         job = job_dict["job"]
-        job_artifacts = job_dict["artifacts"]
         mlflow_run_id = self._job_id_mlflowrun_service.get(job_id=job_id, log=log)
 
         if mlflow_run_id is None:
             raise JobMlflowRunNotSetError
 
-        # check if an artifact with the same uri and job_id has already been created
-        duplicate = _find_artifact(job_artifacts, uri)
-        if duplicate is not None:
-            raise EntityExistsError(EntityType.ARTIFACT, duplicate.resource_id, uri=uri)
-        artifact = self._job_run_store.find_artifact(run_id=mlflow_run_id, uri=uri)
-
         group = self._group_id_service.get(group_id, error_if_not_found=True, log=log)
+        # UploadedArtifact describes the file or directory already in job run storage.
+        uploaded_artifact = self._job_run_store.find_artifact(
+            run_id=mlflow_run_id, artifact_path=artifact_path
+        )
 
         resource = models.Resource(
             resource_type=EntityType.ARTIFACT.db_table_name,
             owner=group,
         )
         new_artifact = models.Artifact(
-            uri=uri,
             description=description,
-            is_dir=artifact.is_dir,
-            file_size=artifact.file_size,
+            is_dir=uploaded_artifact.is_dir,
+            file_size=uploaded_artifact.file_size,
             resource=resource,
             creator=current_user,
         )
-        db.session.add(new_artifact)
-        job.children.append(new_artifact.resource)
-
         self._artifact_task_helper.associate_task(
             artifact=new_artifact,
             plugin_snapshot_id=plugin_snapshot_id,
             task_id=task_id,
         )
+
+        job.children.append(resource)
+        db.session.add(new_artifact)
+        # Start the registration write before checking whether the path is available.
+        db.session.flush()
+        prefix = _get_or_create_storage_prefix(uploaded_artifact.storage_prefix)
+        _check_duplicate_artifact(prefix.storage_prefix_id, artifact_path)
+        new_artifact.location = models.ArtifactLocation(
+            storage_prefix_id=prefix.storage_prefix_id, relative_path=artifact_path
+        )
+        db.session.flush()
 
         if commit:
             db.session.commit()
@@ -275,6 +291,11 @@ class ArtifactService(object):
         stmt = (
             select(func.count(models.Artifact.resource_id))
             .join(models.Resource)
+            .join(
+                models.ArtifactLocation,
+                models.ArtifactLocation.artifact_resource_id
+                == models.Artifact.resource_id,
+            )
             .where(
                 *filters,
                 models.Resource.is_deleted == False,  # noqa: E712
@@ -303,6 +324,11 @@ class ArtifactService(object):
         latest_artifacts_stmt = (
             select(models.Artifact)
             .join(models.Resource)
+            .join(
+                models.ArtifactLocation,
+                models.ArtifactLocation.artifact_resource_id
+                == models.Artifact.resource_id,
+            )
             .where(
                 *filters,
                 models.Resource.is_deleted == False,  # noqa: E712
@@ -497,7 +523,7 @@ class ArtifactIdService(object):
         has_draft = cast(bool, artifact_dict.get("has_draft"))
 
         new_artifact = models.Artifact(
-            uri=artifact.uri,  # pyright: ignore
+            location=artifact.location,  # pyright: ignore
             description=description,  # pyright: ignore
             resource=artifact.resource,  # pyright: ignore
             is_dir=artifact.is_dir,  # pyright: ignore
@@ -543,6 +569,7 @@ class ArtifactIdService(object):
         artifact_dict = self.get(artifact_id, log=log)
 
         artifact = artifact_dict["artifact"]
+        location = utils.require_artifact_location(artifact)
 
         return [
             utils.ArtifactFileDict(
@@ -551,16 +578,50 @@ class ArtifactIdService(object):
                 is_dir=element.is_dir,
             )
             for element in self._job_run_store.get_artifact_file_list(
-                base_uri=artifact.uri,
-                subfolder_path="",
+                storage_prefix=location.storage_prefix.relative_prefix,
+                artifact_path=location.relative_path,
             )
         ]
 
 
-def _find_artifact(
-    job_artifacts: list[models.Artifact], new_artifact_uri: str
-) -> models.Artifact | None:
-    for artifact in job_artifacts:
-        if new_artifact_uri == artifact.uri:
-            return artifact
-    return None
+def _get_or_create_storage_prefix(relative_prefix: str) -> models.ArtifactStoragePrefix:
+    """Find or create the run directory shared by registrations in this transaction."""
+    query = (
+        select(models.ArtifactStoragePrefix)
+        .where(models.ArtifactStoragePrefix.relative_prefix == relative_prefix)
+        .with_for_update()
+    )
+    prefix = db.session.scalar(query)
+    if prefix is not None:
+        return prefix
+
+    try:
+        with db.session.begin_nested():
+            prefix = models.ArtifactStoragePrefix(relative_prefix=relative_prefix)
+            db.session.add(prefix)
+            db.session.flush()
+    except IntegrityError:
+        # A concurrent registration may have created this prefix first.
+        existing = db.session.scalar(query)
+        if existing is None:
+            raise
+        return existing
+    return prefix
+
+
+def _check_duplicate_artifact(storage_prefix_id: int, artifact_path: str) -> None:
+    """Reject a second active artifact at the same storage location."""
+    duplicate_id = db.session.scalar(
+        select(models.ArtifactLocation.artifact_resource_id)
+        .join(models.Resource)
+        .where(
+            models.ArtifactLocation.storage_prefix_id == storage_prefix_id,
+            models.ArtifactLocation.relative_path == artifact_path,
+            models.Resource.is_deleted.is_(False),
+        )
+        .limit(1)
+    )
+    if duplicate_id is not None:
+        raise EntityExistsError(
+            EntityType.ARTIFACT, duplicate_id, artifact_path=artifact_path
+        )

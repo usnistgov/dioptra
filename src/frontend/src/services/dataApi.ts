@@ -62,7 +62,7 @@ type CreateParams = {
     description: string;
     group: number;
     job: number;
-    uri: string;
+    artifactPath: string;
   };
 };
 
@@ -442,15 +442,6 @@ export async function updateTags<T extends ResourceType>(type: T, id: number, ta
     return await axios.put(`/api/plugins/${id}/files/${fileId}/tags/`, { ids: tagIDs });
   }
   return await axios.put(`/api/${type}/${id}/tags`, { ids: tagIDs });
-}
-
-interface ArtifactParams {
-  description: string;
-  uri: string;
-}
-
-export async function addArtifact(expId: string, jobId: string, params: ArtifactParams) {
-  return await axios.post(`/api/experiments/${expId}/jobs/${jobId}/artifacts`, params);
 }
 
 export async function getArtifactFiles(id: string) {

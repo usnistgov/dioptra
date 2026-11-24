@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.bootstrap import JobRunStoreConfiguration
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
@@ -184,11 +185,20 @@ def app_factory(
             "SESSION_PROTECTION": None,
             "SQLALCHEMY_DATABASE_URI": "sqlite://",
             "MLFLOW_TRACKING_URI": "file:///unused-fixture-mlruns",
+            "DIOPTRA_ARTIFACT_BASE_URI": "s3://dioptra-fixtures/outputs",
             "RQ_REDIS_URI": "redis://",
         }
         settings.update(overrides)
+        injector = Injector(dependency_modules)
+        injector.binder.bind(
+            JobRunStoreConfiguration,
+            to=JobRunStoreConfiguration(
+                tracking_uri=settings["MLFLOW_TRACKING_URI"],
+                artifact_base_uri=settings["DIOPTRA_ARTIFACT_BASE_URI"],
+            ),
+        )
         return create_app(
-            mode, injector=Injector(dependency_modules), overrides=settings
+            mode, injector=injector, overrides=settings
         )
 
     return build

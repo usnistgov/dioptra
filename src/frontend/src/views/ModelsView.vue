@@ -138,10 +138,10 @@ const versionColumns = [
   { name: "versionNumber", label: "Version", align: "left", field: "versionNumber", sortable: true },
   { name: "description", label: "Description", align: "left", field: "description", sortable: true },
   {
-    name: "artifactURI",
-    label: "Artifact URI",
+    name: "artifactPath",
+    label: "Artifact Path",
     align: "left",
-    field: (row) => row.artifact.artifactUri,
+    field: (row) => row.artifact.artifactPath,
     sortable: true,
   },
   { name: "artifactURL", label: "Artifact URL", align: "left", field: (row) => row.artifact.url, sortable: true },
