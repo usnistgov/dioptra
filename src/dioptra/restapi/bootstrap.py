@@ -34,6 +34,19 @@ from dioptra.restapi.v1.shared.password_service import PasswordService
 from dioptra.restapi.v1.shared.rq_service import RQServiceV1
 
 
+@dataclass(frozen=True)
+class JobRunStoreConfiguration:
+    """Hold the resolved settings used for MLflow artifact access.
+
+    Attributes:
+        tracking_uri: Tracking service selected by the API configuration.
+        artifact_base_uri: Physical root shared by Dioptra and MLflow, if set.
+    """
+
+    tracking_uri: str | None
+    artifact_base_uri: str | None
+
+
 class JobRunStoreModule(Module):
     """Provide the MLflow-backed job run store in request scope."""
 
@@ -42,16 +55,20 @@ class JobRunStoreModule(Module):
     def provide_job_run_store_module(
         self,
         client: MlflowClient,
+        configuration: JobRunStoreConfiguration,
     ) -> JobRunStoreProtocol:
         """Wrap the injected MLflow client in a job run store.
 
         Args:
             client: MLflow client used for run storage.
+            configuration: Application settings used to resolve artifact locations.
 
         Returns:
             The request-scoped MLflow-backed job run store.
         """
-        return MlFlowJobRunStore(client)
+        return MlFlowJobRunStore(
+            client, configuration.tracking_uri, configuration.artifact_base_uri
+        )
 
 
 @dataclass
@@ -121,9 +138,13 @@ def _bind_rq_service_configuration(binder: Binder, settings: BaseConfig):
 
 
 def _bind_job_run_store_configuration(binder: Binder, settings: BaseConfig):
-    """Bind an MLflow client using the resolved tracking URI."""
+    """Bind the MLflow client and its matching artifact access settings."""
     tracking_uri = settings.MLFLOW_TRACKING_URI
     binder.bind(MlflowClient, to=MlflowClient(tracking_uri=tracking_uri), scope=request)
+    binder.bind(
+        JobRunStoreConfiguration,
+        to=JobRunStoreConfiguration(tracking_uri, settings.DIOPTRA_ARTIFACT_BASE_URI),
+    )
 
 
 def _bind_password_service_configuration(binder: Binder):

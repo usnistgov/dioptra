@@ -78,7 +78,7 @@ set_display_env_details(){
 ###########################################################################################
 read_properties_from_file()
 {
-  file=`grep -v '^#\|^\s*$' ${1} | sed 's/\r//'`
+  file=`grep -v '^#\|^\s*$' "${1}" | sed 's/\r//'`
   echo "Reading environment from config file: $file"
 
   while IFS="=" read -r key value; do
@@ -93,6 +93,9 @@ read_properties_from_file()
       "DIOPTRA_DEPLOY_DIR") 
         ### Expand ~/ path just in-case it wasn't fully resolved
         export DIOPTRA_DEPLOY="${value/#\~/$HOME}"
+        ;;
+      "DIOPTRA_ARTIFACT_BASE_URI")
+        export DIOPTRA_ARTIFACT_BASE_URI="$value"
         ;;
       "DIOPTRA_CONFIG_INFO")
         export DIOPTRA_CONFIG_INFO="$value"
@@ -186,6 +189,7 @@ read_cli_parameters()
 ### Script Main-Body
 ##################################################################################
 ### Make sure that we begin with clean environment variables to avoid hybrid swamp
+unset DIOPTRA_ARTIFACT_BASE_URI
 unset DIOPTRA_ENV_FILE
 unset DIOPTRA_BRANCH
 unset DIOPTRA_CODE
@@ -213,7 +217,7 @@ fi
 
 ############################################
 ### Run the main parameter-reading logic ###
-read_cli_parameters $@
+read_cli_parameters "$@"
 
 
 if [ -z "$DIOPTRA_BRANCH" ] || [ -z "$DIOPTRA_CODE" ] || [ -z "$DIOPTRA_DEPLOY" ]; then
@@ -256,6 +260,12 @@ else
   alias frontend='cd ${DIOPTRA_CODE}/src/frontend'
 
   ######## Setup REST-API Configuration
+  if [ -z "${DIOPTRA_ARTIFACT_BASE_URI:-}" ]; then
+    DIOPTRA_ARTIFACT_BASE_URI=$(uv run --no-project python -c \
+      'import sys; from pathlib import Path; print(Path(sys.argv[1]).resolve().as_uri())' \
+      "${DIOPTRA_DEPLOY}/mlflow/runs") || return 1
+    export DIOPTRA_ARTIFACT_BASE_URI
+  fi
   export DIOPTRA_RESTAPI_DATABASE_URI="sqlite:///${DIOPTRA_DEPLOY}/instance/dioptra-dev.db"
   export DIOPTRA_RESTAPI_SECRET_KEY_FILE="${DIOPTRA_DEPLOY}/restapi/secret-key"
   export DIOPTRA_RESTAPI_ENV=dev

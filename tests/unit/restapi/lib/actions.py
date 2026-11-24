@@ -224,7 +224,7 @@ def register_tag(
 
 def register_artifact(
     client: FlaskClient,
-    uri: str,
+    artifact_path: str,
     job_id: int,
     group_id: int,
     description: str | None = None,
@@ -233,7 +233,7 @@ def register_artifact(
 
     Args:
         client: The Flask test client.
-        uri: The URI of the artifact
+        artifact_path: Path of the uploaded file relative to the job's run.
         job_id: The job to create the new artifact.
         group_id: The group to create the new artifact in.
         description: The description of the new artifact.
@@ -241,7 +241,7 @@ def register_artifact(
     Returns:
         The response from the API.
     """
-    payload = {"artifactUri": uri, "job": job_id, "group": group_id}
+    payload = {"artifactPath": artifact_path, "job": job_id, "group": group_id}
 
     if description is not None:
         payload["description"] = description

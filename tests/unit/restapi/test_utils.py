@@ -22,7 +22,7 @@ import pytest
 from marshmallow import ValidationError
 
 from dioptra.client.base import DioptraResponseProtocol, SubCollectionClient
-from dioptra.restapi.utils import find_non_unique, validate_artifact_url
+from dioptra.restapi.utils import find_non_unique, validate_artifact_path
 
 
 def assert_http_response_matches_expected(
@@ -171,26 +171,39 @@ def test_find_non_unique():
 
 
 @pytest.mark.parametrize(
-    "url",
+    "path",
     [
-        ("http://www.example.org/some/path/to/a/file"),
-        ("file:////some/path/to/a/file"),
-        ("https://www.example.org/some/path/to/a/file"),
-        ("mlflow-artifacts:/0/911421d1835f4e6bbdfa6d0a79f65d45/artifacts/my_artifact"),
+        "reports/first run/summary.v2.csv",
+        ".hidden/_signed-1",
     ],
 )
-def test_validate_valid_url(url: str):
-    validate_artifact_url(url)
+def test_validate_portable_artifact_path(path: str) -> None:
+    """Accept portable uploaded file names including ordinary spaces and periods."""
+    validate_artifact_path(path)
 
 
 @pytest.mark.parametrize(
-    "url",
+    "path",
     [
-        ("file:////some/../path/to/a/file"),
-        ("imap://www.example.org"),
-        ("https:://www.example.org"),
+        "https://example.invalid/report.csv",
+        "/report.csv",
+        "reports/../report.csv",
+        "./report.csv",
+        "reports/./report.csv",
+        "reports//report.csv",
+        "reports/",
+        "",
+        "reports\\report.csv",
+        "reports%2Freport.csv",
+        "AUX.txt",
+        "report.",
+        "report ",
+        "report\t.csv",
+        "report\n.csv",
+        "résumé.csv",
     ],
 )
-def test_validate_invalid_url(url: str):
+def test_reject_noncanonical_artifact_path(path: str) -> None:
+    """Reject names that are ambiguous across storage systems or outside the run."""
     with pytest.raises(ValidationError):
-        validate_artifact_url(url)
+        validate_artifact_path(path)

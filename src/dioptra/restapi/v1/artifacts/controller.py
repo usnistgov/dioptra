@@ -20,22 +20,24 @@ import mimetypes
 import shutil
 import tempfile
 import uuid
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Generator
+from typing import cast
 from urllib.parse import unquote
 
 import structlog
-from flask import Response, request
+from flask import Response, request, send_file
 from flask_accepts import accepts, responds
 from flask_login import login_required
 from flask_restx import Namespace, Resource
 from injector import inject
 from structlog.stdlib import BoundLogger
+from werkzeug.wsgi import ClosingIterator
 
 from dioptra.restapi.db import models
 from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
-from dioptra.restapi.utils import verify_filename_is_safe
+from dioptra.restapi.utils import validate_artifact_child_path
 from dioptra.restapi.v1 import utils
 from dioptra.restapi.v1.entity_types import EntityType
 from dioptra.restapi.v1.file_types import FileTypes
@@ -136,7 +138,7 @@ class ArtifactEndpoint(Resource):
         parsed_obj = request.parsed_obj
 
         artifact = self._artifact_service.create(
-            uri=parsed_obj["artifact_uri"],
+            artifact_path=parsed_obj["artifact_path"],
             description=parsed_obj["description"],
             group_id=parsed_obj["group_id"],
             job_id=parsed_obj["job_id"],
@@ -352,13 +354,13 @@ ArtifactSnapshotsIdResource = generate_resource_snapshots_id_endpoint(
 def _handle_artifact_contents(
     job_run_store: JobRunStoreProtocol, artifact: models.Artifact, log: BoundLogger
 ) -> Response:
+    """Validate the contents request shared by current and historical snapshots."""
     parsed_query_params = request.parsed_query_params  # type: ignore # noqa: F841
 
     path: str | None = parsed_query_params.get("path")
-    if path:
-        # validate the path
+    if path is not None:
         try:
-            verify_filename_is_safe(path)
+            validate_artifact_child_path(path)
         except ValueError as e:
             log.error("Query Parameter validation failed.", error=e)
             raise QueryParameterValidationError(
@@ -379,34 +381,32 @@ def _handle_artifact_contents(
             constraint="file_type query parameter may not be provided for a file",
         )
 
-    tmp_dir = tempfile.mkdtemp()
-
-    mimetype, result_path = _download_artifacts(
-        job_run_store=job_run_store,
-        tmp_dir=tmp_dir,
-        artifact=artifact,
-        path=path,
-        file_type=file_type,
-    )
-
-    def generate() -> Generator:
-        with result_path.open("rb") as f:
-            yield from f
-        shutil.rmtree(tmp_dir)
-
-    response = Response(
-        generate(),
-        mimetype=mimetype,
-        direct_passthrough=True,
-    )
-
-    response.headers.set(
-        "Content-Disposition",
-        "attachment",
-        filename=result_path.name,
-    )
-
-    return response
+    directory = tempfile.TemporaryDirectory()
+    stream = None
+    try:
+        mimetype, result_path = _download_artifacts(
+            job_run_store=job_run_store,
+            tmp_dir=directory.name,
+            artifact=artifact,
+            path=path,
+            file_type=file_type,
+        )
+        stream = result_path.open("rb")
+        response = send_file(
+            stream,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=result_path.name,
+        )
+        # The WSGI server closes this iterator on completion or disconnect.
+        file_iterator = cast(Iterable[bytes], response.response)
+        response.response = ClosingIterator(file_iterator, directory.cleanup)
+        return response
+    except Exception:
+        if stream is not None:
+            stream.close()
+        directory.cleanup()
+        raise
 
 
 def _download_artifacts(
@@ -416,12 +416,13 @@ def _download_artifacts(
     path: str | None,
     file_type: FileTypes | None,
 ) -> tuple[str, Path]:
-    """
-    A helper function for downloading the artifact(s) and preparing them for
-    download
-    """
+    """Prepare a file or directory archive from a snapshot's saved location."""
+    location = utils.require_artifact_location(artifact)
     result = job_run_store.download_artifacts(
-        artifact_uri=artifact.uri, path=path, destination=Path(tmp_dir)
+        storage_prefix=location.storage_prefix.relative_prefix,
+        artifact_path=location.relative_path,
+        path=path,
+        destination=Path(tmp_dir),
     )
     if result.is_dir():
         if file_type is None:

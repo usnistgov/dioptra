@@ -7,7 +7,7 @@ _dioptra_worker_lib="${DIOPTRA_WORKER_LIB:-tensorflow-cpu}"
 echo "Your current BASH_VERSION is $BASH_VERSION"
 echo "which bash command points to $(which bash)"
 
-cd ${DIOPTRA_CODE}
+cd "${DIOPTRA_CODE}"
 
 # Exit early and print message if uv is not installed
 if ! command -v uv >/dev/null 2>&1; then
@@ -19,7 +19,7 @@ fi
 
 # Ensure your environment is up-to-date
 uv sync --extra worker --extra "${_dioptra_worker_lib}"
-source ${DIOPTRA_VENV}/bin/activate
+source "${DIOPTRA_VENV}/bin/activate"
 dioptra-api init-key
 dioptra-db autoupgrade
 exec dioptra-api dev "$@"

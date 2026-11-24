@@ -24,6 +24,7 @@ from dioptra.restapi.v1.type_coercions import (
     GlobalParameterType,
     coerce_entrypoint_param_types,
 )
+from dioptra.restapi.v1.utils import require_artifact_location
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -55,24 +56,27 @@ def build_job_artifacts_dict(
     job_artifact_values: list[models.EntryPointArtifactParameterValue],
     logger: BoundLogger | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Builds a dict of a job's parameters coerce types as appropriate.
+    """Describe artifact inputs by the snapshots fixed when the job was submitted.
 
     Args:
-        values: a list of EntryPointArtifactValue instances.
-        logger: A structlog logger object to use for logging. A new logger will be
-            created if None.
+        job_artifact_values: Bound artifact-valued entrypoint inputs.
+        logger: Structured logger to use for this export.
 
     Returns:
-        The a dict of the names of the parameters mapped to their type.
+        Input names mapped to their snapshot IDs, relative paths and task metadata.
+
+    Raises:
+        JobStoreError: If a referenced artifact has no recorded location.
     """
     log = logger or LOGGER.new()  # noqa: F841
 
     artifacts: dict[str, dict[str, Any]] = {}
     for value in job_artifact_values:
+        location = require_artifact_location(value.artifact)
         artifacts[value.artifact_parameter.name] = {
             "artifact_id": value.artifact.resource_id,
             "artifact_snapshot_id": value.artifact.resource_snapshot_id,
-            "artifact_uri": value.artifact.uri,
+            "artifact_path": location.relative_path,
             "is_dir": value.artifact.is_dir,
             "artifact_task": {
                 "plugin_id": value.artifact.plugin_plugin_file.plugin.resource_id,

@@ -285,6 +285,23 @@ def _download_artifacts(
     dioptra_client: DioptraClient[dict[str, Any]],
     log: BoundLogger,
 ) -> dict[str, Any]:
+    """Download the files and plugin code needed to read this job’s artifact inputs.
+
+    Inputs from different snapshots can have the same filename. Each snapshot
+    gets a separate directory so its deserializer can open the original name.
+
+    Args:
+        job_id: Resource ID of the consuming job.
+        context: Working directories for the job and its downloaded inputs.
+        dioptra_client: Authenticated client for the selected job.
+        log: Logger associated with the job.
+
+    Returns:
+        Artifact input metadata keyed by parameter name.
+
+    Raises:
+        StatusCodeError: If the API rejects an input or task download.
+    """
     artifact_params = dioptra_client.jobs.get_artifact_parameters(job_id=job_id)
     _save_as_json(context.artifact_parameters_file, artifact_params)
     for artifact in artifact_params.values():
@@ -305,7 +322,7 @@ def _download_artifacts(
             dioptra_client.artifacts.snapshots.get_contents(
                 artifact_id=artifact["artifact_id"],
                 artifact_snapshot_id=artifact["artifact_snapshot_id"],
-                file_stem=PurePosixPath(artifact["artifact_uri"]).name,
+                file_stem=PurePosixPath(artifact["artifact_path"]).name,
                 output_dir=artifact_dir,
             )
 
@@ -335,7 +352,21 @@ def _register_artifacts(
     dioptra_client: DioptraClient[dict[str, Any]],
     artifact_results_file: Path,
 ) -> None:
-    # load up the artifacts.json file
+    """Upload and register the outputs reported by the task engine.
+
+    MLflow stores each file or directory under the output name from the job.
+    Dioptra records that path so later jobs can download the same output.
+
+    Args:
+        group_id: Owning group for the registered artifacts.
+        job_id: Resource ID of the job bound to the active MLflow run.
+        dioptra_client: Authenticated client for the producing job.
+        artifact_results_file: Task engine manifest of outputs and artifact tasks.
+
+    Raises:
+        mlflow.exceptions.MlflowException: If MLflow cannot upload an output.
+        StatusCodeError: If the API rejects a registration.
+    """
     artifacts: list[ArtifactOutputEntry] = []
     if artifact_results_file.exists():
         artifacts = cast(
@@ -343,15 +374,14 @@ def _register_artifacts(
             _load_json(filepath=artifact_results_file).get("artifacts", []),
         )
     for artifact in artifacts:
-        artifact_path_name = PurePosixPath(artifact["path"]).name
-        # add artifact to mlflow
-        mlflow.log_artifact(local_path=artifact["path"], artifact_path=artifact["name"])
-        uri = mlflow.get_artifact_uri(f"{artifact['name']}/{artifact_path_name}")
-        # add artifact to dioptra_client
+        local_path = artifact["path"]
+        output_name = artifact["name"]
+        artifact_path = f"{output_name}/{PurePosixPath(local_path).name}"
+        mlflow.log_artifact(local_path=local_path, artifact_path=output_name)
         dioptra_client.artifacts.create(
             group_id=group_id,
             job_id=job_id,
-            artifact_uri=uri,
+            artifact_path=artifact_path,
             plugin_snapshot_id=artifact["task_plugin_snapshot_id"],
             task_id=artifact["task_id"],
             description=(

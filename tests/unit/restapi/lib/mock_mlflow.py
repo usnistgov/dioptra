@@ -19,7 +19,7 @@ import contextlib
 import dataclasses
 import time
 import uuid
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -30,7 +30,7 @@ from structlog.stdlib import BoundLogger
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
 
-PREFIX: str = "mlflow-artifacts:////some/storage/location"
+PREFIX: str = "s3://dioptra-fixtures/outputs"
 
 
 class MockMlflowException(Exception):
@@ -135,6 +135,11 @@ class MockMlflowRunInfo(object):
         LOGGER.info("Mocking mlflow.entities.RunInfo.run_id getter")
         return self._run_id
 
+    @property
+    def artifact_uri(self) -> str:
+        """Return the artifact directory owned by this test run."""
+        return f"{PREFIX}/{self._experiment_id}/{self._run_id}/artifacts"
+
 
 @dataclasses.dataclass
 class MockArtifact:
@@ -182,7 +187,7 @@ class MockMlflowArtifactStore(object):
             if e not in store:
                 store[e] = MockArtifact(
                     mlflow.entities.FileInfo(
-                        path=f"{'/'.join(elements[:i])}/{e}",
+                        path="/".join(elements[: i + 1]),
                         is_dir=True,
                         file_size=None,
                     )
@@ -202,22 +207,43 @@ class MockMlflowArtifactStore(object):
             name=None,
         )
 
-    def list(self, path: str | None = None) -> list[mlflow.entities.FileInfo]:
-        def list_artifact(artifact: MockArtifact) -> list[mlflow.entities.FileInfo]:
-            if len(artifact.children) == 0:
-                return [artifact.info]
-            result = []
-            for child in artifact.children.values():
-                result.extend(list_artifact(child))
-            return result
+    @property
+    def artifact_uri(self) -> str:
+        """Return the configured URI of the test run's repository."""
+        return self.get_artifact_uri("")
 
-        if path is not None:
-            return list_artifact(self._get_entry(path))
+    def list_artifacts(self, path: str | None = None) -> list[mlflow.entities.FileInfo]:
+        """Return immediate entries of a test directory, matching MLflow listings.
 
-        result = []
-        for element in self._store.values():
-            result.extend(list_artifact(element))
-        return result
+        Args:
+            path: Directory to list, or None for the run's artifact root.
+
+        Returns:
+            Files and subdirectories immediately below the requested directory.
+        """
+        children = self._store
+        if path:
+            for component in path.split("/"):
+                entry = children.get(component)
+                if entry is None or not entry.info.is_dir:
+                    return []
+                children = entry.children
+        return [entry.info for entry in children.values()]
+
+    def download_artifacts(self, artifact_path: str, dst_path: str) -> str:
+        """Materialize one test file under its run-relative path.
+
+        Args:
+            artifact_path: Run-relative path of the selected file.
+            dst_path: Local root for the materialized file.
+
+        Returns:
+            Path of the downloaded file.
+        """
+        output = Path(dst_path, artifact_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text("test contents", encoding="UTF-8", newline="")
+        return str(output)
 
 
 class MockMlflowRun(contextlib.AbstractContextManager):
@@ -282,6 +308,19 @@ class MockMlflowClient(object):
         """
         MockState.registered_runs.pop(run_id, None)
 
+    def get_experiment(self, experiment_id: str) -> mlflow.entities.Experiment:
+        """Return the experiment rooted under the configured test bucket.
+
+        Args:
+            experiment_id: ID whose directory the tracking client should describe.
+
+        Returns:
+            Tracking metadata with the corresponding artifact root.
+        """
+        return mlflow.entities.Experiment(
+            experiment_id, "Default", f"{PREFIX}/{experiment_id}", "active"
+        )
+
     def get_run(self, run_id: str) -> MockMlflowRun:
         # Note: In Mlflow, this function would usually throw an MlflowException
         # if the run id is not found. For simplicity this is left out in favor of
@@ -296,7 +335,7 @@ class MockMlflowClient(object):
     def list_artifacts(
         self, run_id: str, path: str | None = None
     ) -> list[mlflow.entities.FileInfo]:
-        return self.get_run(run_id).artifacts.list(path=path)
+        return self.get_run(run_id).artifacts.list_artifacts(path=path)
 
 
 def _create_run(
@@ -373,7 +412,7 @@ def get_artifact_uri(artifact_path: str) -> str:
 
 
 # the assumed uri format for MLFlow is something like:
-# scheme:{path prefix}/runs/<experiment id>/<run id>/artifacts/<artifact_path>/<name>
+# scheme:{path prefix}/<experiment id>/<run id>/artifacts/<artifact_path>/<name>
 def _build_artifact_uri(
     path_prefix: str,
     experiment_id: int,
@@ -381,7 +420,7 @@ def _build_artifact_uri(
     artifact_path: str | None,
     name: str | None,
 ) -> str:
-    result = f"{path_prefix}/runs/{experiment_id}/{run_id}/artifacts"
+    result = f"{path_prefix}/{experiment_id}/{run_id}/artifacts"
     if artifact_path:
         result += "/" + artifact_path
     if name:
@@ -402,23 +441,21 @@ def _parse_artifact_uri(uri: str) -> Tuple[str, str]:
     parsed_uri = urlparse(uri)
     elements = parsed_uri.path.split("/")
     # raises value error if uri is not formatted as expected
-    index = elements.index("runs")
-
-    return (elements[index + 2], "/".join(elements[index + 4 :]))
-
-
-# mocks for mlflow.artifacts
-def list_artifacts(artifact_uri: str) -> list[mlflow.entities.FileInfo]:
-    LOGGER.info("Mocking mlflow.artifacts.list_artifacts function")
-    elements = _parse_artifact_uri(artifact_uri)
-    return MockState.registered_runs[elements[0]].artifacts.list(elements[1])
+    index = len(urlparse(PREFIX).path.split("/"))
+    return (elements[index + 1], "/".join(elements[index + 3 :]))
 
 
-def download_artifacts(artifact_uri: str, dst_path: str) -> str:
-    LOGGER.info("Mocking mlflow.artifacts.download_artifacts function")
-    # just write something to a file
-    Path(dst_path, PurePosixPath(artifact_uri).name).write_text(
-        "test contents", encoding="UTF-8", newline=""
-    )
-    # do nothing other than return the dst_path
-    return dst_path
+def get_artifact_repository(
+    artifact_uri: str, tracking_uri: str | None = None
+) -> MockMlflowArtifactStore:
+    """Select the test repository associated with the configured run URI.
+
+    Args:
+        artifact_uri: Configured root of the selected run.
+        tracking_uri: Tracking selection supplied by the API.
+
+    Returns:
+        Test repository listing run-relative entries.
+    """
+    run_id, _ = _parse_artifact_uri(artifact_uri)
+    return MockState.registered_runs[run_id].artifacts

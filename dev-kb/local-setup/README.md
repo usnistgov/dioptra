@@ -77,6 +77,9 @@ DIOPTRA_GIT_BRANCH=dev
 ### Deployment Path location; stores files created during runs
 DIOPTRA_DEPLOY_DIR=~/di/di-dep
 
+### Optional override if MLflow uses a different artifact destination
+# DIOPTRA_ARTIFACT_BASE_URI=file:///srv/dioptra/mlflow/runs
+
 ### The source code location
 DIOPTRA_CODE_DIR=~/di/di-src
 
@@ -200,6 +203,7 @@ The `setup.sh` script will setup working and source directories using the config
 
 -   DIOPTRA_GIT_BRANCH
 -   DIOPTRA_DEPLOY_DIR
+-   DIOPTRA_ARTIFACT_BASE_URI [OPTIONAL]. Defaults to the file URI for `mlflow/runs` under the deployment directory. Set this to match MLflow’s `--artifacts-destination` if you use a different location.
 -   DIOPTRA_CODE_DIR
 -   DIOPTRA_WORKER_LIB
 -   DIOPTRA_CONFIG_INFO [OPTIONAL]

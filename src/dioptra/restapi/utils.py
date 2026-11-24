@@ -31,7 +31,6 @@ from collections import Counter
 from importlib.resources import as_file, files
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any, Callable, Iterable, List, Protocol, Type, cast
-from urllib.parse import urlparse
 
 from flask.views import View
 from flask_restx import Api, Namespace, Resource, inputs
@@ -52,6 +51,10 @@ from .custom_schema_fields import FileUpload, MultiFileUpload
 DOTS_REGEX = re.compile(r"^\.\.\.+$")
 ALLOWED_RESOURCE_NAME_REGEX = re.compile(r"\A(?! +\Z)[A-Za-z0-9_. -]+\Z")
 ALLOWED_PLUGIN_NAME_REGEX = re.compile(r"\A(?:[A-Za-z]|[A-Za-z_][A-Za-z0-9_]+)\Z")
+ARTIFACT_COMPONENT_REGEX = re.compile(r"[A-Za-z0-9_. -]+")
+RESERVED_DEVICE_NAME_REGEX = re.compile(
+    r"CON|PRN|AUX|NUL|(?:COM|LPT)[1-9]", re.IGNORECASE
+)
 
 
 class ParametersSchema(TypedDict, total=False):
@@ -233,35 +236,47 @@ def read_json_file(package: str, filename: str) -> Any:
         return json.loads(fp.read_text())
 
 
-def validate_artifact_url(url: str) -> None:
-    try:
-        result = urlparse(url)
-    except ValueError:
-        raise ValidationError("Failed to parse URL") from None
+def validate_artifact_path(path: str) -> None:
+    """Check that an artifact name can be used on both Windows and Unix.
 
-    # only allow these schemes
-    if result.scheme not in [
-        "http",
-        "https",
-        "ftp",
-        "ftps",
-        "sftp",
-        "file",
-        "mlflow-artifacts",
-        "s3",
-    ]:
-        raise ValidationError("Not a valid scheme")
+    Dioptra stores this path exactly as given. Each file or directory name
+    must work on either platform when a worker downloads the artifact.
 
-    # network location required if not a file
-    if result.scheme not in ["file", "mlflow-artifacts"] and (
-        result.netloc is None or result.netloc == ""
-    ):
-        raise ValidationError("Location is required")
+    Args:
+        path: Raw artifact path with components separated by forward slashes.
 
-    try:
-        verify_filename_is_safe(result.path, relative=False, absolute=True)
-    except ValueError:
-        raise ValidationError("URL is not absolute") from None
+    Raises:
+        ValidationError: If the path contains a disallowed or ambiguous component.
+    """
+    if not isinstance(path, str):
+        raise ValidationError("An artifact path must be a string.")
+    for component in path.split("/"):
+        stem = component.partition(".")[0].rstrip(" ")
+        if (
+            not ARTIFACT_COMPONENT_REGEX.fullmatch(component)
+            or component.endswith((".", " "))
+            or RESERVED_DEVICE_NAME_REGEX.fullmatch(stem)
+        ):
+            raise ValidationError(
+                "Use a relative artifact path with portable file or directory names."
+            )
+
+
+def validate_artifact_child_path(path: str) -> None:
+    """Check that a path names a file or directory inside the registered artifact.
+
+    Files inside an uploaded directory keep their original names, including
+    spaces and Unicode characters.
+
+    Args:
+        path: Decoded child path from the API query or an artifact listing.
+
+    Raises:
+        ValueError: If the path does not name a relative descendant.
+    """
+    if path in ("", ".") or re.search(r"[\x00-\x1f\x7f]", path):
+        raise ValueError("The artifact child path is invalid.")
+    verify_filename_is_safe(path)
 
 
 def verify_filename_is_safe(
