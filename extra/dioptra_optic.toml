@@ -227,8 +227,8 @@ description = "A collection of basic artifact tasks."
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
-  name = "PickleArtifactTask"
-  output_params = [ { name = "array", type = "any" } ]
+  name = "SklearnModelArtifactTask"
+  output_params = [ { name = "model", type = "any" } ]
 
   [[plugins.tasks.artifacts]]
   filename = "tasks.py"
