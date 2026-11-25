@@ -2,7 +2,7 @@ artifacts:
   model:
     contents: $model
     task:
-      name: PickleArtifactTask
+      name: SklearnModelArtifactTask
   predictions:
     contents: $predictions
     task:

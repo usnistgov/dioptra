@@ -221,6 +221,7 @@ worker = [
     "opencv-python>=4",
     "pyarrow>=18.0.0",
     "scikit-learn>=1.8.0",
+    "skops>=0.16.0",
     "tensorflow-metadata<1.21.0",
 ]
 

@@ -14,7 +14,6 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-import pickle
 import tarfile
 from collections.abc import ByteString
 from typing import Callable, Dict, Literal, Optional, Sequence
@@ -24,10 +23,13 @@ import pandas as pd
 import structlog
 from structlog.stdlib import BoundLogger
 
+# isort: split
 # [artifact-task-imports]
-from dioptra.sdk.api.artifact import ArtifactTaskInterface
 from pathlib import Path
 from typing import Any
+
+from dioptra.sdk.api.artifact import ArtifactTaskInterface
+
 # [end-artifact-task-imports]
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -43,6 +45,11 @@ class UnsupportedDataFrameFileFormatError(Exception):
 
 class UnsupportedTarFileFormatError(Exception):
     """The tar file format was unexpected."""
+
+
+class UnsafeArtifactFormatError(ValueError):
+    """The artifact format permits unsafe object deserialization."""
+
 
 # [example-artifact-task]
 class StringArtifactTask(ArtifactTaskInterface):
@@ -61,7 +68,10 @@ class StringArtifactTask(ArtifactTaskInterface):
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return {"type": {"type": "string"}}
+
+
 # [end-example-artifact-task]
+
 
 class BytesArtifactTask(ArtifactTaskInterface):
     @staticmethod
@@ -166,7 +176,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
         compression.
         - `feather` - A binary feather file.
         - `json` - A plain text JSON file.
-        - `pickle` - A binary pickle file.
         - `parquet` - A parquet file
 
         Args:
@@ -185,7 +194,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             - :py:meth:`pandas.DataFrame.to_csv`
             - :py:meth:`pandas.DataFrame.to_feather`
             - :py:meth:`pandas.DataFrame.to_json`
-            - :py:meth:`pandas.DataFrame.to_pickle`
             - :py:meth:`pandas.DataFrame.to_parquet`
         """
         filepath: Path = working_dir / name
@@ -196,7 +204,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             "csv.xz": {"func": contents.to_csv, "ext": ".csv.xz"},
             "feather": {"func": contents.to_feather, "ext": ".feather"},
             "json": {"func": contents.to_json, "ext": ".json"},
-            "pickle": {"func": contents.to_pickle, "ext": ".pkl"},
             "parquet": {"func": contents.to_parquet, "ext": ".parquet"},
         }
 
@@ -230,7 +237,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             ".xz": {"func": pd.read_csv, "args": {"index_col": 0}},
             ".feather": {"func": pd.read_feather, "args": {}},
             ".json": {"func": pd.read_json, "args": {}},
-            ".pkl": {"func": pd.read_pickle, "args": {}},
             ".parquet": {"func": pd.read_parquet, "args": {}},
         }
 
@@ -249,7 +255,15 @@ class DataframeArtifactTask(ArtifactTaskInterface):
     def validation() -> dict[str, Any]:
         return {
             "format": {
-                "enum": ["csv", "bz2", "gz", "xz", "feather", "json", "pkl", "parquet"]
+                "enum": [
+                    "csv",
+                    "csv.bz2",
+                    "csv.gz",
+                    "csv.xz",
+                    "feather",
+                    "json",
+                    "parquet",
+                ]
             }
         }
 
@@ -263,7 +277,11 @@ class NumpyArrayArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> np.ndarray:
-        return np.load(working_dir / path, **kwargs)
+        if kwargs.pop("allow_pickle", False):
+            raise UnsafeArtifactFormatError(
+                "NumPy artifacts cannot enable pickle loading"
+            )
+        return np.load(working_dir / path, allow_pickle=False, **kwargs)
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
@@ -290,25 +308,45 @@ class NumpyArraysArtifactTask(ArtifactTaskInterface):
 
     @staticmethod
     def deserialize(working_dir: Path, path: str, **kwargs) -> dict[str, np.ndarray]:
-        return dict(list(np.load(working_dir / path, **kwargs).items()))
+        if kwargs.pop("allow_pickle", False):
+            raise UnsafeArtifactFormatError(
+                "NumPy artifacts cannot enable pickle loading"
+            )
+        with np.load(working_dir / path, allow_pickle=False, **kwargs) as arrays:
+            return dict(arrays.items())
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
         return None
 
 
-class PickleArtifactTask(ArtifactTaskInterface):
+class SklearnModelArtifactTask(ArtifactTaskInterface):
+    """Persist sklearn models using skops' built-in trusted types only.
+
+    Custom types are deliberately unsupported. Never derive a trust list from
+    the artifact or accept one from task arguments.
+    """
+
     @staticmethod
     def serialize(working_dir: Path, name: str, contents: Any, **kwargs) -> Path:
-        path = (working_dir / name).with_suffix(".pkl")
-        with open(path, "wb") as f:
-            pickle.dump(contents, f, **kwargs)
+        import skops.io as sio
+
+        if kwargs:
+            raise ValueError("SklearnModelArtifactTask does not accept task arguments")
+        data = sio.dumps(contents)
+        if sio.get_untrusted_types(data=data):
+            raise UnsafeArtifactFormatError("Model contains unsupported custom types")
+        path = (working_dir / name).with_suffix(".skops")
+        path.write_bytes(data)
         return path
 
     @staticmethod
-    def deserialize(working_dir: Path, path: str, **kwargs) -> Path:
-        with open(working_dir / path, "wb") as f:
-            return pickle.load(f, **kwargs)
+    def deserialize(working_dir: Path, path: str, **kwargs) -> Any:
+        import skops.io as sio
+
+        if kwargs:
+            raise ValueError("SklearnModelArtifactTask does not accept task arguments")
+        return sio.load(working_dir / path, trusted=[])
 
     @staticmethod
     def validation() -> dict[str, Any] | None:
