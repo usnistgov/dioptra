@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.client.jobs &#8212; Dioptra 1.2.3 documentation</title>
+    <title>dioptra.client.jobs &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -170,14 +170,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -186,6 +189,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -248,6 +254,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -285,6 +292,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -593,22 +601,6 @@ document.write(`
 <span class="sd">            The response from the Dioptra API.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_mlflow_run_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mlflow_run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Sets the MLflow run id for a job.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            job_id: The job id, an integer.</span>
-<span class="sd">            mlflow_run_id: The UUID as a string for the associated MLflow run.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The response from the Dioptra API.</span>
-<span class="sd">        """</span>
-        <span class="n">json_</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"mlflowRunId"</span><span class="p">:</span> <span class="n">mlflow_run_id</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">job_id</span><span class="p">),</span> <span class="n">MLFLOW_RUN</span><span class="p">,</span> <span class="n">json_</span><span class="o">=</span><span class="n">json_</span><span class="p">)</span>
 
 <div class="viewcode-block" id="JobsCollectionClient.get_parameters"><a class="viewcode-back" href="../../../reference/python-client/jobs-client-methods.html#dioptra.client.jobs.JobsCollectionClient.get_parameters">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Gets the parameters for a job.</span>

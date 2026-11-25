@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Download the Container Images &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Download the Container Images &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>

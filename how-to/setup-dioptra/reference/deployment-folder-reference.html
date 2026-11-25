@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Deployment Folder Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Deployment Folder Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -456,6 +464,7 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-tree">Folder Tree</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-directory">config/ Directory</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-ssl-toml">config/ssl.toml</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-db">config/db/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-rustfs">config/rustfs/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-nginx">config/nginx/</a></li>
@@ -471,9 +480,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-directory">ssl/ Directory</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-ca-certificates">ssl/ca-certificates/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-db">ssl/db/</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-nginx">ssl/nginx/</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-restapi-and-ssl-nginx">ssl/restapi/ and ssl/nginx/</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-private-directory">.ssl-private/ Directory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-backups">Certificate Backups</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-directory">systemd/ Directory</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#root-directory">Root Directory</a></li>
 </ul>
@@ -489,7 +500,7 @@ document.write(`
                   
   <section id="deployment-folder-reference">
 <span id="reference-deployment-folder"></span><h1>Deployment Folder Reference<a class="headerlink" href="#deployment-folder-reference" title="Permalink to this headline">#</a></h1>
-<p>This reference describes the files and folders created by the Dioptra deployment cookiecutter template.
+<p>This reference describes the files and folders created by the Dioptra deployment cookiecutter template and deployment initialization.
 Understanding this structure will help you customize and troubleshoot your deployment.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -502,13 +513,20 @@ If you set this variable to a different value, the prefixes will change accordin
 </div>
 <section id="folder-tree">
 <h2>Folder Tree<a class="headerlink" href="#folder-tree" title="Permalink to this headline">#</a></h2>
-<p>The following tree shows all files created by the template with annotations explaining their purpose.</p>
+<p>The following tree shows the deployment layout, including certificate files and private state created by initialization.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>.
+├── .ssl-private/
+│   ├── ca/
+│   │   ├── ca.crt
+│   │   └── ca.key
+│   ├── deployment-state.json
+│   └── operations/
 ├── config/
 │   ├── db/
 │   │   └── init-db.sh
 │   ├── rustfs/
 │   │   └── mlflow-tracking-readwrite-policy.json
+│   ├── ssl.toml
 │   └── nginx/
 │       ├── http_*.conf
 │       ├── https_*.conf
@@ -535,6 +553,7 @@ If you set this variable to a different value, the prefixes will change accordin
 │   ├── init-rustfs.sh
 │   ├── init-named-volumes.m4
 │   ├── init-scripts.sh
+│   ├── manage_ssl.py
 │   ├── manage-postgres-ssl.m4
 │   └── set-permissions.m4
 ├── secrets/
@@ -542,10 +561,16 @@ If you set this variable to a different value, the prefixes will change accordin
 │   └── postgres-passwd.env
 ├── ssl/
 │   ├── ca-certificates/
+│   │   ├── dioptra-local-ca.crt
 │   │   └── README.md
 │   ├── db/
 │   │   └── README.md
+│   ├── restapi/
+│   │   ├── server.crt
+│   │   └── server.key
 │   └── nginx/
+│       ├── server.crt
+│       ├── server.key
 │       └── README.md
 ├── systemd/
 │   └── dioptra.service
@@ -561,7 +586,12 @@ If you set this variable to a different value, the prefixes will change accordin
 </section>
 <section id="config-directory">
 <h2>config/ Directory<a class="headerlink" href="#config-directory" title="Permalink to this headline">#</a></h2>
-<p>Contains configuration files that are copied into named volumes during deployment initialization.</p>
+<p>Contains service and certificate configuration files.</p>
+<section id="config-ssl-toml">
+<h3>config/ssl.toml<a class="headerlink" href="#config-ssl-toml" title="Permalink to this headline">#</a></h3>
+<p>Configures the deployment hostname and certificates for the REST API and nginx, including whether Dioptra generates the certificates or uses certificates you supply.
+See <a class="reference internal" href="ssl-toml-reference.html#reference-ssl-toml"><span class="std std-ref">ssl.toml Configuration Reference</span></a> for the available settings.</p>
+</section>
 <section id="config-db">
 <h3>config/db/<a class="headerlink" href="#config-db" title="Permalink to this headline">#</a></h3>
 <dl class="simple">
@@ -591,14 +621,14 @@ If you set this variable to a different value, the prefixes will change accordin
 <li><p><code class="docutils literal notranslate"><span class="pre">http_dbadmin.conf</span></code> - pgadmin4 dashboard</p></li>
 </ul>
 </dd>
-<dt><strong>https_*.conf</strong></dt><dd><p>Configure NGINX to serve each service over HTTPS connections (used when SSL/TLS is enabled):</p>
+<dt><strong>https_*.conf</strong></dt><dd><p>Configure NGINX to serve each service over HTTPS connections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">https_default.conf</span></code> - HTTPS defaults, including paths to server certificate and private key</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">https_proxy.conf</span></code> - Reverse proxy settings for HTTPS</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">https_restapi.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_mlflow.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_rustfs.conf</span></code>, <code class="docutils literal notranslate"><span class="pre">https_dbadmin.conf</span></code> - HTTPS versions of each service</p></li>
 </ul>
 </dd>
-<dt><strong>stream_db.conf</strong></dt><dd><p>Configures NGINX to proxy TCP requests to the PostgreSQL database. This is a simple passthrough; any SSL encryption must be enabled in the PostgreSQL service itself.</p>
+<dt><strong>stream_db.conf</strong></dt><dd><p>Configures NGINX to proxy TCP requests to the PostgreSQL database. This is a simple passthrough. Any SSL encryption must be enabled in the PostgreSQL service itself.</p>
 </dd>
 </dl>
 </section>
@@ -638,6 +668,7 @@ If you set this variable to a different value, the prefixes will change accordin
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_ENV</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_SECRET_KEY_FILE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLFLOW_S3_ENDPOINT_URL</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MLFLOW_TRACKING_URI</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">RQ_REDIS_URI</span></code></p></li>
@@ -663,7 +694,7 @@ If you set this variable to a different value, the prefixes will change accordin
 </section>
 <section id="scripts-directory">
 <h2>scripts/ Directory<a class="headerlink" href="#scripts-directory" title="Permalink to this headline">#</a></h2>
-<p>Contains initialization scripts used by <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code>.</p>
+<p>Contains deployment initialization scripts and <code class="docutils literal notranslate"><span class="pre">manage_ssl.py</span></code> for certificate maintenance.</p>
 <section id="scripts-templates">
 <h3>scripts/templates/<a class="headerlink" href="#scripts-templates" title="Permalink to this headline">#</a></h3>
 <p>Jinja2 templates used to generate configuration files:</p>
@@ -684,6 +715,9 @@ If you set this variable to a different value, the prefixes will change accordin
 <dt><strong>generate_password_templates.py</strong></dt><dd><p>Python script that generates random passwords to secure Dioptra’s services.</p>
 </dd>
 <dt><strong>init-deployment.sh</strong> (see Root Directory section)</dt><dd><p>Main initialization script.</p>
+</dd>
+<dt><strong>manage_ssl.py</strong></dt><dd><p>Deployment certificate initialization, validation, replacement and recovery.
+See <a class="reference internal" href="manage-ssl-reference.html#reference-manage-ssl"><span class="std std-ref">manage_ssl.py Command Reference</span></a>.</p>
 </dd>
 <dt><strong>init-rustfs.sh</strong></dt><dd><p>Sets RustFS policies defined in <code class="docutils literal notranslate"><span class="pre">config/rustfs/</span></code>.</p>
 </dd>
@@ -736,31 +770,67 @@ If you set this variable to a different value, the prefixes will change accordin
 </section>
 <section id="ssl-directory">
 <h2>ssl/ Directory<a class="headerlink" href="#ssl-directory" title="Permalink to this headline">#</a></h2>
-<p>Contains SSL/TLS certificates and private keys.</p>
+<p>Contains service certificates, private keys, and public CA certificates.
+The generated CA’s private key is stored separately under <code class="docutils literal notranslate"><span class="pre">.ssl-private/</span></code>.</p>
 <section id="ssl-ca-certificates">
 <h3>ssl/ca-certificates/<a class="headerlink" href="#ssl-ca-certificates" title="Permalink to this headline">#</a></h3>
-<p>Place extra CA certificates here if your environment uses an internal certificate authority.
-Initialization also copies these certificates and the updated CA bundle into the <code class="docutils literal notranslate"><span class="pre">rustfs-certs</span></code> and <code class="docutils literal notranslate"><span class="pre">rc-ca-certificates</span></code> volumes for RustFS and its client.
-See <a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> for details.</p>
+<p>Contains public root CA certificates trusted by Dioptra’s services.
+<code class="docutils literal notranslate"><span class="pre">dioptra-local-ca.crt</span></code> is the public certificate for Dioptra’s generated CA.
+Additional certificates use PEM format and <code class="docutils literal notranslate"><span class="pre">.crt</span></code> filenames.
+See <a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a> for details.</p>
 </section>
 <section id="ssl-db">
 <h3>ssl/db/<a class="headerlink" href="#ssl-db" title="Permalink to this headline">#</a></h3>
 <p>Place the PostgreSQL server certificate (<code class="docutils literal notranslate"><span class="pre">server.crt</span></code>) and private key (<code class="docutils literal notranslate"><span class="pre">server.key</span></code>) here to enable encrypted database connections.
-See <a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> for details.</p>
+See <a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> for details.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The private key file (<code class="docutils literal notranslate"><span class="pre">server.key</span></code>) is sensitive. <strong>DO NOT commit it to version control.</strong></p>
 </div>
 </section>
-<section id="ssl-nginx">
-<h3>ssl/nginx/<a class="headerlink" href="#ssl-nginx" title="Permalink to this headline">#</a></h3>
-<p>Place the NGINX server certificate (<code class="docutils literal notranslate"><span class="pre">server.crt</span></code>) and private key (<code class="docutils literal notranslate"><span class="pre">server.key</span></code>) here to enable HTTPS.
-See <a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> for details.</p>
+<section id="ssl-restapi-and-ssl-nginx">
+<h3>ssl/restapi/ and ssl/nginx/<a class="headerlink" href="#ssl-restapi-and-ssl-nginx" title="Permalink to this headline">#</a></h3>
+<p>Each directory contains <code class="docutils literal notranslate"><span class="pre">server.crt</span></code>, holding the server certificate followed by any required intermediate certificates, and <code class="docutils literal notranslate"><span class="pre">server.key</span></code>, holding its matching private key.
+Initialization creates these files for generated certificates or validates files you supply.
+Directory modes are <code class="docutils literal notranslate"><span class="pre">0700</span></code>, private keys <code class="docutils literal notranslate"><span class="pre">0600</span></code> and public certificates <code class="docutils literal notranslate"><span class="pre">0644</span></code>.
+See <a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> for initial setup and <a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a> for replacing existing certificates.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The private key file (<code class="docutils literal notranslate"><span class="pre">server.key</span></code>) is sensitive. <strong>DO NOT commit it to version control.</strong></p>
 </div>
 </section>
+</section>
+<section id="ssl-private-directory">
+<h2>.ssl-private/ Directory<a class="headerlink" href="#ssl-private-directory" title="Permalink to this headline">#</a></h2>
+<p>Contains the generated CA, certificate installation records, and files used for recovery.
+These files are owned by the deployment user.
+The directory and its subdirectories use mode <code class="docutils literal notranslate"><span class="pre">0700</span></code>.
+Private keys and installation and operation records use <code class="docutils literal notranslate"><span class="pre">0600</span></code>.</p>
+<dl class="simple">
+<dt><strong>ca/ca.key and ca/ca.crt</strong></dt><dd><p>The private key and public certificate for Dioptra’s generated CA.
+The key is used to issue deployment certificates.</p>
+</dd>
+<dt><strong>deployment-state.json</strong></dt><dd><p>Records the installed certificates and the status of certificate operations.
+Managed by <code class="docutils literal notranslate"><span class="pre">manage_ssl.py</span></code>.</p>
+</dd>
+<dt><strong>operations/</strong></dt><dd><p>Stores replacement certificates and keys, together with the previous files needed to resume or undo a certificate operation.
+See <a class="reference internal" href="../recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a> before changing or removing these files.</p>
+</dd>
+</dl>
+</section>
+<section id="certificate-backups">
+<span id="reference-deployment-certificate-backups"></span><h2>Certificate Backups<a class="headerlink" href="#certificate-backups" title="Permalink to this headline">#</a></h2>
+<p>Retain a protected backup of the following files and directories:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config/ssl.toml</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.ssl-private/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ssl/restapi/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code></p></li>
+<li><p>The public CA certificate files used by the deployment under <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code>.</p></li>
+</ul>
+<p>Backups containing private keys require the same restricted access as the live files.
+Do not commit these backups to version control or share them with users configuring certificate trust.
+The generated CA’s private key is needed to issue new certificates using the same CA.</p>
 </section>
 <section id="systemd-directory">
 <h2>systemd/ Directory<a class="headerlink" href="#systemd-directory" title="Permalink to this headline">#</a></h2>
@@ -864,6 +934,7 @@ See <a class="reference internal" href="../configure-setup/data-mounts.html#how-
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#folder-tree">Folder Tree</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config-directory">config/ Directory</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-ssl-toml">config/ssl.toml</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-db">config/db/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-rustfs">config/rustfs/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#config-nginx">config/nginx/</a></li>
@@ -879,9 +950,11 @@ See <a class="reference internal" href="../configure-setup/data-mounts.html#how-
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-directory">ssl/ Directory</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-ca-certificates">ssl/ca-certificates/</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-db">ssl/db/</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-nginx">ssl/nginx/</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-restapi-and-ssl-nginx">ssl/restapi/ and ssl/nginx/</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-private-directory">.ssl-private/ Directory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-backups">Certificate Backups</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-directory">systemd/ Directory</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#root-directory">Root Directory</a></li>
 </ul>

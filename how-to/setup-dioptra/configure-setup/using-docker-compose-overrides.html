@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Use Docker Compose Override Files &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Use Docker Compose Override Files &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Customize Your Setup</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -541,7 +549,7 @@ To modify a service, specify the service name and only the properties you want t
 <ul class="simple">
 <li><p><strong>Scalar values</strong> (strings, numbers): Override file values replace base values</p></li>
 <li><p><strong>Lists</strong> (like <code class="docutils literal notranslate"><span class="pre">volumes:</span></code> or <code class="docutils literal notranslate"><span class="pre">ports:</span></code>): Items are appended, not replaced</p></li>
-<li><p><strong>Mappings</strong> (like <code class="docutils literal notranslate"><span class="pre">environment:</span></code>): Keys are merged; override values take precedence</p></li>
+<li><p><strong>Mappings</strong> (like <code class="docutils literal notranslate"><span class="pre">environment:</span></code>): Keys are merged. Override values take precedence</p></li>
 </ul>
 </section>
 <section class="header-on-a-card header-steps" id="step-3-add-your-customizations">
@@ -565,6 +573,14 @@ To modify a service, specify the service name and only the properties you want t
 <span class="w">      </span><span class="nt">NVIDIA_VISIBLE_DEVICES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 </pre></div>
 </div>
+<p id="how-to-compose-overrides-nginx-connection"><strong>Example: Reaching nginx from a developer container</strong></p>
+<p>If the SSL manager cannot reach nginx from a developer container or another machine, set the connection address:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">x-dioptra</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nginx-connect-host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">host.docker.internal</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">host.docker.internal</span></code> with a hostname or IP address through which the manager can reach nginx on its published HTTPS port.
+Do not include a URL scheme, port or path.</p>
 <p><strong>Example: Using a custom-built image for a specific worker</strong></p>
 <p>If you are using downloaded images but need to use a custom-built image for a specific worker (e.g., a modified GPU worker), you can override the image for that service.
 This is useful because downloaded and locally built images have different registry prefixes.
@@ -607,11 +623,12 @@ See <a class="reference internal" href="../get-container-images/index.html#how-t
 </section>
 <section class="header-on-a-card header-steps" id="step-4-apply-your-changes">
 <h3>Step 4: Apply Your Changes<a class="headerlink" href="#step-4-apply-your-changes" title="Permalink to this headline">#</a></h3>
-<p>After modifying the override file, restart the deployment to apply changes:</p>
+<p>If you changed service settings, restart the deployment:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>down
 docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
 </pre></div>
 </div>
+<p>Changes to <code class="docutils literal notranslate"><span class="pre">x-dioptra.nginx-connect-host</span></code> take effect the next time you run <code class="docutils literal notranslate"><span class="pre">manage_ssl.py</span></code>.</p>
 <p>Verify the configuration was applied:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>config
 </pre></div>
@@ -626,7 +643,7 @@ docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> 
 <li><p><a class="reference internal" href="data-mounts.html#how-to-data-mounts"><span class="std std-ref">Mount Data Volumes</span></a> - Mount data volumes into worker containers</p></li>
 <li><p><a class="reference internal" href="gpu-enabled-workers.html#how-to-gpu-enabled-workers"><span class="std std-ref">Configure GPU Workers</span></a> - Configure GPU assignments</p></li>
 <li><p><a class="reference internal" href="integrating-custom-containers.html#how-to-integrating-custom-containers"><span class="std std-ref">Integrate Custom Containers</span></a> - Add custom containers</p></li>
-<li><p><a class="reference internal" href="enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> - Enable SSL/TLS encryption</p></li>
+<li><p><a class="reference internal" href="enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> - Configure SSL/TLS certificates</p></li>
 </ul>
 <p><strong>Reference:</strong></p>
 <ul class="simple">

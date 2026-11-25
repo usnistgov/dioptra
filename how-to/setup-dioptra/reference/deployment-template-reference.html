@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Deployment Template Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Deployment Template Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -516,7 +524,7 @@ If you are using locally built images instead, set this to an empty string.</p>
 </section>
 <section id="container-tag">
 <h3>container_tag<a class="headerlink" href="#container-tag" title="Permalink to this headline">#</a></h3>
-<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code></p>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">1.2.4</span></code></p>
 <p>This should match the tags of the Dioptra container images you will be using.
 If you are using Docker, you can see the available tags by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">images</span></code>.
 If you built the images manually using the build commands in the repository, the images will have the <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag.</p>
@@ -544,15 +552,18 @@ Multiple mounts should be separated by spaces, for example: <code class="docutil
 </section>
 <section id="nginx-server-name">
 <h3>nginx_server_name<a class="headerlink" href="#nginx-server-name" title="Permalink to this headline">#</a></h3>
-<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code></p>
-<p>If you are hosting Dioptra on a remote machine, such as a virtual private server, then this will either be a domain name like <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code> or the IP address you use to access the machine.
-If you are running Dioptra on your personal computer or laptop, then answer <code class="docutils literal notranslate"><span class="pre">_</span></code> (underscore).</p>
+<p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">localhost</span></code></p>
+<p>The DNS name or IP address used to access Dioptra over HTTPS.
+Keep <code class="docutils literal notranslate"><span class="pre">localhost</span></code> for local access, or supply the hostname or IP address your users will use.
+Do not include a URL scheme, port, path, or wildcard.</p>
+<p>The template uses this value for <code class="docutils literal notranslate"><span class="pre">host</span></code> in the <code class="docutils literal notranslate"><span class="pre">[public]</span></code> section of <code class="docutils literal notranslate"><span class="pre">config/ssl.toml</span></code>.
+See <a class="reference internal" href="ssl-toml-reference.html#reference-ssl-public-host"><span class="std std-ref">ssl.toml Configuration Reference</span></a> for hostname requirements.</p>
 </section>
 <section id="nginx-expose-ports-on-localhost-only">
 <h3>nginx_expose_ports_on_localhost_only<a class="headerlink" href="#nginx-expose-ports-on-localhost-only" title="Permalink to this headline">#</a></h3>
 <p><strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 <p>Choosing <code class="docutils literal notranslate"><span class="pre">True</span></code> will generate a <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> file that binds the NGINX ports to the loopback interface (localhost, 127.0.0.1).
-In this configuration, you will need to use port forwarding via SSH or a firewall in order to access the services from another machine.
+Access from another machine requires SSH port forwarding or a change to the published bind address.
 If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the NGINX ports will be exposed on all available network interfaces.</p>
 <p><strong>Recommendations:</strong></p>
 <ul class="simple">
@@ -632,10 +643,10 @@ The values between the square brackets <code class="docutils literal notranslate
 Press Enter to accept the default, or type a new value.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>deployment_name [Dioptra deployment]: Dioptra deployment
 container_registry [ghcr.io/usnistgov]:
-container_tag [1.2.3]: 1.2.3
+container_tag [1.2.4]: 1.2.4
 docker_compose_path [docker compose]: docker compose
 systemd_required_mounts []:
-nginx_server_name [dioptra.example.org]: _
+nginx_server_name [localhost]:
 Select nginx_expose_ports_on_localhost_only:
 1 - True
 2 - False
@@ -661,17 +672,17 @@ The folder name will be a slugified version of the <strong>deployment_name</stro
 <p>For automated deployments or when you want to avoid interactive prompts, you can use one of these methods.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> with the Dioptra branch that matches your container images (for example, <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases or <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
 </div>
 <p><strong>Use all defaults:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input
 </pre></div>
 </div>
 <p><strong>Override specific values on the command line:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">'{"datasets_directory": "~/datasets", "nginx_server_name": "_"}'</span>
+<span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">'{"datasets_directory": "~/datasets"}'</span>
 </pre></div>
 </div>
 <p><strong>Override values from a JSON file:</strong></p>
@@ -679,13 +690,12 @@ The folder name will be a slugified version of the <strong>deployment_name</stro
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"deployment_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"My Dioptra Deployment"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"datasets_directory"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/data/ml-datasets"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"nginx_server_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"_"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"num_tensorflow_cpu_workers"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Then run:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--extra-context-file<span class="w"> </span>overrides.json
 </pre></div>

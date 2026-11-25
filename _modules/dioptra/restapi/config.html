@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dioptra.restapi.config &#8212; Dioptra 1.2.3 documentation</title>
+    <title>dioptra.restapi.config &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -170,14 +170,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -186,6 +189,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -248,6 +254,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -285,6 +292,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -428,6 +436,7 @@ document.write(`
 <span class="sd">instance; importing this module never reads deployment settings or key files.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
@@ -438,6 +447,7 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_url</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentError</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">.authorities</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_authorities</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.key_file</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_windows</span><span class="p">,</span> <span class="n">_resolve_key_file</span><span class="p">,</span> <span class="n">_validate_key_content</span><span class="p">,</span> <span class="n">read_key</span>
 
 
@@ -486,9 +496,13 @@ document.write(`
 <span class="k">class</span><span class="w"> </span><span class="nc">_ConfigSchema</span><span class="p">(</span><span class="n">Schema</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Validate the resolved application settings and their constraints."""</span>
 
+    <span class="n">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">List</span><span class="p">(</span>
+        <span class="n">_String</span><span class="p">(),</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate_authorities</span>
+    <span class="p">)</span>
     <span class="n">DEBUG</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">TESTING</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">LOGIN_DISABLED</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">SESSION_COOKIE_SECURE</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">REMEMBER_COOKIE_SECURE</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">SQLALCHEMY_TRACK_MODIFICATIONS</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">USE_MOCK_EQUIVALENCY</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -511,6 +525,9 @@ document.write(`
     <span class="p">)</span>
     <span class="n">RQ_REDIS_URI</span> <span class="o">=</span> <span class="n">_String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="p">[</span><span class="n">validate</span><span class="o">.</span><span class="n">Length</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">_redis_uri</span><span class="p">])</span>
     <span class="n">MLFLOW_TRACKING_URI</span> <span class="o">=</span> <span class="n">_String</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="o">.</span><span class="n">Length</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">DIOPTRA_ARTIFACT_BASE_URI</span> <span class="o">=</span> <span class="n">_String</span><span class="p">(</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="o">.</span><span class="n">Length</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">DIOPTRA_RESTAPI_LOG_AS_JSON</span> <span class="o">=</span> <span class="n">_Boolean</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">DIOPTRA_RESTAPI_LOG_LEVEL</span> <span class="o">=</span> <span class="n">_String</span><span class="p">(</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="o">.</span><span class="n">OneOf</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()))</span>
@@ -525,6 +542,7 @@ document.write(`
 <span class="sd">    """</span>
 
     <span class="n">CONFIG_NAME</span> <span class="o">=</span> <span class="s2">"base"</span>
+    <span class="n">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">SECRET_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">SECRET_KEY_FILE</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">USE_MOCK_EQUIVALENCY</span> <span class="o">=</span> <span class="kc">False</span>
@@ -534,6 +552,7 @@ document.write(`
     <span class="n">SQLALCHEMY_DATABASE_URI</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">REMEMBER_COOKIE_NAME</span> <span class="o">=</span> <span class="s2">"dioptra_remember_token"</span>
     <span class="n">REMEMBER_COOKIE_DURATION</span> <span class="o">=</span> <span class="mi">1209600</span>
+    <span class="n">SESSION_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">REMEMBER_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">LOGIN_DISABLED</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">SESSION_PROTECTION</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">"strong"</span>
@@ -543,6 +562,7 @@ document.write(`
     <span class="n">DIOPTRA_MAX_PAGE_SIZE</span> <span class="o">=</span> <span class="mi">1000</span>
     <span class="n">RQ_REDIS_URI</span> <span class="o">=</span> <span class="s2">"redis://"</span>
     <span class="n">MLFLOW_TRACKING_URI</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">DIOPTRA_ARTIFACT_BASE_URI</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">DIOPTRA_RESTAPI_LOG_AS_JSON</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">DIOPTRA_RESTAPI_LOG_LEVEL</span> <span class="o">=</span> <span class="s2">"INFO"</span>
     <span class="n">_resolved</span> <span class="o">=</span> <span class="kc">False</span>
@@ -560,11 +580,7 @@ document.write(`
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">config_by_name</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">CONFIG_NAME</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"CONFIG_NAME must match the resolved configuration class."</span><span class="p">)</span>
         <span class="n">_validate_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONFIG_NAME</span> <span class="o">==</span> <span class="s2">"prod"</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"DEBUG must be False in production."</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">LOGIN_DISABLED</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"LOGIN_DISABLED must be False in production."</span><span class="p">)</span>
+        <span class="n">_validate_production_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECRET_KEY_FILE</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SECRET_KEY_FILE must be a resolved absolute path."</span><span class="p">)</span>
@@ -586,9 +602,11 @@ document.write(`
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ProductionConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Packaged defaults for explicit production mode."""</span>
+<span class="w">    </span><span class="sd">"""Packaged production defaults requiring HTTPS session and remember cookies."""</span>
 
     <span class="n">CONFIG_NAME</span> <span class="o">=</span> <span class="s2">"prod"</span>
+    <span class="n">SESSION_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">REMEMBER_COOKIE_SECURE</span> <span class="o">=</span> <span class="kc">True</span>
 
 
 <span class="n">config_by_name</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"dev"</span><span class="p">:</span> <span class="n">DevelopmentConfig</span><span class="p">,</span> <span class="s2">"prod"</span><span class="p">:</span> <span class="n">ProductionConfig</span><span class="p">}</span>
@@ -596,6 +614,7 @@ document.write(`
 <span class="c1"># Only current environment inputs belong here. Other Flask attributes can be</span>
 <span class="c1"># overridden explicitly, while SECRET_KEY and CONFIG_NAME have dedicated sources.</span>
 <span class="n">_ENVIRONMENT_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"DIOPTRA_TLS_ALLOWED_AUTHORITIES"</span><span class="p">:</span> <span class="s2">"DIOPTRA_TLS_ALLOWED_AUTHORITIES"</span><span class="p">,</span>
     <span class="s2">"LOGIN_DISABLED"</span><span class="p">:</span> <span class="s2">"DIOPTRA_LOGIN_DISABLED"</span><span class="p">,</span>
     <span class="s2">"SESSION_PROTECTION"</span><span class="p">:</span> <span class="s2">"DIOPTRA_SESSION_PROTECTION"</span><span class="p">,</span>
     <span class="s2">"REMEMBER_COOKIE_DURATION"</span><span class="p">:</span> <span class="s2">"DIOPTRA_REMEMBER_COOKIE_DURATION"</span><span class="p">,</span>
@@ -606,6 +625,7 @@ document.write(`
     <span class="s2">"DIOPTRA_MAX_PAGE_SIZE"</span><span class="p">:</span> <span class="s2">"DIOPTRA_MAX_PAGE_SIZE"</span><span class="p">,</span>
     <span class="s2">"RQ_REDIS_URI"</span><span class="p">:</span> <span class="s2">"RQ_REDIS_URI"</span><span class="p">,</span>
     <span class="s2">"MLFLOW_TRACKING_URI"</span><span class="p">:</span> <span class="s2">"MLFLOW_TRACKING_URI"</span><span class="p">,</span>
+    <span class="s2">"DIOPTRA_ARTIFACT_BASE_URI"</span><span class="p">:</span> <span class="s2">"DIOPTRA_ARTIFACT_BASE_URI"</span><span class="p">,</span>
     <span class="s2">"DIOPTRA_RESTAPI_LOG_AS_JSON"</span><span class="p">:</span> <span class="s2">"DIOPTRA_RESTAPI_LOG_AS_JSON"</span><span class="p">,</span>
     <span class="s2">"DIOPTRA_RESTAPI_LOG_LEVEL"</span><span class="p">:</span> <span class="s2">"DIOPTRA_RESTAPI_LOG_LEVEL"</span><span class="p">,</span>
 <span class="p">}</span>
@@ -712,7 +732,14 @@ document.write(`
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_parse_environment_value</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Convert named boolean and integer settings from their environment strings."""</span>
+<span class="w">    </span><span class="sd">"""Parse named JSON, boolean and integer environment inputs without loose coercion."""</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"DIOPTRA_TLS_ALLOWED_AUTHORITIES"</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> requires a JSON array of HTTPS authorities."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_BOOLEAN_ENVIRONMENT_SETTINGS</span><span class="p">:</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"true"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
         <span class="k">try</span><span class="p">:</span>
@@ -737,6 +764,23 @@ document.write(`
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Invalid configuration for </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">; check types and constraints."</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_production_policy</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">BaseConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Reject production bypasses before key access and on instance revalidation."""</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">CONFIG_NAME</span> <span class="o">!=</span> <span class="s2">"prod"</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Production requires DIOPTRA_TLS_ALLOWED_AUTHORITIES."</span><span class="p">)</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"DEBUG"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"LOGIN_DISABLED"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"SESSION_COOKIE_SECURE"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"REMEMBER_COOKIE_SECURE"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">expected</span> <span class="ow">in</span> <span class="n">required</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Production requires </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_populate_settings</span><span class="p">(</span>
@@ -775,6 +819,11 @@ document.write(`
 <span class="sd">    ``DIOPTRA_MAX_PAGE_SIZE`` applies to paginated endpoints and must be at</span>
 <span class="sd">    least 10. Session protection accepts ``basic``, ``strong`` or None; the</span>
 <span class="sd">    environment string ``none`` selects None.</span>
+<span class="sd">    Production requires explicit nonempty ``DIOPTRA_TLS_ALLOWED_AUTHORITIES``.</span>
+<span class="sd">    Its environment value is a JSON list of HTTPS authorities; typed overrides</span>
+<span class="sd">    supply a list of strings. Host checking precedes route matching.</span>
+<span class="sd">    Production requires Secure session and remember cookies. Overrides that</span>
+<span class="sd">    disable either flag fail validation; explicit development permits HTTP.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        env: ``dev`` or ``prod``. If omitted, select ``DIOPTRA_RESTAPI_ENV``.</span>
@@ -814,8 +863,7 @@ document.write(`
         <span class="n">settings</span><span class="o">.</span><span class="n">DIOPTRA_RESTAPI_LOG_LEVEL</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">DIOPTRA_RESTAPI_LOG_LEVEL</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
     <span class="c1"># Validate ordinary values before opening the selected key or constructing clients.</span>
     <span class="n">_validate_values</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"prod"</span> <span class="ow">and</span> <span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">DEBUG</span> <span class="ow">or</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_DISABLED</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Production requires DEBUG=False and LOGIN_DISABLED=False."</span><span class="p">)</span>
+    <span class="n">_validate_production_policy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="k">if</span> <span class="s2">"SECRET_KEY_FILE"</span> <span class="ow">in</span> <span class="n">supplied</span> <span class="ow">and</span> <span class="n">supplied</span><span class="p">[</span><span class="s2">"SECRET_KEY_FILE"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"SECRET_KEY_FILE requires a nonempty filesystem path."</span><span class="p">)</span>
     <span class="n">settings</span><span class="o">.</span><span class="n">SECRET_KEY_FILE</span> <span class="o">=</span> <span class="n">_resolve_key_file</span><span class="p">(</span>

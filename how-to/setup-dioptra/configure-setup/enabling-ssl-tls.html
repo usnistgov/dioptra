@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Enable SSL/TLS in NGINX and Postgres &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Configure SSL/TLS Certificates &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -64,7 +64,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Create a Custom Worker Container" href="creating-custom-workers.html" />
-    <link rel="prev" title="Add Custom CA Certificates" href="adding-certificates.html" />
+    <link rel="prev" title="Configure Certificate Trust" href="adding-certificates.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Customize Your Setup</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -444,7 +452,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Enable SSL/TLS in NGINX and Postgres</h1>
+    <h1>Configure SSL/TLS Certificates</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -455,11 +463,17 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-tls-configuration">SSL/TLS Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-obtain-certificate-files">Step 1: Obtain Certificate Files</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-copy-certificates-to-the-deployment">Step 2: Copy Certificates to the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-configure-nginx-for-ssl-tls">Step 3: Configure NGINX for SSL/TLS</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-run-the-initialization-script-with-ssl-flags">Step 4: Run the Initialization Script with SSL Flags</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-setup">Certificate Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-choose-which-certificates-to-provide">Step 1: Choose Which Certificates to Provide</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-combine-separate-certificate-files-optional">Step 2: Combine Separate Certificate Files (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-check-certificate-names-and-expiration">Step 3: Check Certificate Names and Expiration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-copy-the-certificate-files">Step 4: Copy the Certificate Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-prepare-postgresql-certificates-optional">Step 5: Prepare PostgreSQL Certificates (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-initialize-the-deployment">Step 6: Initialize the Deployment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-check-the-installed-certificates">Step 7: Check the Installed Certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-start-the-services">Step 8: Start the Services</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-configure-client-trust-optional">Step 9: Configure Client Trust (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-10-verify-access">Step 10: Verify Access</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
@@ -474,114 +488,148 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="enable-ssl-tls-in-nginx-and-postgres">
-<span id="how-to-enabling-ssl-tls"></span><h1>Enable SSL/TLS in NGINX and Postgres<a class="headerlink" href="#enable-ssl-tls-in-nginx-and-postgres" title="Permalink to this headline">#</a></h1>
-<p>This guide explains how to enable SSL/TLS encryption for the NGINX reverse proxy and PostgreSQL database services in your Dioptra deployment.</p>
+  <section id="configure-ssl-tls-certificates">
+<span id="how-to-enabling-ssl-tls"></span><h1>Configure SSL/TLS Certificates<a class="headerlink" href="#configure-ssl-tls-certificates" title="Permalink to this headline">#</a></h1>
+<p>Dioptra generates certificates automatically during <a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">deployment setup</span></a>.
+Use this guide to provide your own certificates for the API, nginx, or both before initializing the deployment.
+For an already initialized deployment, follow <a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a>.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - A configured Dioptra deployment (before running <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code>)</p></li>
-<li><p><a class="reference internal" href="using-docker-compose-overrides.html#how-to-using-docker-compose-overrides"><span class="std std-ref">Use Docker Compose Override Files</span></a> - Override file created</p></li>
-<li><p>SSL certificate and private key files for each service you want to secure</p></li>
-<li><p>(Optional) <a class="reference internal" href="adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> - If using an internal CA</p></li>
+<li><p>A deployment directory created by following <a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a>, before running <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code>.</p></li>
+<li><p>OpenSSL for inspecting certificate names and expiration dates.</p></li>
 </ul>
-</section>
-<section id="ssl-tls-configuration">
-<h2>SSL/TLS Configuration<a class="headerlink" href="#ssl-tls-configuration" title="Permalink to this headline">#</a></h2>
-<section class="header-on-a-card header-steps" id="step-1-obtain-certificate-files">
-<h3>Step 1: Obtain Certificate Files<a class="headerlink" href="#step-1-obtain-certificate-files" title="Permalink to this headline">#</a></h3>
-<p>You will need a server certificate (<code class="docutils literal notranslate"><span class="pre">server.crt</span></code>) and private key (<code class="docutils literal notranslate"><span class="pre">server.key</span></code>) for each service.
-These can be:</p>
+<p>Have these files ready for each service whose certificate you will provide:</p>
 <ul class="simple">
-<li><p>Obtained from a certificate authority (CA)</p></li>
-<li><p>Generated using Let’s Encrypt</p></li>
-<li><p>Self-signed certificates (for testing only)</p></li>
+<li><p>A PEM file containing your server certificate and any required intermediate certificates. Look for a download described as a <strong>full certificate chain</strong>, such as <code class="docutils literal notranslate"><span class="pre">fullchain.pem</span></code>.</p></li>
+<li><p>The private key associated with that server certificate.</p></li>
+<li><p>The root certificate from your certificate authority (CA), which Dioptra uses to verify the server certificate.</p></li>
 </ul>
+<p>See <a class="reference internal" href="../reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">Certificate Policy Reference</span></a> for certificate requirements.</p>
 </section>
-<section class="header-on-a-card header-steps" id="step-2-copy-certificates-to-the-deployment">
-<h3>Step 2: Copy Certificates to the Deployment<a class="headerlink" href="#step-2-copy-certificates-to-the-deployment" title="Permalink to this headline">#</a></h3>
-<p>The certificate and key files <strong>must</strong> be named <code class="docutils literal notranslate"><span class="pre">server.crt</span></code> and <code class="docutils literal notranslate"><span class="pre">server.key</span></code> when copying them to the deployment directories.</p>
-<p><strong>For NGINX:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>/path/to/your/nginx-certificate.crt<span class="w"> </span>./ssl/nginx/server.crt
-cp<span class="w"> </span>/path/to/your/nginx-private-key.key<span class="w"> </span>./ssl/nginx/server.key
+<section id="certificate-setup">
+<h2>Certificate Setup<a class="headerlink" href="#certificate-setup" title="Permalink to this headline">#</a></h2>
+<p>Run commands from the deployment root.</p>
+<section class="header-on-a-card header-steps" id="step-1-choose-which-certificates-to-provide">
+<h3>Step 1: Choose Which Certificates to Provide<a class="headerlink" href="#step-1-choose-which-certificates-to-provide" title="Permalink to this headline">#</a></h3>
+<p>Open <code class="docutils literal notranslate"><span class="pre">config/ssl.toml</span></code>.
+Set <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;supplied&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">[restapi]</span></code>, <code class="docutils literal notranslate"><span class="pre">[nginx]</span></code>, or both, depending on which certificates you will provide.
+List the corresponding root CA certificate in <code class="docutils literal notranslate"><span class="pre">trust_files</span></code>.</p>
+<p>For example, to let Dioptra generate the API certificate while you provide the nginx certificate, update these fields in the existing sections:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[restapi]</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"generated"</span>
+<span class="n">trust_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+
+<span class="k">[nginx]</span>
+<span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"supplied"</span>
+<span class="n">trust_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"ssl/ca-certificates/root-ca.crt"</span><span class="p">]</span>
 </pre></div>
 </div>
-<p><strong>For Postgres:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>/path/to/your/db-certificate.crt<span class="w"> </span>./ssl/db/server.crt
-cp<span class="w"> </span>/path/to/your/db-private-key.key<span class="w"> </span>./ssl/db/server.key
-</pre></div>
-</div>
-<p>You can use different certificate-key pairs for each service.</p>
+<p>Leave <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">=</span> <span class="pre">&quot;generated&quot;</span></code> for services whose certificates Dioptra will generate.
+Keep the other settings unchanged.
+See <a class="reference internal" href="../reference/ssl-toml-reference.html#reference-ssl-toml"><span class="std std-ref">ssl.toml Configuration Reference</span></a> for field definitions and path rules.</p>
 </section>
-<section class="header-on-a-card header-steps" id="step-3-configure-nginx-for-ssl-tls">
-<h3>Step 3: Configure NGINX for SSL/TLS<a class="headerlink" href="#step-3-configure-nginx-for-ssl-tls" title="Permalink to this headline">#</a></h3>
-<p>If you are enabling SSL/TLS in NGINX, add the SSL port and update the health check in <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code>.</p>
-<p>Open <code class="docutils literal notranslate"><span class="pre">docker-compose.override.yml</span></code> and add the following configuration for the NGINX service:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">&lt;deployment-name&gt;-nginx</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">test</span><span class="p">:</span>
-<span class="w">        </span><span class="p p-Indicator">[</span>
-<span class="w">          </span><span class="s">"CMD"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"/usr/local/bin/healthcheck.sh"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"http://localhost:30080"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"https://localhost:30443"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"https://localhost:35000"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"https://localhost:35050/login"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"https://localhost:39000/health/ready"</span><span class="p p-Indicator">,</span>
-<span class="w">          </span><span class="s">"https://localhost:39001/rustfs/console/health"</span><span class="p p-Indicator">,</span>
-<span class="w">        </span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:443:30443/tcp"</span>
+<section class="header-on-a-card header-steps" id="step-2-combine-separate-certificate-files-optional">
+<h3>Step 2: Combine Separate Certificate Files (Optional)<a class="headerlink" href="#step-2-combine-separate-certificate-files-optional" title="Permalink to this headline">#</a></h3>
+<p>If you already have a full-chain PEM file, continue to <a class="reference internal" href="#how-to-check-initial-certificate-files"><span class="std std-ref">Step 3</span></a>.</p>
+<p>If your provider supplies the server certificate and intermediate certificates separately, combine them into one PEM file with the server certificate first:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s2">"SERVER_CERT_PATH"</span><span class="w"> </span><span class="s2">"INTERMEDIATE_CERTS_PATH"</span><span class="w"> </span>&gt;<span class="w"> </span>server-chain.pem
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;deployment-name&gt;</span></code> with your deployment’s slugified name (default: <code class="docutils literal notranslate"><span class="pre">dioptra-deployment</span></code>).</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">SERVER_CERT_PATH</span></code> with the server certificate file and <code class="docutils literal notranslate"><span class="pre">INTERMEDIATE_CERTS_PATH</span></code> with the intermediate certificate file supplied by your provider.
+Use the resulting <code class="docutils literal notranslate"><span class="pre">server-chain.pem</span></code> as <code class="docutils literal notranslate"><span class="pre">CHAIN_PATH</span></code> in the following steps.
+If both services need combined files, use a different output filename for each, such as <code class="docutils literal notranslate"><span class="pre">restapi-chain.pem</span></code> and <code class="docutils literal notranslate"><span class="pre">nginx-chain.pem</span></code>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-3-check-certificate-names-and-expiration">
+<span id="how-to-check-initial-certificate-files"></span><h3>Step 3: Check Certificate Names and Expiration<a class="headerlink" href="#step-3-check-certificate-names-and-expiration" title="Permalink to this headline">#</a></h3>
+<p>For each certificate you will provide, display the server certificate’s names and expiration date:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>x509<span class="w"> </span>-in<span class="w"> </span><span class="s2">"CHAIN_PATH"</span><span class="w"> </span>-noout<span class="w"> </span>-subject<span class="w"> </span>-issuer<span class="w"> </span>-dates<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-ext<span class="w"> </span>subjectAltName
+</pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">ports:</span></code> list in the override file <strong>appends</strong> to the existing ports in <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>.
-You only need to specify the new HTTPS port (443:30443).
-The <code class="docutils literal notranslate"><span class="pre">healthcheck:</span></code> configuration <strong>replaces</strong> the existing health check to use HTTPS endpoints.</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">CHAIN_PATH</span></code> with the path to your full-chain PEM file.
+Check the Subject Alternative Name (SAN) entries for the service:</p>
+<ul class="simple">
+<li><p>For the API, check for its internal DNS name, <code class="docutils literal notranslate"><span class="pre">&lt;deployment-slug&gt;-restapi</span></code>, such as <code class="docutils literal notranslate"><span class="pre">dioptra-deployment-restapi</span></code>.</p></li>
+<li><p>For nginx, check for the DNS name or IP address in <code class="docutils literal notranslate"><span class="pre">public.host</span></code> in <code class="docutils literal notranslate"><span class="pre">config/ssl.toml</span></code>. Confirm that this is the address you will use in your browser URL.</p></li>
+</ul>
+<p>Also check for any additional names or addresses listed in the service’s <code class="docutils literal notranslate"><span class="pre">dns_sans</span></code> and <code class="docutils literal notranslate"><span class="pre">ip_sans</span></code> settings.
+DNS names must appear as DNS entries and IP addresses as IP address entries.
+Check that the certificate’s expiration date meets the <a class="reference internal" href="../reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">certificate requirements</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-4-copy-the-certificate-files">
+<h3>Step 4: Copy the Certificate Files<a class="headerlink" href="#step-4-copy-the-certificate-files" title="Permalink to this headline">#</a></h3>
+<p>Copy the files into the deployment directory.
+For nginx, run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>install<span class="w"> </span>-m<span class="w"> </span><span class="m">0644</span><span class="w"> </span><span class="s2">"CHAIN_PATH"</span><span class="w"> </span>ssl/nginx/server.crt
+install<span class="w"> </span>-m<span class="w"> </span><span class="m">0600</span><span class="w"> </span><span class="s2">"KEY_PATH"</span><span class="w"> </span>ssl/nginx/server.key
+install<span class="w"> </span>-m<span class="w"> </span><span class="m">0644</span><span class="w"> </span><span class="s2">"ROOT_CA_PATH"</span><span class="w"> </span>ssl/ca-certificates/root-ca.crt
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">CHAIN_PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">KEY_PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">ROOT_CA_PATH</span></code> with the paths to your full certificate chain, private key and root CA certificate.
+The <code class="docutils literal notranslate"><span class="pre">install</span></code> command copies each file with the specified permissions, including owner-only access for the private key.
+For the API, use <code class="docutils literal notranslate"><span class="pre">ssl/restapi/server.crt</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/restapi/server.key</span></code> as the first two destinations.
+Use separate private keys for the API and nginx.</p>
+<p>If the API and nginx use different root certificates, give each root certificate a separate filename in <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code>.
+Check that each service’s <code class="docutils literal notranslate"><span class="pre">trust_files</span></code> setting names its root certificate’s destination, relative to the deployment directory.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-5-prepare-postgresql-certificates-optional">
+<h3>Step 5: Prepare PostgreSQL Certificates (Optional)<a class="headerlink" href="#step-5-prepare-postgresql-certificates-optional" title="Permalink to this headline">#</a></h3>
+<p>If you do not want TLS for PostgreSQL, skip this step and continue to <a class="reference internal" href="#how-to-initialize-with-supplied-certificates"><span class="std std-ref">Step 6</span></a>.</p>
+<p>Copy the PostgreSQL server certificate and its matching private key into the deployment directory:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>install<span class="w"> </span>-m<span class="w"> </span><span class="m">0644</span><span class="w"> </span><span class="s2">"DB_CERT_PATH"</span><span class="w"> </span>ssl/db/server.crt
+install<span class="w"> </span>-m<span class="w"> </span><span class="m">0600</span><span class="w"> </span><span class="s2">"DB_KEY_PATH"</span><span class="w"> </span>ssl/db/server.key
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">DB_CERT_PATH</span></code> with the path to the server certificate file, including any required intermediate certificates, and <code class="docutils literal notranslate"><span class="pre">DB_KEY_PATH</span></code> with the path to its private key.
+See <code class="docutils literal notranslate"><span class="pre">ssl/db/README.md</span></code> in the deployment directory for certificate file requirements.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-6-initialize-the-deployment">
+<span id="how-to-initialize-with-supplied-certificates"></span><h3>Step 6: Initialize the Deployment<a class="headerlink" href="#step-6-initialize-the-deployment" title="Permalink to this headline">#</a></h3>
+<p>Run the initializer.
+If you provided PostgreSQL certificates in Step 5, add <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> to the following command.
+Otherwise, omit that option.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> with the Dioptra branch matching your container images.
+If you enabled PostgreSQL TLS, include <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> each time you rerun the initializer.</p>
+<p>Wait for initialization to report success before continuing.
+If it reports an interrupted certificate operation, follow <a class="reference internal" href="../recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-7-check-the-installed-certificates">
+<h3>Step 7: Check the Installed Certificates<a class="headerlink" href="#step-7-check-the-installed-certificates" title="Permalink to this headline">#</a></h3>
+<p>Check the installed certificates:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>scripts/manage_ssl.py<span class="w"> </span>validate
+</pre></div>
+</div>
+<p>Confirm that validation succeeds with no unavailable checks.
+Note the reported expiration dates so you can replace the certificates before they expire.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-8-start-the-services">
+<h3>Step 8: Start the Services<a class="headerlink" href="#step-8-start-the-services" title="Permalink to this headline">#</a></h3>
+<p>Start the deployment services:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
 </div>
 </section>
-<section class="header-on-a-card header-steps" id="step-4-run-the-initialization-script-with-ssl-flags">
-<h3>Step 4: Run the Initialization Script with SSL Flags<a class="headerlink" href="#step-4-run-the-initialization-script-with-ssl-flags" title="Permalink to this headline">#</a></h3>
-<p>Run the initialization script with the appropriate SSL flags:</p>
-<p><strong>Enable NGINX SSL only:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl
-</pre></div>
-</div>
-<p><strong>Enable Postgres SSL only:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-postgres-ssl
-</pre></div>
-</div>
-<p><strong>Enable both NGINX and Postgres SSL:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl
-</pre></div>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>You must specify the <code class="docutils literal notranslate"><span class="pre">--enable-nginx-ssl</span></code> and <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> options <strong>each time</strong> you run the <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script.
-If you omit them on a subsequent run, SSL/TLS will be disabled for the services.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
-</div>
-<div class="admonition-learn-more admonition">
-<p class="admonition-title">Learn More</p>
-<p>See the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> files in the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folders for additional details about certificate requirements.</p>
-</div>
+<section class="header-on-a-card header-steps" id="step-9-configure-client-trust-optional">
+<h3>Step 9: Configure Client Trust (Optional)<a class="headerlink" href="#step-9-configure-client-trust-optional" title="Permalink to this headline">#</a></h3>
+<p>If your browser or Python client does not already trust the CA that issued the server certificate, follow the <a class="reference internal" href="adding-certificates.html#how-to-trust-public-issuer"><span class="std std-ref">workstation</span></a> or <a class="reference internal" href="adding-certificates.html#how-to-configure-python-trust"><span class="std std-ref">Python client</span></a> instructions to verify its fingerprint and configure trust.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-10-verify-access">
+<h3>Step 10: Verify Access<a class="headerlink" href="#step-10-verify-access" title="Permalink to this headline">#</a></h3>
+<p>Open the deployment’s HTTPS address and confirm that the frontend loads without certificate warnings.
+If you already have an account, log in to check authenticated access.
+For external Python clients, follow the <a class="reference internal" href="../../essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">client connection and login checks</span></a>.</p>
 </section>
 </section>
-<section class="header-on-a-card header-seealso" id="see-also">
+<section class="fancy-header header-seealso" id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="using-docker-compose-overrides.html#how-to-using-docker-compose-overrides"><span class="std std-ref">Use Docker Compose Override Files</span></a> - Docker Compose override file basics</p></li>
-<li><p><a class="reference internal" href="adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> - Add custom CA certificates</p></li>
-<li><p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - Full deployment customization</p></li>
+<li><p><a class="reference internal" href="../reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">Certificate Policy Reference</span></a> lists certificate requirements.</p></li>
+<li><p><a class="reference internal" href="../reference/init-deployment-script-reference.html#reference-init-deployment-script"><span class="std std-ref">init-deployment.sh Script Reference</span></a> describes initialization and reruns.</p></li>
+<li><p><a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a> covers replacing certificates after initialization.</p></li>
 </ul>
 </section>
 </section>
@@ -604,7 +652,7 @@ If you omit them on a subsequent run, SSL/TLS will be disabled for the services.
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Add Custom CA Certificates</p>
+        <p class="prev-next-title">Configure Certificate Trust</p>
       </div>
     </a>
     <a class="right-next"
@@ -635,11 +683,17 @@ If you omit them on a subsequent run, SSL/TLS will be disabled for the services.
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ssl-tls-configuration">SSL/TLS Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-obtain-certificate-files">Step 1: Obtain Certificate Files</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-copy-certificates-to-the-deployment">Step 2: Copy Certificates to the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-configure-nginx-for-ssl-tls">Step 3: Configure NGINX for SSL/TLS</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-run-the-initialization-script-with-ssl-flags">Step 4: Run the Initialization Script with SSL Flags</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-setup">Certificate Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-choose-which-certificates-to-provide">Step 1: Choose Which Certificates to Provide</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-combine-separate-certificate-files-optional">Step 2: Combine Separate Certificate Files (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-check-certificate-names-and-expiration">Step 3: Check Certificate Names and Expiration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-copy-the-certificate-files">Step 4: Copy the Certificate Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-prepare-postgresql-certificates-optional">Step 5: Prepare PostgreSQL Certificates (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-initialize-the-deployment">Step 6: Initialize the Deployment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-check-the-installed-certificates">Step 7: Check the Installed Certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-start-the-services">Step 8: Start the Services</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-configure-client-trust-optional">Step 9: Configure Client Trust (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-10-verify-access">Step 10: Verify Access</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>

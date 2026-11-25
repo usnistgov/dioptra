@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>init-deployment.sh Script Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>init-deployment.sh Script Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -63,7 +63,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/setup-dioptra/reference/init-deployment-script-reference';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Deployment Commands Reference" href="deployment-commands-reference.html" />
+    <link rel="next" title="manage_ssl.py Command Reference" href="manage-ssl-reference.html" />
     <link rel="prev" title="Deployment Folder Reference" href="deployment-folder-reference.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -454,14 +462,19 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secrets">Secrets</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization-behavior">Initialization Behavior</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files">Files</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#host-credential-files">Host Credential Files</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-signing-key">API Signing Key</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-and-nginx-certificates">API and nginx Certificates</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-options">Command-Line Options</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
             </nav>
         </div>
@@ -475,32 +488,115 @@ document.write(`
                   
   <section id="init-deployment-sh-script-reference">
 <span id="reference-init-deployment-script"></span><h1>init-deployment.sh Script Reference<a class="headerlink" href="#init-deployment-sh-script-reference" title="Permalink to this headline">#</a></h1>
-<p>This reference describes the <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script that initializes a Dioptra deployment.
-The script is located in the root of the deployment folder generated by the cookiecutter template.</p>
+<p><code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> initializes a Dioptra deployment.
+The script is located in the root of the deployment directory generated by the Dioptra template.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - Step-by-step guide for creating and customizing your deployment.</p>
+<p>For step-by-step instructions, see <a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a>.</p>
 </div>
-<div class="contents local topic" id="contents">
-<p class="topic-title">Contents</p>
+<section id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh [--enable-postgres-ssl] [--skip-rustfs-setup]
+                     [--branch BRANCH] [--worker-ssl-service {tfcpu|pytorchcpu}]
+                     [--python CMD] [--help]
+</pre></div>
+</div>
+<p>Square brackets indicate optional arguments.
+Braces with vertical bars indicate a required choice when supplying that option.</p>
+</section>
+<section id="requirements">
+<span id="reference-init-deployment-requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">#</a></h2>
+<p>The command requires:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
-<li><p><a class="reference internal" href="#secrets" id="id3">Secrets</a></p>
-<ul>
-<li><p><a class="reference internal" href="#host-credential-files" id="id4">Host Credential Files</a></p></li>
-<li><p><a class="reference internal" href="#api-signing-key" id="id5">API Signing Key</a></p></li>
+<li><p>Bash.</p></li>
+<li><p>Python 3.11 or newer with the <code class="docutils literal notranslate"><span class="pre">jinja2</span></code> package installed.</p></li>
+<li><p>Docker with Docker Compose.</p></li>
+<li><p>The container images configured for the deployment.</p></li>
+<li><p>A POSIX environment supporting descriptor-relative file operations, same-directory hard links, and file/directory synchronization.</p></li>
 </ul>
-</li>
-<li><p><a class="reference internal" href="#command-line-options" id="id6">Command-Line Options</a></p></li>
-<li><p><a class="reference internal" href="#examples" id="id7">Examples</a></p></li>
-</ul>
+<p>Run the command from the deployment directory as the user who owns its files and has permission to use Docker.
+The deployment user needs permission to read and create files and change their permissions.</p>
+<p>The normal deployment must be torn down before initialization.
+The script refuses existing runtime containers, including stopped containers, before changing files or volumes.
+Use <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">down</span></code> without <code class="docutils literal notranslate"><span class="pre">--volumes</span></code> to retain persistent data.</p>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">#</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-enable-postgres-ssl">
+<span id="cmdoption-init-deployment-sh-enable-postgres-ssl"></span><span class="sig-name descname"><span class="pre">--enable-postgres-ssl</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-init-deployment.sh-enable-postgres-ssl" title="Permalink to this definition">#</a></dt>
+<dd><p>Enable PostgreSQL TLS using <code class="docutils literal notranslate"><span class="pre">ssl/db/server.crt</span></code> and <code class="docutils literal notranslate"><span class="pre">ssl/db/server.key</span></code>.
+Disabled by default. Include it on every initialization run that should retain PostgreSQL TLS.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-skip-rustfs-setup">
+<span id="cmdoption-init-deployment-sh-skip-rustfs-setup"></span><span class="sig-name descname"><span class="pre">--skip-rustfs-setup</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-init-deployment.sh-skip-rustfs-setup" title="Permalink to this definition">#</a></dt>
+<dd><p>Skip RustFS service setup.
+Disabled by default.
+Useful for configuration changes that do not require reconciling storage accounts and policies.
+RustFS account initialization can also be rerun without duplicating policy attachments.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-branch">
+<span id="cmdoption-init-deployment-sh-branch"></span><span class="sig-name descname"><span class="pre">--branch</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;branch-name&gt;</span></span><a class="headerlink" href="#cmdoption-init-deployment.sh-branch" title="Permalink to this definition">#</a></dt>
+<dd><p>Dioptra GitHub branch used when syncing built-in task plugins and frontend files.
+The default is <code class="docutils literal notranslate"><span class="pre">main</span></code>.
+Select the branch matching your container images, such as <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases or <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-python">
+<span id="cmdoption-init-deployment-sh-python"></span><span class="sig-name descname"><span class="pre">--python</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;cmd&gt;</span></span><a class="headerlink" href="#cmdoption-init-deployment.sh-python" title="Permalink to this definition">#</a></dt>
+<dd><p>Host Python interpreter command.
+Defaults to <code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span></code> in the deployment directory when available, otherwise <code class="docutils literal notranslate"><span class="pre">python</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-worker-ssl-service">
+<span id="cmdoption-init-deployment-sh-worker-ssl-service"></span><span class="sig-name descname"><span class="pre">--worker-ssl-service</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;tfcpu|pytorchcpu&gt;</span></span><a class="headerlink" href="#cmdoption-init-deployment.sh-worker-ssl-service" title="Permalink to this definition">#</a></dt>
+<dd><p>Container image used to bootstrap worker SSL named volumes.
+The default is <code class="docutils literal notranslate"><span class="pre">tfcpu</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-init-deployment.sh-h">
+<span id="cmdoption-init-deployment-sh-h"></span><span id="cmdoption-init-deployment.sh-help"></span><span id="cmdoption-init-deployment-sh-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-init-deployment.sh-h" title="Permalink to this definition">#</a></dt>
+<dd><p>Print help and exit.</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> in these examples with the Dioptra branch matching your container images.</p>
+<p>Initialize the deployment:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME
+</pre></div>
 </div>
-<section id="overview">
-<h2><a class="toc-backref" href="#id2">Overview</a><a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
+<p>Initialize the deployment with PostgreSQL TLS enabled:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME<span class="w"> </span>--enable-postgres-ssl
+</pre></div>
+</div>
+<p>Rerun after configuration changes that do not need RustFS account reconciliation:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME<span class="w"> </span>--skip-rustfs-setup
+</pre></div>
+</div>
+</section>
+<section id="output-and-exit-status">
+<h2>Output and Exit Status<a class="headerlink" href="#output-and-exit-status" title="Permalink to this headline">#</a></h2>
+<p>The script prints initialization progress and error messages.
+Initialization reports the deployment’s HTTPS address, public CA certificate path and SHA-256 fingerprint, certificate expiration dates, and any shortened certificate lifetime.</p>
+<p>Successful initialization and <code class="docutils literal notranslate"><span class="pre">--help</span></code> return zero.
+Failed initialization, HTTPS verification, worker registration, or service teardown returns a nonzero exit status.</p>
+<p>An interrupted certificate operation reports its operation ID and the applicable <a class="reference internal" href="../recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">recovery command</span></a>.</p>
+</section>
+<section id="initialization-behavior">
+<h2>Initialization Behavior<a class="headerlink" href="#initialization-behavior" title="Permalink to this headline">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script automates the following initialization steps:</p>
 <ul class="simple">
 <li><p>Generates random passwords used to secure Dioptra’s services</p></li>
-<li><p>Copies and bundles extra CA certificates for the containers</p></li>
+<li><p>Generates or validates API/nginx certificates and installs trusted CA certificates in the containers</p></li>
 <li><p>Copies configuration files and certificates into named volumes</p></li>
 <li><p>Sets appropriate file and folder access permissions</p></li>
 <li><p>Initializes the persistent API signing key before database migrations and API startup</p></li>
@@ -508,14 +604,18 @@ The script is located in the root of the deployment folder generated by the cook
 <li><p>Syncs built-in task plugins from the Dioptra GitHub repository</p></li>
 <li><p>Enables SSL/TLS in PostgreSQL (if applicable)</p></li>
 </ul>
+<p>The script installs certificates while normal deployment services are stopped.
+It then starts normal services, verifies live HTTPS, and registers the worker account.
+Before returning, it tears down the initialization and runtime services it started while retaining volumes, credentials, certificates, and recovery files.
+On failure, it attempts the same teardown and reports any teardown failure.
+Normal operation starts separately with <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">up</span> <span class="pre">-d</span></code>.</p>
 </section>
-<section id="secrets">
-<h2><a class="toc-backref" href="#id3">Secrets</a><a class="headerlink" href="#secrets" title="Permalink to this headline">#</a></h2>
-<p>Initialization manages host credential files and a separate persistent API signing key.
-The credential paths below are relative to the generated deployment directory.</p>
+<section id="files">
+<h2>Files<a class="headerlink" href="#files" title="Permalink to this headline">#</a></h2>
+<p>The following sections describe the files managed by initialization, including their locations and how the script handles them on subsequent runs.</p>
 <section id="host-credential-files">
-<span id="reference-init-deployment-credentials"></span><h3><a class="toc-backref" href="#id4">Host Credential Files</a><a class="headerlink" href="#host-credential-files" title="Permalink to this headline">#</a></h3>
-<p>The following files form one credential set:</p>
+<span id="reference-init-deployment-credentials"></span><h3>Host Credential Files<a class="headerlink" href="#host-credential-files" title="Permalink to this headline">#</a></h3>
+<p>The following paths are relative to the deployment directory and form one credential set:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">.env</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">secrets/postgres-passwd.env</span></code></p></li>
@@ -539,118 +639,43 @@ The credential paths below are relative to the generated deployment directory.</
 <tr class="row-odd"><td><p>All three files exist and are nonempty.</p></td>
 <td><p>Preserve contents and ownership, repair permissions to <code class="docutils literal notranslate"><span class="pre">0600</span></code> and report repairs without logging credentials.</p></td>
 </tr>
-<tr class="row-even"><td><p>The set is incomplete or empty; a path is linked, nonregular or cannot be secured.</p></td>
+<tr class="row-even"><td><p>The set is incomplete or empty, or a path is linked, nonregular or cannot be secured.</p></td>
 <td><p>Stop initialization.</p></td>
 </tr>
 </tbody>
 </table>
-<p>Existing values are not checked for consistency across files or against running services.
-The generated systemd unit contains no credentials and is outside this file-permission policy.</p>
-<p>Credential generation requires a POSIX filesystem supporting descriptor-relative operations, same-directory hard links and file/directory synchronization.
-The deployment user needs access to read the files, set their permissions and create files in the containing directories.</p>
-<p>An interrupted run can leave partial credentials or protected temporary files named <code class="docutils literal notranslate"><span class="pre">.&lt;credential-name&gt;.&lt;random-token&gt;.tmp</span></code> beside their destinations.
-Temporary files contain secrets and are not removed automatically by a later run.
-Caught generation failures attempt to remove newly created files and report cleanup failures; hardware failure or forced termination can leave partial state.
+<p>Existing values are not checked for consistency across files or against running services.</p>
+<p>An interrupted run can leave incomplete credentials or temporary files containing secrets.
 See <a class="reference internal" href="../recover-deployment-credentials.html#how-to-recover-deployment-credentials"><span class="std std-ref">Recover Deployment Credentials</span></a> before removing files or rerunning initialization.</p>
 </section>
 <section id="api-signing-key">
-<span id="reference-init-deployment-signing-key"></span><h3><a class="toc-backref" href="#id5">API Signing Key</a><a class="headerlink" href="#api-signing-key" title="Permalink to this headline">#</a></h3>
-<table class="colwidths-given table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Property</p></th>
-<th class="head"><p>Behavior</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Initialization</p></td>
-<td><p>Runs inside the REST API image; the host does not need an installed Dioptra package.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Storage</p></td>
-<td><p>The persistent REST API data volume retains the key across container restarts.</p></td>
-</tr>
-<tr class="row-even"><td><p>Reruns</p></td>
-<td><p>Preserve an existing valid key.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Failure</p></td>
-<td><p>Stop before database migrations or API startup.</p></td>
-</tr>
-</tbody>
-</table>
+<span id="reference-init-deployment-signing-key"></span><h3>API Signing Key<a class="headerlink" href="#api-signing-key" title="Permalink to this headline">#</a></h3>
+<p>The API signing key is stored in the persistent REST API data volume and retained across container restarts.
+Initialization creates the key when it is absent and preserves an existing valid key.
+If key initialization fails, the script stops before database migrations or API startup.</p>
+</section>
+<section id="api-and-nginx-certificates">
+<span id="reference-init-deployment-certificates"></span><h3>API and nginx Certificates<a class="headerlink" href="#api-and-nginx-certificates" title="Permalink to this headline">#</a></h3>
+<p>Initialization uses <code class="docutils literal notranslate"><span class="pre">config/ssl.toml</span></code> and calls <a class="reference internal" href="manage-ssl-reference.html#reference-manage-ssl-init"><span class="std std-ref">scripts/manage_ssl.py init</span></a> to prepare and install certificates for the API and nginx.
+By default, it creates a deployment CA and separate server certificates and private keys for the two services.
+To use your own server certificates, follow <a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a>.</p>
+<p>Rerunning initialization preserves valid existing certificates and private keys.
+Changes to supplied certificate files or the <code class="docutils literal notranslate"><span class="pre">source</span></code> setting require <a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">certificate replacement</span></a>.
+See <a class="reference internal" href="manage-ssl-reference.html#reference-manage-ssl-init"><span class="std std-ref">manage_ssl.py init</span></a> for validation and file-permission handling.</p>
+<p>The public certificate for a Dioptra-generated CA is saved at <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/dioptra-local-ca.crt</span></code>.
+Browser and Python-client trust are configured separately; see <a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a>.</p>
+<p><a class="reference internal" href="certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">Certificate Policy Reference</span></a> lists file-permission and expiration requirements.
+<a class="reference internal" href="deployment-folder-reference.html#reference-deployment-certificate-backups"><span class="std std-ref">Certificate Backups</span></a> identifies the files to back up.</p>
 </section>
 </section>
-<section id="command-line-options">
-<h2><a class="toc-backref" href="#id6">Command-Line Options</a><a class="headerlink" href="#command-line-options" title="Permalink to this headline">#</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Usage: init-deployment.sh [--enable-nginx-ssl] [--enable-postgres-ssl]
-                          [--skip-rustfs-setup] [--branch &lt;branch-name&gt;]
-                          [--worker-ssl-service [tfcpu|pytorchcpu]]
-                          [--python &lt;cmd&gt;] [-h|--help]
-</pre></div>
-</div>
-<dl class="simple">
-<dt><strong>–enable-nginx-ssl</strong></dt><dd><p>Enable the SSL-enabled configuration settings for the NGINX container.
-Use this if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/nginx/</span></code> folder.</p>
-</dd>
-<dt><strong>–enable-postgres-ssl</strong></dt><dd><p>Enable the SSL-enabled configuration settings for the PostgreSQL container.
-Use this if you copied a server certificate and private key into the <code class="docutils literal notranslate"><span class="pre">ssl/db/</span></code> folder.</p>
-</dd>
-<dt><strong>–skip-rustfs-setup</strong></dt><dd><p>Skip RustFS service setup.
-Useful when making configuration changes that do not require reconciling storage accounts and policies.
-RustFS account initialization can also be rerun without duplicating policy attachments.</p>
-</dd>
-<dt><strong>–branch &lt;branch-name&gt;</strong></dt><dd><p>The Dioptra GitHub branch to use when syncing built-in task plugins and frontend files.
-Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the branch you want to use (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code>, <code class="docutils literal notranslate"><span class="pre">dev</span></code>).
-(default: <code class="docutils literal notranslate"><span class="pre">main</span></code>)</p>
-</dd>
-<dt><strong>–python &lt;cmd&gt;</strong></dt><dd><p>Command for invoking the Python interpreter.
-Must be Python 3.11 or greater with the <code class="docutils literal notranslate"><span class="pre">jinja2</span></code> package installed.
-(default: <code class="docutils literal notranslate"><span class="pre">python</span></code>)</p>
-</dd>
-<dt><strong>–worker-ssl-service [tfcpu|pytorchcpu]</strong></dt><dd><p>Container image to use when bootstrapping the SSL named volumes for worker containers.
-(default: <code class="docutils literal notranslate"><span class="pre">tfcpu</span></code>)</p>
-</dd>
-<dt><strong>-h, –help</strong></dt><dd><p>Print the help message and exit.</p>
-</dd>
-</dl>
-</section>
-<section id="examples">
-<h2><a class="toc-backref" href="#id7">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
-</div>
-<p><strong>Basic initialization:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;
-</pre></div>
-</div>
-<p><strong>With NGINX SSL enabled:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl
-</pre></div>
-</div>
-<p><strong>With both NGINX and PostgreSQL SSL enabled:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--enable-nginx-ssl<span class="w"> </span>--enable-postgres-ssl
-</pre></div>
-</div>
-<p><strong>Rerunning after configuration changes:</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span>--skip-rustfs-setup
-</pre></div>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>You must specify the <code class="docutils literal notranslate"><span class="pre">--enable-nginx-ssl</span></code> and <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> options <strong>each time</strong> you run the <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code> script.
-If you omit them on a subsequent run, SSL/TLS will be disabled for those services.</p>
-</div>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
+<section class="fancy-header header-seealso" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="deployment-folder-reference.html#reference-deployment-folder"><span class="std std-ref">Deployment Folder Reference</span></a> - Deployment folder structure and file descriptions</p></li>
-<li><p><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> - Enable SSL/TLS for NGINX and PostgreSQL</p></li>
-<li><p><a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> - Add custom CA certificates</p></li>
+<li><p><a class="reference internal" href="deployment-folder-reference.html#reference-deployment-folder"><span class="std std-ref">Deployment Folder Reference</span></a> lists retained files and backups.</p></li>
+<li><p><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> covers supplied certificates.</p></li>
+<li><p><a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a> covers public CA trust.</p></li>
+<li><p><a class="reference internal" href="../recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a> covers interrupted certificate operations.</p></li>
 </ul>
-</div>
 </section>
 </section>
 
@@ -676,11 +701,11 @@ If you omit them on a subsequent run, SSL/TLS will be disabled for those service
       </div>
     </a>
     <a class="right-next"
-       href="deployment-commands-reference.html"
+       href="manage-ssl-reference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Deployment Commands Reference</p>
+        <p class="prev-next-title">manage_ssl.py Command Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -702,14 +727,19 @@ If you omit them on a subsequent run, SSL/TLS will be disabled for those service
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secrets">Secrets</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization-behavior">Initialization Behavior</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files">Files</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#host-credential-files">Host Credential Files</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-signing-key">API Signing Key</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-and-nginx-certificates">API and nginx Certificates</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-options">Command-Line Options</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
   </nav></div>
 

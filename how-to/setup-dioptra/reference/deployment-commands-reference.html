@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Deployment Commands Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Deployment Commands Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -64,7 +64,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Custom Worker Template Reference" href="custom-worker-template-reference.html" />
-    <link rel="prev" title="init-deployment.sh Script Reference" href="init-deployment-script-reference.html" />
+    <link rel="prev" title="Certificate Policy Reference" href="certificate-policy-reference.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -459,6 +467,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-service-status">Checking Service Status</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#viewing-logs">Viewing Logs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#restarting-services">Restarting Services</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-maintenance">Certificate Maintenance</a></li>
 </ul>
             </nav>
         </div>
@@ -503,7 +512,8 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">en
 </div>
 </div>
 </div>
-<p>Once started, access the frontend at <code class="docutils literal notranslate"><span class="pre">http://localhost/</span></code> (or <code class="docutils literal notranslate"><span class="pre">https://localhost/</span></code> if SSL/TLS is enabled).</p>
+<p>Open the HTTPS address reported by initialization, such as <code class="docutils literal notranslate"><span class="pre">https://localhost/</span></code> or <code class="docutils literal notranslate"><span class="pre">https://localhost:53443/</span></code> when using a custom port.
+If your browser does not trust the deployment CA, follow <a class="reference internal" href="../configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a> before logging in.</p>
 </section>
 <section id="stopping-dioptra">
 <h2>Stopping Dioptra<a class="headerlink" href="#stopping-dioptra" title="Permalink to this headline">#</a></h2>
@@ -552,10 +562,11 @@ systemd</label><div class="sd-tab-content docutils">
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs
 </pre></div>
 </div>
-<p><strong>Specific service</strong> (e.g., REST API):</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>&lt;deployment-name&gt;-restapi
+<p><strong>Specific service</strong> (for example, REST API):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>SERVICE_NAME
 </pre></div>
 </div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">SERVICE_NAME</span></code> with a service name shown by <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">ps</span></code>.</p>
 <p><strong>Follow logs in real-time:</strong></p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f
 </pre></div>
@@ -596,9 +607,10 @@ Docker Compose</label><div class="sd-tab-content docutils">
 </pre></div>
 </div>
 <p>Restart a specific service:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>restart<span class="w"> </span>&lt;deployment-name&gt;-restapi
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>restart<span class="w"> </span>SERVICE_NAME
 </pre></div>
 </div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">SERVICE_NAME</span></code> with a service name shown by <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">compose</span> <span class="pre">ps</span></code>.</p>
 </div>
 <input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
 </input><label class="sd-tab-label" for="sd-tab-item-5">
@@ -609,6 +621,20 @@ systemd</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
+</section>
+<section id="certificate-maintenance">
+<h2>Certificate Maintenance<a class="headerlink" href="#certificate-maintenance" title="Permalink to this headline">#</a></h2>
+<p>Check the deployment’s certificate configuration and files without changing them:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>scripts/manage_ssl.py<span class="w"> </span>validate
+</pre></div>
+</div>
+<p>See the following guides for certificate maintenance:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a></p></li>
+<li><p><a class="reference internal" href="../replace-deployment-ca.html#how-to-replace-deployment-ca"><span class="std std-ref">Replace the Deployment Certificate Authority</span></a></p></li>
+<li><p><a class="reference internal" href="../recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a></p></li>
+</ul>
+<p>See <a class="reference internal" href="manage-ssl-reference.html#reference-manage-ssl"><span class="std std-ref">manage_ssl.py Command Reference</span></a> for command options.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
@@ -633,12 +659,12 @@ systemd</label><div class="sd-tab-content docutils">
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="init-deployment-script-reference.html"
+       href="certificate-policy-reference.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">init-deployment.sh Script Reference</p>
+        <p class="prev-next-title">Certificate Policy Reference</p>
       </div>
     </a>
     <a class="right-next"
@@ -673,6 +699,7 @@ systemd</label><div class="sd-tab-content docutils">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-service-status">Checking Service Status</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#viewing-logs">Viewing Logs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#restarting-services">Restarting Services</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-maintenance">Certificate Maintenance</a></li>
 </ul>
   </nav></div>
 

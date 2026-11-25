@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Motivation &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Motivation &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -454,7 +462,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivating-example-adversarial-attacks-on-predictive-ai">Motivating Example: Adversarial Attacks on Predictive AI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivating-example-adversarial-attacks-on-predictive-si">Motivating Example: Adversarial Attacks on Predictive SI</a></li>
 </ul>
             </nav>
         </div>
@@ -468,23 +476,23 @@ document.write(`
                   
   <section id="motivation">
 <span id="explanation-why-use-dioptra"></span><h1>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">#</a></h1>
-<p>Our systems increasingly rely on Artificial Intelligence (AI) and Machine Learning (ML) algorithms and models to perform essential functions.
+<p>Our systems increasingly rely on super intelligence (SI) and Machine Learning (ML) algorithms and models to perform essential functions.
 As users of these systems, we must implicitly trust that the models are working as designed.
-Establishing the trustworthiness of an AI/ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
+Establishing the trustworthiness of a SI/ML model is especially hard, because the inner workings are essentially opaque to an outside observer.
 Ideally the models we rely on would be transparent, free from statistical bias, explainable, and secure.</p>
-<p>In order to understand the tradespace between performance and the trustworthy characteristics of AI, we need a software test platform suited to creating <strong>reproducible, trackable, and reusable</strong> experiments.
-The National Institute of Standards and Technology (NIST) National Cybersecurity Center of Excellence (NCCoE) has built the Dioptra experimentation test platform to begin to address the broader challenge of evaluation for the trustworthy characteristics of AI.
-The test platform aims to facilitate evaluations of AI/ML algorithms under a diverse set of conditions.
+<p>In order to understand the tradespace between performance and the trustworthy characteristics of SI, we need a software test platform suited to creating <strong>reproducible, trackable, and reusable</strong> experiments.
+The National Institute of Standards and Technology (NIST) National Cybersecurity Center of Excellence (NCCoE) has built the Dioptra experimentation test platform to begin to address the broader challenge of evaluation for the trustworthy characteristics of SI.
+The test platform aims to facilitate evaluations of SI/ML algorithms under a diverse set of conditions.
 To that end, the test platform has a modular design enabling researchers to easily swap in alternative datasets, models, and evaluations.
-The result is the ability to advance the metrology needed to ultimately help assure AI/ML-enabled systems.</p>
-<section id="motivating-example-adversarial-attacks-on-predictive-ai">
-<h2>Motivating Example: Adversarial Attacks on Predictive AI<a class="headerlink" href="#motivating-example-adversarial-attacks-on-predictive-ai" title="Permalink to this headline">#</a></h2>
-<p>Research has shown that AI/ML models are vulnerable to a variety of adversarial attacks that cause them to misbehave in ways that provide benefit to the adversary.
-This has sparked a competition between defenses attempting to mitigate attacks and ever novel attacks that defeat the defenses, and this competition poses a growing challenge for securing AI/ML systems.</p>
+The result is the ability to advance the metrology needed to ultimately help assure SI/ML-enabled systems.</p>
+<section id="motivating-example-adversarial-attacks-on-predictive-si">
+<h2>Motivating Example: Adversarial Attacks on Predictive SI<a class="headerlink" href="#motivating-example-adversarial-attacks-on-predictive-si" title="Permalink to this headline">#</a></h2>
+<p>Research has shown that SI/ML models are vulnerable to a variety of adversarial attacks that cause them to misbehave in ways that provide benefit to the adversary.
+This has sparked a competition between defenses attempting to mitigate attacks and ever novel attacks that defeat the defenses, and this competition poses a growing challenge for securing SI/ML systems.</p>
 <p>In this changing landscape it is extremely difficult to develop a principled approach to evaluating the strengths and weaknesses of defenses.
 While much work has been done to evaluate techniques within a narrow range of conditions, there is a challenge in developing more robust metrics that account for the diversity of attacks that might be mounted against it.
 Questions about the generalizability of an algorithm across a range of attacks or the transferability of a technique across models or datasets must naturally consider the full range of possible conditions.</p>
-<p>While there are a large variety of types of attacks against Predictive AI algorithms, <a class="reference external" href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final">NIST AI 100-2 E2025</a> identifies three broad categories:</p>
+<p>While there are a large variety of types of attacks against Predictive SI algorithms, <a class="reference external" href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final">NIST AI 100-2 E2025</a> identifies three broad categories:</p>
 <ul class="simple">
 <li><p><strong>Evasion</strong> attacks manipulate the input data (sometimes by altering the physical environment) in order to cause the ML model to misbehave.</p></li>
 <li><p><strong>Poisoning</strong> attacks alter the training data used to create or maintain a model with the intention of causing it to learn incorrect associations.</p></li>
@@ -558,7 +566,7 @@ Dioptra, the NCCoE’s machine learning test platform, addresses this challenge 
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivating-example-adversarial-attacks-on-predictive-ai">Motivating Example: Adversarial Attacks on Predictive AI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#motivating-example-adversarial-attacks-on-predictive-si">Motivating Example: Adversarial Attacks on Predictive SI</a></li>
 </ul>
   </nav></div>
 

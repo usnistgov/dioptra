@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>dioptra-api Command Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>dioptra-api Command Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -63,7 +63,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/dioptra-api-reference';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="REST API Application Factory Reference" href="api-application-factory-reference.html" />
+    <link rel="next" title="dioptra-ssl Command Reference" href="dioptra-ssl-reference.html" />
     <link rel="prev" title="REST API Configuration Reference" href="api-configuration-reference.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -454,33 +462,36 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-summary">Command Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-path-precedence">Key-Path Precedence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-key">init-key</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization-and-reruns">Initialization and Reruns</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-behavior">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dev">dev</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Output and Exit Status</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debug-precedence">Debug Precedence</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-options-and-restrictions">Server Options and Restrictions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prod">prod</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Syntax</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Options</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Server Options and Restrictions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Output and Exit Status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Server Options and Restrictions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production-https-requirements">Production HTTPS Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-inputs">Certificate Inputs</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-path-precedence">Key-Path Precedence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
             </nav>
@@ -501,19 +512,25 @@ Shared settings and key-file requirements are listed in <a class="reference inte
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#command-summary" id="id10">Command Summary</a></p></li>
-<li><p><a class="reference internal" href="#key-path-precedence" id="id11">Key-Path Precedence</a></p></li>
-<li><p><a class="reference internal" href="#init-key" id="id12">init-key</a></p></li>
-<li><p><a class="reference internal" href="#dev" id="id13">dev</a></p></li>
-<li><p><a class="reference internal" href="#prod" id="id14">prod</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id15">See Also</a></p></li>
+<li><p><a class="reference internal" href="#syntax" id="id11">Syntax</a></p></li>
+<li><p><a class="reference internal" href="#command-summary" id="id12">Command Summary</a></p></li>
+<li><p><a class="reference internal" href="#init-key" id="id13">init-key</a></p></li>
+<li><p><a class="reference internal" href="#dev" id="id14">dev</a></p></li>
+<li><p><a class="reference internal" href="#prod" id="id15">prod</a></p></li>
+<li><p><a class="reference internal" href="#key-path-precedence" id="id16">Key-Path Precedence</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id17">See Also</a></p></li>
 </ul>
 </div>
-<section id="command-summary">
-<h2><a class="toc-backref" href="#id10">Command Summary</a><a class="headerlink" href="#command-summary" title="Permalink to this headline">#</a></h2>
+<section id="syntax">
+<h2><a class="toc-backref" href="#id11">Syntax</a><a class="headerlink" href="#syntax" title="Permalink to this headline">#</a></h2>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-api [--help] COMMAND [OPTIONS]
 </pre></div>
 </div>
+<p>Square brackets indicate optional arguments.
+Replace <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> with a subcommand from the following table.</p>
+</section>
+<section id="command-summary">
+<h2><a class="toc-backref" href="#id12">Command Summary</a><a class="headerlink" href="#command-summary" title="Permalink to this headline">#</a></h2>
 <table class="colwidths-given table">
 <colgroup>
 <col style="width: 20%" />
@@ -527,15 +544,15 @@ Shared settings and key-file requirements are listed in <a class="reference inte
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">init-key</span></code></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reference-dioptra-api-init-key"><span class="std std-ref">init-key</span></a></p></td>
 <td><p>Create a persistent signing key or preserve an existing valid key.</p></td>
-<td><p>POSIX; native Windows with <code class="docutils literal notranslate"><span class="pre">--development</span></code>.</p></td>
+<td><p>POSIX, and native Windows with <code class="docutils literal notranslate"><span class="pre">--development</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reference-dioptra-api-dev"><span class="std std-ref">dev</span></a></p></td>
 <td><p>Run development policy with Flask’s development server.</p></td>
 <td><p>POSIX and native Windows.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prod</span></code></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#reference-dioptra-api-prod"><span class="std std-ref">prod</span></a></p></td>
 <td><p>Run production policy with Gunicorn.</p></td>
 <td><p>POSIX only.</p></td>
 </tr>
@@ -544,62 +561,56 @@ Shared settings and key-file requirements are listed in <a class="reference inte
 <p><code class="docutils literal notranslate"><span class="pre">--help</span></code> lists the group or subcommand’s own options and exits with status zero.
 The launch commands also accept the native server options described below.</p>
 </section>
-<section id="key-path-precedence">
-<h2><a class="toc-backref" href="#id11">Key-Path Precedence</a><a class="headerlink" href="#key-path-precedence" title="Permalink to this headline">#</a></h2>
-<p>All three commands select the key path from these sources, in descending priority.</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">--key-file</span> <span class="pre">PATH</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_SECRET_KEY_FILE</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">~/.local/share/dioptra/restapi/secret-key</span></code>.</p></li>
-</ol>
-<p>An empty or invalid selected path causes an error; it does not fall back to another source.
-Relative paths use the invocation directory, and <code class="docutils literal notranslate"><span class="pre">~</span></code> is expanded.
-See <a class="reference internal" href="api-configuration-reference.html#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a> for content and filesystem requirements.</p>
-</section>
 <section id="init-key">
-<span id="reference-dioptra-api-init-key"></span><h2><a class="toc-backref" href="#id12">init-key</a><a class="headerlink" href="#init-key" title="Permalink to this headline">#</a></h2>
+<span id="reference-dioptra-api-init-key"></span><h2><a class="toc-backref" href="#id13">init-key</a><a class="headerlink" href="#init-key" title="Permalink to this headline">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">init-key</span></code> creates a cryptographically random persistent key without selecting an API mode, constructing Flask or connecting to backing services.
 It preserves existing valid contents and ownership on reruns and never rotates or overwrites a key.</p>
-<section id="syntax">
-<h3>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">#</a></h3>
+<section id="id1">
+<h3>Syntax<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-api init-key [--development] [--key-file PATH] [--help]
 </pre></div>
 </div>
 </section>
 <section id="options">
 <h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">#</a></h3>
-<table class="colwidths-given table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 25%" />
-<col style="width: 45%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Option</p></th>
-<th class="head"><p>Default</p></th>
-<th class="head"><p>Behavior</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--key-file</span> <span class="pre">PATH</span></code></p></td>
-<td><p>Environment or per-user path.</p></td>
-<td><p>Select the persistent key path.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--development</span></code></p></td>
-<td><p>Disabled.</p></td>
-<td><p>Permit native Windows initialization with the reduced filesystem guarantees in <a class="reference internal" href="api-configuration-reference.html#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a>. POSIX checks remain unchanged.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
-<td><p>None.</p></td>
-<td><p>Display command help and exit.</p></td>
-</tr>
-</tbody>
-</table>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-init-key-key-file">
+<span class="sig-name descname"><span class="pre">--key-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-init-key-key-file" title="Permalink to this definition">#</a></dt>
+<dd><p>Select the persistent signing-key path.
+If omitted, use the environment or per-user path under <a class="reference internal" href="#key-path-precedence">Key-Path Precedence</a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-init-key-development">
+<span class="sig-name descname"><span class="pre">--development</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-init-key-development" title="Permalink to this definition">#</a></dt>
+<dd><p>Permit native Windows initialization with the reduced filesystem guarantees in <a class="reference internal" href="api-configuration-reference.html#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a>.
+Disabled by default. POSIX checks remain unchanged.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-init-key-help">
+<span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-init-key-help" title="Permalink to this definition">#</a></dt>
+<dd><p>Display command help and exit.</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-api<span class="w"> </span>init-key<span class="w"> </span>--key-file<span class="w"> </span>~/.local/share/dioptra/restapi/secret-key
+</pre></div>
+</div>
+<p>Native Windows requires <code class="docutils literal notranslate"><span class="pre">dioptra-api</span> <span class="pre">init-key</span> <span class="pre">--development</span></code>.</p>
+</section>
+<section id="output-and-exit-status">
+<h3>Output and Exit Status<a class="headerlink" href="#output-and-exit-status" title="Permalink to this headline">#</a></h3>
+<p>Creation or valid preservation returns zero and reports the key path.
+Invalid content, unsafe paths, unsupported platform use and initialization failures return nonzero.</p>
 </section>
 <section id="initialization-and-reruns">
 <h3>Initialization and Reruns<a class="headerlink" href="#initialization-and-reruns" title="Permalink to this headline">#</a></h3>
 <p>On POSIX, initialization creates or repairs the API-owned immediate parent to <code class="docutils literal notranslate"><span class="pre">0700</span></code> and the key file to <code class="docutils literal notranslate"><span class="pre">0600</span></code>.
-A custom path authorizes restricting its immediate parent; other API data may share that directory.
+A custom path authorizes restricting its immediate parent.
+Other API data may share that directory.
 Missing higher ancestors are created under the process umask, while existing higher ancestors retain their permissions.
 Permission repairs report the path and old/new modes without displaying key material.</p>
 <table class="colwidths-given table">
@@ -617,7 +628,7 @@ Permission repairs report the path and old/new modes without displaying key mate
 <td><p>Create and publish a complete key without replacing an existing file.</p></td>
 </tr>
 <tr class="row-odd"><td><p>An existing key is valid.</p></td>
-<td><p>Preserve its contents and ownership; repair POSIX permissions when needed.</p></td>
+<td><p>Preserve its contents and ownership. Repair POSIX permissions when needed.</p></td>
 </tr>
 <tr class="row-even"><td><p>Existing contents are invalid.</p></td>
 <td><p>Return an error and preserve the contents. POSIX permission repairs may already have occurred.</p></td>
@@ -631,65 +642,62 @@ Permission repairs report the path and old/new modes without displaying key mate
 </tbody>
 </table>
 <p>Inspect any reported temporary files or staging links before rerunning initialization.
-An observed extra link causes an error with rerun guidance; do not replace the final key to resolve it.</p>
-</section>
-<section id="exit-behavior">
-<h3>Exit Behavior<a class="headerlink" href="#exit-behavior" title="Permalink to this headline">#</a></h3>
-<p>Creation or valid preservation returns zero and reports the key path.
-Invalid content, unsafe paths, unsupported platform use and initialization failures return nonzero.</p>
-</section>
-<section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">#</a></h3>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-api<span class="w"> </span>init-key<span class="w"> </span>--key-file<span class="w"> </span>~/.local/share/dioptra/restapi/secret-key
-</pre></div>
-</div>
-<p>Native Windows requires <code class="docutils literal notranslate"><span class="pre">dioptra-api</span> <span class="pre">init-key</span> <span class="pre">--development</span></code>.</p>
+An observed extra link causes an error with rerun guidance.
+Do not replace the final key to resolve it.</p>
 </section>
 </section>
 <section id="dev">
-<span id="reference-dioptra-api-dev"></span><h2><a class="toc-backref" href="#id13">dev</a><a class="headerlink" href="#dev" title="Permalink to this headline">#</a></h2>
+<span id="reference-dioptra-api-dev"></span><h2><a class="toc-backref" href="#id14">dev</a><a class="headerlink" href="#dev" title="Permalink to this headline">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">dev</span></code> selects development policy and runs Flask with the resolved Dioptra application.
 It selects <code class="docutils literal notranslate"><span class="pre">dev</span></code> even when <code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_ENV=prod</span></code> is inherited.
 The selected key must already exist.</p>
-<section id="id1">
-<h3>Syntax<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<section id="id2">
+<h3>Syntax<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-api dev [--key-file PATH] [--debug | --no-debug] [FLASK_RUN_OPTIONS]
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Options<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
-<table class="colwidths-given table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 25%" />
-<col style="width: 45%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Option</p></th>
-<th class="head"><p>Default</p></th>
-<th class="head"><p>Behavior</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--key-file</span> <span class="pre">PATH</span></code></p></td>
-<td><p>Environment or per-user path.</p></td>
-<td><p>Select an existing signing key.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--debug</span> <span class="pre">/</span> <span class="pre">--no-debug</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">FLASK_DEBUG</span></code>, then enabled.</p></td>
-<td><p>Enable or disable debug mode; see the precedence rule below.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FLASK_RUN_OPTIONS</span></code></p></td>
-<td><p>Flask defaults.</p></td>
-<td><p>Forward native host, port, reload, debugger, threading and TLS options.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
-<td><p>None.</p></td>
-<td><p>Display the Dioptra subcommand’s own help and exit.</p></td>
-</tr>
-</tbody>
-</table>
+<section id="id3">
+<h3>Options<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-dev-key-file">
+<span class="sig-name descname"><span class="pre">--key-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-dev-key-file" title="Permalink to this definition">#</a></dt>
+<dd><p>Select an existing signing key.
+If omitted, use the environment or per-user path under <a class="reference internal" href="#key-path-precedence">Key-Path Precedence</a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-dev-debug">
+<span id="cmdoption-dioptra-api-dev-no-debug"></span><span class="sig-name descname"><span class="pre">--debug</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--no-debug</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-dev-debug" title="Permalink to this definition">#</a></dt>
+<dd><p>Enable or disable debug mode.
+If omitted, use <code class="docutils literal notranslate"><span class="pre">FLASK_DEBUG</span></code>, then the enabled development default.
+See the precedence rule below.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-dev-arg-FLASK_RUN_OPTIONS">
+<span id="cmdoption-dioptra-api-dev-arg-flask-run-options"></span><span class="sig-name descname"><span class="pre">FLASK_RUN_OPTIONS</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-dev-arg-FLASK_RUN_OPTIONS" title="Permalink to this definition">#</a></dt>
+<dd><p>Native Flask host, port, reload, debugger, threading and TLS options.
+Unspecified values retain Flask’s defaults.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-dev-help">
+<span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-dev-help" title="Permalink to this definition">#</a></dt>
+<dd><p>Display the Dioptra subcommand’s own help and exit.</p>
+</dd></dl>
+
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-api<span class="w"> </span>dev<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>--port<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--no-reload
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output and Exit Status<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<p>Configuration or key validation errors return nonzero before server dispatch.
+After dispatch, Flask controls server operation and exit behavior.</p>
 </section>
 <section id="debug-precedence">
 <h3>Debug Precedence<a class="headerlink" href="#debug-precedence" title="Permalink to this headline">#</a></h3>
@@ -709,82 +717,129 @@ Native reload and debugger options remain independent of debug-mode selection.</
 Positional application arguments and <code class="docutils literal notranslate"><span class="pre">--app</span></code> replacements are rejected.
 See Flask’s <a class="reference external" href="https://flask.palletsprojects.com/en/stable/cli/#run-the-development-server">run command documentation</a> for native option behavior.</p>
 </section>
-<section id="id3">
-<h3>Exit Behavior<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
-<p>Configuration or key validation errors return nonzero before server dispatch.
-After dispatch, Flask controls server operation and exit behavior.</p>
-</section>
-<section id="id4">
-<h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-api<span class="w"> </span>dev<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>--port<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--no-reload
-</pre></div>
-</div>
-</section>
 </section>
 <section id="prod">
-<span id="reference-dioptra-api-prod"></span><h2><a class="toc-backref" href="#id14">prod</a><a class="headerlink" href="#prod" title="Permalink to this headline">#</a></h2>
+<span id="reference-dioptra-api-prod"></span><h2><a class="toc-backref" href="#id15">prod</a><a class="headerlink" href="#prod" title="Permalink to this headline">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">prod</span></code> selects production policy and runs Gunicorn with the resolved Dioptra application.
 It selects <code class="docutils literal notranslate"><span class="pre">prod</span></code> regardless of an inherited <code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_ENV</span></code> value.
-The selected key must already exist, and native Windows is unsupported.</p>
-<section id="id5">
-<h3>Syntax<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+The selected signing key must already exist, and native Windows is unsupported.
+Production requires a TLS server certificate and matching private key, plus a configured list of hostnames or IP addresses that the API accepts in requests.</p>
+<section id="id6">
+<h3>Syntax<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-api prod [--key-file PATH] [GUNICORN_OPTIONS]
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Options<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
-<table class="colwidths-given table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 25%" />
-<col style="width: 45%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Option</p></th>
-<th class="head"><p>Default</p></th>
-<th class="head"><p>Behavior</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--key-file</span> <span class="pre">PATH</span></code></p></td>
-<td><p>Environment or per-user path.</p></td>
-<td><p>Select an existing signing key.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GUNICORN_OPTIONS</span></code></p></td>
-<td><p>Gunicorn defaults/configuration.</p></td>
-<td><p>Forward native config-file, bind, worker, timeout and TLS options.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
-<td><p>None.</p></td>
-<td><p>Display the Dioptra subcommand’s own help and exit.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="id7">
-<h3>Server Options and Restrictions<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
-<p>Positional applications, configured WSGI replacements and Paste dispatch are rejected.
-Gunicorn retains its native signal handling.
-Ordinary worker forks share the resolved configuration; preload is an explicit native option.
-Relative key paths and the default SQLite path are resolved before Gunicorn changes directory.
-Native re-execution repeats launcher resolution from the original invocation directory.
-See the <a class="reference external" href="https://docs.gunicorn.org/en/stable/settings.html">Gunicorn settings reference</a> for native options.</p>
+<h3>Options<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<p>The TLS certificate and private-key paths can also be set in a Gunicorn configuration file.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-key-file">
+<span class="sig-name descname"><span class="pre">--key-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-key-file" title="Permalink to this definition">#</a></dt>
+<dd><p>Select an existing API signing key, separate from the TLS private key.
+If omitted, use the environment or per-user path under <a class="reference internal" href="#key-path-precedence">Key-Path Precedence</a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-certfile">
+<span class="sig-name descname"><span class="pre">--certfile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-certfile" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to a PEM file containing the server certificate followed by any required intermediate certificates.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-keyfile">
+<span class="sig-name descname"><span class="pre">--keyfile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-keyfile" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to the matching TLS private key.
+This differs from <code class="docutils literal notranslate"><span class="pre">--key-file</span></code>, which selects the API signing key.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-c">
+<span id="cmdoption-dioptra-api-prod-config"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--config</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-c" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to a Gunicorn configuration file.
+Gunicorn’s normal configuration precedence applies.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-b">
+<span id="cmdoption-dioptra-api-prod-bind"></span><span class="sig-name descname"><span class="pre">-b</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;address&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--bind</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;address&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-b" title="Permalink to this definition">#</a></dt>
+<dd><p>Address on which the API listens, such as <code class="docutils literal notranslate"><span class="pre">127.0.0.1:8000</span></code>.
+If omitted, Gunicorn’s configured value or default applies.
+Accepted request hostnames and IP addresses are configured separately through <a class="reference internal" href="api-configuration-reference.html#reference-api-transport-settings"><span class="std std-ref">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-arg-GUNICORN_OPTIONS">
+<span id="cmdoption-dioptra-api-prod-arg-gunicorn-options"></span><span class="sig-name descname"><span class="pre">GUNICORN_OPTIONS</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-arg-GUNICORN_OPTIONS" title="Permalink to this definition">#</a></dt>
+<dd><p>Additional Gunicorn options, such as worker count and timeouts.
+Unspecified values use Gunicorn’s configuration or defaults.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-api-prod-help">
+<span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-api-prod-help" title="Permalink to this definition">#</a></dt>
+<dd><p>Display the Dioptra subcommand’s own help and exit.</p>
+</dd></dl>
+
 </section>
 <section id="id8">
-<h3>Exit Behavior<a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<h3>Examples<a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<p>This example uses an existing certificate for <code class="docutils literal notranslate"><span class="pre">localhost</span></code> at <code class="docutils literal notranslate"><span class="pre">pki/server/api.crt</span></code>, its private key at <code class="docutils literal notranslate"><span class="pre">pki/server/api.key</span></code>, and an API signing key initialized with <a class="reference internal" href="#reference-dioptra-api-init-key"><span class="std std-ref">dioptra-api init-key</span></a>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span><span class="o">=</span><span class="s1">'["localhost:8000"]'</span>
+dioptra-api<span class="w"> </span>prod<span class="w"> </span>--certfile<span class="w"> </span>pki/server/api.crt<span class="w"> </span>--keyfile<span class="w"> </span>pki/server/api.key<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--bind<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>--workers<span class="w"> </span><span class="m">2</span>
+</pre></div>
+</div>
+<p>The API is available at <code class="docutils literal notranslate"><span class="pre">https://localhost:8000</span></code>.</p>
+</section>
+<section id="id9">
+<h3>Output and Exit Status<a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p>Configuration or key validation errors return nonzero before server dispatch.
 After dispatch, Gunicorn controls server operation and exit behavior.</p>
 </section>
-<section id="id9">
-<h3>Example<a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-api<span class="w"> </span>prod<span class="w"> </span>--bind<span class="w"> </span><span class="m">127</span>.0.0.1:8000<span class="w"> </span>--workers<span class="w"> </span><span class="m">2</span>
-</pre></div>
-</div>
+<section id="id10">
+<h3>Server Options and Restrictions<a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<p>Positional applications, configured WSGI replacements and Paste dispatch are rejected.
+Gunicorn retains its native signal handling.
+Ordinary worker forks share the resolved configuration.
+Preload is an explicit native option.
+Relative signing-key paths and the default SQLite path are resolved before Gunicorn changes directory.
+Native re-execution repeats launcher resolution from the original invocation directory.
+See the <a class="reference external" href="https://docs.gunicorn.org/en/stable/settings.html">Gunicorn settings reference</a> for native options.</p>
+</section>
+<section id="production-https-requirements">
+<h3>Production HTTPS Requirements<a class="headerlink" href="#production-https-requirements" title="Permalink to this headline">#</a></h3>
+<p>Production requires TLS 1.3 and a readable server certificate and matching private key.
+The command checks these requirements after loading Gunicorn’s configuration and stops before accepting connections if they are not met.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span></code> to a JSON list of hostnames or IP addresses accepted in requests.
+Include the port when it differs from 443, for example <code class="docutils literal notranslate"><span class="pre">[&quot;localhost:8000&quot;]</span></code>.
+The server certificate must cover the hostname or IP address clients use.
+See <a class="reference internal" href="api-configuration-reference.html#reference-api-transport-settings"><span class="std std-ref">REST API Configuration Reference</span></a> for request-host validation and reverse-proxy settings.</p>
+</section>
+<section id="certificate-inputs">
+<h3>Certificate Inputs<a class="headerlink" href="#certificate-inputs" title="Permalink to this headline">#</a></h3>
+<p>Provide a server certificate and matching private key before starting the API.
+You can use certificates from your certificate provider or create your own with <code class="docutils literal notranslate"><span class="pre">dioptra-ssl</span></code>.
+See its <a class="reference internal" href="dioptra-ssl-reference.html#reference-dioptra-ssl-create-ca"><span class="std std-ref">create-ca</span></a> and <a class="reference internal" href="dioptra-ssl-reference.html#reference-dioptra-ssl-issue"><span class="std std-ref">issue</span></a> command examples.</p>
+<p>Clients must trust the CA that issued the server certificate.
+See <a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a> for browser and Python-client instructions.
+Keep the CA’s private key separate from the API’s server certificate and private key.</p>
 </section>
 </section>
-<section id="see-also">
-<h2><a class="toc-backref" href="#id15">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<section id="key-path-precedence">
+<h2><a class="toc-backref" href="#id16">Key-Path Precedence</a><a class="headerlink" href="#key-path-precedence" title="Permalink to this headline">#</a></h2>
+<p>All three commands select the key path from these sources, in descending priority.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--key-file</span> <span class="pre">PATH</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_SECRET_KEY_FILE</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">~/.local/share/dioptra/restapi/secret-key</span></code>.</p></li>
+</ol>
+<p>An empty or invalid selected path causes an error and stops key-path selection.
+Relative paths use the invocation directory, and <code class="docutils literal notranslate"><span class="pre">~</span></code> is expanded.
+See <a class="reference internal" href="api-configuration-reference.html#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a> for content and filesystem requirements.</p>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2><a class="toc-backref" href="#id17">See Also</a><a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="api-configuration-reference.html#reference-api-configuration"><span class="std std-ref">REST API Configuration Reference</span></a> lists shared environment settings and key requirements.</p></li>
 <li><p><a class="reference internal" href="api-application-factory-reference.html#reference-api-application-factory"><span class="std std-ref">REST API Application Factory Reference</span></a> describes Python application construction.</p></li>
@@ -814,11 +869,11 @@ After dispatch, Gunicorn controls server operation and exit behavior.</p>
       </div>
     </a>
     <a class="right-next"
-       href="api-application-factory-reference.html"
+       href="dioptra-ssl-reference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">REST API Application Factory Reference</p>
+        <p class="prev-next-title">dioptra-ssl Command Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -840,33 +895,36 @@ After dispatch, Gunicorn controls server operation and exit behavior.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-summary">Command Summary</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-path-precedence">Key-Path Precedence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-key">init-key</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization-and-reruns">Initialization and Reruns</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-behavior">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dev">dev</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Output and Exit Status</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debug-precedence">Debug Precedence</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#server-options-and-restrictions">Server Options and Restrictions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Example</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prod">prod</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Syntax</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Options</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Server Options and Restrictions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Exit Behavior</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Output and Exit Status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Server Options and Restrictions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production-https-requirements">Production HTTPS Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#certificate-inputs">Certificate Inputs</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-path-precedence">Key-Path Precedence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
   </nav></div>

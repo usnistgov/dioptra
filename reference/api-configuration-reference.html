@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>REST API Configuration Reference &#8212; Dioptra 1.2.3 documentation</title>
+    <title>REST API Configuration Reference &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -458,6 +466,10 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mode-and-key-selection">Mode and Key Selection</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication-and-cookies">Authentication and Cookies</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production-https-settings">Production HTTPS Settings</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxies">Reverse Proxies</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-presentation-and-pagination">API Presentation and Pagination</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#connections-and-logging">Connections and Logging</a></li>
 </ul>
@@ -483,7 +495,8 @@ document.write(`
 <span id="reference-api-configuration"></span><h1>REST API Configuration Reference<a class="headerlink" href="#rest-api-configuration-reference" title="Permalink to this headline">#</a></h1>
 <p>This reference lists the REST API’s operating modes, environment variables, defaults and signing-key requirements.
 It serves developers and deployment maintainers configuring the API.
-Command syntax is documented in <a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api"><span class="std std-ref">dioptra-api Command Reference</span></a>; Python construction and overrides are documented in <a class="reference internal" href="api-application-factory-reference.html#reference-api-application-factory"><span class="std std-ref">REST API Application Factory Reference</span></a>.</p>
+Command syntax is documented in <a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api"><span class="std std-ref">dioptra-api Command Reference</span></a>.
+Python construction and overrides are documented in <a class="reference internal" href="api-application-factory-reference.html#reference-api-application-factory"><span class="std std-ref">REST API Application Factory Reference</span></a>.</p>
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
@@ -492,24 +505,26 @@ Command syntax is documented in <a class="reference internal" href="dioptra-api-
 <ul>
 <li><p><a class="reference internal" href="#mode-and-key-selection" id="id4">Mode and Key Selection</a></p></li>
 <li><p><a class="reference internal" href="#authentication-and-cookies" id="id5">Authentication and Cookies</a></p></li>
-<li><p><a class="reference internal" href="#api-presentation-and-pagination" id="id6">API Presentation and Pagination</a></p></li>
-<li><p><a class="reference internal" href="#connections-and-logging" id="id7">Connections and Logging</a></p></li>
+<li><p><a class="reference internal" href="#production-https-settings" id="id6">Production HTTPS Settings</a></p></li>
+<li><p><a class="reference internal" href="#api-presentation-and-pagination" id="id7">API Presentation and Pagination</a></p></li>
+<li><p><a class="reference internal" href="#connections-and-logging" id="id8">Connections and Logging</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#signing-key-files" id="id8">Signing-Key Files</a></p>
+<li><p><a class="reference internal" href="#signing-key-files" id="id9">Signing-Key Files</a></p>
 <ul>
-<li><p><a class="reference internal" href="#path-and-content" id="id9">Path and Content</a></p></li>
-<li><p><a class="reference internal" href="#filesystem-requirements" id="id10">Filesystem Requirements</a></p></li>
+<li><p><a class="reference internal" href="#path-and-content" id="id10">Path and Content</a></p></li>
+<li><p><a class="reference internal" href="#filesystem-requirements" id="id11">Filesystem Requirements</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#retired-environment-variables" id="id11">Retired Environment Variables</a></p></li>
+<li><p><a class="reference internal" href="#retired-environment-variables" id="id12">Retired Environment Variables</a></p></li>
 </ul>
 </div>
 <section id="operating-modes">
 <h2><a class="toc-backref" href="#id2">Operating Modes</a><a class="headerlink" href="#operating-modes" title="Permalink to this headline">#</a></h2>
 <p>The API requires an explicit operating mode.
 The <code class="docutils literal notranslate"><span class="pre">dioptra-api</span> <span class="pre">dev</span></code> and <code class="docutils literal notranslate"><span class="pre">dioptra-api</span> <span class="pre">prod</span></code> commands select their corresponding modes regardless of an inherited <code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_ENV</span></code> value.
-Python callers can select the mode through an argument or that environment variable; see <a class="reference internal" href="api-application-factory-reference.html#reference-api-mode-precedence"><span class="std std-ref">Mode Precedence</span></a>.</p>
+Python callers can select the mode through an argument or that environment variable.
+See <a class="reference internal" href="api-application-factory-reference.html#reference-api-mode-precedence"><span class="std std-ref">Mode Precedence</span></a>.</p>
 <table class="colwidths-given table" id="id1">
 <caption><span class="caption-text">Mode policies</span><a class="headerlink" href="#id1" title="Permalink to this table">#</a></caption>
 <colgroup>
@@ -533,16 +548,24 @@ Python callers can select the mode through an argument or that environment varia
 <td><p>POSIX only.</p></td>
 </tr>
 <tr class="row-even"><td><p>Debugging default</p></td>
-<td><p>Enabled; may be disabled.</p></td>
-<td><p>Disabled; enabling it is rejected.</p></td>
+<td><p>Enabled. May be disabled.</p></td>
+<td><p>Disabled. Enabling it is rejected.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Authentication</p></td>
-<td><p>Enabled; may be disabled explicitly.</p></td>
-<td><p>Enabled; disabling it is rejected.</p></td>
+<td><p>Enabled. May be disabled explicitly.</p></td>
+<td><p>Enabled. Disabling it is rejected.</p></td>
 </tr>
 <tr class="row-even"><td><p>CORS</p></td>
 <td><p>Enabled for the configured origin.</p></td>
 <td><p>The development CORS configuration is not applied.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Session and remember cookies</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">Secure</span></code> attribute is optional for local HTTP development.</p></td>
+<td><p>Both cookies require the <code class="docutils literal notranslate"><span class="pre">Secure</span></code> attribute. Disabling it is rejected.</p></td>
+</tr>
+<tr class="row-even"><td><p>Packaged transport</p></td>
+<td><p>Local HTTP is permitted.</p></td>
+<td><p>Gunicorn must serve HTTPS using TLS 1.3.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Signing key</p></td>
 <td><p>An existing persistent key file is required.</p></td>
@@ -555,12 +578,13 @@ Missing, empty or unsupported modes fail configuration validation.</p>
 </section>
 <section id="environment-variables">
 <span id="reference-api-environment-settings"></span><h2><a class="toc-backref" href="#id3">Environment Variables</a><a class="headerlink" href="#environment-variables" title="Permalink to this headline">#</a></h2>
-<p>The API reads these variables when resolving a configuration.
-Later environment changes affect subsequent resolution, not an existing application.
+<p>The API reads these variables for each new configuration resolution.
+An existing application retains its resolved settings.
 Python callers can supply <a class="reference internal" href="api-application-factory-reference.html#reference-api-typed-overrides"><span class="std std-ref">typed overrides</span></a> with higher priority.</p>
 <p>Boolean values accept case-insensitive <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code>, ignoring surrounding whitespace.
 Empty or other boolean values are invalid.
-Integer settings accept whole numbers, such as <code class="docutils literal notranslate"><span class="pre">1000</span></code>; decimal fractions (<code class="docutils literal notranslate"><span class="pre">1000.0</span></code>) and scientific notation (<code class="docutils literal notranslate"><span class="pre">1e3</span></code>) are not accepted.</p>
+Integer settings accept whole numbers, such as <code class="docutils literal notranslate"><span class="pre">1000</span></code>.
+Decimal fractions (<code class="docutils literal notranslate"><span class="pre">1000.0</span></code>) and scientific notation (<code class="docutils literal notranslate"><span class="pre">1e3</span></code>) are rejected.</p>
 <section id="mode-and-key-selection">
 <h3><a class="toc-backref" href="#id4">Mode and Key Selection</a><a class="headerlink" href="#mode-and-key-selection" title="Permalink to this headline">#</a></h3>
 <table class="colwidths-given table">
@@ -578,11 +602,11 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_ENV</span></code></p></td>
 <td><p>None.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code> or <code class="docutils literal notranslate"><span class="pre">prod</span></code>; required when the caller does not select a mode.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dev</span></code> or <code class="docutils literal notranslate"><span class="pre">prod</span></code>. Required when the caller does not select a mode.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_SECRET_KEY_FILE</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">~/.local/share/dioptra/restapi/secret-key</span></code></p></td>
-<td><p>A nonempty path to an existing key; see <a class="reference internal" href="#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a>.</p></td>
+<td><p>A nonempty path to an existing key. See <a class="reference internal" href="#reference-api-signing-key"><span class="std std-ref">Signing-Key Files</span></a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -604,25 +628,54 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_LOGIN_DISABLED</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Boolean; <code class="docutils literal notranslate"><span class="pre">true</span></code> is rejected in production.</p></td>
+<td><p>Boolean. <code class="docutils literal notranslate"><span class="pre">true</span></code> is rejected in production.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_SESSION_PROTECTION</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">strong</span></code></p></td>
-<td><p>Case-insensitive <code class="docutils literal notranslate"><span class="pre">basic</span></code>, <code class="docutils literal notranslate"><span class="pre">strong</span></code> or <code class="docutils literal notranslate"><span class="pre">none</span></code>; <code class="docutils literal notranslate"><span class="pre">none</span></code> disables session protection.</p></td>
+<td><p>Case-insensitive <code class="docutils literal notranslate"><span class="pre">basic</span></code>, <code class="docutils literal notranslate"><span class="pre">strong</span></code> or <code class="docutils literal notranslate"><span class="pre">none</span></code>. <code class="docutils literal notranslate"><span class="pre">none</span></code> disables session protection.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_REMEMBER_COOKIE_DURATION</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1209600</span></code> seconds.</p></td>
 <td><p>Integer duration in seconds.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_REMEMBER_COOKIE_SECURE</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
-<td><p>Boolean.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code> in development, <code class="docutils literal notranslate"><span class="pre">true</span></code> in production.</p></td>
+<td><p>Boolean. <code class="docutils literal notranslate"><span class="pre">false</span></code> is rejected in production.</p></td>
 </tr>
 </tbody>
 </table>
+<p>The <code class="docutils literal notranslate"><span class="pre">Secure</span></code> attribute restricts cookies to HTTPS connections.
+Production enforces <code class="docutils literal notranslate"><span class="pre">SESSION_COOKIE_SECURE</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">REMEMBER_COOKIE_SECURE</span> <span class="pre">=</span> <span class="pre">True</span></code> for session and remember cookies.
+Python overrides that disable either setting are rejected.</p>
+</section>
+<section id="production-https-settings">
+<span id="reference-api-transport-settings"></span><h3><a class="toc-backref" href="#id6">Production HTTPS Settings</a><a class="headerlink" href="#production-https-settings" title="Permalink to this headline">#</a></h3>
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-DIOPTRA_TLS_ALLOWED_AUTHORITIES">
+<span class="sig-name descname"><span class="pre">DIOPTRA_TLS_ALLOWED_AUTHORITIES</span></span><a class="headerlink" href="#envvar-DIOPTRA_TLS_ALLOWED_AUTHORITIES" title="Permalink to this definition">#</a></dt>
+<dd><p>Hostnames and IP addresses that clients use to reach the API.
+The API checks each request’s <code class="docutils literal notranslate"><span class="pre">Host</span></code> header against this list.</p>
+<p>Production requires a nonempty JSON array, for example <code class="docutils literal notranslate"><span class="pre">[&quot;localhost:8000&quot;,</span> <span class="pre">&quot;dioptra.example.org&quot;]</span></code>.</p>
+<ul class="simple">
+<li><p>Include the port when it differs from 443. Omitting it is equivalent to specifying <code class="docutils literal notranslate"><span class="pre">:443</span></code>.</p></li>
+<li><p>Enclose IPv6 addresses in square brackets, for example <code class="docutils literal notranslate"><span class="pre">[::1]:8000</span></code>.</p></li>
+<li><p>Hostname comparisons ignore letter case.</p></li>
+</ul>
+<p>Requests with a malformed <code class="docutils literal notranslate"><span class="pre">Host</span></code> header or a value outside this list receive HTTP 400.</p>
+</dd></dl>
+
+<p>Generated deployments configure this list automatically.
+When running the API directly, set it before starting <a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api-prod"><span class="std std-ref">dioptra-api prod</span></a>.</p>
+<section id="reverse-proxies">
+<h4>Reverse Proxies<a class="headerlink" href="#reverse-proxies" title="Permalink to this headline">#</a></h4>
+<p>A reverse proxy must connect to the API over HTTPS, verify its server certificate, and send an allowed hostname and port in the <code class="docutils literal notranslate"><span class="pre">Host</span></code> header.
+<code class="docutils literal notranslate"><span class="pre">Forwarded</span></code> and <code class="docutils literal notranslate"><span class="pre">X-Forwarded-*</span></code> headers do not override the request’s scheme, hostname, or port.
+The generated nginx configuration handles these settings automatically.</p>
+<p>See <a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api-prod"><span class="std std-ref">dioptra-api prod</span></a> for TLS options and <a class="reference internal" href="../how-to/setup-dioptra/reference/ssl-toml-reference.html#reference-ssl-key-exchange"><span class="std std-ref">ssl.toml key_exchange</span></a> for deployment key-exchange settings.</p>
+</section>
 </section>
 <section id="api-presentation-and-pagination">
-<h3><a class="toc-backref" href="#id6">API Presentation and Pagination</a><a class="headerlink" href="#api-presentation-and-pagination" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id7">API Presentation and Pagination</a><a class="headerlink" href="#api-presentation-and-pagination" title="Permalink to this headline">#</a></h3>
 <table class="colwidths-given table">
 <colgroup>
 <col style="width: 40%" />
@@ -638,7 +691,7 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_CORS_ORIGIN</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">http://localhost:5173</span></code></p></td>
-<td><p>Nonempty origin string; used in development.</p></td>
+<td><p>Nonempty origin string used in development.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_SWAGGER_PATH</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">/</span></code></p></td>
@@ -646,7 +699,7 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_BASE_URL</span></code></p></td>
 <td><p>Unset.</p></td>
-<td><p>Nonempty string passed as Flask-RESTX’s <code class="docutils literal notranslate"><span class="pre">url_scheme</span></code>; this is a scheme, not a full base URL.</p></td>
+<td><p>Nonempty URL scheme string, such as <code class="docutils literal notranslate"><span class="pre">https</span></code>, passed as Flask-RESTX’s <code class="docutils literal notranslate"><span class="pre">url_scheme</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_MAX_PAGE_SIZE</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1000</span></code></p></td>
@@ -656,7 +709,7 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 </table>
 </section>
 <section id="connections-and-logging">
-<h3><a class="toc-backref" href="#id7">Connections and Logging</a><a class="headerlink" href="#connections-and-logging" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id8">Connections and Logging</a><a class="headerlink" href="#connections-and-logging" title="Permalink to this headline">#</a></h3>
 <table class="colwidths-given table">
 <colgroup>
 <col style="width: 40%" />
@@ -688,19 +741,20 @@ Integer settings accept whole numbers, such as <code class="docutils literal not
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DIOPTRA_RESTAPI_LOG_LEVEL</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">INFO</span></code></p></td>
-<td><p>Python logging level name; normalized to uppercase.</p></td>
+<td><p>Python logging level name normalized to uppercase.</p></td>
 </tr>
 </tbody>
 </table>
 </section>
 </section>
 <section id="signing-key-files">
-<span id="reference-api-signing-key"></span><h2><a class="toc-backref" href="#id8">Signing-Key Files</a><a class="headerlink" href="#signing-key-files" title="Permalink to this headline">#</a></h2>
-<p>API startup reads an existing key; it never creates a key, repairs its permissions or selects a fallback file after a failure.
+<span id="reference-api-signing-key"></span><h2><a class="toc-backref" href="#id9">Signing-Key Files</a><a class="headerlink" href="#signing-key-files" title="Permalink to this headline">#</a></h2>
+<p>API startup reads an existing key.
+It never creates a key, repairs its permissions or selects a fallback file after a failure.
 Use <a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api-init-key"><span class="std std-ref">dioptra-api init-key</span></a> to provision it before startup.
 Keep the file out of source control and avoid displaying its contents in output or logs.</p>
 <section id="path-and-content">
-<h3><a class="toc-backref" href="#id9">Path and Content</a><a class="headerlink" href="#path-and-content" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id10">Path and Content</a><a class="headerlink" href="#path-and-content" title="Permalink to this headline">#</a></h3>
 <table class="colwidths-given table">
 <colgroup>
 <col style="width: 25%" />
@@ -728,7 +782,7 @@ Keep the file out of source control and avoid displaying its contents in output 
 </table>
 </section>
 <section id="filesystem-requirements">
-<h3><a class="toc-backref" href="#id10">Filesystem Requirements</a><a class="headerlink" href="#filesystem-requirements" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id11">Filesystem Requirements</a><a class="headerlink" href="#filesystem-requirements" title="Permalink to this headline">#</a></h3>
 <table class="colwidths-given table">
 <colgroup>
 <col style="width: 25%" />
@@ -744,7 +798,7 @@ Keep the file out of source control and avoid displaying its contents in output 
 <td><p>The effective API account owns the immediate parent with mode <code class="docutils literal notranslate"><span class="pre">0700</span></code> and the regular, single-link file with mode <code class="docutils literal notranslate"><span class="pre">0400</span></code> or <code class="docutils literal notranslate"><span class="pre">0600</span></code>. Symlinks in the file or parent path are rejected. Protected read-only files and volume mounts are supported.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Native Windows development</p></td>
-<td><p>The same content format and detectable link/file-type checks apply. POSIX ownership, permissions and no-follow descriptor enforcement are unavailable; owner-only Windows ACLs are not established.</p></td>
+<td><p>The same content format and detectable link/file-type checks apply. POSIX ownership, permissions and no-follow descriptor enforcement are unavailable. Owner-only Windows ACLs are not established.</p></td>
 </tr>
 <tr class="row-even"><td><p>Native Windows production</p></td>
 <td><p>Unsupported.</p></td>
@@ -756,7 +810,7 @@ The initializer’s permission repairs and interrupted-initialization behavior a
 </section>
 </section>
 <section id="retired-environment-variables">
-<h2><a class="toc-backref" href="#id11">Retired Environment Variables</a><a class="headerlink" href="#retired-environment-variables" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id12">Retired Environment Variables</a><a class="headerlink" href="#retired-environment-variables" title="Permalink to this headline">#</a></h2>
 <p>The presence of either variable below causes an error, even when its replacement or a Python override is supplied.
 Diagnostics identify setting names without printing credential values.</p>
 <table class="colwidths-given table">
@@ -833,6 +887,10 @@ Diagnostics identify setting names without printing credential values.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mode-and-key-selection">Mode and Key Selection</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication-and-cookies">Authentication and Cookies</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#production-https-settings">Production HTTPS Settings</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxies">Reverse Proxies</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-presentation-and-pagination">API Presentation and Pagination</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#connections-and-logging">Connections and Logging</a></li>
 </ul>

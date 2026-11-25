@@ -58,7 +58,7 @@ If you are using locally built images instead, set this to an empty string.
 container_tag
 ~~~~~~~~~~~~~
 
-**Default:** ``1.2.3``
+**Default:** ``1.2.4``
 
 This should match the tags of the Dioptra container images you will be using.
 If you are using Docker, you can see the available tags by running ``docker images``.
@@ -96,10 +96,14 @@ Multiple mounts should be separated by spaces, for example: ``data.mount var.mou
 nginx_server_name
 ~~~~~~~~~~~~~~~~~
 
-**Default:** ``dioptra.example.org``
+**Default:** ``localhost``
 
-If you are hosting Dioptra on a remote machine, such as a virtual private server, then this will either be a domain name like ``dioptra.example.org`` or the IP address you use to access the machine.
-If you are running Dioptra on your personal computer or laptop, then answer ``_`` (underscore).
+The DNS name or IP address used to access Dioptra over HTTPS.
+Keep ``localhost`` for local access, or supply the hostname or IP address your users will use.
+Do not include a URL scheme, port, path, or wildcard.
+
+The template uses this value for ``host`` in the ``[public]`` section of ``config/ssl.toml``.
+See :ref:`ssl.toml Configuration Reference <reference-ssl-public-host>` for hostname requirements.
 
 nginx_expose_ports_on_localhost_only
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,7 +111,7 @@ nginx_expose_ports_on_localhost_only
 **Default:** ``True``
 
 Choosing ``True`` will generate a ``docker-compose.yml`` file that binds the NGINX ports to the loopback interface (localhost, 127.0.0.1).
-In this configuration, you will need to use port forwarding via SSH or a firewall in order to access the services from another machine.
+Access from another machine requires SSH port forwarding or a change to the published bind address.
 If ``False``, the NGINX ports will be exposed on all available network interfaces.
 
 **Recommendations:**
@@ -205,10 +209,10 @@ Press Enter to accept the default, or type a new value.
 
    deployment_name [Dioptra deployment]: Dioptra deployment
    container_registry [ghcr.io/usnistgov]:
-   container_tag [1.2.3]: 1.2.3
+   container_tag [1.2.4]: 1.2.4
    docker_compose_path [docker compose]: docker compose
    systemd_required_mounts []:
-   nginx_server_name [dioptra.example.org]: _
+   nginx_server_name [localhost]:
    Select nginx_expose_ports_on_localhost_only:
    1 - True
    2 - False
@@ -234,22 +238,22 @@ For automated deployments or when you want to avoid interactive prompts, you can
 
 .. note::
 
-   Replace ``<branch-name>`` with the Dioptra branch that matches your container images (e.g., ``main`` for releases, ``dev`` for development builds).
+   Replace ``BRANCH_NAME`` with the Dioptra branch that matches your container images (for example, ``main`` for releases or ``dev`` for development builds).
 
 **Use all defaults:**
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input
 
 **Override specific values on the command line:**
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
-     --extra-context '{"datasets_directory": "~/datasets", "nginx_server_name": "_"}'
+     --extra-context '{"datasets_directory": "~/datasets"}'
 
 **Override values from a JSON file:**
 
@@ -260,7 +264,6 @@ Create a file named ``overrides.json``:
    {
      "deployment_name": "My Dioptra Deployment",
      "datasets_directory": "/data/ml-datasets",
-     "nginx_server_name": "_",
      "num_tensorflow_cpu_workers": "2"
    }
 
@@ -268,6 +271,6 @@ Then run:
 
 .. code:: sh
 
-   cruft create https://github.com/usnistgov/dioptra --checkout <branch-name> \
+   cruft create https://github.com/usnistgov/dioptra --checkout BRANCH_NAME \
      --directory cookiecutter-templates/cookiecutter-dioptra-deployment --no-input \
      --extra-context-file overrides.json

@@ -20,7 +20,7 @@
 Deployment Folder Reference
 ===========================
 
-This reference describes the files and folders created by the Dioptra deployment cookiecutter template.
+This reference describes the files and folders created by the Dioptra deployment cookiecutter template and deployment initialization.
 Understanding this structure will help you customize and troubleshoot your deployment.
 
 .. seealso::
@@ -35,16 +35,23 @@ Understanding this structure will help you customize and troubleshoot your deplo
 Folder Tree
 -----------
 
-The following tree shows all files created by the template with annotations explaining their purpose.
+The following tree shows the deployment layout, including certificate files and private state created by initialization.
 
 .. code:: text
 
    .
+   ├── .ssl-private/
+   │   ├── ca/
+   │   │   ├── ca.crt
+   │   │   └── ca.key
+   │   ├── deployment-state.json
+   │   └── operations/
    ├── config/
    │   ├── db/
    │   │   └── init-db.sh
    │   ├── rustfs/
    │   │   └── mlflow-tracking-readwrite-policy.json
+   │   ├── ssl.toml
    │   └── nginx/
    │       ├── http_*.conf
    │       ├── https_*.conf
@@ -71,6 +78,7 @@ The following tree shows all files created by the template with annotations expl
    │   ├── init-rustfs.sh
    │   ├── init-named-volumes.m4
    │   ├── init-scripts.sh
+   │   ├── manage_ssl.py
    │   ├── manage-postgres-ssl.m4
    │   └── set-permissions.m4
    ├── secrets/
@@ -78,10 +86,16 @@ The following tree shows all files created by the template with annotations expl
    │   └── postgres-passwd.env
    ├── ssl/
    │   ├── ca-certificates/
+   │   │   ├── dioptra-local-ca.crt
    │   │   └── README.md
    │   ├── db/
    │   │   └── README.md
+   │   ├── restapi/
+   │   │   ├── server.crt
+   │   │   └── server.key
    │   └── nginx/
+   │       ├── server.crt
+   │       ├── server.key
    │       └── README.md
    ├── systemd/
    │   └── dioptra.service
@@ -96,7 +110,13 @@ The following tree shows all files created by the template with annotations expl
 config/ Directory
 -----------------
 
-Contains configuration files that are copied into named volumes during deployment initialization.
+Contains service and certificate configuration files.
+
+config/ssl.toml
+~~~~~~~~~~~~~~~
+
+Configures the deployment hostname and certificates for the REST API and nginx, including whether Dioptra generates the certificates or uses certificates you supply.
+See :ref:`reference-ssl-toml` for the available settings.
 
 config/db/
 ~~~~~~~~~~
@@ -128,14 +148,14 @@ NGINX reverse proxy configuration files:
    - ``http_dbadmin.conf`` - pgadmin4 dashboard
 
 **https_*.conf**
-   Configure NGINX to serve each service over HTTPS connections (used when SSL/TLS is enabled):
+   Configure NGINX to serve each service over HTTPS connections:
 
    - ``https_default.conf`` - HTTPS defaults, including paths to server certificate and private key
    - ``https_proxy.conf`` - Reverse proxy settings for HTTPS
    - ``https_restapi.conf``, ``https_mlflow.conf``, ``https_rustfs.conf``, ``https_dbadmin.conf`` - HTTPS versions of each service
 
 **stream_db.conf**
-   Configures NGINX to proxy TCP requests to the PostgreSQL database. This is a simple passthrough; any SSL encryption must be enabled in the PostgreSQL service itself.
+   Configures NGINX to proxy TCP requests to the PostgreSQL database. This is a simple passthrough. Any SSL encryption must be enabled in the PostgreSQL service itself.
 
 envs/ Directory
 ---------------
@@ -174,6 +194,7 @@ Contains environment variable files that configure each service. **These files a
 
    - ``DIOPTRA_RESTAPI_ENV``
    - ``DIOPTRA_RESTAPI_SECRET_KEY_FILE``
+   - ``DIOPTRA_TLS_ALLOWED_AUTHORITIES``
    - ``MLFLOW_S3_ENDPOINT_URL``
    - ``MLFLOW_TRACKING_URI``
    - ``RQ_REDIS_URI``
@@ -197,7 +218,7 @@ Contains environment variable files that configure each service. **These files a
 scripts/ Directory
 ------------------
 
-Contains initialization scripts used by ``init-deployment.sh``.
+Contains deployment initialization scripts and ``manage_ssl.py`` for certificate maintenance.
 
 scripts/templates/
 ~~~~~~~~~~~~~~~~~~
@@ -224,6 +245,10 @@ scripts/ (root)
 
 **init-deployment.sh** (see Root Directory section)
    Main initialization script.
+
+**manage_ssl.py**
+   Deployment certificate initialization, validation, replacement and recovery.
+   See :ref:`reference-manage-ssl`.
 
 **init-rustfs.sh**
    Sets RustFS policies defined in ``config/rustfs/``.
@@ -274,13 +299,15 @@ secrets/ Directory
 ssl/ Directory
 --------------
 
-Contains SSL/TLS certificates and private keys.
+Contains service certificates, private keys, and public CA certificates.
+The generated CA's private key is stored separately under ``.ssl-private/``.
 
 ssl/ca-certificates/
 ~~~~~~~~~~~~~~~~~~~~
 
-Place extra CA certificates here if your environment uses an internal certificate authority.
-Initialization also copies these certificates and the updated CA bundle into the ``rustfs-certs`` and ``rc-ca-certificates`` volumes for RustFS and its client.
+Contains public root CA certificates trusted by Dioptra's services.
+``dioptra-local-ca.crt`` is the public certificate for Dioptra's generated CA.
+Additional certificates use PEM format and ``.crt`` filenames.
 See :ref:`how-to-adding-certificates` for details.
 
 ssl/db/
@@ -293,15 +320,54 @@ See :ref:`how-to-enabling-ssl-tls` for details.
 
    The private key file (``server.key``) is sensitive. **DO NOT commit it to version control.**
 
-ssl/nginx/
-~~~~~~~~~~
+ssl/restapi/ and ssl/nginx/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Place the NGINX server certificate (``server.crt``) and private key (``server.key``) here to enable HTTPS.
-See :ref:`how-to-enabling-ssl-tls` for details.
+Each directory contains ``server.crt``, holding the server certificate followed by any required intermediate certificates, and ``server.key``, holding its matching private key.
+Initialization creates these files for generated certificates or validates files you supply.
+Directory modes are ``0700``, private keys ``0600`` and public certificates ``0644``.
+See :ref:`how-to-enabling-ssl-tls` for initial setup and :ref:`how-to-replace-deployment-certificates` for replacing existing certificates.
 
 .. warning::
 
    The private key file (``server.key``) is sensitive. **DO NOT commit it to version control.**
+
+.ssl-private/ Directory
+-----------------------
+
+Contains the generated CA, certificate installation records, and files used for recovery.
+These files are owned by the deployment user.
+The directory and its subdirectories use mode ``0700``.
+Private keys and installation and operation records use ``0600``.
+
+**ca/ca.key and ca/ca.crt**
+   The private key and public certificate for Dioptra's generated CA.
+   The key is used to issue deployment certificates.
+
+**deployment-state.json**
+   Records the installed certificates and the status of certificate operations.
+   Managed by ``manage_ssl.py``.
+
+**operations/**
+   Stores replacement certificates and keys, together with the previous files needed to resume or undo a certificate operation.
+   See :ref:`how-to-recover-certificate-operation` before changing or removing these files.
+
+.. _reference-deployment-certificate-backups:
+
+Certificate Backups
+-------------------
+
+Retain a protected backup of the following files and directories:
+
+* ``config/ssl.toml``
+* ``.ssl-private/``
+* ``ssl/restapi/``
+* ``ssl/nginx/``
+* The public CA certificate files used by the deployment under ``ssl/ca-certificates/``.
+
+Backups containing private keys require the same restricted access as the live files.
+Do not commit these backups to version control or share them with users configuring certificate trust.
+The generated CA's private key is needed to issue new certificates using the same CA.
 
 systemd/ Directory
 ------------------

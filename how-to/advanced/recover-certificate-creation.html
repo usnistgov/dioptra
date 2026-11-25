@@ -1,0 +1,749 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Recover from Interrupted Certificate Creation &#8212; Dioptra 1.2.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../../_static/jquery.visible.js"></script>
+    <script src="../../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../../_static/applyLeaveNotice.js"></script>
+    <script src="../../_static/smoothNavScroll.js"></script>
+    <script src="../../_static/image_modals.js"></script>
+    <script src="../../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/advanced/recover-certificate-creation';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Glossary" href="../../reference/glossary.html" />
+    <link rel="prev" title="Develop for Dioptra" href="develop-for-dioptra.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Advanced</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Recover from Interrupted Certificate Creation</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../reference/glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../reference/python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../reference/python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/how-to/advanced/recover-certificate-creation.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Recover from Interrupted Certificate Creation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-a-recover-the-saved-files">Option A: Recover the Saved Files</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a1-identify-the-saved-and-output-files">Step A1: Identify the Saved and Output Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a2-validate-the-saved-certificate-and-key">Step A2: Validate the Saved Certificate and Key</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a3-check-the-issuance-log-if-used">Step A3: Check the Issuance Log (If Used)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a4-compare-any-existing-output-files">Step A4: Compare Any Existing Output Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a5-restore-the-missing-files">Step A5: Restore the Missing Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a6-verify-the-recovered-files">Step A6: Verify the Recovered Files</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-b-start-again">Option B: Start Again</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b1-prepare-new-output-paths">Step B1: Prepare New Output Paths</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b2-repeat-the-creation-command">Step B2: Repeat the Creation Command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b3-use-the-new-files">Step B3: Use the New Files</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="recover-from-interrupted-certificate-creation">
+<span id="how-to-recover-certificate-creation"></span><h1>Recover from Interrupted Certificate Creation<a class="headerlink" href="#recover-from-interrupted-certificate-creation" title="Permalink to this headline">#</a></h1>
+<p>Use this guide to recover the certificate and private key saved by a failed <code class="docutils literal notranslate"><span class="pre">dioptra-ssl</span> <span class="pre">create-ca</span></code> or <code class="docutils literal notranslate"><span class="pre">dioptra-ssl</span> <span class="pre">issue</span></code> command when it could not finish writing its output files.
+For certificates managed by a Dioptra deployment, follow <a class="reference internal" href="../setup-dioptra/recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a>.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p>The original command and its failure report, including the location of the saved files.</p></li>
+<li><p>Terminal access as the user who owns the saved files and output directories.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dioptra-ssl</span></code> and OpenSSL available in your terminal.</p></li>
+<li><p>For a server certificate, the root CA certificate needed to validate its chain.</p></li>
+</ul>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
+<p>Choose how to proceed after the failed command:</p>
+<ul class="simple">
+<li><p><strong>Option A: Recover the Saved Files.</strong> Use this to check the saved certificate and key and restore missing outputs.</p></li>
+<li><p><strong>Option B: Start Again.</strong> Use this if the saved files cannot be recovered or you prefer to generate a new pair.</p></li>
+</ul>
+</section>
+<section id="option-a-recover-the-saved-files">
+<span id="how-to-recover-certificate-creation-saved"></span><h2>Option A: Recover the Saved Files<a class="headerlink" href="#option-a-recover-the-saved-files" title="Permalink to this headline">#</a></h2>
+<section class="header-on-a-card header-steps" id="step-a1-identify-the-saved-and-output-files">
+<h3>Step A1: Identify the Saved and Output Files<a class="headerlink" href="#step-a1-identify-the-saved-and-output-files" title="Permalink to this headline">#</a></h3>
+<p>Confirm that the failed command has stopped and that no other process is writing to these files.
+Find the saved certificate and private key in the recovery directory identified by the failure report.
+In your terminal, save their paths and the intended output paths in shell variables:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">saved_cert</span><span class="o">=</span><span class="s1">'SAVED_CERTIFICATE_PATH'</span>
+<span class="nv">saved_key</span><span class="o">=</span><span class="s1">'SAVED_PRIVATE_KEY_PATH'</span>
+<span class="nv">cert_out</span><span class="o">=</span><span class="s1">'OUTPUT_CERTIFICATE_PATH'</span>
+<span class="nv">key_out</span><span class="o">=</span><span class="s1">'OUTPUT_PRIVATE_KEY_PATH'</span>
+</pre></div>
+</div>
+<p>Replace the <code class="docutils literal notranslate"><span class="pre">SAVED_</span></code> placeholders with the paths to the saved files.
+Replace the <code class="docutils literal notranslate"><span class="pre">OUTPUT_</span></code> placeholders with the original command’s <code class="docutils literal notranslate"><span class="pre">--cert-out</span></code> and <code class="docutils literal notranslate"><span class="pre">--key-out</span></code> paths.
+Use absolute paths to regular files, not directories or symbolic links; either output file may be missing.
+These assignments produce no output.
+Use the same terminal session for the remaining steps.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a2-validate-the-saved-certificate-and-key">
+<h3>Step A2: Validate the Saved Certificate and Key<a class="headerlink" href="#step-a2-validate-the-saved-certificate-and-key" title="Permalink to this headline">#</a></h3>
+<p>If the failed command was <code class="docutils literal notranslate"><span class="pre">create-ca</span></code>, validate the saved CA certificate and key:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>validate<span class="w"> </span>--kind<span class="w"> </span>ca<span class="w"> </span>--cert<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_cert</span><span class="s2">"</span><span class="w"> </span>--key<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_key</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>If the failed command was <code class="docutils literal notranslate"><span class="pre">issue</span></code>, validate the saved server certificate and key:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>validate<span class="w"> </span>--cert<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_cert</span><span class="s2">"</span><span class="w"> </span>--key<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_key</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trust<span class="w"> </span><span class="s1">'ROOT_CA_FILE'</span><span class="w"> </span>--dns<span class="w"> </span><span class="s1">'SERVER_DNS_NAME'</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">ROOT_CA_FILE</span></code> with the root CA certificate’s path and <code class="docutils literal notranslate"><span class="pre">SERVER_DNS_NAME</span></code> with a DNS name from the original command.
+Use <code class="docutils literal notranslate"><span class="pre">--ip</span></code> for an IP address, and repeat <code class="docutils literal notranslate"><span class="pre">--dns</span></code> or <code class="docutils literal notranslate"><span class="pre">--ip</span></code> to check every name and address from that command.
+If the original command used <code class="docutils literal notranslate"><span class="pre">--not-after-limit</span></code>, add <code class="docutils literal notranslate"><span class="pre">--max-not-after</span></code> with the same date.</p>
+<p>Continue only if validation succeeds.
+If it fails, use <a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-recovery-problems"><span class="std std-ref">Recovery Problems</span></a> to check for an incorrect path, validation argument or file-access problem.
+If the saved pair still cannot be validated, continue to <a class="reference internal" href="#how-to-recover-certificate-creation-restart"><span class="std std-ref">Option B: Start Again</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a3-check-the-issuance-log-if-used">
+<h3>Step A3: Check the Issuance Log (If Used)<a class="headerlink" href="#step-a3-check-the-issuance-log-if-used" title="Permalink to this headline">#</a></h3>
+<p>If the original <code class="docutils literal notranslate"><span class="pre">issue</span></code> command used <code class="docutils literal notranslate"><span class="pre">--issuance-log</span></code>, check its failure report for confirmation that the issuance record was saved successfully.
+If you did not use <code class="docutils literal notranslate"><span class="pre">--issuance-log</span></code>, skip this step and continue to <a class="reference internal" href="#how-to-recover-certificate-creation-compare"><span class="std std-ref">Step A4: Compare Any Existing Output Files</span></a>.</p>
+<p>If the record was saved successfully, continue to <a class="reference internal" href="#how-to-recover-certificate-creation-compare"><span class="std std-ref">Step A4: Compare Any Existing Output Files</span></a>.
+If the log write failed or its completion could not be confirmed, keep the log unchanged and choose how to proceed:</p>
+<ul class="simple">
+<li><p><strong>Keep the generated pair.</strong> If you accept that this issuance might not be recorded, continue to <a class="reference internal" href="#how-to-recover-certificate-creation-compare"><span class="std std-ref">Step A4: Compare Any Existing Output Files</span></a>.</p></li>
+<li><p><strong>Require a complete issuance record.</strong> Follow <a class="reference internal" href="#how-to-recover-certificate-creation-restart"><span class="std std-ref">Option B: Start Again</span></a> to generate a new pair with working logging.</p></li>
+</ul>
+<p>For subsequent issuance, use a new log file if the old log is damaged or its condition is uncertain.
+The new log records only future issuance; it does not record the certificate you recover here.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a4-compare-any-existing-output-files">
+<span id="how-to-recover-certificate-creation-compare"></span><h3>Step A4: Compare Any Existing Output Files<a class="headerlink" href="#step-a4-compare-any-existing-output-files" title="Permalink to this headline">#</a></h3>
+<p>If the certificate output already exists, compare its SHA-256 checksum with the saved copy:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>dgst<span class="w"> </span>-sha256<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_cert</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$cert_out</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>If the private key output already exists, compare its checksum with the saved copy:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>dgst<span class="w"> </span>-sha256<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_key</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$key_out</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>Each comparison prints two checksums, one for each file.
+The hexadecimal values must match.
+Skip the comparison for any missing output file.
+If a command cannot read a file, check its path and your read permissions, then repeat the comparison.
+If the checksums differ, check that you selected files from the same failed operation.
+If they still differ, leave the existing output unchanged and continue to <a class="reference internal" href="#how-to-recover-certificate-creation-restart"><span class="std std-ref">Option B: Start Again</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a5-restore-the-missing-files">
+<h3>Step A5: Restore the Missing Files<a class="headerlink" href="#step-a5-restore-the-missing-files" title="Permalink to this headline">#</a></h3>
+<p>If the private key output is missing, copy it and set its permissions:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>-n<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_key</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$key_out</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span><span class="s2">"</span><span class="nv">$key_out</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>If the certificate output is missing, copy it and set its permissions:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>-n<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_cert</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$cert_out</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span><span class="s2">"</span><span class="nv">$cert_out</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-n</span></code> option prevents <code class="docutils literal notranslate"><span class="pre">cp</span></code> from overwriting an existing file.
+Leave existing files that matched their saved copies in place.
+If copying or setting permissions fails, stop before using the output files.
+Check <a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-recovery-problems"><span class="std std-ref">Recovery Problems</span></a>, correct the reported file-access or storage problem, and continue to <a class="reference internal" href="#how-to-recover-certificate-creation-restart"><span class="std std-ref">Option B: Start Again</span></a>.
+A failed copy may have left an incomplete output file.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a6-verify-the-recovered-files">
+<h3>Step A6: Verify the Recovered Files<a class="headerlink" href="#step-a6-verify-the-recovered-files" title="Permalink to this headline">#</a></h3>
+<p>Compare both output files with the saved files you validated:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>dgst<span class="w"> </span>-sha256<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_cert</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$cert_out</span><span class="s2">"</span>
+openssl<span class="w"> </span>dgst<span class="w"> </span>-sha256<span class="w"> </span><span class="s2">"</span><span class="nv">$saved_key</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$key_out</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>Confirm that the two certificate checksums match and that the two private-key checksums match.
+Both output files must be present and identical to their saved copies before you use them.
+If either comparison fails, continue to <a class="reference internal" href="#how-to-recover-certificate-creation-restart"><span class="std std-ref">Option B: Start Again</span></a>.</p>
+<p>Keep a protected backup of the recovered certificate and private key.
+Retain the saved recovery files and any issuance log until you have verified the recovered files and completed the backup.</p>
+</section>
+</section>
+<section id="option-b-start-again">
+<span id="how-to-recover-certificate-creation-restart"></span><h2>Option B: Start Again<a class="headerlink" href="#option-b-start-again" title="Permalink to this headline">#</a></h2>
+<section class="header-on-a-card header-steps" id="step-b1-prepare-new-output-paths">
+<h3>Step B1: Prepare New Output Paths<a class="headerlink" href="#step-b1-prepare-new-output-paths" title="Permalink to this headline">#</a></h3>
+<p>Keep the failed attempt’s files and any issuance log in place.
+Choose new filenames for <code class="docutils literal notranslate"><span class="pre">--cert-out</span></code> and <code class="docutils literal notranslate"><span class="pre">--key-out</span></code> in an existing directory you own and only you can access.
+Neither output file may already exist.</p>
+<p>Before retrying, correct any problem reported with the inputs, directory access or available storage.
+See <a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-recovery-problems"><span class="std std-ref">Recovery Problems</span></a> for the corresponding action.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-b2-repeat-the-creation-command">
+<h3>Step B2: Repeat the Creation Command<a class="headerlink" href="#step-b2-repeat-the-creation-command" title="Permalink to this headline">#</a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">issue</span></code>, reuse the same CA certificate and key if they remain valid and intact.
+A failed server-certificate operation does not require replacing a healthy CA.</p>
+<p>If you used <code class="docutils literal notranslate"><span class="pre">--issuance-log</span></code>, keep using that log if it is valid and writable.
+If it is damaged or you cannot determine its condition, supply a new, unused log filename and retain the old log unchanged.
+The new log does not fill gaps in the old history.</p>
+<p>Run the original <a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-create-ca"><span class="std std-ref">create-ca</span></a> or <a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-issue"><span class="std std-ref">issue</span></a> command with the new output paths and any corrected inputs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If an already-used CA is damaged, restore it from a known-good backup where possible.
+Replacing it also requires replacing certificates that depend on it and updating affected clients to trust the new CA.</p>
+</div>
+</section>
+<section class="header-on-a-card header-steps" id="step-b3-use-the-new-files">
+<h3>Step B3: Use the New Files<a class="headerlink" href="#step-b3-use-the-new-files" title="Permalink to this headline">#</a></h3>
+<p>Confirm that the command reports success and that both new output files exist.
+Use these files for subsequent setup, and keep a protected backup of the certificate and private key.
+Do not use the outputs from the abandoned attempt.
+Retain its issuance log as part of the signing history, even if the certificate it records will not be used.</p>
+</section>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-validate"><span class="std std-ref">validate</span></a> describes certificate validation options.</p></li>
+<li><p><a class="reference internal" href="../../reference/dioptra-ssl-reference.html#reference-dioptra-ssl-files-permissions"><span class="std std-ref">Files and Permissions</span></a> lists certificate and private-key formats and permissions.</p></li>
+<li><p><a class="reference internal" href="../setup-dioptra/recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a> covers deployment certificate recovery.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="develop-for-dioptra.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Develop for Dioptra</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../reference/glossary.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Glossary</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-a-recover-the-saved-files">Option A: Recover the Saved Files</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a1-identify-the-saved-and-output-files">Step A1: Identify the Saved and Output Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a2-validate-the-saved-certificate-and-key">Step A2: Validate the Saved Certificate and Key</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a3-check-the-issuance-log-if-used">Step A3: Check the Issuance Log (If Used)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a4-compare-any-existing-output-files">Step A4: Compare Any Existing Output Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a5-restore-the-missing-files">Step A5: Restore the Missing Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a6-verify-the-recovered-files">Step A6: Verify the Recovered Files</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-b-start-again">Option B: Start Again</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b1-prepare-new-output-paths">Step B1: Prepare New Output Paths</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b2-repeat-the-creation-command">Step B2: Repeat the Creation Command</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b3-use-the-new-files">Step B3: Use the New Files</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>

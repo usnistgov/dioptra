@@ -10,7 +10,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Index &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -139,7 +139,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -170,14 +170,17 @@
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -186,6 +189,9 @@
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -248,6 +254,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -285,6 +292,7 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -409,9 +417,12 @@ document.write(`
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#A"><strong>A</strong></a>
+ <a href="#Symbols"><strong>Symbols</strong></a>
+ | <a href="#A"><strong>A</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
@@ -425,11 +436,323 @@ document.write(`
  | <a href="#Y"><strong>Y</strong></a>
  
 </div>
+<h2 id="Symbols">Symbols</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    --action
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-recover-action">scripts/manage_ssl.py-recover command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --bind
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-b">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --branch
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-branch">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --ca-cert
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-cert">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --ca-chain
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-chain">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --ca-key
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-key">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --cert
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-cert">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --cert-out
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-cert-out">dioptra-ssl-create-ca command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-cert-out">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --certfile
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-certfile">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --common-name
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-common-name">dioptra-ssl-create-ca command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --config
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-c">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --debug
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-debug">dioptra-api-dev command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --deployment-root
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-deployment-root">scripts/manage_ssl.py command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --development
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-development">dioptra-api-init-key command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --dns
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-dns">dioptra-ssl-issue command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-dns">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --enable-postgres-ssl
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-enable-postgres-ssl">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --format
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-format">dioptra-ssl command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --help
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-help">dioptra-api-dev command line option</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-help">dioptra-api-init-key command line option</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-help">dioptra-api-prod command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-help">dioptra-ssl command line option</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-h">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --ip
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ip">dioptra-ssl-issue command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-ip">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --issuance-log
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-issuance-log">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    --key
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-key">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --key-file
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-key-file">dioptra-api-dev command line option</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-key-file">dioptra-api-init-key command line option</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-key-file">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --key-out
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-key-out">dioptra-ssl-create-ca command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-key-out">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --keyfile
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-keyfile">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --kind
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-kind">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --max-not-after
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-max-not-after">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --no-debug
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-debug">dioptra-api-dev command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --not-after-limit
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-not-after-limit">dioptra-ssl-create-ca command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-not-after-limit">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --operation
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-recover-operation">scripts/manage_ssl.py-recover command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --python
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-python">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --rsa-bits
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-rsa-bits">dioptra-ssl-create-ca command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-rsa-bits">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --skip-rustfs-setup
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-skip-rustfs-setup">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --target
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-replace-target">scripts/manage_ssl.py-replace command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --trust
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-trust">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --valid-days
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-valid-days">dioptra-ssl-create-ca command line option</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-valid-days">dioptra-ssl-issue command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --warn-ca-not-after
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-warn-ca-not-after">dioptra-ssl-validate command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --worker-ssl-service
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-worker-ssl-service">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -b
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-b">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -c
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-c">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -h
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-h">init-deployment.sh command line option</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/glossary.html#term-AI"><strong>AI</strong></a>
-</li>
       <li><a href="reference/glossary.html#term-AML"><strong>AML</strong></a>
 </li>
       <li><a href="reference/python-client/workflows-client-methods.html#dioptra.client.workflows.WorkflowsCollectionClient.analyze_plugin_task_signatures">analyze_plugin_task_signatures() (WorkflowsCollectionClient method)</a>
@@ -534,12 +857,161 @@ document.write(`
         <li><a href="reference/python-client/tags-client-methods.html#dioptra.client.tags.TagsCollectionClient.delete_by_id">(TagsCollectionClient method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/python-client/auth-users-groups-client-methods.html#dioptra.client.users.UsersCollectionClient.delete_current_user">delete_current_user() (UsersCollectionClient method)</a>
 </li>
       <li><a href="reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface.deserialize">deserialize() (ArtifactTaskInterface static method)</a>
 </li>
+      <li>
+    dioptra-api-dev command line option
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-debug">--debug</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-help">--help</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-key-file">--key-file</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-debug">--no-debug</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-arg-FLASK_RUN_OPTIONS">FLASK_RUN_OPTIONS</a>
+</li>
+      </ul></li>
+      <li>
+    dioptra-api-init-key command line option
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-development">--development</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-help">--help</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-init-key-key-file">--key-file</a>
+</li>
+      </ul></li>
+      <li>
+    dioptra-api-prod command line option
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-b">--bind</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-certfile">--certfile</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-c">--config</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-help">--help</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-key-file">--key-file</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-keyfile">--keyfile</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-b">-b</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-c">-c</a>
+</li>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-arg-GUNICORN_OPTIONS">GUNICORN_OPTIONS</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    dioptra-ssl command line option
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-format">--format</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-help">--help</a>
+</li>
+      </ul></li>
+      <li>
+    dioptra-ssl-create-ca command line option
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-cert-out">--cert-out</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-common-name">--common-name</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-key-out">--key-out</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-not-after-limit">--not-after-limit</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-rsa-bits">--rsa-bits</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-create-ca-valid-days">--valid-days</a>
+</li>
+      </ul></li>
+      <li>
+    dioptra-ssl-issue command line option
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-cert">--ca-cert</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-chain">--ca-chain</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ca-key">--ca-key</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-cert-out">--cert-out</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-dns">--dns</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-ip">--ip</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-issuance-log">--issuance-log</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-key-out">--key-out</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-not-after-limit">--not-after-limit</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-rsa-bits">--rsa-bits</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-issue-valid-days">--valid-days</a>
+</li>
+      </ul></li>
+      <li>
+    dioptra-ssl-validate command line option
+
+      <ul>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-cert">--cert</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-dns">--dns</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-ip">--ip</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-key">--key</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-kind">--kind</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-max-not-after">--max-not-after</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-trust">--trust</a>
+</li>
+        <li><a href="reference/dioptra-ssl-reference.html#cmdoption-dioptra-ssl-validate-warn-ca-not-after">--warn-ca-not-after</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    environment variable
+
+      <ul>
+        <li><a href="reference/api-configuration-reference.html#envvar-DIOPTRA_TLS_ALLOWED_AUTHORITIES">DIOPTRA_TLS_ALLOWED_AUTHORITIES</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    FLASK_RUN_OPTIONS
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-dev-arg-FLASK_RUN_OPTIONS">dioptra-api-dev command line option</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -654,6 +1126,13 @@ document.write(`
 </li>
       <li><a href="reference/glossary.html#term-GUI"><strong>GUI</strong></a>
 </li>
+      <li>
+    GUNICORN_OPTIONS
+
+      <ul>
+        <li><a href="reference/dioptra-api-reference.html#cmdoption-dioptra-api-prod-arg-GUNICORN_OPTIONS">dioptra-api-prod command line option</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -670,6 +1149,25 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/python-client/workflows-client-methods.html#dioptra.client.workflows.WorkflowsCollectionClient.import_resources">import_resources() (WorkflowsCollectionClient method)</a>
 </li>
+      <li>
+    init-deployment.sh command line option
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-branch">--branch</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-enable-postgres-ssl">--enable-postgres-ssl</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-h">--help</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-python">--python</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-skip-rustfs-setup">--skip-rustfs-setup</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-worker-ssl-service">--worker-ssl-service</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/init-deployment-script-reference.html#cmdoption-init-deployment.sh-h">-h</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -744,13 +1242,38 @@ document.write(`
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/glossary.html#term-SDK"><strong>SDK</strong></a>
+      <li>
+    scripts/manage_ssl.py command line option
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-deployment-root">--deployment-root</a>
 </li>
+      </ul></li>
+      <li>
+    scripts/manage_ssl.py-recover command line option
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-recover-action">--action</a>
+</li>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-recover-operation">--operation</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    scripts/manage_ssl.py-replace command line option
+
+      <ul>
+        <li><a href="how-to/setup-dioptra/reference/manage-ssl-reference.html#cmdoption-scripts-manage_ssl.py-replace-target">--target</a>
+</li>
+      </ul></li>
+      <li><a href="reference/glossary.html#term-SDK"><strong>SDK</strong></a>
+</li>
       <li><a href="reference/dioptra-components/plugin-reference.html#dioptra.sdk.api.artifact.ArtifactTaskInterface.serialize">serialize() (ArtifactTaskInterface static method)</a>
 </li>
       <li><a href="reference/python-client/experiments-client-methods.html#dioptra.client.experiments.ExperimentJobsSubCollectionClient.set_status">set_status() (ExperimentJobsSubCollectionClient method)</a>
+</li>
+      <li><a href="reference/glossary.html#term-SI"><strong>SI</strong></a>
 </li>
   </ul></td>
 </tr></table>

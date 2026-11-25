@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Prepare Your Deployment &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Prepare Your Deployment &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -460,7 +468,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-apply-the-template">Step 2: Apply the Template</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-configure-template-variables">Step 3: Configure Template Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-initialize-the-deployment">Step 4: Initialize the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-start-dioptra">Step 5: Start Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-save-certificate-details-and-configure-trust">Step 5: Save Certificate Details and Configure Trust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-start-dioptra">Step 6: Start Dioptra</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
@@ -478,56 +487,56 @@ document.write(`
                   
   <section id="prepare-your-deployment">
 <span id="how-to-prepare-deployment"></span><h1>Prepare Your Deployment<a class="headerlink" href="#prepare-your-deployment" title="Permalink to this headline">#</a></h1>
-<p>This guide explains how to create and configure a Dioptra deployment using the cruft template system.
-After completing these steps, you will have a deployment folder ready to start.</p>
+<p>This guide explains how to create, configure, and start a Dioptra deployment.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p>Python 3.11+ virtual environment with the <code class="docutils literal notranslate"><span class="pre">cruft</span></code> package installed (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cruft</span></code>)</p></li>
 <li><p><a class="reference external" href="https://docs.docker.com/engine/install/">Docker Engine</a> and <a class="reference external" href="https://docs.docker.com/compose/install/">Docker Compose</a> installed</p></li>
-<li><p><a class="reference internal" href="get-container-images/index.html#how-to-get-container-images"><span class="std std-ref">Get the Container Images</span></a> - Container images available (downloaded or built)</p></li>
-<li><p>A terminal with access to the deployment target directory</p></li>
-<li><p>A POSIX deployment environment with the <a class="reference internal" href="reference/init-deployment-script-reference.html#reference-init-deployment-credentials"><span class="std std-ref">required filesystem support</span></a></p></li>
+<li><p>Dioptra container images, downloaded or built following <a class="reference internal" href="get-container-images/index.html#how-to-get-container-images"><span class="std std-ref">Get the Container Images</span></a>.</p></li>
+<li><p>Permission to create and manage the deployment directory.</p></li>
+<li><p>A POSIX deployment environment with the <a class="reference internal" href="reference/init-deployment-script-reference.html#reference-init-deployment-requirements"><span class="std std-ref">required filesystem support</span></a></p></li>
 </ul>
 </section>
 <section id="deployment-setup">
 <h2>Deployment Setup<a class="headerlink" href="#deployment-setup" title="Permalink to this headline">#</a></h2>
 <section class="header-on-a-card header-steps" id="step-1-create-the-deployment-directory">
 <h3>Step 1: Create the Deployment Directory<a class="headerlink" href="#step-1-create-the-deployment-directory" title="Permalink to this headline">#</a></h3>
-<p>Create the folder where you plan to keep your deployment and change into it so that it becomes your working directory.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>/path/to/deployments/folder
-<span class="nb">cd</span><span class="w"> </span>/path/to/deployments/folder
+<p>Create the directory where you plan to keep your deployment and change into it:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">"DEPLOYMENTS_DIRECTORY"</span>
+<span class="nb">cd</span><span class="w"> </span><span class="s2">"DEPLOYMENTS_DIRECTORY"</span>
 </pre></div>
 </div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">DEPLOYMENTS_DIRECTORY</span></code> with the path to your deployment parent directory.</p>
 </section>
 <section class="header-on-a-card header-steps" id="step-2-apply-the-template">
 <h3>Step 2: Apply the Template<a class="headerlink" href="#step-2-apply-the-template" title="Permalink to this headline">#</a></h3>
 <p>Run cruft to apply the Dioptra Deployment template. There are four different methods for configuring the deployment:</p>
 <p><strong>Method 1: Interactive prompts for each variable</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment
 </pre></div>
 </div>
 <p><strong>Method 2: Use all default template values</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input
 </pre></div>
 </div>
 <p><strong>Method 3: Use defaults except for specific values</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--extra-context<span class="w"> </span><span class="s1">'{"datasets_directory": "~/datasets"}'</span>
 </pre></div>
 </div>
-<p><strong>Method 4: Use defaults except for values in a config file</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>&lt;branch-name&gt;<span class="w"> </span><span class="se">\</span>
+<p><strong>Method 4: Use values from a config file</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cruft<span class="w"> </span>create<span class="w"> </span>https://github.com/usnistgov/dioptra<span class="w"> </span>--checkout<span class="w"> </span>BRANCH_NAME<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--directory<span class="w"> </span>cookiecutter-templates/cookiecutter-dioptra-deployment<span class="w"> </span>--no-input<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--extra-context-file<span class="w"> </span>overrides.json
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> with the Dioptra branch that matches your container images (for example, <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases or <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -536,14 +545,14 @@ After completing these steps, you will have a deployment folder ready to start.<
 </section>
 <section class="header-on-a-card header-steps" id="step-3-configure-template-variables">
 <h3>Step 3: Configure Template Variables<a class="headerlink" href="#step-3-configure-template-variables" title="Permalink to this headline">#</a></h3>
-<p>If you selected Method 1 (interactive prompts), you will be asked to set configuration variables.
-In most cases, the default value is appropriate.</p>
+<p>If you selected Method 1, enter the configuration variables at the prompts.
+You can accept the defaults when they fit your environment.</p>
 <p>Key variables include:</p>
 <ul class="simple">
 <li><p><strong>deployment_name:</strong> A name to associate with the deployment (default: <code class="docutils literal notranslate"><span class="pre">Dioptra</span> <span class="pre">deployment</span></code>)</p></li>
 <li><p><strong>container_registry:</strong> Registry prefix for Dioptra container images. Leave as default for downloaded images, or set to empty for locally built images. See <a class="reference internal" href="get-container-images/index.html#how-to-get-container-images-registry-prefix"><span class="std std-ref">Understanding Container Registry Prefixes</span></a> for details. (default: <code class="docutils literal notranslate"><span class="pre">ghcr.io/usnistgov</span></code>)</p></li>
-<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code>)</p></li>
-<li><p><strong>nginx_server_name:</strong> Domain name, IP address, or <code class="docutils literal notranslate"><span class="pre">_</span></code> for local deployments (default: <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code>)</p></li>
+<li><p><strong>container_tag:</strong> Should match the tags of your Dioptra container images (default: <code class="docutils literal notranslate"><span class="pre">1.2.4</span></code>)</p></li>
+<li><p><strong>nginx_server_name:</strong> Hostname or IP address used to access Dioptra (default: <code class="docutils literal notranslate"><span class="pre">localhost</span></code>). Change it if you will use a different hostname or IP address.</p></li>
 <li><p><strong>num_tensorflow_cpu_workers / num_pytorch_cpu_workers:</strong> Number of CPU workers (default: <code class="docutils literal notranslate"><span class="pre">1</span></code> each)</p></li>
 <li><p><strong>datasets_directory:</strong> Host directory to mount at <code class="docutils literal notranslate"><span class="pre">/dioptra/data</span></code> in workers (default: <em>empty</em>)</p></li>
 </ul>
@@ -554,30 +563,52 @@ In most cases, the default value is appropriate.</p>
 </section>
 <section class="header-on-a-card header-steps" id="step-4-initialize-the-deployment">
 <h3>Step 4: Initialize the Deployment<a class="headerlink" href="#step-4-initialize-the-deployment" title="Permalink to this headline">#</a></h3>
-<p>Run the initialization script to generate passwords, copy configuration files, prepare the named volumes, and initialize the persistent API signing key.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dioptra-deployment<span class="w">  </span><span class="c1"># Or your deployment folder name</span>
-./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;
+<p>Change into the rendered deployment directory, using its actual name:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>dioptra-deployment
+</pre></div>
+</div>
+<p>If you want to use your own server certificates, follow <a class="reference internal" href="configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> before initialization.</p>
+<p>If you are rerunning initialization, tear down the existing deployment first:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>down
+</pre></div>
+</div>
+<p>Keep the named volumes by omitting <code class="docutils literal notranslate"><span class="pre">--volumes</span></code>.
+Stopped containers must also be removed before initialization.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When running initialization inside a developer container, HTTPS verification may fail because the SSL manager cannot reach nginx at the default address.
+See <a class="reference internal" href="configure-setup/using-docker-compose-overrides.html#how-to-compose-overrides-nginx-connection"><span class="std std-ref">Reaching nginx from a developer container</span></a> to configure the connection address.</p>
+</div>
+<p>Run the initializer as the user who owns the deployment files, using the branch that matches your container images:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> with the Dioptra branch that matches your container images (for example, <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases or <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
 </div>
-<p>Run initialization as the user who owns the deployment files.
-If initialization reports an incomplete or empty credential set, follow <a class="reference internal" href="recover-deployment-credentials.html#how-to-recover-deployment-credentials"><span class="std std-ref">Recover Deployment Credentials</span></a> before continuing.</p>
-<p>The script automates password generation, certificate bundling, volume preparation, RustFS account setup, and built-in plugin syncing.</p>
 <div class="admonition-learn-more admonition">
 <p class="admonition-title">Learn More</p>
 <p>See <a class="reference internal" href="reference/init-deployment-script-reference.html#reference-init-deployment-script"><span class="std std-ref">init-deployment.sh Script Reference</span></a> for complete command-line options and detailed examples.</p>
 </div>
 </section>
-<section class="header-on-a-card header-steps" id="step-5-start-dioptra">
-<h3>Step 5: Start Dioptra<a class="headerlink" href="#step-5-start-dioptra" title="Permalink to this headline">#</a></h3>
+<section class="header-on-a-card header-steps" id="step-5-save-certificate-details-and-configure-trust">
+<h3>Step 5: Save Certificate Details and Configure Trust<a class="headerlink" href="#step-5-save-certificate-details-and-configure-trust" title="Permalink to this headline">#</a></h3>
+<p>Wait for initialization to finish successfully.
+The initializer starts services for HTTPS verification and worker registration, then tears them down while retaining deployment data.
+Save the reported HTTPS address, public CA certificate path, and SHA-256 fingerprint for configuring browser trust.</p>
+<p>If initialization reports an incomplete or empty credential set, follow <a class="reference internal" href="recover-deployment-credentials.html#how-to-recover-deployment-credentials"><span class="std std-ref">Recover Deployment Credentials</span></a> before continuing.
+If it reports an interrupted certificate operation, follow <a class="reference internal" href="recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a>.</p>
+<p>Retain a protected backup of the <a class="reference internal" href="reference/deployment-folder-reference.html#reference-deployment-certificate-backups"><span class="std std-ref">certificate files and installation state</span></a>.</p>
+<p>If your browser does not already trust the deployment’s CA, complete Steps B1–B3 in the <a class="reference internal" href="configure-setup/adding-certificates.html#how-to-trust-public-issuer"><span class="std std-ref">workstation instructions</span></a> to obtain, verify, and import the CA certificate.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-6-start-dioptra">
+<h3>Step 6: Start Dioptra<a class="headerlink" href="#step-6-start-dioptra" title="Permalink to this headline">#</a></h3>
 <p>Start all Dioptra services:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
 </pre></div>
 </div>
-<p>Once the containers are running, open your web browser and navigate to <code class="docutils literal notranslate"><span class="pre">http://localhost/</span></code> (or <code class="docutils literal notranslate"><span class="pre">https://localhost/</span></code> if SSL/TLS is enabled).</p>
+<p>Open the HTTPS address reported by initialization, such as <code class="docutils literal notranslate"><span class="pre">https://localhost/</span></code>.</p>
 <p>Verify all services are running:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>ps
 </pre></div>
@@ -597,6 +628,7 @@ If initialization reports an incomplete or empty credential set, follow <a class
 <p><strong>How-To Guides:</strong></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="update-deployment.html#how-to-update-deployment"><span class="std std-ref">Update Your Deployment</span></a> - Update your deployment when new template versions are available</p></li>
+<li><p><a class="reference internal" href="replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a> - Replace certificates before expiry</p></li>
 </ul>
 <p><strong>Reference Documentation:</strong></p>
 <ul class="simple">
@@ -609,8 +641,8 @@ If initialization reports an incomplete or empty credential set, follow <a class
 <li><p><a class="reference internal" href="configure-setup/using-docker-compose-overrides.html#how-to-using-docker-compose-overrides"><span class="std std-ref">Use Docker Compose Override Files</span></a> - Use override files for customizations</p></li>
 <li><p><a class="reference internal" href="configure-setup/data-mounts.html#how-to-data-mounts"><span class="std std-ref">Mount Data Volumes</span></a> - Mount data volumes into worker containers</p></li>
 <li><p><a class="reference internal" href="configure-setup/gpu-enabled-workers.html#how-to-gpu-enabled-workers"><span class="std std-ref">Configure GPU Workers</span></a> - Configure GPU workers</p></li>
-<li><p><a class="reference internal" href="configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Add Custom CA Certificates</span></a> - Add custom CA certificates</p></li>
-<li><p><a class="reference internal" href="configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> - Enable SSL/TLS encryption</p></li>
+<li><p><a class="reference internal" href="configure-setup/adding-certificates.html#how-to-adding-certificates"><span class="std std-ref">Configure Certificate Trust</span></a> - Configure deployment and workstation certificate trust</p></li>
+<li><p><a class="reference internal" href="configure-setup/enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> - Supply API or nginx certificates</p></li>
 <li><p><a class="reference internal" href="configure-setup/integrating-custom-containers.html#how-to-integrating-custom-containers"><span class="std std-ref">Integrate Custom Containers</span></a> - Add custom containers</p></li>
 </ul>
 </section>
@@ -670,7 +702,8 @@ If initialization reports an incomplete or empty credential set, follow <a class
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-apply-the-template">Step 2: Apply the Template</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-configure-template-variables">Step 3: Configure Template Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-initialize-the-deployment">Step 4: Initialize the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-start-dioptra">Step 5: Start Dioptra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-save-certificate-details-and-configure-trust">Step 5: Save Certificate Details and Configure Trust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-start-dioptra">Step 6: Start Dioptra</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>

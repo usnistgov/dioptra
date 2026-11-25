@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Add Custom CA Certificates &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Configure Certificate Trust &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -63,7 +63,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/setup-dioptra/configure-setup/adding-certificates';</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Enable SSL/TLS in NGINX and Postgres" href="enabling-ssl-tls.html" />
+    <link rel="next" title="Configure SSL/TLS Certificates" href="enabling-ssl-tls.html" />
     <link rel="prev" title="Configure GPU Workers" href="gpu-enabled-workers.html" />
     
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -142,7 +142,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -173,14 +173,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Customize Your Setup</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -189,6 +192,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -251,6 +257,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -288,6 +295,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -444,7 +452,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Add Custom CA Certificates</h1>
+    <h1>Configure Certificate Trust</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -454,11 +462,29 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-certificates">Adding Certificates</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-prepare-certificate-files">Step 1: Prepare Certificate Files</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-copy-certificates-to-the-deployment">Step 2: Copy Certificates to the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-run-the-initialization-script">Step 3: Run the Initialization Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-a-deployment-services">Option A: Deployment Services</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a1-copy-the-ca-certificates">Step A1: Copy the CA Certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a2-initialize-the-deployment">Step A2: Initialize the Deployment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a3-start-the-services">Step A3: Start the Services</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-b-your-workstation">Option B: Your Workstation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b1-obtain-the-ca-certificate">Step B1: Obtain the CA Certificate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b2-verify-the-certificate-fingerprint">Step B2: Verify the Certificate Fingerprint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b3-import-the-ca-certificate">Step B3: Import the CA Certificate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b4-check-browser-access">Step B4: Check Browser Access</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-c-your-python-client">Option C: Your Python Client</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c1-activate-the-client-environment">Step C1: Activate the Client Environment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c2-obtain-and-verify-the-ca-certificate-optional">Step C2: Obtain and Verify the CA Certificate (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c3-create-the-ca-bundle">Step C3: Create the CA Bundle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c4-configure-certificate-trust">Step C4: Configure Certificate Trust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c5-check-the-https-connection">Step C5: Check the HTTPS Connection</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
@@ -473,61 +499,170 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="add-custom-ca-certificates">
-<span id="how-to-adding-certificates"></span><h1>Add Custom CA Certificates<a class="headerlink" href="#add-custom-ca-certificates" title="Permalink to this headline">#</a></h1>
-<p>This guide explains how to add custom Certificate Authority (CA) certificates to your Dioptra deployment. This is necessary when operating in environments with internal certificate authorities or when connecting to services that use certificates signed by non-public CAs.</p>
+  <section id="configure-certificate-trust">
+<span id="how-to-adding-certificates"></span><h1>Configure Certificate Trust<a class="headerlink" href="#configure-certificate-trust" title="Permalink to this headline">#</a></h1>
+<p>Use this guide to configure trusted certificate authorities (CAs) for deployment services, your browser or an external Python client.
+Repeat the relevant procedure if the deployment’s CA changes.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
+<p>Follow one or more procedures for the systems you configure:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#how-to-deployment-service-trust"><span class="std std-ref">Option A: Deployment Services</span></a> is for the deployment owner.</p></li>
+<li><p><a class="reference internal" href="#how-to-trust-public-issuer"><span class="std std-ref">Option B: Your Workstation</span></a> configures browser trust.</p></li>
+<li><p><a class="reference internal" href="#how-to-configure-python-trust"><span class="std std-ref">Option C: Your Python Client</span></a> configures trust for scripts and notebooks.</p></li>
+</ul>
+</section>
+<section id="option-a-deployment-services">
+<span id="how-to-deployment-service-trust"></span><h2>Option A: Deployment Services<a class="headerlink" href="#option-a-deployment-services" title="Permalink to this headline">#</a></h2>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h2>
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
-<li><p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - A configured Dioptra deployment (before running <code class="docutils literal notranslate"><span class="pre">init-deployment.sh</span></code>)</p></li>
-<li><p>CA certificate file(s) in PEM format</p></li>
+<li><p>A deployment directory created by following <a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a>.</p></li>
+<li><p>Terminal access as the user who owns the deployment files.</p></li>
+<li><p>Docker with Docker Compose.</p></li>
+<li><p>Public root CA certificates for any additional certificate authorities the services need to trust, obtained from the certificate administrator.</p></li>
+</ul>
+<p>Run the commands in this procedure from the deployment directory.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a1-copy-the-ca-certificates">
+<h3>Step A1: Copy the CA Certificates<a class="headerlink" href="#step-a1-copy-the-ca-certificates" title="Permalink to this headline">#</a></h3>
+<p>Copy each public root CA certificate into <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code>.
+Use PEM format, one certificate per file, and a <code class="docutils literal notranslate"><span class="pre">.crt</span></code> filename extension.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>install<span class="w"> </span>-m<span class="w"> </span><span class="m">0644</span><span class="w"> </span><span class="s2">"ROOT_CA_PATH"</span><span class="w"> </span>ssl/ca-certificates/root-ca.crt
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">ROOT_CA_PATH</span></code> with the path to your public root CA certificate.
+If you add more than one certificate, give each a different destination filename.</p>
+<p>Warnings about CA certificates used only to access external websites do not stop initialization.
+CA certificates used to secure the API or nginx must meet the <a class="reference internal" href="../reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">certificate policy</span></a>.</p>
+<p>To configure API or nginx server certificates that you provide, follow <a class="reference internal" href="enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a2-initialize-the-deployment">
+<h3>Step A2: Initialize the Deployment<a class="headerlink" href="#step-a2-initialize-the-deployment" title="Permalink to this headline">#</a></h3>
+<p>If you are changing an existing API or nginx server certificate, follow <a class="reference internal" href="../replace-deployment-certificates.html#how-to-replace-deployment-certificates"><span class="std std-ref">Replace Deployment Certificates</span></a>.</p>
+<p>Run the initializer.
+If PostgreSQL TLS is enabled, include <code class="docutils literal notranslate"><span class="pre">--enable-postgres-ssl</span></code> in the following command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>BRANCH_NAME
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">BRANCH_NAME</span></code> with the Dioptra branch matching your container images.
+Wait for initialization to report success before continuing.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-a3-start-the-services">
+<h3>Step A3: Start the Services<a class="headerlink" href="#step-a3-start-the-services" title="Permalink to this headline">#</a></h3>
+<p>Start the services:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+docker<span class="w"> </span>compose<span class="w"> </span>ps
+</pre></div>
+</div>
+<p>Confirm that the deployment services are running.</p>
+</section>
+</section>
+<section id="option-b-your-workstation">
+<span id="how-to-trust-public-issuer"></span><h2>Option B: Your Workstation<a class="headerlink" href="#option-b-your-workstation" title="Permalink to this headline">#</a></h2>
+<section id="id1">
+<h3>Prerequisites<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>The deployment’s HTTPS address.</p></li>
+<li><p>Permission to change your browser’s or operating system’s certificate trust settings.</p></li>
+<li><p>OpenSSL for displaying certificate fingerprints.</p></li>
 </ul>
 </section>
-<section id="adding-certificates">
-<h2>Adding Certificates<a class="headerlink" href="#adding-certificates" title="Permalink to this headline">#</a></h2>
-<section class="header-on-a-card header-steps" id="step-1-prepare-certificate-files">
-<h3>Step 1: Prepare Certificate Files<a class="headerlink" href="#step-1-prepare-certificate-files" title="Permalink to this headline">#</a></h3>
-<p>Ensure your CA certificate files meet the following requirements:</p>
+<section class="header-on-a-card header-steps" id="step-b1-obtain-the-ca-certificate">
+<h3>Step B1: Obtain the CA Certificate<a class="headerlink" href="#step-b1-obtain-the-ca-certificate" title="Permalink to this headline">#</a></h3>
+<p>If your browser already trusts the CA, continue to <a class="reference internal" href="#how-to-check-browser-certificate-trust"><span class="std std-ref">Step B4</span></a>.</p>
+<p>Obtain the deployment’s public root CA certificate and its SHA-256 fingerprint from the deployment owner or certificate administrator.
+Save the certificate file on your workstation.</p>
+<p>If you own the deployment, use the public root CA certificate for nginx and its fingerprint recorded during initialization or replacement.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-b2-verify-the-certificate-fingerprint">
+<span id="how-to-verify-ca-fingerprint"></span><h3>Step B2: Verify the Certificate Fingerprint<a class="headerlink" href="#step-b2-verify-the-certificate-fingerprint" title="Permalink to this headline">#</a></h3>
+<p>Display the SHA-256 fingerprint of the certificate file on your workstation:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>x509<span class="w"> </span>-in<span class="w"> </span><span class="s2">"CA_CERT_PATH"</span><span class="w"> </span>-noout<span class="w"> </span>-fingerprint<span class="w"> </span>-sha256
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">CA_CERT_PATH</span></code> with the path to the public CA certificate file you received.
+Compare the result with the fingerprint recorded during initialization or replacement, or supplied by the deployment administrator in a message you can verify came from them.
+Compare the hexadecimal fingerprint values, ignoring differences in capitalization or colon separators.
+The fingerprints must match before you trust the certificate.</p>
+<p>If the values differ, do not import the certificate.
+Ask the deployment owner or certificate administrator to confirm the fingerprint and resend the certificate, then repeat this check.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-b3-import-the-ca-certificate">
+<h3>Step B3: Import the CA Certificate<a class="headerlink" href="#step-b3-import-the-ca-certificate" title="Permalink to this headline">#</a></h3>
+<p>Import the verified public root CA certificate using your browser’s or operating system’s certificate settings.
+If prompted to choose a purpose, allow the CA to verify websites or HTTPS servers.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-b4-check-browser-access">
+<span id="how-to-check-browser-certificate-trust"></span><h3>Step B4: Check Browser Access<a class="headerlink" href="#step-b4-check-browser-access" title="Permalink to this headline">#</a></h3>
+<p>Open the deployment’s HTTPS address, including its port if needed.
+Confirm that the page loads without a certificate warning before entering credentials.</p>
+<p>If a certificate warning appears, do not bypass it.
+Send the warning message to the deployment owner for help.</p>
+</section>
+</section>
+<section id="option-c-your-python-client">
+<span id="how-to-configure-python-trust"></span><h2>Option C: Your Python Client<a class="headerlink" href="#option-c-your-python-client" title="Permalink to this headline">#</a></h2>
+<section id="id2">
+<h3>Prerequisites<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
-<li><p><strong>PEM format</strong>: Each certificate must be encoded using base64 and stored in a plain text file between <code class="docutils literal notranslate"><span class="pre">-----BEGIN</span> <span class="pre">CERTIFICATE-----</span></code> and <code class="docutils literal notranslate"><span class="pre">-----END</span> <span class="pre">CERTIFICATE-----</span></code> lines.</p></li>
-<li><p><strong>One certificate per file</strong>: Each file should contain only one CA certificate. Do not bundle multiple CA certificates together.</p></li>
-<li><p><strong>File extension</strong>: Each file <strong>must</strong> have the <code class="docutils literal notranslate"><span class="pre">.crt</span></code> extension (e.g., <code class="docutils literal notranslate"><span class="pre">ca-root.crt</span></code>). If your certificate has a different extension (such as <code class="docutils literal notranslate"><span class="pre">.pem</span></code>), rename it to <code class="docutils literal notranslate"><span class="pre">.crt</span></code>.</p></li>
+<li><p>The deployment’s HTTPS address.</p></li>
+<li><p>A Python environment containing the Dioptra client and its <code class="docutils literal notranslate"><span class="pre">requests</span></code> dependency.</p></li>
+<li><p>OpenSSL for displaying certificate fingerprints.</p></li>
 </ul>
 </section>
-<section class="header-on-a-card header-steps" id="step-2-copy-certificates-to-the-deployment">
-<h3>Step 2: Copy Certificates to the Deployment<a class="headerlink" href="#step-2-copy-certificates-to-the-deployment" title="Permalink to this headline">#</a></h3>
-<p>Copy your CA certificate files into the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder in your deployment directory:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>/path/to/your/ca-certificate.crt<span class="w"> </span>./ssl/ca-certificates/
+<section class="header-on-a-card header-steps" id="step-c1-activate-the-client-environment">
+<h3>Step C1: Activate the Client Environment<a class="headerlink" href="#step-c1-activate-the-client-environment" title="Permalink to this headline">#</a></h3>
+<p>Activate the Python environment containing the Dioptra client and its <code class="docutils literal notranslate"><span class="pre">requests</span></code> dependency.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-c2-obtain-and-verify-the-ca-certificate-optional">
+<span id="how-to-obtain-python-ca-certificate"></span><h3>Step C2: Obtain and Verify the CA Certificate (Optional)<a class="headerlink" href="#step-c2-obtain-and-verify-the-ca-certificate-optional" title="Permalink to this headline">#</a></h3>
+<p>If Requests already trusts the deployment’s CA, continue to <a class="reference internal" href="#how-to-check-python-certificate-trust"><span class="std std-ref">Step C5</span></a>.</p>
+<p>Obtain the public root CA certificate and its SHA-256 fingerprint from the deployment owner or certificate administrator.
+Save the certificate on the computer where you run the Python client, then follow the instructions in <a class="reference internal" href="#how-to-verify-ca-fingerprint"><span class="std std-ref">Verify the Certificate Fingerprint</span></a>.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-c3-create-the-ca-bundle">
+<h3>Step C3: Create the CA Bundle<a class="headerlink" href="#step-c3-create-the-ca-bundle" title="Permalink to this headline">#</a></h3>
+<p>In the terminal where you activated the Python environment, combine Requests’ default CA bundle with the verified deployment CA certificate:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s2">"</span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import requests; print(requests.certs.where())'</span><span class="k">)</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">"CA_CERT_PATH"</span><span class="w"> </span>&gt;<span class="w"> </span>dioptra-ca-bundle.pem
 </pre></div>
 </div>
-<p>You can add multiple CA certificates by copying additional files:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>/path/to/another-ca.crt<span class="w"> </span>./ssl/ca-certificates/
+<p>Replace <code class="docutils literal notranslate"><span class="pre">CA_CERT_PATH</span></code> with the path to the PEM certificate you verified in <a class="reference internal" href="#how-to-obtain-python-ca-certificate"><span class="std std-ref">Step C2</span></a>.
+The command creates <code class="docutils literal notranslate"><span class="pre">dioptra-ca-bundle.pem</span></code> in the current directory and leaves the installed CA bundle unchanged.
+Recreate this file after updating <code class="docutils literal notranslate"><span class="pre">certifi</span></code> or replacing the deployment CA.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-c4-configure-certificate-trust">
+<h3>Step C4: Configure Certificate Trust<a class="headerlink" href="#step-c4-configure-certificate-trust" title="Permalink to this headline">#</a></h3>
+<p>From the same directory, set <code class="docutils literal notranslate"><span class="pre">REQUESTS_CA_BUNDLE</span></code> to the combined bundle:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">REQUESTS_CA_BUNDLE</span><span class="o">=</span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/dioptra-ca-bundle.pem"</span>
 </pre></div>
 </div>
+<p>Start Python or your notebook from this terminal so it uses this setting.</p>
 </section>
-<section class="header-on-a-card header-steps" id="step-3-run-the-initialization-script">
-<h3>Step 3: Run the Initialization Script<a class="headerlink" href="#step-3-run-the-initialization-script" title="Permalink to this headline">#</a></h3>
-<p>The deployment initialization scripts will automatically look for extra CA certificates in the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder and copy and bundle them into named volumes so they are available at runtime.</p>
-<p>Run the initialization script:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>./init-deployment.sh<span class="w"> </span>--branch<span class="w"> </span>&lt;branch-name&gt;
+<section class="header-on-a-card header-steps" id="step-c5-check-the-https-connection">
+<span id="how-to-check-python-certificate-trust"></span><h3>Step C5: Check the HTTPS Connection<a class="headerlink" href="#step-c5-check-the-https-connection" title="Permalink to this headline">#</a></h3>
+<p>In the same terminal, check the HTTPS connection:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<span class="s">import requests</span>
+
+<span class="s">response = requests.get("https://localhost/")</span>
+<span class="s">print(response.status_code)</span>
+<span class="s">PY</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">&lt;branch-name&gt;</span></code> with the Dioptra branch that matches your container images (e.g., <code class="docutils literal notranslate"><span class="pre">main</span></code> for releases, <code class="docutils literal notranslate"><span class="pre">dev</span></code> for development builds).</p>
-</div>
-<p>The script will process all <code class="docutils literal notranslate"><span class="pre">.crt</span></code> files in the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder and make them available to all containers.</p>
-<div class="admonition-learn-more admonition">
-<p class="admonition-title">Learn More</p>
-<p>See the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> file in the <code class="docutils literal notranslate"><span class="pre">ssl/ca-certificates/</span></code> folder for additional details.</p>
-</div>
+<p>Replace the URL with the deployment’s HTTPS address, including its port if needed.
+A successful request to the frontend prints <code class="docutils literal notranslate"><span class="pre">200</span></code>.</p>
+<p>If you receive a certificate verification error, send the error message to the deployment owner for help.</p>
+<p>Follow <a class="reference internal" href="../../essential-workflows/setup-python-client.html#how-to-set-up-the-python-client"><span class="std std-ref">Set Up the Python Client</span></a> to select the API address and log in.</p>
 </section>
 </section>
-<section class="header-on-a-card header-seealso" id="see-also">
+<section class="fancy-header header-seealso" id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Enable SSL/TLS in NGINX and Postgres</span></a> - Enable SSL/TLS for NGINX and Postgres</p></li>
-<li><p><a class="reference internal" href="../prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Prepare Your Deployment</span></a> - Full deployment customization</p></li>
+<li><p><a class="reference internal" href="enabling-ssl-tls.html#how-to-enabling-ssl-tls"><span class="std std-ref">Configure SSL/TLS Certificates</span></a> explains how to use your own server certificates.</p></li>
+<li><p><a class="reference internal" href="../reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">Certificate Policy Reference</span></a> lists certificate and trust requirements.</p></li>
+<li><p><a class="reference internal" href="../replace-deployment-ca.html#how-to-replace-deployment-ca"><span class="std std-ref">Replace the Deployment Certificate Authority</span></a> covers replacement of Dioptra’s CA.</p></li>
 </ul>
 </section>
 </section>
@@ -558,7 +693,7 @@ document.write(`
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Enable SSL/TLS in NGINX and Postgres</p>
+        <p class="prev-next-title">Configure SSL/TLS Certificates</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -580,11 +715,29 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-certificates">Adding Certificates</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-prepare-certificate-files">Step 1: Prepare Certificate Files</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-copy-certificates-to-the-deployment">Step 2: Copy Certificates to the Deployment</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-run-the-initialization-script">Step 3: Run the Initialization Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-a-deployment-services">Option A: Deployment Services</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a1-copy-the-ca-certificates">Step A1: Copy the CA Certificates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a2-initialize-the-deployment">Step A2: Initialize the Deployment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a3-start-the-services">Step A3: Start the Services</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-b-your-workstation">Option B: Your Workstation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b1-obtain-the-ca-certificate">Step B1: Obtain the CA Certificate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b2-verify-the-certificate-fingerprint">Step B2: Verify the Certificate Fingerprint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b3-import-the-ca-certificate">Step B3: Import the CA Certificate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b4-check-browser-access">Step B4: Check Browser Access</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-c-your-python-client">Option C: Your Python Client</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c1-activate-the-client-environment">Step C1: Activate the Client Environment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c2-obtain-and-verify-the-ca-certificate-optional">Step C2: Obtain and Verify the CA Certificate (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c3-create-the-ca-bundle">Step C3: Create the CA Bundle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c4-configure-certificate-trust">Step C4: Configure Certificate Trust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c5-check-the-https-connection">Step C5: Check the HTTPS Connection</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>

@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Set Up the Python Client &#8212; Dioptra 1.2.3 documentation</title>
+    <title>Set Up the Python Client &#8212; Dioptra 1.2.4 documentation</title>
   
   
   
@@ -144,7 +144,7 @@
   
   
   
-    <p class="title logo__title">Dioptra 1.2.3 documentation</p>
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -175,14 +175,17 @@
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/adding-certificates.html">Add Custom CA Certificates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/enabling-ssl-tls.html">Enable SSL/TLS in NGINX and Postgres</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
 </ul>
@@ -191,6 +194,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
@@ -253,6 +259,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/distribute-plugins.html">Distribute Plugins</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
 </ul>
 </li>
 </ul>
@@ -290,6 +297,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-reference-restapi.html">REST API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-configuration-reference.html">REST API Configuration Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/dioptra-ssl-reference.html">dioptra-ssl Command Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/api-application-factory-reference.html">REST API Application Factory Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-import-reference.html">Resource Import Syntax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../reference/resource-search-language-reference.html">Resource Search Language Syntax</a></li>
@@ -458,11 +466,12 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-setup-workflow">Client Setup Workflow</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-configure-the-client-optional">Step 1: Configure the Client (Optional)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-initialize-client">Step 2: Initialize Client</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-register-user">Step 3: Register User</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-log-in">Step 4: Log In</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-retrieve-the-ids-of-resources-optional">Step 5: Retrieve the IDs of Resources (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-configure-the-https-address">Step 1: Configure the HTTPS Address</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-certificate-trust-optional">Step 2: Configure Certificate Trust (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-initialize-client">Step 3: Initialize Client</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-register-user">Step 4: Register User</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-log-in">Step 5: Log In</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-retrieve-the-ids-of-resources-optional">Step 6: Retrieve the IDs of Resources (optional)</a></li>
 </ul>
 </li>
 </ul>
@@ -487,19 +496,24 @@ document.write(`
 </section>
 <section id="client-setup-workflow">
 <span id="setup-python-client-recipe"></span><h2>Client Setup Workflow<a class="headerlink" href="#client-setup-workflow" title="Permalink to this headline">#</a></h2>
-<section class="header-on-a-card header-steps" id="step-1-configure-the-client-optional">
-<h3>Step 1: Configure the Client (Optional)<a class="headerlink" href="#step-1-configure-the-client-optional" title="Permalink to this headline">#</a></h3>
-<p>Optionally set the environment variable for the Dioptra REST API address. This will allow you to configure the client once across multiple instantiations.</p>
-<p>The REST API is configured as part of the <a class="reference internal" href="../setup-dioptra/prepare-deployment.html#how-to-prepare-deployment"><span class="std std-ref">Dioptra deployment</span></a>. By default it will be <cite>http://localhost:80</cite>.</p>
+<section class="header-on-a-card header-steps" id="step-1-configure-the-https-address">
+<h3>Step 1: Configure the HTTPS Address<a class="headerlink" href="#step-1-configure-the-https-address" title="Permalink to this headline">#</a></h3>
+<p>Set <code class="docutils literal notranslate"><span class="pre">DIOPTRA_API</span></code> to the deployment’s HTTPS address, such as <code class="docutils literal notranslate"><span class="pre">https://localhost</span></code>.
+Include its port if needed, for example <code class="docutils literal notranslate"><span class="pre">https://dioptra.example.org:53443</span></code>.</p>
 <div class="code-panel console admonition">
 <p class="admonition-title">Initialize Client</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DIOPTRA_API</span><span class="o">=</span><span class="s2">"&lt;host&gt;:&lt;port&gt;"</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DIOPTRA_API</span><span class="o">=</span><span class="s2">"https://localhost"</span>
 </pre></div>
 </div>
 </div>
 </section>
-<section class="header-on-a-card header-steps" id="step-2-initialize-client">
-<h3>Step 2: Initialize Client<a class="headerlink" href="#step-2-initialize-client" title="Permalink to this headline">#</a></h3>
+<section class="header-on-a-card header-steps" id="step-2-configure-certificate-trust-optional">
+<h3>Step 2: Configure Certificate Trust (Optional)<a class="headerlink" href="#step-2-configure-certificate-trust-optional" title="Permalink to this headline">#</a></h3>
+<p>If your Python environment does not already trust the deployment’s CA, follow the <a class="reference internal" href="../setup-dioptra/configure-setup/adding-certificates.html#how-to-configure-python-trust"><span class="std std-ref">Python-client instructions in Configure Certificate Trust</span></a>.
+Then return here to initialize the client.</p>
+</section>
+<section class="header-on-a-card header-steps" id="step-3-initialize-client">
+<h3>Step 3: Initialize Client<a class="headerlink" href="#step-3-initialize-client" title="Permalink to this headline">#</a></h3>
 <p>There are two Dioptra clients to choose from: the JSON client with returns dictionaries and will raise an exception if a non-200 response is recived, and the Response client which returns Response objects and does not raise exceptions.</p>
 <p>Choose your preferred client, then in your python interpreter, run the following code:</p>
 <div class="sphinx-tabs docutils container">
@@ -510,23 +524,28 @@ document.write(`
 <span class="c1"># the client will use the DIOPTRA_API environment variable by default</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">connect_json_dioptra_client</span><span class="p">()</span>
 <span class="c1"># otherwise you can pass address manually:</span>
-<span class="c1"># client = connect_json_dioptra_client(address="&lt;host&gt;:&lt;port&gt;")</span>
+<span class="c1"># client = connect_json_dioptra_client(address="https://localhost")</span>
 </pre></div>
 </div>
 </div>
 <p><em>Full Client Method Documentation:</em></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">client.</span></span><span class="sig-name descname"><span class="pre">connect_json_dioptra_client</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.client.DioptraClient</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-prename descclassname"><span class="pre">client.</span></span><span class="sig-name descname"><span class="pre">connect_json_dioptra_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_exchange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.client.DioptraClient</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><p>Connect a client to the Dioptra API that returns JSON-like Python dictionaries.</p>
 <p>In contrast to the client that returns response objects, this client will raise an
 exception for any non-2xx response status code.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>address</strong> – The Dioptra web address. This is the same address used to access the
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – The Dioptra web address. This is the same address used to access the
 web GUI, e.g. “<a class="reference external" href="https://dioptra.example.org">https://dioptra.example.org</a>”. Note that the
 “/api/&lt;apiVersion&gt;” suffix is omitted. If None, then the DIOPTRA_API
-environment variable will be checked and used.</p>
+environment variable will be checked and used.</p></li>
+<li><p><strong>key_exchange</strong> – <code class="docutils literal notranslate"><span class="pre">default</span></code> uses ordinary Requests TLS. <code class="docutils literal notranslate"><span class="pre">hybrid-required</span></code>
+requires TLS 1.3 and X25519MLKEM768 on a capable Python runtime,
+preserves CA environment inputs, and rejects cross-origin redirects.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Dioptra client.</p>
@@ -545,24 +564,29 @@ environment variable will be checked and used.</p>
 <span class="c1"># the client will use the DIOPTRA_API environment variable by default</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">connect_response_dioptra_client</span><span class="p">()</span>
 <span class="c1"># otherwise you can pass address manually:</span>
-<span class="c1"># client = connect_response_dioptra_client(address="&lt;host&gt;:&lt;port&gt;")</span>
+<span class="c1"># client = connect_response_dioptra_client(address="https://localhost")</span>
 </pre></div>
 </div>
 </div>
 <p><em>Full Client Method Documentation:</em></p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">client.</span></span><span class="sig-name descname"><span class="pre">connect_response_dioptra_client</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.client.DioptraClient</span><span class="p"><span class="pre">[</span></span><span class="pre">dioptra.client.base.DioptraResponseProtocol</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-prename descclassname"><span class="pre">client.</span></span><span class="sig-name descname"><span class="pre">connect_response_dioptra_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_exchange</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dioptra.client.client.DioptraClient</span><span class="p"><span class="pre">[</span></span><span class="pre">dioptra.client.base.DioptraResponseProtocol</span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><p>Connect a client to the Dioptra API that returns response objects.</p>
 <p>This client always returns a response object regardless of the response status code.
 It is the responsibility of the caller to check the status code and handle any
 errors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>address</strong> – The Dioptra web address. This is the same address used to access the
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – The Dioptra web address. This is the same address used to access the
 web GUI, e.g. “<a class="reference external" href="https://dioptra.example.org">https://dioptra.example.org</a>”. Note that the
 “/api/&lt;apiVersion&gt;” suffix is omitted. If None, then the DIOPTRA_API
-environment variable will be checked and used.</p>
+environment variable will be checked and used.</p></li>
+<li><p><strong>key_exchange</strong> – <code class="docutils literal notranslate"><span class="pre">default</span></code> uses ordinary Requests TLS. <code class="docutils literal notranslate"><span class="pre">hybrid-required</span></code>
+requires TLS 1.3 and X25519MLKEM768 on a capable Python runtime,
+preserves CA environment inputs, and rejects cross-origin redirects.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A Dioptra client.</p>
@@ -576,8 +600,8 @@ environment variable will be checked and used.</p>
 
 </div></div>
 </section>
-<section class="header-on-a-card header-steps" id="step-3-register-user">
-<h3>Step 3: Register User<a class="headerlink" href="#step-3-register-user" title="Permalink to this headline">#</a></h3>
+<section class="header-on-a-card header-steps" id="step-4-register-user">
+<h3>Step 4: Register User<a class="headerlink" href="#step-4-register-user" title="Permalink to this headline">#</a></h3>
 <p>In your python interpreter, set the username and password, then use the client to register a new user:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-SlNPTiBDbGllbnQ=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-1-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tab" tabindex="0">JSON Client</button><button aria-controls="panel-1-UmVzcG9uc2UgQ2xpZW50" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-UmVzcG9uc2UgQ2xpZW50" name="UmVzcG9uc2UgQ2xpZW50" role="tab" tabindex="-1">Response Client</button></div><div aria-labelledby="tab-1-SlNPTiBDbGllbnQ=" class="sphinx-tabs-panel group-tab" id="panel-1-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tabpanel" tabindex="0"><div class="code-panel python admonition">
@@ -640,8 +664,8 @@ environment variable will be checked and used.</p>
 </dd></dl>
 
 </section>
-<section class="header-on-a-card header-steps" id="step-4-log-in">
-<h3>Step 4: Log In<a class="headerlink" href="#step-4-log-in" title="Permalink to this headline">#</a></h3>
+<section class="header-on-a-card header-steps" id="step-5-log-in">
+<h3>Step 5: Log In<a class="headerlink" href="#step-5-log-in" title="Permalink to this headline">#</a></h3>
 <p>In your python interpreter, run the following code:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-SlNPTiBDbGllbnQ=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-2-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tab" tabindex="0">JSON Client</button><button aria-controls="panel-2-UmVzcG9uc2UgQ2xpZW50" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-2-UmVzcG9uc2UgQ2xpZW50" name="UmVzcG9uc2UgQ2xpZW50" role="tab" tabindex="-1">Response Client</button></div><div aria-labelledby="tab-2-SlNPTiBDbGllbnQ=" class="sphinx-tabs-panel group-tab" id="panel-2-SlNPTiBDbGllbnQ=" name="SlNPTiBDbGllbnQ=" role="tabpanel" tabindex="0"><div class="code-panel python admonition">
@@ -686,8 +710,8 @@ environment variable will be checked and used.</p>
 </dd></dl>
 
 </section>
-<section class="header-on-a-card header-steps" id="step-5-retrieve-the-ids-of-resources-optional">
-<h3>Step 5: Retrieve the IDs of Resources (optional)<a class="headerlink" href="#step-5-retrieve-the-ids-of-resources-optional" title="Permalink to this headline">#</a></h3>
+<section class="header-on-a-card header-steps" id="step-6-retrieve-the-ids-of-resources-optional">
+<h3>Step 6: Retrieve the IDs of Resources (optional)<a class="headerlink" href="#step-6-retrieve-the-ids-of-resources-optional" title="Permalink to this headline">#</a></h3>
 <p>There are many resource IDs you will need for access to downstream methods in the client.</p>
 <p>Some of these include:</p>
 <ul class="simple">
@@ -873,11 +897,12 @@ language. Optional, defaults to None.</p></li>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#client-setup-workflow">Client Setup Workflow</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-configure-the-client-optional">Step 1: Configure the Client (Optional)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-initialize-client">Step 2: Initialize Client</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-register-user">Step 3: Register User</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-log-in">Step 4: Log In</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-retrieve-the-ids-of-resources-optional">Step 5: Retrieve the IDs of Resources (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-configure-the-https-address">Step 1: Configure the HTTPS Address</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-certificate-trust-optional">Step 2: Configure Certificate Trust (Optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-initialize-client">Step 3: Initialize Client</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-register-user">Step 4: Register User</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-log-in">Step 5: Log In</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-retrieve-the-ids-of-resources-optional">Step 6: Retrieve the IDs of Resources (optional)</a></li>
 </ul>
 </li>
 </ul>

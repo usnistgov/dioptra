@@ -32,6 +32,9 @@ Use these documents for quick lookup of configuration options, folder structures
       deployment-template-reference
       deployment-folder-reference
       init-deployment-script-reference
+      manage-ssl-reference
+      ssl-toml-reference
+      certificate-policy-reference
       deployment-commands-reference
       custom-worker-template-reference
       dioptra-worker-v1-reference

@@ -1,0 +1,1113 @@
+
+
+
+
+<!DOCTYPE html>
+
+
+<html >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>dioptra-ssl Command Reference &#8212; Dioptra 1.2.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/dioptra.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/jquery.visible.js"></script>
+    <script src="../_static/jquery.leaveNotice-nist.js"></script>
+    <script src="../_static/applyLeaveNotice.js"></script>
+    <script src="../_static/smoothNavScroll.js"></script>
+    <script src="../_static/image_modals.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/dioptra-ssl-reference';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="REST API Application Factory Reference" href="api-application-factory-reference.html" />
+    <link rel="prev" title="dioptra-api Command Reference" href="dioptra-api-reference.html" />
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
+
+    <link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+    <link rel="stylesheet" type="text/css" href="https://pages.nist.gov/leaveNotice/css/jquery.leaveNotice.css" />
+    <script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+    <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=NIST&subagency=github&pua=UA-66610693-1&yt=true&exts=ppsx,pps,f90,sch,rtf,wrl,txz,m1v,xlsm,msi,xsd,f,tif,eps,mpg,xml,pl,xlt,c"></script>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dioptra 1.2.4 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../index.html">
+                    Dioptra Overview
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">What is Dioptra?</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/why-dioptra.html">Motivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/design-principles.html">Design Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/dioptra-motivation/audience.html">Intended Audience</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/architecture-overview.html">Architecture Overview</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/install-dioptra-explanation.html">Install Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/index.html">Get the Container Images</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/download-container-images.html">Download the Container Images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../how-to/setup-dioptra/get-container-images/build-container-images.html">Build the Container Images</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/prepare-deployment.html">Prepare Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/update-deployment.html">Update Your Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-deployment-credentials.html">Recover Deployment Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-certificates.html">Replace Deployment Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/replace-deployment-ca.html">Replace the Deployment Certificate Authority</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/recover-certificate-operation.html">Recover an Interrupted Certificate Operation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/index.html">Customize Your Setup</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/using-docker-compose-overrides.html">Use Docker Compose Override Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/data-mounts.html">Mount Data Volumes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/gpu-enabled-workers.html">Configure GPU Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/adding-certificates.html">Configure Certificate Trust</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/enabling-ssl-tls.html">Configure SSL/TLS Certificates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/creating-custom-workers.html">Create a Custom Worker Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/configure-setup/integrating-custom-containers.html">Integrate Custom Containers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/setup-dioptra/reference/index.html">Setup Reference</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-template-reference.html">Deployment Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-folder-reference.html">Deployment Folder Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html">init-deployment.sh Script Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/manage-ssl-reference.html">manage_ssl.py Command Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/ssl-toml-reference.html">ssl.toml Configuration Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html">Certificate Policy Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/deployment-commands-reference.html">Deployment Commands Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/custom-worker-template-reference.html">Custom Worker Template Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/dioptra-worker-v1-reference.html">dioptra-worker-v1 Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/setup-dioptra/reference/worker-container-requirements-reference.html">Worker Container Requirements Reference</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explainers</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../explanation/workflow-architecture-explanation.html">Workflow Architecture</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../explanation/components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/queues-workers-explanation.html">Queues and Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/users-groups-explanation.html">Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/param-types-explanation.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/plugin-explanation.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/entrypoints-explanation.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/task-graph-explanation.html">Task Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/artifacts-explanation.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../explanation/components/experiments-jobs-explanation.html">Experiments and Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../explanation/usage-modes.html">Usage Modes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/hello_world/index.html">Hello World in Dioptra</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-0.html">Set Up Dioptra in the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/hello_world/part-1.html">Running Hello World</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/essential_workflows/index.html">Learning the Essentials</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-2.html">Adding Inputs and Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-3.html">Building a Multi-Step Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-5.html">Saving Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/essential_workflows/part-6.html">Using Saved Artifacts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/advanced/index.html">Advanced Tutorials</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How Tos</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/essential-workflows/index.html">Running Experiments</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/setup-python-client.html">Set Up the Python Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-queue.html">Create Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-users-groups.html">Create Users and Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-param-types.html">Create Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-plugin.html">Create Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/use-metrics.html">Logging Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-entrypoint.html">Create Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-a-swappable-task.html">Add Swappable Tasks to an Entrypoint Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/creating-an-experiment.html">Create Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/essential-workflows/running-jobs.html">Running Jobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/import-content/index.html">Importing Content</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/add-a-dataset.html">Add a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/import-content/import-resources.html">Import Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../how-to/advanced/index.html">Advanced</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/distribute-plugins.html">Distribute Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/develop-for-dioptra.html">Develop for Dioptra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html">Recover from Interrupted Certificate Creation</a></li>
+</ul>
+</li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="dioptra-components/index.html">Dioptra Components</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/users-reference.html">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/groups-reference.html">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/queues-reference.html">Queues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/param-types-reference.html">Plugin Parameter Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/plugin-reference.html">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/entrypoints-reference.html">Entrypoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/experiments-reference.html">Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/jobs-reference.html">Jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/artifacts-reference.html">Artifacts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/metrics-reference.html">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dioptra-components/workers-reference.html">Workers</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="python-client/index.html">Python Client Methods</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="python-client/auth-users-groups-client-methods.html">Auth, Users, and Groups Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/queues-client-methods.html">Queues Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/param-types-client-methods.html">Parameter Types Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/plugin-client-methods.html">Plugins Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/entrypoints-client-methods.html">Entrypoints Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/experiments-client-methods.html">Experiments Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/jobs-client-methods.html">Jobs Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/artifacts-client-methods.html">Artifacts Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/tags-client-methods.html">Tags Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/snapshots-client-methods.html">Snapshots Client Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python-client/workflows-client-methods.html">Workflows Client Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference-restapi.html">REST API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-configuration-reference.html">REST API Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dioptra-api-reference.html">dioptra-api Command Reference</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">dioptra-ssl Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-application-factory-reference.html">REST API Application Factory Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-import-reference.html">Resource Import Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-search-language-reference.html">Resource Search Language Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="task-engine-reference.html">Declarative Experiment Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev-guide/contributing-documentation-guide.html">Guidelines for Documentation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/usnistgov/dioptra" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/reference/dioptra-ssl-reference.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>dioptra-ssl Command Reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-summary">Command Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-options">Common Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-ca">create-ca</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issue">issue</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate">validate</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#argument-values">Argument Values</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-and-permissions">Files and Permissions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creation-failures-and-retained-files">Creation Failures and Retained Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recovery-problems">Recovery Problems</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-issuance-history">Optional Issuance History</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="dioptra-ssl-command-reference">
+<span id="reference-dioptra-ssl"></span><h1>dioptra-ssl Command Reference<a class="headerlink" href="#dioptra-ssl-command-reference" title="Permalink to this headline">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">dioptra-ssl</span></code> creates certificate authorities, issues server certificates and validates certificate files.
+It is supplied by the <code class="docutils literal notranslate"><span class="pre">dioptra-platform</span></code> Python package and can be used without a Dioptra deployment.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For Docker deployment initialization and certificate replacement, see <a class="reference internal" href="../how-to/setup-dioptra/reference/init-deployment-script-reference.html#reference-init-deployment-script"><span class="std std-ref">init-deployment.sh Script Reference</span></a> and <a class="reference internal" href="../how-to/setup-dioptra/reference/manage-ssl-reference.html#reference-manage-ssl"><span class="std std-ref">manage_ssl.py Command Reference</span></a>.</p>
+<p>For interrupted standalone certificate creation, see <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation"><span class="std std-ref">Recover from Interrupted Certificate Creation</span></a>.</p>
+</div>
+<section id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-ssl COMMAND [OPTIONS]
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#reference-dioptra-ssl-argument-values"><span class="std std-ref">Argument Values</span></a> for shared path, date, DNS-name and IP-address rules.</p>
+</section>
+<section id="command-summary">
+<h2>Command Summary<a class="headerlink" href="#command-summary" title="Permalink to this headline">#</a></h2>
+<table class="colwidths-given table" id="id8">
+<caption><span class="caption-text">Commands</span><a class="headerlink" href="#id8" title="Permalink to this table">#</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Command</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#reference-dioptra-ssl-create-ca"><span class="std std-ref">create-ca</span></a></p></td>
+<td><p>Create a private CA key and self-signed CA certificate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#reference-dioptra-ssl-issue"><span class="std std-ref">issue</span></a></p></td>
+<td><p>Create a server key and certificate signed by an explicitly selected CA.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#reference-dioptra-ssl-validate"><span class="std std-ref">validate</span></a></p></td>
+<td><p>Check existing certificates and, optionally, their private keys without modifying them.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="common-options">
+<span id="reference-dioptra-ssl-common-options"></span><h2>Common Options<a class="headerlink" href="#common-options" title="Permalink to this headline">#</a></h2>
+<p>These options are available after any command name.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-format">
+<span class="sig-name descname"><span class="pre">--format</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;text|json&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-format" title="Permalink to this definition">#</a></dt>
+<dd><p>Select the output format.
+<code class="docutils literal notranslate"><span class="pre">text</span></code> produces human-readable output and is the default.
+<code class="docutils literal notranslate"><span class="pre">json</span></code> produces structured JSON.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-help">
+<span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dioptra-ssl-help" title="Permalink to this definition">#</a></dt>
+<dd><p>Display help for the command and exit.</p>
+</dd></dl>
+
+</section>
+<section id="create-ca">
+<span id="reference-dioptra-ssl-create-ca"></span><h2>create-ca<a class="headerlink" href="#create-ca" title="Permalink to this headline">#</a></h2>
+<p>Creates an RSA private key and a self-signed CA certificate using SHA-256.
+Use this CA to issue server certificates with the <a class="reference internal" href="#reference-dioptra-ssl-issue"><span class="std std-ref">issue</span></a> command.</p>
+<section id="id1">
+<h3>Syntax<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-ssl create-ca --key-out PATH --cert-out PATH --common-name TEXT
+                      [--rsa-bits N] [--valid-days N]
+                      [--not-after-limit UTC] [--format text|json]
+</pre></div>
+</div>
+</section>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">#</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-key-out">
+<span class="sig-name descname"><span class="pre">--key-out</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-key-out" title="Permalink to this definition">#</a></dt>
+<dd><p>Required destination for the new CA private key.
+The destination must not exist.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-cert-out">
+<span class="sig-name descname"><span class="pre">--cert-out</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-cert-out" title="Permalink to this definition">#</a></dt>
+<dd><p>Required destination for the new CA certificate.
+The destination must not exist.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-common-name">
+<span class="sig-name descname"><span class="pre">--common-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;text&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-common-name" title="Permalink to this definition">#</a></dt>
+<dd><p>Required name for the CA, such as <code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">Service</span> <span class="pre">CA</span></code>.
+This name is stored in the certificate’s Common Name (CN) field.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-rsa-bits">
+<span class="sig-name descname"><span class="pre">--rsa-bits</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-rsa-bits" title="Permalink to this definition">#</a></dt>
+<dd><p>RSA key size in bits.
+The default is <code class="docutils literal notranslate"><span class="pre">3072</span></code>.
+The minimum is <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-valid-days">
+<span class="sig-name descname"><span class="pre">--valid-days</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-valid-days" title="Permalink to this definition">#</a></dt>
+<dd><p>Requested certificate lifetime in days.
+The value must be a positive integer.
+The default is <code class="docutils literal notranslate"><span class="pre">1825</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-create-ca-not-after-limit">
+<span class="sig-name descname"><span class="pre">--not-after-limit</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;utc&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-create-ca-not-after-limit" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional expiration deadline in UTC.
+If the lifetime requested with <code class="docutils literal notranslate"><span class="pre">--valid-days</span></code> would extend past this date, the command shortens it and reports the change.
+Creation fails if no valid lifetime remains.</p>
+</dd></dl>
+
+<p>See <a class="reference internal" href="#reference-dioptra-ssl-common-options"><span class="std std-ref">Common Options</span></a> for <code class="docutils literal notranslate"><span class="pre">--format</span></code> and <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<p>Create a CA named <code class="docutils literal notranslate"><span class="pre">Example</span> <span class="pre">Service</span> <span class="pre">CA</span></code>, saving its key and certificate in an existing private directory named <code class="docutils literal notranslate"><span class="pre">pki</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>create-ca<span class="w"> </span>--key-out<span class="w"> </span>pki/ca.key<span class="w"> </span>--cert-out<span class="w"> </span>pki/ca.crt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--common-name<span class="w"> </span><span class="s2">"Example Service CA"</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="issue">
+<span id="reference-dioptra-ssl-issue"></span><h2>issue<a class="headerlink" href="#issue" title="Permalink to this headline">#</a></h2>
+<p>Creates an RSA private key and a server certificate signed by the CA you specify.
+It signs the certificate with SHA-256 using the CA’s RSA or ECDSA private key.
+The certificate includes the DNS names and IP addresses supplied with <code class="docutils literal notranslate"><span class="pre">--dns</span></code> and <code class="docutils literal notranslate"><span class="pre">--ip</span></code>.</p>
+<section id="id2">
+<h3>Syntax<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-ssl issue --ca-cert PATH --ca-key PATH --key-out PATH --cert-out PATH
+                  [--dns NAME]... [--ip ADDRESS]... [--ca-chain PATH]
+                  [--rsa-bits N] [--valid-days N] [--not-after-limit UTC]
+                  [--issuance-log PATH] [--format text|json]
+</pre></div>
+</div>
+<p>At least one <code class="docutils literal notranslate"><span class="pre">--dns</span></code> or <code class="docutils literal notranslate"><span class="pre">--ip</span></code> is required.
+These names and addresses are stored in the certificate’s Subject Alternative Name (SAN) extension.</p>
+</section>
+<section id="id3">
+<h3>Options<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-ca-cert">
+<span class="sig-name descname"><span class="pre">--ca-cert</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-ca-cert" title="Permalink to this definition">#</a></dt>
+<dd><p>Required PEM certificate for the signing CA.
+The certificate must be valid and permit certificate signing.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-ca-key">
+<span class="sig-name descname"><span class="pre">--ca-key</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-ca-key" title="Permalink to this definition">#</a></dt>
+<dd><p>Required private key for the signing CA.
+The key must match the certificate supplied with <code class="docutils literal notranslate"><span class="pre">--ca-cert</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-ca-chain">
+<span class="sig-name descname"><span class="pre">--ca-chain</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-ca-chain" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional PEM file containing intermediate CA certificates needed to complete the certificate chain.
+Omit this option when using a CA created by <a class="reference internal" href="#reference-dioptra-ssl-create-ca"><span class="std std-ref">create-ca</span></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-key-out">
+<span class="sig-name descname"><span class="pre">--key-out</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-key-out" title="Permalink to this definition">#</a></dt>
+<dd><p>Required destination for the new server private key.
+The destination must not exist.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-cert-out">
+<span class="sig-name descname"><span class="pre">--cert-out</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-cert-out" title="Permalink to this definition">#</a></dt>
+<dd><p>Required destination for the new server certificate.
+The destination must not exist.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-dns">
+<span class="sig-name descname"><span class="pre">--dns</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;name&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-dns" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a DNS name clients use to connect to the server.
+Repeat this option for additional names.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-ip">
+<span class="sig-name descname"><span class="pre">--ip</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;address&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-ip" title="Permalink to this definition">#</a></dt>
+<dd><p>Add an IPv4 or IPv6 address clients use to connect to the server.
+Repeat this option for additional addresses.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-rsa-bits">
+<span class="sig-name descname"><span class="pre">--rsa-bits</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-rsa-bits" title="Permalink to this definition">#</a></dt>
+<dd><p>New server key size in bits.
+The default is <code class="docutils literal notranslate"><span class="pre">3072</span></code>.
+The minimum is <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-valid-days">
+<span class="sig-name descname"><span class="pre">--valid-days</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-valid-days" title="Permalink to this definition">#</a></dt>
+<dd><p>Requested certificate lifetime in days.
+The value must be a positive integer.
+The default is <code class="docutils literal notranslate"><span class="pre">365</span></code>.</p>
+<p>The command shortens the lifetime if necessary so the certificate expires no later than the CA certificate or the deadline set by <code class="docutils literal notranslate"><span class="pre">--not-after-limit</span></code>.
+It reports any shortening and fails if no valid lifetime remains.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-not-after-limit">
+<span class="sig-name descname"><span class="pre">--not-after-limit</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;utc&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-not-after-limit" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional expiration deadline in UTC.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-issue-issuance-log">
+<span class="sig-name descname"><span class="pre">--issuance-log</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-issue-issuance-log" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional path to a log of certificates signed by this command.
+No log is written by default.
+See <a class="reference internal" href="#reference-dioptra-ssl-issuance-history"><span class="std std-ref">Optional Issuance History</span></a> for the file format and logging behavior.</p>
+</dd></dl>
+
+<p>See <a class="reference internal" href="#reference-dioptra-ssl-common-options"><span class="std std-ref">Common Options</span></a> for <code class="docutils literal notranslate"><span class="pre">--format</span></code> and <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p>
+</section>
+<section id="id4">
+<h3>Examples<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<p>Issue a certificate for <code class="docutils literal notranslate"><span class="pre">service.example.org</span></code> and <code class="docutils literal notranslate"><span class="pre">192.0.2.20</span></code> using the CA in the existing <code class="docutils literal notranslate"><span class="pre">pki</span></code> directory:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>issue<span class="w"> </span>--ca-cert<span class="w"> </span>pki/ca.crt<span class="w"> </span>--ca-key<span class="w"> </span>pki/ca.key<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--key-out<span class="w"> </span>pki/service.key<span class="w"> </span>--cert-out<span class="w"> </span>pki/service.crt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dns<span class="w"> </span>service.example.org<span class="w"> </span>--ip<span class="w"> </span><span class="m">192</span>.0.2.20
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validate">
+<span id="reference-dioptra-ssl-validate"></span><h2>validate<a class="headerlink" href="#validate" title="Permalink to this headline">#</a></h2>
+<p>Checks local certificate files without changing them.</p>
+<p>For server certificates, it verifies the certificate chain against root CA certificates you supply and checks the requested DNS names and IP addresses.
+With <code class="docutils literal notranslate"><span class="pre">--kind</span> <span class="pre">ca</span></code>, it checks whether a CA certificate can sign other certificates.</p>
+<p>If you supply a private key, it also checks that the key matches the certificate.</p>
+<p>The command does not connect to a running server or check whether certificates have been revoked.
+See <a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html#reference-certificate-algorithms"><span class="std std-ref">Algorithms</span></a> for supported certificate keys and signature algorithms.</p>
+<section id="id5">
+<h3>Syntax<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dioptra-ssl validate --cert PATH [--key PATH] [--kind server|ca|outbound-ca]
+                     [--trust PATH]... [--dns NAME]... [--ip ADDRESS]...
+                     [--max-not-after UTC] [--warn-ca-not-after UTC]
+                     [--format text|json]
+</pre></div>
+</div>
+<p>By default, the command validates a server certificate.
+This requires <code class="docutils literal notranslate"><span class="pre">--trust</span></code> and at least one <code class="docutils literal notranslate"><span class="pre">--dns</span></code> or <code class="docutils literal notranslate"><span class="pre">--ip</span></code>.</p>
+</section>
+<section id="id6">
+<h3>Options<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-cert">
+<span class="sig-name descname"><span class="pre">--cert</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-cert" title="Permalink to this definition">#</a></dt>
+<dd><p>Required path to a PEM certificate file.
+For server validation, this single file must contain the server certificate first, followed by any required intermediate certificates.
+Supply root CA certificates separately with <code class="docutils literal notranslate"><span class="pre">--trust</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-key">
+<span class="sig-name descname"><span class="pre">--key</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-key" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional path to a private key file.
+The command checks that this key matches the certificate.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-kind">
+<span class="sig-name descname"><span class="pre">--kind</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;server|ca|outbound-ca&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-kind" title="Permalink to this definition">#</a></dt>
+<dd><p>Certificate type to validate.
+The default is <code class="docutils literal notranslate"><span class="pre">server</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">server</span></code></dt><dd><p>Check a server certificate’s chain and the requested DNS names and IP addresses.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ca</span></code></dt><dd><p>Check whether a CA certificate is valid for signing other certificates.
+No DNS name or IP address is required.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">outbound-ca</span></code></dt><dd><p>Inspect one CA certificate used to access external websites, reporting policy problems as warnings.
+Use <code class="docutils literal notranslate"><span class="pre">--cert</span></code> to supply the certificate; <code class="docutils literal notranslate"><span class="pre">--warn-ca-not-after</span></code> and <code class="docutils literal notranslate"><span class="pre">--format</span></code> are optional.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-trust">
+<span class="sig-name descname"><span class="pre">--trust</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-trust" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to a PEM file containing a root CA certificate to trust for this check.
+Required for server certificate validation.
+Repeat this option to supply additional root CA files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-dns">
+<span class="sig-name descname"><span class="pre">--dns</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;name&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-dns" title="Permalink to this definition">#</a></dt>
+<dd><p>Check that the server certificate is valid for the specified DNS name.
+Repeat this option to check additional names.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-ip">
+<span class="sig-name descname"><span class="pre">--ip</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;address&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-ip" title="Permalink to this definition">#</a></dt>
+<dd><p>Check that the server certificate is valid for the specified IPv4 or IPv6 address.
+Repeat this option to check additional addresses.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-max-not-after">
+<span class="sig-name descname"><span class="pre">--max-not-after</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;utc&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-max-not-after" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional expiration deadline in UTC for the certificate supplied with <code class="docutils literal notranslate"><span class="pre">--cert</span></code>.
+Validation fails if that certificate expires after this date.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dioptra-ssl-validate-warn-ca-not-after">
+<span class="sig-name descname"><span class="pre">--warn-ca-not-after</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;utc&gt;</span></span><a class="headerlink" href="#cmdoption-dioptra-ssl-validate-warn-ca-not-after" title="Permalink to this definition">#</a></dt>
+<dd><p>Optional expiration threshold in UTC for CA certificates in the chain.
+A CA certificate that expires after this date produces a warning.
+The warning alone does not cause validation to fail.</p>
+</dd></dl>
+
+<p>With <code class="docutils literal notranslate"><span class="pre">--kind</span> <span class="pre">server</span></code> or <code class="docutils literal notranslate"><span class="pre">--kind</span> <span class="pre">ca</span></code>, certificates must be within their validity period and use supported algorithms, whether or not these options are supplied.</p>
+<p>See <a class="reference internal" href="#reference-dioptra-ssl-common-options"><span class="std std-ref">Common Options</span></a> for <code class="docutils literal notranslate"><span class="pre">--format</span></code> and <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p>
+</section>
+<section id="id7">
+<h3>Examples<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<p>Validate a server certificate for <code class="docutils literal notranslate"><span class="pre">service.example.org</span></code> and check its private key, using <code class="docutils literal notranslate"><span class="pre">root-ca.crt</span></code> as the trusted root CA:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>validate<span class="w"> </span>--cert<span class="w"> </span>server-chain.pem<span class="w"> </span>--key<span class="w"> </span>server.key<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trust<span class="w"> </span>root-ca.crt<span class="w"> </span>--dns<span class="w"> </span>service.example.org
+</pre></div>
+</div>
+<p>Validate a CA certificate and check that its private key matches:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>dioptra-ssl<span class="w"> </span>validate<span class="w"> </span>--kind<span class="w"> </span>ca<span class="w"> </span>--cert<span class="w"> </span>pki/ca.crt<span class="w"> </span>--key<span class="w"> </span>pki/ca.key
+</pre></div>
+</div>
+</section>
+</section>
+<section id="output-and-exit-status">
+<h2>Output and Exit Status<a class="headerlink" href="#output-and-exit-status" title="Permalink to this headline">#</a></h2>
+<p>Results report certificate details, checks and warnings as applicable to the command.
+JSON output also includes a schema version and the command name.</p>
+<p>Successful commands return exit status <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+Errors identify the affected file or certificate and the failed operation or check.
+File-access and storage errors include the operating-system reason.
+Errors are written to standard error and return a nonzero exit status.
+In JSON mode, an error is reported as a single structured JSON object.</p>
+</section>
+<section id="argument-values">
+<span id="reference-dioptra-ssl-argument-values"></span><h2>Argument Values<a class="headerlink" href="#argument-values" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p>Relative file paths are resolved from the directory where you run the command.</p></li>
+<li><p>Dates and times use UTC in RFC 3339 format, ending in <code class="docutils literal notranslate"><span class="pre">Z</span></code>, for example <code class="docutils literal notranslate"><span class="pre">2030-12-31T23:59:59Z</span></code>.</p></li>
+<li><p>DNS names and IP addresses must not include a URL scheme or port number.
+For example, use <code class="docutils literal notranslate"><span class="pre">dioptra.example.org</span></code>, not <code class="docutils literal notranslate"><span class="pre">https://dioptra.example.org:443</span></code>.</p></li>
+</ul>
+</section>
+<section id="files-and-permissions">
+<span id="reference-dioptra-ssl-files-permissions"></span><h2>Files and Permissions<a class="headerlink" href="#files-and-permissions" title="Permalink to this headline">#</a></h2>
+<table class="colwidths-given table">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 50%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Created file</p></th>
+<th class="head"><p>Format</p></th>
+<th class="head"><p>Permissions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Certificate</p></td>
+<td><p>PEM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0644</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Private key</p></td>
+<td><p>Unencrypted PKCS#8 PEM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0600</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Create output files in directories you own.
+Store private keys and their backups in directories only you can access, outside source control.</p>
+</section>
+<section id="creation-failures-and-retained-files">
+<span id="reference-dioptra-ssl-publication"></span><h2>Creation Failures and Retained Files<a class="headerlink" href="#creation-failures-and-retained-files" title="Permalink to this headline">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">create-ca</span></code> and <code class="docutils literal notranslate"><span class="pre">issue</span></code> fail if either output file already exists.
+If a command fails while writing the files, it reports which files were written and the paths to the saved certificate and private key.
+If issuance logging was requested, it also reports whether the issuance record was saved successfully.
+Keep these saved files until recovery is complete.
+Follow <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation"><span class="std std-ref">Recover from Interrupted Certificate Creation</span></a> to restore an intact pair or generate replacements.
+If a requested issuance record cannot be confirmed, you can recover a validated pair while accepting that the issuance might not be recorded.
+If you require a complete record, generate a new pair with working logging.</p>
+<p>For certificates managed by a Dioptra deployment, see <a class="reference internal" href="../how-to/setup-dioptra/recover-certificate-operation.html#how-to-recover-certificate-operation"><span class="std std-ref">Recover an Interrupted Certificate Operation</span></a>.</p>
+</section>
+<section id="recovery-problems">
+<span id="reference-dioptra-ssl-recovery-problems"></span><h2>Recovery Problems<a class="headerlink" href="#recovery-problems" title="Permalink to this headline">#</a></h2>
+<p>The following cases cover validation and file errors during standalone recovery.
+For the restart procedure, follow <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation-restart"><span class="std std-ref">Start Again</span></a> in the <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation"><span class="std std-ref">certificate recovery how-to</span></a>.</p>
+<table class="colwidths-given table">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem</p></th>
+<th class="head"><p>Action</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>A file cannot be read or written, or its permissions cannot be set.</p></td>
+<td><p>Check the reported path, that its parent directory exists, and that you own the output directory and have the required access. Correct the path or use a private directory you own. For a read-only filesystem, use a writable location.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Storage is full or a filesystem operation fails.</p></td>
+<td><p>Free space or use a working filesystem with sufficient space, then start again with unused output paths. A failed write may leave a partial file.</p></td>
+</tr>
+<tr class="row-even"><td><p>A certificate or key is malformed, missing, or does not match its partner.</p></td>
+<td><p>Check that both saved files belong to the same attempt. If they remain unusable, start again. Restore damaged externally supplied files from a known-good copy or obtain replacements from their provider; a lost private key can require a new certificate.</p></td>
+</tr>
+<tr class="row-odd"><td><p>The server certificate’s chain cannot be verified.</p></td>
+<td><p>Check the root CA supplied with <code class="docutils literal notranslate"><span class="pre">--trust</span></code> and the intermediate certificates in the certificate file. If the correct inputs still fail validation, start again using a valid signing CA and its matching key.</p></td>
+</tr>
+<tr class="row-even"><td><p>A DNS name or IP address does not match.</p></td>
+<td><p>Check the validation argument against the original issuance request. If the certificate lacks a name you need, issue a new certificate with that name.</p></td>
+</tr>
+<tr class="row-odd"><td><p>A certificate is outside its validity period or exceeds the requested deadline.</p></td>
+<td><p>Check the system clock and compare any <code class="docutils literal notranslate"><span class="pre">--max-not-after</span></code> argument with the original request. If the saved certificate still fails the validity check, generate a replacement using a valid CA.</p></td>
+</tr>
+<tr class="row-even"><td><p>An algorithm is unsupported or a CA cannot be used for signing.</p></td>
+<td><p>Check that you selected the intended certificate. If so, use a CA and certificate that meet the <a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html#reference-certificate-algorithms"><span class="std std-ref">supported requirements</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>An existing output’s checksum differs from its saved copy.</p></td>
+<td><p>Check the selected paths. If they are correct, leave both files unchanged and start again with unused output paths.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Keep saved files and existing outputs when starting again.
+A failed server-certificate operation does not require replacing a healthy CA.</p>
+</section>
+<section id="optional-issuance-history">
+<span id="reference-dioptra-ssl-issuance-history"></span><h2>Optional Issuance History<a class="headerlink" href="#optional-issuance-history" title="Permalink to this headline">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">issue</span> <span class="pre">--issuance-log</span> <span class="pre">PATH</span></code> to record certificate signing in the specified file.
+The file uses UTF-8 JSON Lines format, with one JSON object per line, and permissions <code class="docutils literal notranslate"><span class="pre">0600</span></code>.
+Each record contains:</p>
+<ul class="simple">
+<li><p>A schema version and unique issuance ID.</p></li>
+<li><p>The signing time in UTC.</p></li>
+<li><p>SHA-256 fingerprints of the signing CA certificate and the issued certificate.</p></li>
+<li><p>The issued certificate’s serial number, DNS names, IP addresses and validity dates.</p></li>
+<li><p>The public-key and signature algorithms.</p></li>
+</ul>
+<p>The issued certificate’s fingerprint and issuance ID identify its log record.
+The log covers only signing performed by this command with logging enabled.
+An interruption between signing and writing the log can leave a signed certificate without a log record.</p>
+<table class="colwidths-given table" id="id9">
+<caption><span class="caption-text">Logging failures</span><a class="headerlink" href="#id9" title="Permalink to this table">#</a></caption>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Condition</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>The log cannot be written.</p></td>
+<td><p>The command fails and saves the generated certificate and private key for recovery.</p></td>
+</tr>
+<tr class="row-odd"><td><p>The log is written, but writing the certificate or key output fails.</p></td>
+<td><p>The log record remains. It confirms signing, but does not confirm that both output files were written successfully.</p></td>
+</tr>
+<tr class="row-even"><td><p>The log contains an invalid or incomplete record.</p></td>
+<td><p>The command stops before signing another certificate. Keep the log unchanged and select a new log path when starting a fresh issuance.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For subsequent issuance, you can reuse a valid, writable log.
+If the log is damaged or its condition is uncertain, select a new, unused path with <code class="docutils literal notranslate"><span class="pre">--issuance-log</span></code> and retain the old log.
+The new log records subsequent issuance; it does not record a recovered certificate retrospectively or complete the old history.
+Missing or damaged records are not reconstructed as part of recovery.
+A complete record remains part of the signing history even if its certificate will not be used.</p>
+<p>To start a fresh issuance, follow <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation-restart"><span class="std std-ref">Start Again</span></a> in the <a class="reference internal" href="../how-to/advanced/recover-certificate-creation.html#how-to-recover-certificate-creation"><span class="std std-ref">certificate recovery how-to</span></a>.
+See <a class="reference internal" href="#reference-dioptra-ssl-publication"><span class="std std-ref">Creation Failures and Retained Files</span></a> for failure reporting.</p>
+</section>
+<section class="fancy-header header-seealso" id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../how-to/setup-dioptra/reference/certificate-policy-reference.html#reference-certificate-policy"><span class="std std-ref">Certificate Policy Reference</span></a> lists certificate requirements enforced by deployment tools.</p></li>
+<li><p><a class="reference internal" href="dioptra-api-reference.html#reference-dioptra-api-prod"><span class="std std-ref">dioptra-api prod</span></a> describes running the API with HTTPS from an installed Python package.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="dioptra-api-reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">dioptra-api Command Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api-application-factory-reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">REST API Application Factory Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax">Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-summary">Command Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-options">Common Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-ca">create-ca</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#issue">issue</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate">validate</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Syntax</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-and-exit-status">Output and Exit Status</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#argument-values">Argument Values</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-and-permissions">Files and Permissions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creation-failures-and-retained-files">Creation Failures and Retained Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recovery-problems">Recovery Problems</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-issuance-history">Optional Issuance History</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  
+  <footer class="bd-footer">
+  </footer>
+  <div id="img-modal">
+    <span class="close-btn">&times;</span>
+    <img id="modal-img" src="" alt="enlarged screenshot">
+  </div>
+  </body>
+</html>
