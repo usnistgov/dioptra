@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
+from itertools import chain
 from typing import Any, Callable, Iterable, Iterator, cast
 
 import structlog
@@ -62,6 +63,7 @@ from dioptra.sdk.api.swappable_validation import (
     get_swappable_experiment_schema,
     get_swappable_json_schema_resources,
 )
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
 from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
@@ -73,7 +75,12 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     render_swaps_graph,
 )
 from dioptra.task_engine import util
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.issues import (
+    IssueSeverity,
+    IssueType,
+    ValidationIssue,
+    ValidationLimitIssue,
+)
 from dioptra.task_engine.validation import schema_validate
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
@@ -1635,6 +1642,11 @@ class EntrypointConfigService(UnitOfWorkService):
                 config = render_swaps_config(
                     config, swap_choices, raise_unspecified=not partial
                 )
+            except ValidationLimitError as error:
+                raise EntrypointValidationError(
+                    message="Rendered entrypoint configuration is invalid",
+                    validation_error_dict={"rendered_validation_errors": [str(error)]},
+                ) from error
             except ValueError as error:
                 raise EntrypointSwapsRenderError(str(error)) from error
 
@@ -1939,11 +1951,10 @@ class SwapsValidationService(UnitOfWorkService):
             log: A BoundLogger instance.
 
         Returns:
-            A list of validation issues and a list of global parameters required for the graph.
+            The validation issues and required global parameters for this choice.
+            If a resource limit is exceeded, return only the limit issue and an
+            empty set of parameters.
         """
-        issues_for_swap = []
-        required_globals: set[str] = set()
-
         try:
             task_engine_dict = build_task_engine_dict(
                 entry_point=entrypoint_data,
@@ -1953,30 +1964,29 @@ class SwapsValidationService(UnitOfWorkService):
             task_engine_dict["graph"] = task_graph_yaml
             task_engine_dict = render_swaps_config(task_engine_dict, swap_choices)
             compiled = compile_swaps_config(task_engine_dict)
+        except ValidationLimitError as error:
+            return [ValidationLimitIssue(error)], set()
         except ValueError as error:
-            issues_for_swap.append(
+            issues = [
                 ValidationIssue(
                     type_=IssueType.SEMANTIC,
                     severity=IssueSeverity.ERROR,
-                    message=(
-                        f"[Swap combination {swap_choices}] "
-                        f"Error rendering graph: {error}"
-                    ),
+                    message=f"Error rendering graph: {error}",
                 )
-            )
-            return issues_for_swap, required_globals
+            ]
+            required_globals: set[str] = set()
+        else:
+            issues = compiled.validate()
+            if issues and isinstance(issues[0], ValidationLimitIssue):
+                return issues, set()
+            required_globals, _ = _get_required_globals(compiled.config["graph"])
 
-        # this is a schema check and deeper validation no longer present in workflows
-        issues = compiled.validate()
+        if issues and swap_choices:
+            prefix = f"[Swap combination {swap_choices}] "
+            for issue in issues:
+                issue.message = prefix + issue.message
 
-        for issue in issues:
-            issue.message = f"[Swap combination {swap_choices}] {issue.message}"
-            issues_for_swap.append(issue)
-
-        # collect any globals needed for this rendering
-        required_globals, _ = _get_required_globals(compiled.config["graph"])
-
-        return issues_for_swap, required_globals
+        return issues, required_globals
 
     def validate(
         self,
@@ -2148,25 +2158,16 @@ class SwapsValidationService(UnitOfWorkService):
                 and not multiple_swaps_per_step_issues
             ):
                 pre_render_issues += check_swaps_graph_dependencies(swaps_yaml)
-                # extract a mapping of swaps to possible swap choices
-                swaps = extract_swaps(
-                    swaps_yaml
-                )  # { swap1: [alias1, alias2, alias3], swap2: [alias4, alias5, alias6], etc. }
-                swap_names = list(swaps.keys())  # [swap1, swap2, etc.]
-
+                swaps = extract_swaps(swaps_yaml)
                 defaults = {name: aliases[0] for name, aliases in swaps.items()}
-                combinations = [defaults]
 
-                # Validate the baseline once, then vary each nondefault choice.
-                for swap_name in swap_names:
-                    for alias in swaps[swap_name][1:]:
-                        current_swap_choice = defaults.copy()
-                        current_swap_choice[swap_name] = alias
-
-                        combinations.append(current_swap_choice)
-
-                # loop over the combinations, render each, and validate as a normal experiment description
-                for combination in combinations:
+                # Validate the defaults once, then vary one choice at a time.
+                alternatives = (
+                    {**defaults, name: alias}
+                    for name, aliases in swaps.items()
+                    for alias in aliases[1:]
+                )
+                for combination in chain((defaults,), alternatives):
                     rendered_validation_issues, required_globals = (
                         self.validate_single_swap_combinations(
                             task_graph_yaml=swaps_yaml,
@@ -2177,6 +2178,18 @@ class SwapsValidationService(UnitOfWorkService):
                             log=log,
                         )
                     )
+                    if rendered_validation_issues and isinstance(
+                        rendered_validation_issues[0], ValidationLimitIssue
+                    ):
+                        return {
+                            "schema_issues": [],
+                            "swap_issues": [],
+                            "rendered_validation_errors": [
+                                str(rendered_validation_issues[0])
+                            ],
+                            "missing_global_params": [],
+                            "swaps": {},
+                        }
                     collected_required_globals.update(required_globals)
                     collected_rendered_validation_issues.extend(
                         rendered_validation_issues

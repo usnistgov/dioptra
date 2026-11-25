@@ -15,8 +15,11 @@
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 import yaml
@@ -25,6 +28,8 @@ from dioptra.sdk.api.swappable_validation import (
     get_swap_graph_schema,
     get_swappable_json_schema_resources,
 )
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
+from dioptra.sdk.utilities import run_dioptra_job
 from dioptra.sdk.utilities.entrypoint_swaps import (
     check_duplicate_swap_names,
     check_multiple_swaps_per_step,
@@ -35,11 +40,93 @@ from dioptra.sdk.utilities.entrypoint_swaps import (
     render_swaps_graph,
     validate_swaps_graph,
 )
+from dioptra.task_engine import type_validation_state
 from dioptra.task_engine.task_engine import EngineContext, _run_steps
 from dioptra.task_engine.util import step_get_plugin_short_name
 from dioptra.task_engine.validation import schema_validate
 
 FILES_LOCATION = "entrypoint_swaps_files"
+
+
+@pytest.fixture
+def validation_limit_config() -> dict[str, Any]:
+    """Build a valid workflow for the SDK and worker validation tests.
+
+    Returns:
+        A workflow dictionary with one step that passes an integer to a task
+        accepting either a number or a string.
+    """
+    return {
+        "types": {"Example": {"union": ["number", "string"]}},
+        "tasks": {
+            "consume": {"plugin": "example.consume", "inputs": [{"value": "Example"}]}
+        },
+        "graph": {"step": {"consume": [1]}},
+    }
+
+
+def test_sdk_and_worker_accept_ordinary_workflow(
+    validation_limit_config: dict[str, Any],
+) -> None:
+    """A valid workflow should pass both SDK and worker validation.
+
+    The task accepts a number or a string, and the step supplies an integer. The
+    SDK should return no issues, and the worker should log no error.
+    """
+    assert compile_swaps_config(validation_limit_config).validate() == []
+    log = Mock()
+    run_dioptra_job._validate_yaml(validation_limit_config, log)
+    log.error.assert_not_called()
+
+
+@pytest.mark.parametrize("early", [False, True])
+def test_worker_logs_resource_failure_and_never_runs_job(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    early: bool,
+    validation_limit_config: dict[str, Any],
+) -> None:
+    """The worker must stop before executing a job that exceeded a validation limit.
+
+    Lowering the limits makes the same valid job fail either during preparation or
+    during type checking. In both cases the worker should log one short error and
+    stop before running the task.
+    """
+    limits = replace(
+        type_validation_state.TypeValidationLimits(),
+        **({"input_depth": 1} if early else {"work": 0}),
+    )
+    monkeypatch.setattr(type_validation_state, "TypeValidationLimits", lambda: limits)
+    log = Mock()
+    if early:
+        with pytest.raises(ValidationLimitError):
+            compile_swaps_config(validation_limit_config)
+    else:
+        issues = compile_swaps_config(validation_limit_config).validate()
+        assert len(issues) == 1
+        assert "work limit" in issues[0].message
+    args_file = tmp_path / "args.json"
+    args_file.write_text("{}")
+    context = SimpleNamespace(
+        args_file=args_file, yaml_path=lambda name: tmp_path / name
+    )
+    monkeypatch.setattr(run_dioptra_job, "Context", lambda: context)
+    monkeypatch.setattr(
+        run_dioptra_job,
+        "_load_json",
+        lambda path: {"job_id": 1, "experiment_id": 1, "entrypoint_name": "example"},
+    )
+    monkeypatch.setattr(
+        run_dioptra_job, "_load_job_yaml", lambda path: validation_limit_config
+    )
+    monkeypatch.setattr(run_dioptra_job.LOGGER, "new", lambda **kwargs: log)
+    execute = Mock(side_effect=AssertionError("Invalid job reached task execution"))
+    monkeypatch.setattr(run_dioptra_job, "_run_job", execute)
+    with pytest.raises(ValueError, match="Type validation exceeded"):
+        run_dioptra_job.standalone()
+    log.error.assert_called_once()
+    assert len(log.error.call_args.kwargs["message"]) < 200
+    execute.assert_not_called()
 
 
 @pytest.mark.parametrize(

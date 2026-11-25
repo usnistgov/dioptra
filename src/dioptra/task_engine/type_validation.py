@@ -22,8 +22,19 @@ import functools
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Optional
 
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
 from dioptra.task_engine import type_registry, types, util
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.issues import (
+    IssueSeverity,
+    IssueType,
+    ValidationIssue,
+    ValidationLimitIssue,
+)
+from dioptra.task_engine.type_validation_state import (
+    Comparison,
+    TypeValidationLimits,
+    TypeValidationState,
+)
 
 # Type aliases for type annotations
 _TypeMap = Mapping[str, types.Type]
@@ -119,7 +130,22 @@ def _get_reference_type(
     return type_
 
 
-def _find_common_base_of_two_types(type1: types.Type, type2: types.Type) -> types.Type:
+def _is_subtype(
+    type_: types.SimpleType, other: types.SimpleType, state: TypeValidationState
+) -> bool:
+    """Check ancestry, counting each supertype visited against the work limit."""
+    current = type_.super_type
+    while current is not None:
+        state.charge()
+        if current.name == other.name:
+            return True
+        current = current.super_type
+    return False
+
+
+def _find_common_base_of_two_types(
+    type1: types.Type, type2: types.Type, state: TypeValidationState
+) -> types.Type:
     """
     Find the most specific common base type between the pair of types given.
     Will return the "any" type if nothing more specific is found.
@@ -127,6 +153,7 @@ def _find_common_base_of_two_types(type1: types.Type, type2: types.Type) -> type
     Args:
         type1: A Type instance
         type2: A Type instance
+        state: State shared by the current validation.
 
     Returns:
         A Type instance
@@ -136,15 +163,15 @@ def _find_common_base_of_two_types(type1: types.Type, type2: types.Type) -> type
     if isinstance(type1, types.SimpleType) and isinstance(type2, types.SimpleType):
         if type1 == type2:
             common_base = type1
-        elif type1.is_subtype_of(type2):
+        elif _is_subtype(type1, type2, state):
             common_base = type2
-        elif type2.is_subtype_of(type1):
+        elif _is_subtype(type2, type1, state):
             common_base = type1
         else:
             # Try to find a base of type1 which is also a base of type2.
             common_base = type1.super_type
             while common_base is not None:
-                if type2.is_subtype_of(common_base):
+                if _is_subtype(type2, common_base, state):
                     break
                 common_base = common_base.super_type
             else:
@@ -157,19 +184,25 @@ def _find_common_base_of_two_types(type1: types.Type, type2: types.Type) -> type
     return common_base
 
 
-def _find_common_base_type(types_: Iterable[types.Type]):
+def _find_common_base_type(
+    types_: Iterable[types.Type], state: TypeValidationState
+) -> types.Type:
     """
     Find the most specific common base type among all of the given types.  Will
     return the "any" type if nothing more specific is found.
 
     Args:
         types_: An iterable of Type instances
+        state: State shared by the current validation.
 
     Returns:
         A Type instance
     """
     try:
-        common_base = functools.reduce(_find_common_base_of_two_types, types_)
+        common_base = functools.reduce(
+            lambda left, right: _find_common_base_of_two_types(left, right, state),
+            types_,
+        )
     except TypeError as e:
         raise ValueError("_find_common_base_type() requires at least one type") from e
 
@@ -183,6 +216,8 @@ def _infer_type_from_mapping(
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
     artifact_inputs: Optional[_DefMap] = None,
+    *,
+    state: TypeValidationState,
 ) -> types.Type:
     """
     Infer the type of the given Mapping value.  This always produces a mapping
@@ -194,6 +229,7 @@ def _infer_type_from_mapping(
 
     Args:
         mapping: The mapping value to infer a type for
+        state: State shared by the current validation.
         type_reg: A type registry as a mapping from type name to Type instance
         global_parameter_types: A mapping from global parameter name to
             Type instance, giving the types of all global parameters
@@ -208,11 +244,11 @@ def _infer_type_from_mapping(
     if mapping:
         key_types = (
             # disable reference resolution here
-            _infer_type(key)
+            _infer_type(key, state=state)
             for key in mapping
         )
 
-        key_base_type = _find_common_base_type(key_types)
+        key_base_type = _find_common_base_type(key_types, state=state)
 
         if key_base_type is type_registry.TYPE_STRING:
             # If keys are strings, infer an enumerated mapping type
@@ -224,6 +260,7 @@ def _infer_type_from_mapping(
                     graph,
                     tasks,
                     artifact_inputs,
+                    state=state,
                 )
                 for prop_name, prop_value in mapping.items()
             }
@@ -238,7 +275,13 @@ def _infer_type_from_mapping(
             # multiple different property value types.
             value_types = {
                 _infer_type(
-                    v, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+                    v,
+                    type_reg,
+                    global_parameter_types,
+                    graph,
+                    tasks,
+                    artifact_inputs,
+                    state=state,
                 )
                 for v in mapping.values()
             }
@@ -277,6 +320,8 @@ def _infer_type_from_iterable(
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
     artifact_inputs: Optional[_DefMap] = None,
+    *,
+    state: TypeValidationState,
 ) -> types.Type:
     """
     Infer the type of the given iterable value.  This always produces a tuple
@@ -288,6 +333,7 @@ def _infer_type_from_iterable(
 
     Args:
         iterable: The iterable value to infer a type for
+        state: State shared by the current validation.
         type_reg: A type registry as a mapping from type name to Type instance
         global_parameter_types: A mapping from global parameter name to
             Type instance, giving the types of all global parameters
@@ -300,7 +346,13 @@ def _infer_type_from_iterable(
     # Infer all element types
     elt_types = [
         _infer_type(
-            elt, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+            elt,
+            type_reg,
+            global_parameter_types,
+            graph,
+            tasks,
+            artifact_inputs,
+            state=state,
         )
         for elt in iterable
     ]
@@ -319,6 +371,8 @@ def _infer_type(
     graph: Optional[_DefMap] = None,
     tasks: Optional[_DefMap] = None,
     artifact_inputs: Optional[_DefMap] = None,
+    *,
+    state: TypeValidationState,
 ) -> types.Type:
     """
     Infer the type of the given value.  If the latter four parameters are
@@ -329,6 +383,7 @@ def _infer_type(
 
     Args:
         value: The value to infer a type for
+        state: State shared by the current validation.
         type_reg: A type registry as a mapping from type name to Type instance
         global_parameter_types: A mapping from global parameter name to
             Type instance, giving the types of all global parameters
@@ -338,6 +393,7 @@ def _infer_type(
     Returns:
         The value type
     """
+    state.charge()
     if isinstance(value, str):
         if (
             util.is_reference(value)
@@ -372,12 +428,24 @@ def _infer_type(
 
     elif isinstance(value, Mapping):
         type_ = _infer_type_from_mapping(
-            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+            value,
+            type_reg,
+            global_parameter_types,
+            graph,
+            tasks,
+            artifact_inputs,
+            state=state,
         )
 
     elif util.is_iterable(value):
         type_ = _infer_type_from_iterable(
-            value, type_reg, global_parameter_types, graph, tasks, artifact_inputs
+            value,
+            type_reg,
+            global_parameter_types,
+            graph,
+            tasks,
+            artifact_inputs,
+            state=state,
         )
 
     else:
@@ -388,7 +456,9 @@ def _infer_type(
 
 
 def _mapping_structures_compatible(
-    invoc_map_struct: types.TypeStructure, task_map_struct: types.TypeStructure
+    invoc_map_struct: types.TypeStructure,
+    task_map_struct: types.TypeStructure,
+    state: TypeValidationState,
 ) -> bool:
     """
     Check an invocation mapping structure for compatibility with a task
@@ -397,6 +467,7 @@ def _mapping_structures_compatible(
     Args:
         invoc_map_struct: An invocation mapping structure
         task_map_struct: A task parameter mapping structure
+        state: State shared by the current validation.
 
     Returns:
         True if the structures are compatible; False if not
@@ -426,11 +497,15 @@ def _mapping_structures_compatible(
         result = len(invoc_struct_def) == len(task_struct_def)
 
         if result:
-            for invoc_prop_name, invoc_prop_type in invoc_struct_def.items():
+            for invoc_prop_name, invoc_prop_type in state.members(
+                invoc_struct_def.items()
+            ):
                 task_prop_type = task_struct_def.get(invoc_prop_name)
 
                 if task_prop_type:
-                    result = _types_compatible(invoc_prop_type, task_prop_type)
+                    result = _types_compatible(
+                        invoc_prop_type, task_prop_type, state=state
+                    )
                 else:
                     result = False
 
@@ -451,8 +526,8 @@ def _mapping_structures_compatible(
 
         if result:
             result = all(
-                _types_compatible(invoc_prop_type, task_value_type)
-                for invoc_prop_type in invoc_struct_def.values()
+                _types_compatible(invoc_prop_type, task_value_type, state=state)
+                for invoc_prop_type in state.members(invoc_struct_def.values())
             )
 
     elif not invoc_is_enumerated and task_is_enumerated:
@@ -471,15 +546,20 @@ def _mapping_structures_compatible(
         invoc_key_type, invoc_value_type = invoc_struct_def
         task_key_type, task_value_type = task_struct_def
 
-        result = _types_compatible(invoc_key_type, task_key_type) and _types_compatible(
-            invoc_value_type, task_value_type
+        result = all(
+            _types_compatible(argument, parameter, state=state)
+            for argument, parameter in state.members(
+                ((invoc_key_type, task_key_type), (invoc_value_type, task_value_type))
+            )
         )
 
     return result
 
 
 def _tuple_structures_compatible(
-    invoc_tuple_struct: types.TypeStructure, task_tuple_struct: types.TypeStructure
+    invoc_tuple_struct: types.TypeStructure,
+    task_tuple_struct: types.TypeStructure,
+    state: TypeValidationState,
 ) -> bool:
     """
     Check an invocation tuple structure for compatibility with a task parameter
@@ -488,6 +568,7 @@ def _tuple_structures_compatible(
     Args:
         invoc_tuple_struct: An invocation tuple structure
         task_tuple_struct: A task parameter tuple structure
+        state: State shared by the current validation.
 
     Returns:
         True if the structures are compatible; False if not
@@ -502,8 +583,10 @@ def _tuple_structures_compatible(
     result = len(invoc_struct_def) == len(task_struct_def)
 
     if result:
-        for invoc_elt_type, task_elt_type in zip(invoc_struct_def, task_struct_def):
-            if not _types_compatible(invoc_elt_type, task_elt_type):
+        for invoc_elt_type, task_elt_type in state.members(
+            zip(invoc_struct_def, task_struct_def)
+        ):
+            if not _types_compatible(invoc_elt_type, task_elt_type, state=state):
                 result = False
                 break
 
@@ -511,7 +594,9 @@ def _tuple_structures_compatible(
 
 
 def _types_compatible_structured(
-    invocation_arg_type: types.StructuredType, task_param_type: types.StructuredType
+    invocation_arg_type: types.StructuredType,
+    task_param_type: types.StructuredType,
+    state: TypeValidationState,
 ) -> bool:
     """
     Check an invocation argument type for compatibility with a corresponding
@@ -520,6 +605,7 @@ def _types_compatible_structured(
     Args:
         invocation_arg_type: An invocation argument type
         task_param_type: A task parameter argument type
+        state: State shared by the current validation.
 
     Returns:
         True if the types are compatible; False if not
@@ -541,8 +627,8 @@ def _types_compatible_structured(
         assert isinstance(list_elt_type, types.Type)
 
         result = all(
-            _types_compatible(tuple_elt_type, list_elt_type)
-            for tuple_elt_type in tuple_elt_types
+            _types_compatible(tuple_elt_type, list_elt_type, state=state)
+            for tuple_elt_type in state.members(tuple_elt_types)
         )
 
     elif (
@@ -558,7 +644,7 @@ def _types_compatible_structured(
         invocation_arg_type.structure.struct_type is types.StructureType.MAPPING  # noqa: E721
     ):
         result = _mapping_structures_compatible(
-            invocation_arg_type.structure, task_param_type.structure
+            invocation_arg_type.structure, task_param_type.structure, state=state
         )
 
     elif (
@@ -568,22 +654,26 @@ def _types_compatible_structured(
         assert isinstance(invocation_arg_type.structure.struct_def, types.Type)
         assert isinstance(task_param_type.structure.struct_def, types.Type)
 
+        state.charge()
         result = _types_compatible(
             invocation_arg_type.structure.struct_def,
             task_param_type.structure.struct_def,
+            state=state,
         )
 
     else:
         # Must be tuples
         result = _tuple_structures_compatible(
-            invocation_arg_type.structure, task_param_type.structure
+            invocation_arg_type.structure, task_param_type.structure, state=state
         )
 
     return result
 
 
 def _types_compatible(
-    invocation_arg_type: types.Type, task_param_type: types.Type
+    invocation_arg_type: types.Type,
+    task_param_type: types.Type,
+    state: TypeValidationState,
 ) -> bool:
     """
     Check an invocation argument type for compatibility with a corresponding
@@ -592,15 +682,53 @@ def _types_compatible(
     Args:
         invocation_arg_type: An invocation argument type
         task_param_type: A task parameter argument type
+        state: State shared by the current validation.
 
     Returns:
         True if the types are compatible; False if not
     """
+    state.charge()
+    key = (id(invocation_arg_type), id(task_param_type))
+    entry = state.comparisons.get(key)
+    if entry is not None:
+        if entry.result is None:
+            state.fail("recursive comparison")
+        return entry.result
+    if len(state.comparisons) >= state.limits.cache_entries:
+        state.fail("comparison cache")
+    if state.depth >= state.limits.comparison_depth:
+        state.fail("comparison nesting")
+    entry = Comparison(invocation_arg_type, task_param_type)
+    state.comparisons[key] = entry
+    state.depth += 1
+    try:
+        entry.result = _evaluate_compatibility(
+            invocation_arg_type, task_param_type, state
+        )
+        return entry.result
+    except Exception:
+        # Retain pending state and prevent reuse after any aborted evaluation.
+        state.exhausted = True
+        raise
+    finally:
+        state.depth -= 1
+
+
+def _evaluate_compatibility(
+    invocation_arg_type: types.Type,
+    task_param_type: types.Type,
+    state: TypeValidationState,
+) -> bool:
+    """Evaluate one new directed pair using the existing compatibility rules."""
     if task_param_type is type_registry.TYPE_ANY:
         # everything is compatible with "any"
         result = True
 
-    elif invocation_arg_type == task_param_type:
+    elif invocation_arg_type is task_param_type or (
+        type(invocation_arg_type) is type(task_param_type)
+        and invocation_arg_type.name is not None
+        and invocation_arg_type.name == task_param_type.name
+    ):
         # Simple special case which bypasses the complexity below: if types
         # are the same, they are automatically compatible.
 
@@ -612,8 +740,8 @@ def _types_compatible(
         # Treat invocation union like an "and" over all union members:
         # all union members must be compatible with the task parameter type.
         result = all(
-            _types_compatible(invoc_member_type, task_param_type)
-            for invoc_member_type in invocation_arg_type.member_types
+            _types_compatible(invoc_member_type, task_param_type, state=state)
+            for invoc_member_type in state.members(invocation_arg_type.member_types)
         )
 
     elif isinstance(task_param_type, types.UnionType):
@@ -621,8 +749,8 @@ def _types_compatible(
         # union here.  It must be compatible with some member of the task
         # parameter union.
         result = any(
-            _types_compatible(invocation_arg_type, task_param_member_type)
-            for task_param_member_type in task_param_type.member_types
+            _types_compatible(invocation_arg_type, task_param_member_type, state=state)
+            for task_param_member_type in state.members(task_param_type.member_types)
         )
 
     # Non-union cases
@@ -632,7 +760,7 @@ def _types_compatible(
     ):
         # Both simple, but not the same (that was checked above).  So we can do
         # a subtype check.
-        result = invocation_arg_type.is_subtype_of(task_param_type)
+        result = _is_subtype(invocation_arg_type, task_param_type, state)
 
     elif isinstance(invocation_arg_type, types.StructuredType) and isinstance(
         task_param_type, types.StructuredType
@@ -646,7 +774,9 @@ def _types_compatible(
             result = False
 
         else:
-            result = _types_compatible_structured(invocation_arg_type, task_param_type)
+            result = _types_compatible_structured(
+                invocation_arg_type, task_param_type, state=state
+            )
 
     else:
         # Simple/structured type mismatch
@@ -663,6 +793,7 @@ def _check_invocation_parameter(
     graph: _DefMap,
     tasks: _DefMap,
     artifact_inputs: _DefMap,
+    state: TypeValidationState,
 ) -> list[ValidationIssue]:
     """
     Check the type of one task invocation parameter from a step against the
@@ -671,6 +802,7 @@ def _check_invocation_parameter(
     Args:
         invocation_arg_spec: An argument spec from a task invocation in a step
         task_arg: A task argument definition from a task definition
+        state: State shared by the current validation.
         type_reg: A type registry as a mapping from type name to Type instance
         global_parameter_types: A mapping from global parameter name to Type
             instance, giving the types of all global parameters
@@ -694,13 +826,18 @@ def _check_invocation_parameter(
         graph,
         tasks,
         artifact_inputs,
+        state=state,
     )
 
-    if not _types_compatible(inferred_invocation_arg_type, task_param_type):
-        message = (
-            "Inferred invocation arg type and task plugin input type are"
-            " incompatible. Found {!s}; expected {!s}"
-        ).format(inferred_invocation_arg_type, task_param_type)
+    if not _types_compatible(
+        inferred_invocation_arg_type, task_param_type, state=state
+    ):
+        message = state.message(
+            "Inferred invocation arg type and task plugin input type are incompatible. Found ",
+            state.describe(inferred_invocation_arg_type),
+            "; expected ",
+            state.describe(task_param_type),
+        )
 
         issue = ValidationIssue(IssueType.TYPE, IssueSeverity.ERROR, message)
         issues.append(issue)
@@ -715,12 +852,14 @@ def _step_check_types(
     graph: _DefMap,
     tasks: _DefMap,
     artifact_inputs: _DefMap,
+    state: TypeValidationState,
 ) -> list[ValidationIssue]:
     """
     Check the types of task invocation parameters in the given step.
 
     Args:
         step_def: A step definition
+        state: State shared by the current validation.
         type_reg: A type registry as a mapping from type name to Type instance
         global_parameter_types: A mapping from global parameter name to Type
             instance, giving the types of all global parameters
@@ -773,14 +912,15 @@ def _step_check_types(
             graph,
             tasks,
             artifact_inputs,
+            state=state,
         )
 
         # Augment messages with info not known at the point where the message
         # was originally created.
         for issue in issues:
-            issue.message = "in positional parameter #{}: {}".format(
-                arg_idx + 1, issue.message
-            )
+            prefix = f"in positional parameter #{arg_idx + 1}: "
+            state.message(prefix)
+            issue.message = prefix + issue.message
 
         all_issues.extend(issues)
 
@@ -801,12 +941,14 @@ def _step_check_types(
             graph,
             tasks,
             artifact_inputs,
+            state=state,
         )
 
         for issue in issues:
-            issue.message = 'in keyword argument "{}": {}'.format(
-                invocation_kwarg_name, issue.message
+            prefix = state.message(
+                'in keyword argument "', invocation_kwarg_name, '": '
             )
+            issue.message = prefix + issue.message
 
         all_issues.extend(issues)
 
@@ -814,13 +956,16 @@ def _step_check_types(
 
 
 def _check_global_parameter_defaults(
-    global_parameter_spec: _DefMap, global_parameter_types: _TypeMap
+    global_parameter_spec: _DefMap,
+    global_parameter_types: _TypeMap,
+    state: TypeValidationState,
 ) -> list[ValidationIssue]:
     """
     Check global parameter default values for compatibility with their
     defined types (if any).
 
     Args:
+        state: State shared by the current validation.
         global_parameter_spec: Global parameter specifications taken from an
             experiment description.  This maps a parameter name to a
             definition.
@@ -848,13 +993,15 @@ def _check_global_parameter_defaults(
 
         if param_default is not no_default:
             # Check the default against the type.
-            default_type = _infer_type(param_default)
+            default_type = _infer_type(param_default, state=state)
 
-            if not _types_compatible(default_type, param_type):
-                message = (
-                    'In global parameter "{}": default value {!r} is'
-                    " incompatible with its declared type: {!s}"
-                ).format(param_name, param_default, param_type)
+            if not _types_compatible(default_type, param_type, state=state):
+                message = state.message(
+                    'In global parameter "',
+                    param_name,
+                    '": default value is incompatible with its declared type: ',
+                    state.describe(param_type),
+                )
 
                 issue = ValidationIssue(IssueType.TYPE, IssueSeverity.ERROR, message)
                 issues.append(issue)
@@ -863,13 +1010,16 @@ def _check_global_parameter_defaults(
 
 
 def _infer_global_parameter_types(
-    global_parameter_spec: _DefMap, type_reg: _TypeMap
+    global_parameter_spec: _DefMap,
+    type_reg: _TypeMap,
+    state: TypeValidationState,
 ) -> _TypeMap:
     """
     Find types for all global parameters, either by looking up the type name
     if given, or inferring types from default values.
 
     Args:
+        state: State shared by the current validation.
         global_parameter_spec: Global parameter specifications taken from an
             experiment description.  This maps a parameter name to a
             definition.
@@ -897,25 +1047,35 @@ def _infer_global_parameter_types(
             # Obtain a type by inference from a default value.  Assume that
             # if a type name is not given, a default value is given, i.e. that
             # check has already occurred.
-            param_type = _infer_type(param_default)
+            param_type = _infer_type(param_default, state=state)
 
         global_parameter_types[param_name] = param_type
 
     return global_parameter_types
 
 
-def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def check_types_with_state(
+    experiment_desc: Mapping[str, Any], state: TypeValidationState
+) -> list[ValidationIssue]:
     """
     Check the types of all task invocation arguments across all steps in the
     task graph, against declared task plugin inputs and outputs.
 
+    This interface is for engine validation phases that share state within one
+    validation. Standalone callers should use check_types() instead.
+    Resource-limit exceptions propagate so the engine stops subsequent phases.
+
     Args:
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
+        state: State owned by the current validation and shared between its phases.
 
     Returns:
         A list of ValidationIssue objects; will be empty if no issues were
         found
+
+    Raises:
+        ValidationLimitError: A resource limit was exceeded.
     """
     types_ = experiment_desc.get("types", {})
     global_parameter_spec = experiment_desc.get("parameters", {})
@@ -923,14 +1083,22 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
     graph = experiment_desc["graph"]
     artifact_inputs = experiment_desc.get("artifact_inputs", {})
 
-    type_reg = type_registry.build_type_registry(types_)
+    if state.registry is None:
+        state.inspect(types_)
+        state.registry = type_registry.build_type_registry(
+            types_, check_message_length=state.check_message_length
+        )
+    type_reg = state.registry
+
+    state.inspect(global_parameter_spec)
+    state.inspect(graph)
 
     global_parameter_types = _infer_global_parameter_types(
-        global_parameter_spec, type_reg
+        global_parameter_spec, type_reg, state=state
     )
 
     all_issues = _check_global_parameter_defaults(
-        global_parameter_spec, global_parameter_types
+        global_parameter_spec, global_parameter_types, state=state
     )
 
     if not all_issues:
@@ -942,11 +1110,33 @@ def check_types(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
                 graph,
                 tasks,
                 artifact_inputs,
+                state=state,
             )
 
             for issue in issues:
-                issue.message = 'in step "{}": {}'.format(step_name, issue.message)
+                prefix = state.message('in step "', step_name, '": ')
+                issue.message = prefix + issue.message
 
             all_issues.extend(issues)
 
     return all_issues
+
+
+def check_types(
+    experiment_desc: Mapping[str, Any],
+    *,
+    limits: TypeValidationLimits | None = None,
+) -> list[ValidationIssue]:
+    """Check task argument and global default types with fresh validation state.
+
+    Args:
+        experiment_desc: The experiment description, as parsed YAML or equivalent.
+        limits: Resource limits for this validation. Defaults are used when omitted.
+
+    Returns:
+        Validation issues, including a type error if a resource limit is exceeded.
+    """
+    try:
+        return check_types_with_state(experiment_desc, TypeValidationState(limits))
+    except ValidationLimitError as error:
+        return [ValidationLimitIssue(error)]

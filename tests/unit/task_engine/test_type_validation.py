@@ -14,8 +14,13 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+"""Check type compatibility, literal type inference, and workflow validation."""
+
+from typing import Any
+
 import pytest
 
+from dioptra.task_engine.issues import IssueSeverity, IssueType
 from dioptra.task_engine.type_registry import (
     TYPE_ANY,
     TYPE_BOOLEAN,
@@ -24,7 +29,12 @@ from dioptra.task_engine.type_registry import (
     TYPE_NUMBER,
     TYPE_STRING,
 )
-from dioptra.task_engine.type_validation import _infer_type, _types_compatible
+from dioptra.task_engine.type_validation import (
+    _infer_type,
+    _types_compatible,
+    check_types,
+)
+from dioptra.task_engine.type_validation_state import TypeValidationState
 from dioptra.task_engine.types import (
     SimpleType,
     StructuredType,
@@ -32,20 +42,48 @@ from dioptra.task_engine.types import (
     TypeStructure,
     UnionType,
 )
-from dioptra.task_engine.validation import is_valid
+from dioptra.task_engine.validation import validate
+
+
+def assert_compatibility(config: dict[str, Any], compatible: bool) -> None:
+    """Check whether workflow validation gives the expected type result.
+
+    Args:
+        config: The workflow to validate.
+        compatible: True if validation should find no issues. False if it
+            should report exactly one incompatible-type error.
+
+    Raises:
+        AssertionError: Validation produced a different result.
+    """
+    issues = validate(config)
+    if compatible:
+        assert issues == []
+    else:
+        assert len(issues) == 1
+        assert issues[0].type is IssueType.TYPE
+        assert issues[0].severity is IssueSeverity.ERROR
+        assert "incompatible" in issues[0].message
 
 
 def test_simple_simple_compatibility() -> None:
+    """Simple types match by name and follow the direction of inheritance.
+
+    Two separately created types named A should match. A subtype can supply its
+    parent, while an unrelated type or a parent supplied for a subtype should
+    fail.
+    """
+    state = TypeValidationState()
     a_type1 = SimpleType("A")
     a_type2 = SimpleType("A")
     b_type = SimpleType("B")
     super_type = SimpleType("super")
     sub_type = SimpleType("sub", super_type=super_type)
 
-    assert _types_compatible(a_type1, a_type2)
-    assert _types_compatible(sub_type, super_type)
-    assert not _types_compatible(a_type1, b_type)
-    assert not _types_compatible(super_type, sub_type)
+    assert _types_compatible(a_type1, a_type2, state)
+    assert _types_compatible(sub_type, super_type, state)
+    assert not _types_compatible(a_type1, b_type, state)
+    assert not _types_compatible(super_type, sub_type, state)
 
 
 @pytest.mark.parametrize(
@@ -66,13 +104,25 @@ def test_simple_simple_compatibility() -> None:
     ],
 )
 def test_simple_structured_compatibility(incompat_type) -> None:
+    """A simple type and a collection are incompatible in either direction.
+
+    Even when the collection contains values of the simple type, the value a task
+    receives would have a different kind of structure.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
 
-    assert not _types_compatible(a_type, incompat_type)
-    assert not _types_compatible(incompat_type, a_type)
+    assert not _types_compatible(a_type, incompat_type, state)
+    assert not _types_compatible(incompat_type, a_type, state)
 
 
 def test_list_list_compatibility() -> None:
+    """A list can supply a list input when its element type fits.
+
+    A list of a subtype can supply a list of its parent type. Reversing that
+    connection would allow elements the input cannot accept.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b_type = SimpleType("B", super_type=a_type)
 
@@ -80,13 +130,20 @@ def test_list_list_compatibility() -> None:
 
     list_b = StructuredType(TypeStructure(StructureType.LIST, b_type))
 
-    assert _types_compatible(list_a, list_a)
-    assert _types_compatible(list_b, list_b)
-    assert _types_compatible(list_b, list_a)
-    assert not _types_compatible(list_a, list_b)
+    assert _types_compatible(list_a, list_a, state)
+    assert _types_compatible(list_b, list_b, state)
+    assert _types_compatible(list_b, list_a, state)
+    assert not _types_compatible(list_a, list_b, state)
 
 
 def test_list_tuple_compatibility() -> None:
+    """A tuple can supply a list input when every position fits.
+
+    Both tuple members fit a list of their parent type. Only one fits a list
+    restricted to the first subtype. A list cannot guarantee the positions
+    required by the tuple.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b1_type = SimpleType("B1", super_type=a_type)
     b2_type = SimpleType("B2", super_type=a_type)
@@ -97,13 +154,20 @@ def test_list_tuple_compatibility() -> None:
 
     tuple_b = StructuredType(TypeStructure(StructureType.TUPLE, [b1_type, b2_type]))
 
-    assert _types_compatible(tuple_b, list_a)
-    assert not _types_compatible(list_a, tuple_b)
-    assert not _types_compatible(tuple_b, list_b1)
-    assert not _types_compatible(list_b1, tuple_b)
+    assert _types_compatible(tuple_b, list_a, state)
+    assert not _types_compatible(list_a, tuple_b, state)
+    assert not _types_compatible(tuple_b, list_b1, state)
+    assert not _types_compatible(list_b1, tuple_b, state)
 
 
 def test_tuple_tuple_compatibility() -> None:
+    """Tuple types must agree on length and match at every position.
+
+    A subtype can supply a position that expects its parent. An extra position or
+    an incompatible member prevents a match, and an empty tuple matches another
+    empty tuple.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b1_type = SimpleType("B1", super_type=a_type)
     b2_type = SimpleType("B2", super_type=a_type)
@@ -125,18 +189,24 @@ def test_tuple_tuple_compatibility() -> None:
 
     empty_tuple = StructuredType(TypeStructure(StructureType.TUPLE, []))
 
-    assert not _types_compatible(tuple_b_b, tuple_a)
-    assert not _types_compatible(tuple_a, tuple_b_b)
-    assert _types_compatible(tuple_b_b, tuple_a_a)
-    assert not _types_compatible(tuple_b_b, tuple_b_b_b)
-    assert not _types_compatible(tuple_b_b_b, tuple_b_c)
-    assert _types_compatible(tuple_b_c, tuple_b_c)
-    assert _types_compatible(empty_tuple, empty_tuple)
-    assert not _types_compatible(empty_tuple, tuple_a)
-    assert not _types_compatible(tuple_a, empty_tuple)
+    assert not _types_compatible(tuple_b_b, tuple_a, state)
+    assert not _types_compatible(tuple_a, tuple_b_b, state)
+    assert _types_compatible(tuple_b_b, tuple_a_a, state)
+    assert not _types_compatible(tuple_b_b, tuple_b_b_b, state)
+    assert not _types_compatible(tuple_b_b_b, tuple_b_c, state)
+    assert _types_compatible(tuple_b_c, tuple_b_c, state)
+    assert _types_compatible(empty_tuple, empty_tuple, state)
+    assert not _types_compatible(empty_tuple, tuple_a, state)
+    assert not _types_compatible(tuple_a, empty_tuple, state)
 
 
 def test_map_enum_map_enum_compatibility() -> None:
+    """Mappings with declared fields must agree on the keys and their value types.
+
+    A field can supply a more general value type under the same key. Missing or
+    different keys prevent a match, even when the values would fit.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b_type = SimpleType("B", super_type=a_type)
     c_type = SimpleType("C")
@@ -155,22 +225,28 @@ def test_map_enum_map_enum_compatibility() -> None:
 
     empty_map = StructuredType(TypeStructure(StructureType.MAPPING, {}))
 
-    assert _types_compatible(map_a, map_a)
-    assert _types_compatible(map_b_keyed_a, map_a)
-    assert not _types_compatible(map_b, map_a)
-    assert not _types_compatible(map_a, map_b_keyed_a)
-    assert not _types_compatible(map_a, map_b)
-    assert not _types_compatible(map_a, map_c)
-    assert not _types_compatible(map_b, map_c)
-    assert not _types_compatible(map_a, map_a_c)
-    assert not _types_compatible(map_b, map_a_c)
-    assert not _types_compatible(map_c, map_a_c)
-    assert _types_compatible(empty_map, empty_map)
-    assert not _types_compatible(empty_map, map_a)
-    assert not _types_compatible(map_a, empty_map)
+    assert _types_compatible(map_a, map_a, state)
+    assert _types_compatible(map_b_keyed_a, map_a, state)
+    assert not _types_compatible(map_b, map_a, state)
+    assert not _types_compatible(map_a, map_b_keyed_a, state)
+    assert not _types_compatible(map_a, map_b, state)
+    assert not _types_compatible(map_a, map_c, state)
+    assert not _types_compatible(map_b, map_c, state)
+    assert not _types_compatible(map_a, map_a_c, state)
+    assert not _types_compatible(map_b, map_a_c, state)
+    assert not _types_compatible(map_c, map_a_c, state)
+    assert _types_compatible(empty_map, empty_map, state)
+    assert not _types_compatible(empty_map, map_a, state)
+    assert not _types_compatible(map_a, empty_map, state)
 
 
 def test_map_kv_map_kv_compatibility() -> None:
+    """Mappings declared by key and value type must match on both.
+
+    A mapping with more specific values can supply one that accepts their parent
+    type. Different key types or unrelated value types prevent a match.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b_type = SimpleType("B", super_type=a_type)
     c_type = SimpleType("C")
@@ -191,15 +267,21 @@ def test_map_kv_map_kv_compatibility() -> None:
         TypeStructure(StructureType.MAPPING, [TYPE_INTEGER, b_type])
     )
 
-    assert _types_compatible(map_string_a, map_string_a)
-    assert _types_compatible(map_string_b, map_string_a)
-    assert not _types_compatible(map_string_a, map_string_b)
-    assert not _types_compatible(map_string_c, map_string_a)
-    assert not _types_compatible(map_int_b, map_string_b)
-    assert _types_compatible(map_int_b, map_int_b)
+    assert _types_compatible(map_string_a, map_string_a, state)
+    assert _types_compatible(map_string_b, map_string_a, state)
+    assert not _types_compatible(map_string_a, map_string_b, state)
+    assert not _types_compatible(map_string_c, map_string_a, state)
+    assert not _types_compatible(map_int_b, map_string_b, state)
+    assert _types_compatible(map_int_b, map_int_b, state)
 
 
 def test_map_kv_map_enum_compatibility() -> None:
+    """Named fields can satisfy a mapping input with a common value type.
+
+    Every field has a string key and its value must fit the input. In the other
+    direction, a general mapping cannot guarantee a particular set of fields.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b_type = SimpleType("B", super_type=a_type)
 
@@ -221,19 +303,25 @@ def test_map_kv_map_enum_compatibility() -> None:
         TypeStructure(StructureType.MAPPING, [TYPE_INTEGER, a_type])
     )
 
-    assert _types_compatible(map_a, map_string_a)
-    assert not _types_compatible(map_string_a, map_a)
-    assert _types_compatible(map_b, map_string_a)
-    assert not _types_compatible(map_string_b, map_a)
-    assert not _types_compatible(map_b, map_int_a)
-    assert _types_compatible(empty_map, map_string_a)
-    assert _types_compatible(empty_map, map_string_b)
-    assert not _types_compatible(empty_map, map_int_a)
-    assert not _types_compatible(map_string_a, empty_map)
-    assert not _types_compatible(map_int_a, empty_map)
+    assert _types_compatible(map_a, map_string_a, state)
+    assert not _types_compatible(map_string_a, map_a, state)
+    assert _types_compatible(map_b, map_string_a, state)
+    assert not _types_compatible(map_string_b, map_a, state)
+    assert not _types_compatible(map_b, map_int_a, state)
+    assert _types_compatible(empty_map, map_string_a, state)
+    assert _types_compatible(empty_map, map_string_b, state)
+    assert not _types_compatible(empty_map, map_int_a, state)
+    assert not _types_compatible(map_string_a, empty_map, state)
+    assert not _types_compatible(map_int_a, empty_map, state)
 
 
 def test_map_other_structured_compatibility() -> None:
+    """A mapping cannot supply a list or tuple input, or the reverse.
+
+    Even when their values have the same type, a mapping uses keys and the other
+    collections use positions. This applies to both forms of mapping.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
 
     map_a = StructuredType(TypeStructure(StructureType.MAPPING, {"a": a_type}))
@@ -246,17 +334,24 @@ def test_map_other_structured_compatibility() -> None:
 
     tuple_a = StructuredType(TypeStructure(StructureType.TUPLE, [a_type]))
 
-    assert not _types_compatible(map_a, list_a)
-    assert not _types_compatible(list_a, map_a)
-    assert not _types_compatible(map_a, tuple_a)
-    assert not _types_compatible(tuple_a, map_a)
-    assert not _types_compatible(map_string_a, list_a)
-    assert not _types_compatible(list_a, map_string_a)
-    assert not _types_compatible(map_string_a, tuple_a)
-    assert not _types_compatible(tuple_a, map_string_a)
+    assert not _types_compatible(map_a, list_a, state)
+    assert not _types_compatible(list_a, map_a, state)
+    assert not _types_compatible(map_a, tuple_a, state)
+    assert not _types_compatible(tuple_a, map_a, state)
+    assert not _types_compatible(map_string_a, list_a, state)
+    assert not _types_compatible(list_a, map_string_a, state)
+    assert not _types_compatible(map_string_a, tuple_a, state)
+    assert not _types_compatible(tuple_a, map_string_a, state)
 
 
 def test_union_compatibility() -> None:
+    """Every possible output type must fit the input.
+
+    For a union input, each possible output only needs to match one member. A
+    subtype can therefore fit a union containing its parent, but the reverse can
+    fail.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     b_type = SimpleType("B", super_type=a_type)
     c_type = SimpleType("C")
@@ -265,48 +360,16 @@ def test_union_compatibility() -> None:
     union_b = UnionType([b_type])
     union_a_c = UnionType([a_type, c_type])
 
-    assert _types_compatible(a_type, union_a)
-    assert _types_compatible(b_type, union_a)
-    assert not _types_compatible(c_type, union_a)
-    assert _types_compatible(b_type, union_a_c)
-    assert _types_compatible(union_a, a_type)
-    assert _types_compatible(union_b, a_type)
-    assert _types_compatible(union_a, union_a)
-    assert _types_compatible(union_b, union_a)
-    assert not _types_compatible(union_a, union_b)
-    assert not _types_compatible(union_a_c, union_b)
-
-
-def test_empty_union_compatibility() -> None:
-    a_type = SimpleType("A")
-    b_type = SimpleType("B")
-
-    union_a_b = UnionType([a_type, b_type])
-    empty_union = UnionType([])
-    list_a = StructuredType(TypeStructure(StructureType.LIST, a_type))
-    tuple_a_b = StructuredType(TypeStructure(StructureType.TUPLE, [a_type, b_type]))
-    enum_map_a_b = StructuredType(
-        TypeStructure(StructureType.MAPPING, {"a": a_type, "b": b_type})
-    )
-    kv_map_a_b = StructuredType(
-        TypeStructure(StructureType.MAPPING, [TYPE_STRING, a_type])
-    )
-
-    # Treat empty union like an "empty set": it is compatible with all,
-    # and nothing except itself is compatible with it.
-    assert _types_compatible(empty_union, empty_union)
-    assert _types_compatible(empty_union, union_a_b)
-    assert _types_compatible(empty_union, a_type)
-    assert _types_compatible(empty_union, list_a)
-    assert _types_compatible(empty_union, tuple_a_b)
-    assert _types_compatible(empty_union, enum_map_a_b)
-    assert _types_compatible(empty_union, kv_map_a_b)
-    assert not _types_compatible(a_type, empty_union)
-    assert not _types_compatible(union_a_b, empty_union)
-    assert not _types_compatible(list_a, empty_union)
-    assert not _types_compatible(tuple_a_b, empty_union)
-    assert not _types_compatible(enum_map_a_b, empty_union)
-    assert not _types_compatible(kv_map_a_b, empty_union)
+    assert _types_compatible(a_type, union_a, state)
+    assert _types_compatible(b_type, union_a, state)
+    assert not _types_compatible(c_type, union_a, state)
+    assert _types_compatible(b_type, union_a_c, state)
+    assert _types_compatible(union_a, a_type, state)
+    assert _types_compatible(union_b, a_type, state)
+    assert _types_compatible(union_a, union_a, state)
+    assert _types_compatible(union_b, union_a, state)
+    assert not _types_compatible(union_a, union_b, state)
+    assert not _types_compatible(union_a_c, union_b, state)
 
 
 @pytest.mark.parametrize(
@@ -345,13 +408,25 @@ def test_empty_union_compatibility() -> None:
     ],
 )
 def test_named_anon_type_compatibility(type_named, type_anon) -> None:
-    assert _types_compatible(type_named, type_named)
-    assert _types_compatible(type_anon, type_anon)
-    assert _types_compatible(type_named, type_anon)
-    assert _types_compatible(type_anon, type_named)
+    """A named collection can match the same structure defined inline.
+
+    For lists, tuples, and both kinds of mapping, each type should match itself
+    and its counterpart in either direction.
+    """
+    state = TypeValidationState()
+    assert _types_compatible(type_named, type_named, state)
+    assert _types_compatible(type_anon, type_anon, state)
+    assert _types_compatible(type_named, type_anon, state)
+    assert _types_compatible(type_anon, type_named, state)
 
 
 def test_named_type_compatibility() -> None:
+    """Names distinguish named lists, while union compatibility depends on members.
+
+    Two differently named lists with identical elements should be incompatible.
+    Two differently named unions with identical members should match.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     list_a1 = StructuredType(TypeStructure(StructureType.LIST, a_type), name="name1")
 
@@ -359,27 +434,34 @@ def test_named_type_compatibility() -> None:
 
     # list structure is compatible, but names are not equal, so the types are
     # incompatible.
-    assert not _types_compatible(list_a1, list_a2)
+    assert not _types_compatible(list_a1, list_a2, state)
 
     union_a1 = UnionType([a_type], name="name1")
     union_a2 = UnionType([a_type], name="name2")
 
     # ... but unions are an exception.  Their names are ignored and only their
     # members are considered.
-    assert _types_compatible(union_a1, union_a2)
+    assert _types_compatible(union_a1, union_a2, state)
 
 
 def test_any_compatibility() -> None:
+    """An input declared as any accepts values of every type.
+
+    An output declared as any can supply an unrestricted input or a union that
+    includes any. It cannot guarantee the specific type a narrower input
+    requires.
+    """
+    state = TypeValidationState()
     a_type = SimpleType("A")
     union_a_any = UnionType([a_type, TYPE_ANY])
 
-    assert _types_compatible(a_type, TYPE_ANY)
-    assert _types_compatible(TYPE_ANY, TYPE_ANY)
-    assert not _types_compatible(TYPE_ANY, a_type)
-    assert _types_compatible(union_a_any, union_a_any)
-    assert _types_compatible(TYPE_ANY, union_a_any)
-    assert _types_compatible(union_a_any, TYPE_ANY)
-    assert _types_compatible(a_type, union_a_any)
+    assert _types_compatible(a_type, TYPE_ANY, state)
+    assert _types_compatible(TYPE_ANY, TYPE_ANY, state)
+    assert not _types_compatible(TYPE_ANY, a_type, state)
+    assert _types_compatible(union_a_any, union_a_any, state)
+    assert _types_compatible(TYPE_ANY, union_a_any, state)
+    assert _types_compatible(union_a_any, TYPE_ANY, state)
+    assert _types_compatible(a_type, union_a_any, state)
 
 
 @pytest.mark.parametrize(
@@ -394,7 +476,12 @@ def test_any_compatibility() -> None:
     ],
 )
 def test_type_inference_simple(value, expected_type) -> None:
-    inferred_type = _infer_type(value)
+    """Infer the built-in Dioptra type for a single Python value.
+
+    Booleans and integers have distinct types. A complex number has no
+    corresponding Dioptra type, so its inferred type should be any.
+    """
+    inferred_type = _infer_type(value, state=TypeValidationState())
     assert inferred_type == expected_type
 
 
@@ -412,7 +499,12 @@ def test_type_inference_simple(value, expected_type) -> None:
     ],
 )
 def test_type_inference_tuple(value, expected_type) -> None:
-    inferred_type = _infer_type(value)
+    """A list literal has a known length and a type at each position.
+
+    The inferred tuple should preserve the order of the integer and boolean
+    in a mixed list. An empty list should produce a tuple with no elements.
+    """
+    inferred_type = _infer_type(value, state=TypeValidationState())
     assert inferred_type == expected_type
 
 
@@ -449,171 +541,246 @@ def test_type_inference_tuple(value, expected_type) -> None:
     ],
 )
 def test_type_inference_mapping(value, expected_type) -> None:
-    inferred_type = _infer_type(value)
+    """Infer what task inputs a dictionary can supply from its keys and values.
+
+    String keys describe individual fields. Integer keys share a value type,
+    which can be a union when the values differ. An empty dictionary has no
+    fields, and a dictionary with unsupported key types falls back to any.
+    """
+    inferred_type = _infer_type(value, state=TypeValidationState())
     assert inferred_type == expected_type
 
 
-def test_global_parameter_defaults_good():
-    experiment_desc = {
-        "parameters": {
-            "int": {"type": "integer", "default": 1},
-            "number": {"type": "number", "default": 1.2},
-            "num_init_with_int": {"type": "number", "default": 1},
-            "string": {"type": "string", "default": "abc"},
-            "boolean": {"type": "boolean", "default": True},
-            "null": {"type": "null", "default": None},
-        },
-        "tasks": {"foo": {"plugin": "org.example.foo"}},
-        "graph": {"step1": {"foo": []}},
-    }
+@pytest.mark.parametrize(
+    "value,target,compatible",
+    [
+        (1, "integer", True),
+        (1, "number", True),
+        (1, "boolean", False),
+        (1.1, "number", True),
+        (1.1, "integer", False),
+        ("foo", "string", True),
+        ("foo", "number", False),
+        (True, "boolean", True),
+        (True, "integer", False),
+        (None, "null", True),
+        (None, "string", False),
+        ([1], {"tuple": ["integer"]}, True),
+        ([1, False], {"tuple": ["integer", "boolean"]}, True),
+        ([1, False], {"tuple": ["integer", "integer"]}, False),
+        ([1, False], {"tuple": ["boolean", "integer"]}, False),
+        ([1, 2], {"list": "number"}, True),
+        ([1, "text"], {"list": "number"}, False),
+        ([], {"list": "number"}, True),
+        ([], {"tuple": []}, True),
+        ([], {"tuple": ["integer"]}, False),
+        ({"a": 1}, {"mapping": {"a": "integer"}}, True),
+        ({"a": 1}, {"mapping": {"a": "string"}}, False),
+        ({"a": "foo", "b": None}, {"mapping": {"a": "string", "b": "null"}}, True),
+        ({"a": "foo", "b": None}, {"mapping": {"a": "string", "b": "string"}}, False),
+        ({1: "a", 2: "b"}, {"mapping": ["integer", "string"]}, True),
+        (
+            {1: "a", 2: True},
+            {"mapping": ["integer", {"union": ["string", "boolean"]}]},
+            True,
+        ),
+        ({1: "a", 2: True}, {"mapping": ["integer", "string"]}, False),
+        ({}, {"mapping": ["string", "integer"]}, True),
+        ({}, {"mapping": {}}, True),
+        ({}, {"mapping": ["integer", "integer"]}, False),
+        ({}, {"mapping": {"a": "integer"}}, False),
+    ],
+)
+def test_literal_argument_compatibility(value, target, compatible) -> None:
+    """A value supplied directly in a step must match the task input.
 
-    assert is_valid(experiment_desc)
+    For a collection, the check also depends on its contents. A list of numbers
+    fits a numeric list input, for example, but a list containing text should
+    produce a type error.
+    """
+    config = {
+        "types": {"Target": {"union": [target]}},
+        "tasks": {
+            "consume": {"plugin": "example.consume", "inputs": [{"value": "Target"}]}
+        },
+        "graph": {"step": {"consume": [value]}},
+    }
+    assert_compatibility(config, compatible)
+
+
+@pytest.mark.parametrize("value", [1 + 2j, {1 + 2j: 1.23, None: "hello"}])
+@pytest.mark.parametrize("target,compatible", [("any", True), ("string", False)])
+def test_python_values_without_declared_types(value, target, compatible) -> None:
+    """An input declared as any can accept Python values without a Dioptra type.
+
+    Python callers can supply a complex number or a dictionary with a complex key
+    directly to the type checker. Either value should pass for an unrestricted
+    input and fail for a string input.
+    """
+    config = {
+        "tasks": {
+            "consume": {"plugin": "example.consume", "inputs": [{"value": target}]}
+        },
+        "graph": {"step": {"consume": [value]}},
+    }
+    issues = check_types(config)
+    if compatible:
+        assert issues == []
+    else:
+        assert len(issues) == 1
+        assert "incompatible" in issues[0].message
 
 
 @pytest.mark.parametrize(
-    "bad_param",
+    "other",
     [
-        {"type": "integer", "default": "not_an_int"},
-        {"type": "integer", "default": 1.2},
-        {"type": "number", "default": None},
-        {"type": "null", "default": 1},
-        {"type": "string", "default": 1},
-        {"type": "boolean", "default": 1},
+        SimpleType("A"),
+        UnionType([SimpleType("A"), SimpleType("B")]),
+        StructuredType(TypeStructure(StructureType.LIST, SimpleType("A"))),
+        StructuredType(
+            TypeStructure(StructureType.TUPLE, [SimpleType("A"), SimpleType("B")])
+        ),
+        StructuredType(
+            TypeStructure(
+                StructureType.MAPPING, {"a": SimpleType("A"), "b": SimpleType("B")}
+            )
+        ),
+        StructuredType(
+            TypeStructure(
+                StructureType.MAPPING, [SimpleType("string"), SimpleType("A")]
+            )
+        ),
     ],
 )
-def test_global_parameter_defaults_bad(bad_param) -> None:
-    experiment_desc = {
-        "parameters": {"bad_param": bad_param},
-        "tasks": {"foo": {"plugin": "org.example.foo"}},
-        "graph": {"step1": {"foo": []}},
+def test_empty_union_compatibility(other) -> None:
+    """An empty union has no possible output values.
+
+    The registry cannot build an empty union, so this case uses the type
+    checker directly. An empty union as an output fits any of the inputs
+    tested here. As an input, it accepts only the empty union in these cases.
+    """
+    empty = UnionType([])
+    assert _types_compatible(empty, empty, TypeValidationState())
+    assert _types_compatible(empty, other, TypeValidationState())
+    assert not _types_compatible(other, empty, TypeValidationState())
+
+
+@pytest.mark.parametrize(
+    "type_name,value,compatible",
+    [
+        ("integer", 1, True),
+        ("number", 1.2, True),
+        ("number", 1, True),
+        ("string", "abc", True),
+        ("boolean", True, True),
+        ("null", None, True),
+        ("integer", "not_an_int", False),
+        ("integer", 1.2, False),
+        ("number", None, False),
+        ("null", 1, False),
+        ("string", 1, False),
+        ("boolean", 1, False),
+    ],
+)
+def test_global_parameter_defaults(type_name, value, compatible) -> None:
+    """A global parameter default must fit its declared type.
+
+    The workflow never uses the parameter. Validation should still accept a
+    matching default and report a type error for an incompatible one.
+    """
+    config = {
+        "parameters": {"value": {"type": type_name, "default": value}},
+        "tasks": {"consume": {"plugin": "example.consume"}},
+        "graph": {"step": {"consume": []}},
     }
+    assert_compatibility(config, compatible)
 
-    assert not is_valid(experiment_desc)
 
+@pytest.mark.parametrize(
+    "inputs,invocation,compatible",
+    [
+        ([{"value": "integer"}], {"consume": "foo"}, False),
+        ([{"value": "number"}], {"consume": 1}, True),
+        ([{"value": "integer"}], {"consume": {"value": "foo"}}, False),
+        ([{"value": "string"}], {"consume": {"value": "foo"}}, True),
+        (
+            [
+                {"first": "integer"},
+                {"name": "second", "type": "boolean", "required": True},
+            ],
+            {"task": "consume", "args": "foo", "kwargs": {"second": 1}},
+            False,
+        ),
+        (
+            [
+                {"first": "boolean"},
+                {"name": "second", "type": "null", "required": True},
+            ],
+            {"task": "consume", "args": True, "kwargs": {"second": None}},
+            True,
+        ),
+    ],
+)
+def test_invocation_argument_forms(inputs, invocation, compatible) -> None:
+    """Task arguments must match their inputs however the step supplies them.
 
-def test_positional_invocation_type_error() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {"plugin": "org.example.task1", "inputs": [{"in1": "integer"}]}
-        },
-        "graph": {"step1": {"task1": "foo"}},
+    The same type rules apply to arguments supplied by position, by name, or both.
+    Matching values should pass and incompatible values should produce type
+    errors.
+    """
+    config = {
+        "tasks": {"consume": {"plugin": "example.consume", "inputs": inputs}},
+        "graph": {"step": invocation},
     }
+    issues = validate(config)
+    if compatible:
+        assert issues == []
+    else:
+        assert issues
+        assert all(issue.type is IssueType.TYPE for issue in issues)
+        assert all("incompatible" in issue.message for issue in issues)
 
-    assert not is_valid(experiment_desc)
 
+@pytest.mark.parametrize(
+    "source_types,target_types,compatible",
+    [
+        (["number", "string"], ["integer", "null"], False),
+        (["integer", "string"], ["number", "any"], True),
+    ],
+)
+def test_hybrid_invocation_with_references(
+    source_types, target_types, compatible
+) -> None:
+    """A step can use earlier outputs as both positional and named arguments.
 
-def test_positional_invocation_type_ok() -> None:
-    experiment_desc = {
+    The consuming step takes two outputs from the same earlier step. Compatible
+    output types should pass. When both types are wrong, validation should report
+    two errors.
+    """
+    config = {
         "tasks": {
-            "task1": {"plugin": "org.example.task1", "inputs": [{"in1": "number"}]}
-        },
-        "graph": {"step1": {"task1": 1}},
-    }
-
-    assert is_valid(experiment_desc)
-
-
-def test_keyword_invocation_type_error() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {"plugin": "org.example.task1", "inputs": [{"in1": "integer"}]}
-        },
-        "graph": {"step1": {"task1": {"in1": "foo"}}},
-    }
-
-    assert not is_valid(experiment_desc)
-
-
-def test_keyword_invocation_type_ok() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {"plugin": "org.example.task1", "inputs": [{"in1": "string"}]}
-        },
-        "graph": {"step1": {"task1": {"in1": "foo"}}},
-    }
-
-    assert is_valid(experiment_desc)
-
-
-def test_hybrid_invocation_type_error() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {
-                "plugin": "org.example.task1",
-                "inputs": [
-                    {"in1": "integer"},
-                    {"name": "in2", "type": "boolean", "required": True},
-                ],
-            }
-        },
-        "graph": {"step1": {"task": "task1", "args": "foo", "kwargs": {"in2": 1}}},
-    }
-
-    assert not is_valid(experiment_desc)
-
-
-def test_hybrid_invocation_type_ok() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {
-                "plugin": "org.example.task1",
-                "inputs": [
-                    {"in1": "boolean"},
-                    {"name": "in2", "type": "null", "required": True},
-                ],
-            }
-        },
-        "graph": {"step1": {"task": "task1", "args": True, "kwargs": {"in2": None}}},
-    }
-
-    assert is_valid(experiment_desc)
-
-
-def test_hybrid_invocation_type_error_with_references() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {
-                "plugin": "org.example.task1",
-                "outputs": [{"out1": "number"}, {"out2": "string"}],
+            "produce": {
+                "plugin": "example.produce",
+                "outputs": [{"first": source_types[0]}, {"second": source_types[1]}],
             },
-            "task2": {
-                "plugin": "org.example.task2",
-                "inputs": [{"in1": "integer"}, {"in2": "null"}],
-            },
-        },
-        "graph": {
-            "step1": {"task1": []},
-            "step2": {
-                "task": "task2",
-                "args": "$step1.out1",
-                "kwargs": {"in2": "$step1.out2"},
-            },
-        },
-    }
-
-    assert not is_valid(experiment_desc)
-
-
-def test_hybrid_invocation_type_ok_with_references() -> None:
-    experiment_desc = {
-        "tasks": {
-            "task1": {
-                "plugin": "org.example.task1",
-                "outputs": [{"out1": "integer"}, {"out2": "string"}],
-            },
-            "task2": {
-                "plugin": "org.example.task2",
-                "inputs": [{"in1": "number"}, {"in2": "any"}],
+            "consume": {
+                "plugin": "example.consume",
+                "inputs": [{"first": target_types[0]}, {"second": target_types[1]}],
             },
         },
         "graph": {
-            "step1": {"task1": []},
-            "step2": {
-                "task": "task2",
-                "args": "$step1.out1",
-                "kwargs": {"in2": "$step1.out2"},
+            "produce": {"produce": []},
+            "consume": {
+                "task": "consume",
+                "args": "$produce.first",
+                "kwargs": {"second": "$produce.second"},
             },
         },
     }
-
-    assert is_valid(experiment_desc)
+    issues = validate(config)
+    if compatible:
+        assert issues == []
+    else:
+        assert len(issues) == 2
+        assert all(issue.type is IssueType.TYPE for issue in issues)
+        assert all("incompatible" in issue.message for issue in issues)

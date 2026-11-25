@@ -20,7 +20,15 @@ from a set of type definitions.
 """
 
 import graphlib
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
+from functools import partial
 from typing import Any, Optional, Union, cast
 
 from dioptra.sdk.exceptions.task_engine import (
@@ -57,20 +65,21 @@ BUILTIN_TYPES = {
 _TypeRegistry = Mapping[str, types.Type]
 _TypeDefinition = Mapping[str, Any]
 _NestedTypeDefOrRef = Union[_TypeDefinition, str]
+_BuildNestedType = Callable[[_NestedTypeDefOrRef], types.Type]
 
 
 def _build_mapping_structure(
     map_structure: Union[
         Mapping[str, _NestedTypeDefOrRef], Sequence[_NestedTypeDefOrRef]
     ],
-    type_registry: _TypeRegistry,
+    build_nested_type: _BuildNestedType,
 ):
     """
     Build a TypeStructure instance from a definition of a mapping structure.
 
     Args:
         map_structure: The structure definition
-        type_registry: A type registry, used to look up type references
+        build_nested_type: Resolve references or build property types.
 
     Returns:
         A mapping structure
@@ -78,7 +87,7 @@ def _build_mapping_structure(
     if isinstance(map_structure, Mapping):
         prop_dict = {}
         for prop_name, prop_def in map_structure.items():
-            prop_type = build_or_get_type(prop_def, type_registry)
+            prop_type = build_nested_type(prop_def)
             prop_dict[prop_name] = prop_type
 
         type_structure = types.TypeStructure(types.StructureType.MAPPING, prop_dict)
@@ -92,8 +101,8 @@ def _build_mapping_structure(
         key_type_def = map_structure[0]
         value_type_def = map_structure[1]
 
-        key_type = build_or_get_type(key_type_def, type_registry)
-        value_type = build_or_get_type(value_type_def, type_registry)
+        key_type = build_nested_type(key_type_def)
+        value_type = build_nested_type(value_type_def)
 
         if key_type not in (TYPE_STRING, TYPE_INTEGER):
             raise InvalidKeyTypeError(key_type)
@@ -106,19 +115,19 @@ def _build_mapping_structure(
 
 
 def _build_list_structure(
-    list_structure: _NestedTypeDefOrRef, type_registry: _TypeRegistry
+    list_structure: _NestedTypeDefOrRef, build_nested_type: _BuildNestedType
 ) -> types.TypeStructure:
     """
     Build a TypeStructure instance from a definition of a list structure.
 
     Args:
         list_structure: The structure definition
-        type_registry: A type registry, used to look up type references
+        build_nested_type: Resolve a reference or build the element type.
 
     Returns:
         A list structure
     """
-    elt_type = build_or_get_type(list_structure, type_registry)
+    elt_type = build_nested_type(list_structure)
 
     type_structure = types.TypeStructure(types.StructureType.LIST, elt_type)
 
@@ -126,21 +135,21 @@ def _build_list_structure(
 
 
 def _build_tuple_structure(
-    tuple_structure: Iterable[_NestedTypeDefOrRef], type_registry: _TypeRegistry
+    tuple_structure: Iterable[_NestedTypeDefOrRef], build_nested_type: _BuildNestedType
 ) -> types.TypeStructure:
     """
     Build a TypeStructure instance from a definition of a tuple structure.
 
     Args:
         tuple_structure: The structure definition
-        type_registry: A type registry, used to look up type references
+        build_nested_type: Resolve references or build element types.
 
     Returns:
         A tuple structure
     """
     elt_types = []
     for elt_structure_def in tuple_structure:
-        elt_type = build_or_get_type(elt_structure_def, type_registry)
+        elt_type = build_nested_type(elt_structure_def)
         elt_types.append(elt_type)
 
     type_structure = types.TypeStructure(types.StructureType.TUPLE, elt_types)
@@ -149,7 +158,7 @@ def _build_tuple_structure(
 
 
 def _build_structure(
-    type_def: _TypeDefinition, type_registry: _TypeRegistry
+    type_def: _TypeDefinition, build_nested_type: _BuildNestedType
 ) -> Optional[types.TypeStructure]:
     """
     Build a TypeStructure instance from a structure definition within a
@@ -157,7 +166,7 @@ def _build_structure(
 
     Args:
         type_def: A type definition
-        type_registry: A type registry, used to look up type references
+        build_nested_type: Resolve references or build nested types.
 
     Returns:
         The structure instance, or None if the type definition did not define
@@ -179,13 +188,13 @@ def _build_structure(
     # This code processes and is dependent upon proper data structure.
     if structure_type is types.StructureType.LIST:  # noqa: E721
         assert isinstance(structure_def, (Mapping, str))
-        structure = _build_list_structure(structure_def, type_registry)
+        structure = _build_list_structure(structure_def, build_nested_type)
     elif structure_type is types.StructureType.MAPPING:  # noqa: E721
         assert isinstance(structure_def, (Mapping, Sequence))
-        structure = _build_mapping_structure(structure_def, type_registry)
+        structure = _build_mapping_structure(structure_def, build_nested_type)
     elif structure_type is types.StructureType.TUPLE:  # noqa: E721
         assert isinstance(structure_def, Iterable)
-        structure = _build_tuple_structure(structure_def, type_registry)
+        structure = _build_tuple_structure(structure_def, build_nested_type)
     else:
         structure = None
 
@@ -193,14 +202,14 @@ def _build_structure(
 
 
 def _build_member_types(
-    member_type_defs: Iterable[_NestedTypeDefOrRef], type_registry: _TypeRegistry
+    member_type_defs: Iterable[_NestedTypeDefOrRef], build_nested_type: _BuildNestedType
 ) -> list[types.Type]:
     """
     Create the member types described by a union type definition.
 
     Args:
         member_type_defs: The member type definitions of the union
-        type_registry: A type registry, used to look up type references
+        build_nested_type: Resolve references or build member types.
 
     Returns:
         A list of Type instances which are the member types
@@ -208,7 +217,7 @@ def _build_member_types(
     member_types = []
 
     for member_type_def in member_type_defs:
-        member_type = build_or_get_type(member_type_def, type_registry)
+        member_type = build_nested_type(member_type_def)
 
         member_types.append(member_type)
 
@@ -216,7 +225,10 @@ def _build_member_types(
 
 
 def build_or_get_type(
-    type_def: _NestedTypeDefOrRef, type_registry: _TypeRegistry
+    type_def: _NestedTypeDefOrRef,
+    type_registry: _TypeRegistry,
+    *,
+    check_message_length: Callable[[int], None] | None = None,
 ) -> types.Type:
     """
     Useful in nested contexts where either a nested anonymous type definition
@@ -227,6 +239,8 @@ def build_or_get_type(
     Args:
         type_def: A type name or definition
         type_registry: The type registry as has been built so far
+        check_message_length: An optional check before formatting a diagnostic
+            containing a type name.
 
     Returns:
         A Type instance
@@ -235,7 +249,9 @@ def build_or_get_type(
         type_ = type_registry[type_def]
 
     else:
-        type_ = build_type(None, type_def, type_registry)
+        type_ = build_type(
+            None, type_def, type_registry, check_message_length=check_message_length
+        )
 
     return type_
 
@@ -244,6 +260,8 @@ def build_type(
     type_name: Optional[str],
     type_def: Optional[_TypeDefinition],
     type_registry: _TypeRegistry,
+    *,
+    check_message_length: Callable[[int], None] | None = None,
 ) -> types.Type:
     """
     Create a Type instance from a name and a type definition.
@@ -252,6 +270,8 @@ def build_type(
         type_name: The type name; may be None if creating an anonymous type
         type_def: The type definition; may be None if creating a simple type
         type_registry: A type registry, used to look up type references
+        check_message_length: An optional check before formatting a diagnostic
+            containing the supertype name.
 
     Returns:
         A Type instance
@@ -262,9 +282,14 @@ def build_type(
 
     else:
         # Non-simple type
+        build_nested_type = partial(
+            build_or_get_type,
+            type_registry=type_registry,
+            check_message_length=check_message_length,
+        )
         member_type_defs = type_def.get("union")
         super_type_name = type_def.get("is_a")
-        structure = _build_structure(type_def, type_registry)
+        structure = _build_structure(type_def, build_nested_type)
 
     if super_type_name:
         super_type = type_registry[super_type_name]
@@ -272,7 +297,7 @@ def build_type(
         super_type = None
 
     if member_type_defs:
-        member_types = _build_member_types(member_type_defs, type_registry)
+        member_types = _build_member_types(member_type_defs, build_nested_type)
     else:
         member_types = None
 
@@ -292,7 +317,12 @@ def build_type(
 
     else:  # else, a simple type
         if super_type and not isinstance(super_type, types.SimpleType):
-            raise NonSimpleSuperTypeError(cast(str, super_type_name))
+            name = cast(str, super_type_name)
+            if check_message_length is not None:
+                check_message_length(
+                    len(NonSimpleSuperTypeError.message_prefix) + len(name)
+                )
+            raise NonSimpleSuperTypeError(name)
 
         # Here, super_type must either be null or an instance of SimpleType
         # (the negation of the above if condition).  I.e. it satisfies
@@ -364,7 +394,11 @@ def get_dependency_types(  # noqa: C901
             yield super_type
 
 
-def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
+def get_sorted_types(
+    type_defs: Mapping[str, _TypeDefinition],
+    *,
+    check_message_length: Callable[[int], None] | None = None,
+) -> list[str]:
     """
     Find a topological sorted list of type names for the given type
     definitions.
@@ -372,6 +406,8 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
     Args:
         type_defs: Type definitions, as a mapping from type name to type
             definition.
+        check_message_length: An optional check before formatting diagnostics
+            containing type names.
 
     Returns:
         A list of type names
@@ -383,6 +419,10 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
 
         for dep_type in get_dependency_types(type_def):
             if dep_type not in type_defs and dep_type not in BUILTIN_TYPES:
+                if check_message_length is not None:
+                    check_message_length(
+                        len(TypeNotFoundError.message_prefix) + len(dep_type)
+                    )
                 raise TypeNotFoundError(dep_type, context_type_name=type_name)
 
             topo_sorter.add(type_name, dep_type)
@@ -390,19 +430,31 @@ def get_sorted_types(type_defs: Mapping[str, _TypeDefinition]) -> list[str]:
     try:
         sorted_types = list(topo_sorter.static_order())
     except graphlib.CycleError as e:
-        raise TypeReferenceCycleError(e.args[1]) from e
+        cycle = e.args[1]
+        if check_message_length is not None:
+            size = len(TypeReferenceCycleError.message_prefix)
+            size += (len(cycle) - 1) * len(TypeReferenceCycleError.separator)
+            check_message_length(size)
+            for name in cycle:
+                size += len(name)
+                check_message_length(size)
+        raise TypeReferenceCycleError(cycle) from e
 
     return sorted_types
 
 
 def build_type_registry(
     type_defs: Mapping[str, _TypeDefinition],
+    *,
+    check_message_length: Callable[[int], None] | None = None,
 ) -> Mapping[str, types.Type]:
     """
     Create a type registry from a set of type definitions.
 
     Args:
         type_defs: The type definitions, a mapping type name to type definition
+        check_message_length: An optional check before formatting diagnostics
+            containing type names.
 
     Returns:
         A type registry, as a mapping from type name to Type instance.  The
@@ -417,7 +469,9 @@ def build_type_registry(
     # it.
     type_registry = cast(MutableMapping[str, types.Type], BUILTIN_TYPES.copy())
 
-    sorted_type_names = get_sorted_types(type_defs)
+    sorted_type_names = get_sorted_types(
+        type_defs, check_message_length=check_message_length
+    )
 
     for type_name in sorted_type_names:
         # The topo sorter will add all values to the sorted list regardless of
@@ -433,7 +487,12 @@ def build_type_registry(
 
         else:
             try:
-                type_ = build_type(type_name, type_defs[type_name], type_registry)
+                type_ = build_type(
+                    type_name,
+                    type_defs[type_name],
+                    type_registry,
+                    check_message_length=check_message_length,
+                )
             except DioptraTypeError as e:
                 if not e.context_type_name:
                     e.context_type_name = type_name

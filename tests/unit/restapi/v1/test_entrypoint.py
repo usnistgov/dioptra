@@ -22,6 +22,7 @@ registered, renamed, deleted, and locked/unlocked as expected through the REST A
 """
 
 import textwrap
+from dataclasses import replace
 from http import HTTPStatus
 from typing import Any
 
@@ -38,11 +39,14 @@ from dioptra.restapi.db import models
 from dioptra.restapi.db.models.resources import resource_dependencies_table
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.errors import EntrypointValidationError
+from dioptra.restapi.v1.entrypoints import service as entrypoint_service
 from dioptra.restapi.v1.entrypoints.service import (
     EntrypointIdService,
     SwapsValidationService,
 )
 from dioptra.restapi.v1.plugins.service import PluginIdService
+from dioptra.task_engine import type_validation_state, validation
+from dioptra.task_engine.issues import ValidationIssue
 
 from ..lib import helpers, routines
 from ..lib.asserts import assert_retrieving_deleted_resource_snapshots_works
@@ -3847,6 +3851,8 @@ def test_invalid_interfaces_and_inputs_rejected_before_save(
         )
         assert response.status_code == HTTPStatus.BAD_REQUEST, response.json()
         messages = response.json()["detail"]["reason"][category]
+        if category == "rendered_validation_errors":
+            assert all("[Swap combination {" in message for message in messages)
         assert messages
         if expected is not None:
             assert any(expected in message for message in messages), messages
@@ -5075,3 +5081,152 @@ def test_get_no_swaps_success(
 
     assert isinstance(response, list)
     assert(len(response) == 0)
+
+
+@pytest.mark.parametrize("early", [False, True])
+def test_validation_resource_limit_returns_clear_api_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    proposed_entrypoint: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+    early: bool,
+) -> None:
+    """An ordinary API candidate gets a controlled error under a tiny allowance."""
+    limits = replace(
+        type_validation_state.TypeValidationLimits(),
+        **({"input_depth": 1} if early else {"work": 0}),
+    )
+    monkeypatch.setattr(type_validation_state, "TypeValidationLimits", lambda: limits)
+    response = _request_entrypoint_candidate(
+        dioptra_client, proposed_entrypoint, validate_only=True
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    assert "Type validation exceeded" in response.text
+    assert "Swap combination" not in response.text
+    assert "Error rendering graph" not in response.text
+    assert len(response.text) < 4_000
+
+
+@pytest.fixture
+def proposed_entrypoint_with_swaps(
+    proposed_entrypoint: dict[str, Any],
+) -> dict[str, Any]:
+    """Build an entrypoint request for testing validation across swap choices.
+
+    Args:
+        proposed_entrypoint: The base entrypoint request whose graph is to be
+            replaced.
+
+    Returns:
+        A copy of the request with a single graph step offering three choices.
+        The first two pass integers to their tasks and the third passes text.
+    """
+    return {
+        **proposed_entrypoint,
+        "taskGraph": textwrap.dedent("""
+            selected:
+              ?implementation:
+                ?outputs: [output]
+                first:
+                  task1:
+                    input_param: 1
+                second:
+                  task2:
+                    input_param: 2
+                third:
+                  task3:
+                    input_param: valid
+        """),
+    }
+
+
+@pytest.mark.parametrize("resource", ["input nesting", "work"])
+def test_limit_stops_the_request_after_an_earlier_swap_error(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    proposed_entrypoint_with_swaps: dict[str, Any],
+    monkeypatch: MonkeyPatch,
+    resource: str,
+) -> None:
+    """End validation after a swap exhausts an allowance.
+
+    The first choice has an ordinary type error. Apply a low allowance while
+    preparing or checking the second choice. The response should contain only
+    the limit error, and validation should stop before rendering the third choice.
+    """
+    render = entrypoint_service.render_swaps_config
+    validate = validation.validate
+    attempted: list[str] = []
+    nesting_limit = replace(type_validation_state.TypeValidationLimits(), input_depth=1)
+    work_limit = replace(type_validation_state.TypeValidationLimits(), work=0)
+
+    def render_choice(
+        config: dict[str, Any], choices: dict[str, str]
+    ) -> dict[str, Any]:
+        """Record the selected choice and render its workflow.
+
+        Args:
+            config: The workflow containing the swap.
+            choices: The selection for each swap in the workflow.
+
+        Returns:
+            The workflow with the selected choices applied.
+
+        Raises:
+            ValidationLimitError: The second choice exceeds the reduced
+                nesting limit when the test exercises that limit.
+        """
+        choice = choices["implementation"]
+        attempted.append(choice)
+        if choice == "second" and resource == "input nesting":
+            with monkeypatch.context() as patch:
+                patch.setattr(
+                    type_validation_state, "TypeValidationLimits", lambda: nesting_limit
+                )
+                return render(config, choices)
+        return render(config, choices)
+
+    def validate_choice(config: dict[str, Any]) -> list[ValidationIssue]:
+        """Validate a rendered choice with the work limit selected by the test.
+
+        Args:
+            config: The workflow rendered for the current swap choice.
+
+        Returns:
+            The issues found by validation. When testing the work limit, the
+            second choice receives a reduced allowance and reports that limit.
+        """
+        if attempted[-1] == "second" and resource == "work":
+            return validate(config, limits=work_limit)
+        return validate(config)
+
+    monkeypatch.setattr(entrypoint_service, "render_swaps_config", render_choice)
+    monkeypatch.setattr(validation, "validate", validate_choice)
+
+    response = _request_entrypoint_candidate(
+        dioptra_client, proposed_entrypoint_with_swaps, validate_only=True
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    assert attempted == ["first", "second"]
+    errors = response.json()["detail"]["reason"]
+    assert set(errors) == {"rendered_validation_errors"}
+    (message,) = errors["rendered_validation_errors"]
+    assert f"supported {resource} limit" in message
+    assert "Swap combination" not in message
+
+
+def test_ordinary_type_errors_identify_each_swap_choice(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    proposed_entrypoint_with_swaps: dict[str, Any],
+) -> None:
+    """Collect and identify both incompatible choices in one validation.
+
+    The first two choices supply numbers where their tasks require strings.
+    Both errors should tell the caller which choice to correct.
+    """
+    response = _request_entrypoint_candidate(
+        dioptra_client, proposed_entrypoint_with_swaps, validate_only=True
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+    errors = response.json()["detail"]["reason"]["rendered_validation_errors"]
+    assert len(errors) == 2
+    for choice in ("first", "second"):
+        assert any(choice in error and "incompatible" in error for error in errors)
