@@ -39,7 +39,7 @@ Artifact Attributes
 - **Task**: (integer ID) The Artifact Task associated with the Artifact. The associated task will be used for serialization and deserialization (See: :ref:`Artifact Tasks Reference <reference-plugins-plugin-artifact-tasks>`).
 - **Group**: (integer ID) The Group that owns this Artifact and controls access permissions.
 - **Plugin Snapshot**: (integer ID) The Plugin Snapshot which contains the artifact task. The artifact is associated with a snapshot, and so even if the plugin changes, the artifact will still be loadable using the snapshot.
-- **Artifact URI**: (string) The URI representing the artifact's location.
+- **Artifact Path**: (string) The path to the uploaded artifact relative to the producing job's run.
 - **Job**: (integer ID) The job the artifact should be associated with.
 
 Optional Attributes

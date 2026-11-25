@@ -20,6 +20,7 @@ from http import HTTPStatus
 from typing import Any, Callable
 
 from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
 from dioptra.client.drafts import (
     ModifyResourceDraftsSubCollectionClient,
     NewResourceDraftsSubCollectionClient,
@@ -423,3 +424,19 @@ def assert_retrieving_snapshot_by_id_works(
     """
     response = snapshots_client.get_by_id(*resource_ids, snapshot_id=snapshot_id)
     assert response.status_code == HTTPStatus.OK and response.json() == expected
+
+
+def assert_job_status_matches_expectations(
+    dioptra_client: DioptraClient[DioptraResponseProtocol], job_id: int, expected: str
+) -> None:
+    """Check that the job status endpoint returns the expected status.
+
+    Args:
+        dioptra_client: Client used to retrieve the status.
+        job_id: ID of the submitted job.
+        expected: Status the job should have reached.
+    """
+    response = dioptra_client.jobs.get_status(job_id)
+    assert (
+        response.status_code == HTTPStatus.OK and response.json()["status"] == expected
+    )

@@ -21,7 +21,6 @@ import json
 import os
 import tarfile
 import textwrap
-import uuid
 from contextlib import ExitStack
 from hashlib import sha256
 from http import HTTPStatus
@@ -32,7 +31,6 @@ from typing import Any, cast
 from unittest.mock import Mock
 
 import mlflow
-import mlflow.artifacts
 import pytest
 import requests
 import tomli as toml
@@ -45,6 +43,9 @@ from dioptra.client import (
     DioptraFile,
     select_one_or_more_files,
 )
+from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.client import DioptraClient
+from dioptra.restapi.v1.shared import job_run_store
 from dioptra.restapi.v1.shared.io_file_service import IOFileService
 from dioptra.sdk.utilities.paths import set_cwd
 
@@ -137,10 +138,11 @@ def registered_tags(
 
 @pytest.fixture
 def artifact_info() -> dict[str, dict[str, str]]:
+    """Provide two job outputs under one run and a repeated path under another run."""
     return {
         "artifact1": {
             "job_name": "job1",
-            "name": "model_v1.artifact",
+            "name": "model v1.artifact",
             "description": "Model artifact.",
         },
         "artifact2": {
@@ -155,7 +157,7 @@ def artifact_info() -> dict[str, dict[str, str]]:
         },
         "artifact4": {
             "job_name": "job3",
-            "name": "model_v2.artifact",
+            "name": "model v1.artifact",
             "description": "Fine-tuned model.",
         },
     }
@@ -163,12 +165,22 @@ def artifact_info() -> dict[str, dict[str, str]]:
 
 @pytest.fixture
 @freeze_time("Apr 1st, 2025 3:00pm", auto_tick_seconds=1)
-def mlflow_artifact_uris(
+def mlflow_artifact_paths(
     mockup_mlflow: MlflowClient,
     registered_mlflowrun: dict[str, Any],
     artifact_info: dict[str, dict[str, str]],
 ) -> dict[str, str]:
-    artifact_uris = {}
+    """Publish the fixture artifacts to their jobs' bound runs.
+
+    Args:
+        mockup_mlflow: Test tracking client that records uploads.
+        registered_mlflowrun: Current run metadata for each job.
+        artifact_info: File names, job names and descriptions for fixture artifacts.
+
+    Returns:
+        The published run-relative path for each fixture artifact.
+    """
+    artifact_paths = {}
     for name, artifact in artifact_info.items():
         run_id = registered_mlflowrun[artifact["job_name"]]["mlflowRunId"]
         mlflow.start_run(run_id)
@@ -176,9 +188,9 @@ def mlflow_artifact_uris(
             artifact_path=None,
             local_path=artifact["name"],
         )
-        artifact_uris[name] = mlflow.get_artifact_uri(artifact["name"])
+        artifact_paths[name] = artifact["name"]
         mlflow.end_run()
-    return artifact_uris
+    return artifact_paths
 
 
 @pytest.fixture
@@ -189,14 +201,27 @@ def registered_artifacts(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     artifact_info: dict[str, dict[str, str]],
-    mlflow_artifact_uris: dict[str, str],
+    mlflow_artifact_paths: dict[str, str],
 ) -> dict[str, Any]:
+    """Register the uploaded fixture files and return their responses by fixture name.
+
+    Args:
+        client: Authenticated Flask client.
+        mockup_mlflow: Tracking service double used by the fixture.
+        auth_account: User and group for the registrations.
+        registered_jobs: Jobs that produced the uploaded files.
+        artifact_info: Fixture descriptions and producer names.
+        mlflow_artifact_paths: Uploaded paths in the producing runs.
+
+    Returns:
+        Registration responses for the requested artifacts.
+    """
     group_id = auth_account["groups"][0]["id"]
     result = {}
     for name, artifact in artifact_info.items():
         response = actions.register_artifact(
             client,
-            uri=mlflow_artifact_uris[name],
+            artifact_path=mlflow_artifact_paths[name],
             description=artifact["description"],
             job_id=registered_jobs[artifact["job_name"]]["id"],
             group_id=group_id,
@@ -847,49 +872,23 @@ def registered_jobs(
 
 
 @pytest.fixture
-@freeze_time("Apr 1st, 2025 2:00pm", auto_tick_seconds=1)
 def registered_mlflowrun(
-    client: FlaskClient,
-    mockup_mlflow: MlflowClient,
-    auth_account: dict[str, Any],
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
     registered_jobs: dict[str, Any],
 ) -> dict[str, Any]:
-    run_ids = []
-    # should be able to do this without creating an experiment
-    # leaving it here for now
-    experiment_id = mlflow.create_experiment("experiment1")
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    with mlflow.start_run(experiment_id=experiment_id) as run:
-        run_ids.append(run.info.run_id)
-    mlflowruns = {"job1": run_ids[0], "job2": run_ids[1], "job3": run_ids[2]}
+    """Retrieve the MLflow bindings allocated during ordinary job submission.
 
-    responses = actions.post_mlflowruns(
-        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
-    )
+    Args:
+        dioptra_client: API client for the fixture application.
+        registered_jobs: Submitted jobs keyed by their fixture names.
 
-    return responses
-
-
-@pytest.fixture
-@freeze_time("Apr 1st, 2025 2:10pm", auto_tick_seconds=1)
-def registered_mlflowrun_incomplete(
-    client: FlaskClient,
-    auth_account: dict[str, Any],
-    registered_jobs: dict[str, Any],
-) -> dict[str, Any]:
-    mlflowruns = {
-        "job1": uuid.uuid4(),
-        "job2": uuid.uuid4(),
-    }  # leave job3 out so we can use that in test_mlflowrun()
-
-    responses = actions.post_mlflowruns(
-        client=client, mlflowruns=mlflowruns, registered_jobs=registered_jobs
-    )
-
-    return responses
+    Returns:
+        The run responses keyed by job fixture name.
+    """
+    return {
+        name: dioptra_client.jobs.get_mlflow_run_id(job["id"]).json()
+        for name, job in registered_jobs.items()
+    }
 
 
 @pytest.fixture
@@ -1014,9 +1013,10 @@ def mockup_mlflow(monkeypatch: MonkeyPatch) -> mock_mlflow.MockMlflowClient:
     monkeypatch.setattr(mlflow, "log_artifact", mock_mlflow.log_artifact)
     monkeypatch.setattr(mlflow, "get_artifact_uri", mock_mlflow.get_artifact_uri)
 
-    monkeypatch.setattr(mlflow.artifacts, "list_artifacts", mock_mlflow.list_artifacts)
     monkeypatch.setattr(
-        mlflow.artifacts, "download_artifacts", mock_mlflow.download_artifacts
+        job_run_store,
+        "get_mlflow_artifact_repository",
+        mock_mlflow.get_artifact_repository,
     )
     return mock_mlflow.MockMlflowClient()
 

@@ -59,7 +59,7 @@
               color="primary"
               icon="download"
               :loading="isDownloadingArtifact"
-              @click="downloadFile(artifact.fileUrl, artifact.artifactUri.split('/').pop(), 'artifact')"
+              @click="downloadFile(artifact.fileUrl, artifact.artifactPath.split('/').pop(), 'artifact')"
             />
           </template>
           <template #fileSize>
@@ -614,8 +614,8 @@ async function getSingularFile() {
   selectedNode.value = {
     isDir: false,
     fileUrl: artifact.value.fileUrl,
-    relativePath: artifact.value.artifactUri,
-    label: artifact.value.artifactUri.split("/").pop(),
+    relativePath: artifact.value.artifactPath,
+    label: artifact.value.artifactPath.split("/").pop(),
   };
 }
 

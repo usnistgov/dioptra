@@ -14,8 +14,16 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
-"""Keep Gunicorn's native lifecycle with a fixed, resolved Dioptra factory."""
+"""Run the production API with Gunicorn's native configuration and process lifecycle.
 
+Dioptra fixes which Flask application is served while preserving native server
+options, worker reload and master re-execution. This module validates the final
+certificate/key selection, enforces TLS policy on custom SSL-context hooks and
+keeps relative launch paths usable when Gunicorn changes its working directory.
+"""
+
+import os
+import ssl
 import sys
 from pathlib import Path
 
@@ -23,9 +31,11 @@ from flask import Flask
 from gunicorn.app.base import Application
 from gunicorn.app.wsgiapp import WSGIApplication
 from gunicorn.errors import ConfigError
+from gunicorn.sock import ssl_context
 
 from dioptra.restapi import create_app
 from dioptra.restapi.config import BaseConfig
+from dioptra.sdk.utilities.tls import enforce_tls, validate_key_exchange
 
 
 class DioptraApplication(WSGIApplication):
@@ -43,13 +53,28 @@ class DioptraApplication(WSGIApplication):
     """
 
     def __init__(self, settings: BaseConfig, arguments: list[str]) -> None:
+        """Resolve production server settings for the Dioptra application.
+
+        Parse Gunicorn configuration and validate TLS before constructing the fixed
+        Dioptra application. Save the original invocation directory and arguments so
+        server re-execution can resolve relative paths in the same way.
+
+        Args:
+            settings: Validated Dioptra settings passed to the Flask factory.
+            arguments: Gunicorn options following the production launcher command.
+        """
         self.settings = settings
         self.arguments = arguments
         self.invocation_directory = Path.cwd()
+        self.invocation_arguments = sys.orig_argv.copy()
         super().__init__(usage="%(prog)s [GUNICORN OPTIONS]", prog="dioptra-api prod")
 
     def load_default_config(self) -> None:
-        """Keep native default chdir tied to this launch's invocation directory."""
+        """Load Gunicorn defaults with chdir tied to the original launch directory.
+
+        Returns:
+            None. The native configuration is updated before explicit settings are read.
+        """
         super().load_default_config()
         self.cfg.set("chdir", str(self.invocation_directory))
 
@@ -76,8 +101,8 @@ class DioptraApplication(WSGIApplication):
         to use the launch directory after the configured pre-exec hook.
 
         Raises:
-            ConfigError: If a replacement application or Paste configuration
-                is selected.
+            ConfigError: If a replacement application or Paste configuration is
+                selected.
         """
         original_arguments = sys.argv
         try:
@@ -96,10 +121,14 @@ class DioptraApplication(WSGIApplication):
             raise ConfigError(
                 "Dioptra fixes the application; WSGI app and Paste overrides are unsupported."
             )
+        self.configure_tls()
         configured_pre_exec = self.cfg.pre_exec
 
         def pre_exec(server):
             """Run the configured hook before restoring the invocation directory for exec."""
+            # Gunicorn rebuilds argv from sys.argv, which loses interpreter flags
+            # such as -m. Keep the original module or installed-command form.
+            server.START_CTX["args"] = self.invocation_arguments.copy()
             configured_pre_exec(server)
             # Gunicorn captures cwd after --chdir. Restore invocation semantics
             # for its exec, without changing master/worker operating directories.
@@ -107,10 +136,94 @@ class DioptraApplication(WSGIApplication):
 
         self.cfg.set("pre_exec", pre_exec)
 
-    def load(self) -> Flask:
-        """Construct the fixed Dioptra application.
+    def configure_tls(self) -> None:
+        """Apply production TLS policy after Gunicorn resolves its final settings.
+
+        Gunicorn accepts certificate paths from command options, environment or a
+        configuration file. An ssl_context hook can also construct a context
+        instead of using the provided default factory. This method wraps that hook
+        so every returned context uses the final configured certificate/key pair
+        and TLS policy, including during worker startup and reload.
 
         Returns:
-            A Flask application built with the launcher's resolved settings.
+            None. The configured ssl_context hook is replaced with the enforcing
+            wrapper.
+
+        Raises:
+            ConfigError: Certificate/key settings, the custom context or forwarding
+                settings violate production requirements.
+        """
+        self.reject_forwarding_overrides()
+        if not self.cfg.certfile or not self.cfg.keyfile:
+            raise ConfigError("Production requires Gunicorn certfile and keyfile.")
+        try:
+            exchange = validate_key_exchange(
+                os.environ.get("DIOPTRA_TLS_KEY_EXCHANGE", "default")
+            )
+            configured_context = self.cfg.ssl_context
+
+            def context(conf, factory):
+                """Preserve the selected hook and enforce policy for each native context."""
+                selected = configured_context(conf, factory)
+                if not isinstance(selected, ssl.SSLContext):
+                    raise ValueError("Gunicorn ssl_context hook must return SSLContext")
+                if (
+                    selected.protocol == ssl.PROTOCOL_TLS_CLIENT
+                    or selected.check_hostname
+                ):
+                    raise ValueError(
+                        "Gunicorn ssl_context hook must return a server context"
+                    )
+                selected.load_cert_chain(conf.certfile, conf.keyfile)
+                return enforce_tls(selected, exchange)
+
+            self.cfg.set("ssl_context", context)
+            ssl_context(self.cfg)
+        except (OSError, ValueError, ssl.SSLError) as exc:
+            raise ConfigError(f"Production TLS configuration failed: {exc}") from exc
+
+    def reject_forwarding_overrides(self) -> None:
+        """Reject native options that would trust client-supplied proxy identity.
+
+        Keep the request scheme tied to native TLS and the Host header subject to the
+        application's permitted-host check. Reject settings that would instead accept a
+        client-supplied scheme, host or proxy-protocol identity.
+
+        Returns:
+            None. Accepted native forwarding settings are cleared.
+
+        Raises:
+            ConfigError: A setting permits forwarded identity or proxy-protocol
+                metadata.
+        """
+        defaults = {
+            "secure_scheme_headers": {
+                "X-FORWARDED-PROTOCOL": "ssl",
+                "X-FORWARDED-PROTO": "https",
+                "X-FORWARDED-SSL": "on",
+            },
+            "forwarded_allow_ips": ["127.0.0.1", "::1"],
+            "forwarder_headers": ["SCRIPT_NAME", "PATH_INFO"],
+        }
+        for name in (
+            "secure_scheme_headers",
+            "forwarded_allow_ips",
+            "forwarder_headers",
+        ):
+            value = getattr(self.cfg, name)
+            if value and value != defaults[name]:
+                raise ConfigError(
+                    f"Production forbids unsafe Gunicorn {name} overrides."
+                )
+            self.cfg.set(name, {} if name == "secure_scheme_headers" else "")
+        if self.cfg.proxy_protocol != "off":
+            raise ConfigError("Production forbids Gunicorn proxy_protocol.")
+
+    def load(self) -> Flask:
+        """Create the Flask application using the already resolved Dioptra settings.
+
+        Returns:
+            The Flask WSGI application for the current worker, or for the master when
+            Gunicorn preload is explicitly enabled.
         """
         return create_app(settings=self.settings)

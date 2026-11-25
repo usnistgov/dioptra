@@ -33,7 +33,7 @@ LOGGER = structlog.get_logger()
 @dataclass
 class DatasetMetadata:
     """
-    Metadata for an annotated AI/ML image dataset.
+    Metadata for an annotated ML image dataset.
     """
 
     image_shape: tuple[int, int, int]

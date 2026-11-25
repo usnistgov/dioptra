@@ -24,6 +24,11 @@ networks:
   {%- endfor %}
 
 {% endif -%}
+# Connection settings used by the host-side SSL manager, not by service listeners.
+x-dioptra:
+  # Empty selects the published bind address, using loopback for a wildcard bind.
+  nginx-connect-host: ""
+
 services:
   {{ nginx_service(cookiecutter)|indent(2) }}
 
@@ -85,6 +90,8 @@ services:
     name: {{ cookiecutter.__project_slug }}_postgres-var-certs
   redis-data:
     name: {{ cookiecutter.__project_slug }}_redis-data
+  restapi-tls:
+    name: {{ cookiecutter.__project_slug }}_restapi-tls
   restapi-data:
     name: {{ cookiecutter.__project_slug }}_restapi-data
   restapi-ca-certificates:

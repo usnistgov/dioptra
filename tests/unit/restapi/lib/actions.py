@@ -224,7 +224,7 @@ def register_tag(
 
 def register_artifact(
     client: FlaskClient,
-    uri: str,
+    artifact_path: str,
     job_id: int,
     group_id: int,
     description: str | None = None,
@@ -233,7 +233,7 @@ def register_artifact(
 
     Args:
         client: The Flask test client.
-        uri: The URI of the artifact
+        artifact_path: Path of the uploaded file relative to the job's run.
         job_id: The job to create the new artifact.
         group_id: The group to create the new artifact in.
         description: The description of the new artifact.
@@ -241,7 +241,7 @@ def register_artifact(
     Returns:
         The response from the API.
     """
-    payload = {"artifactUri": uri, "job": job_id, "group": group_id}
+    payload = {"artifactPath": artifact_path, "job": job_id, "group": group_id}
 
     if description is not None:
         payload["description"] = description
@@ -790,51 +790,3 @@ def post_metrics(
         f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/metrics",
         json={"name": metric_name, "value": metric_value},
     )
-
-
-def post_mlflowrun(
-    client: FlaskClient, job_id: int, mlflow_run_id: str
-) -> TestResponse:
-    """Add an mlflow run id to a job.
-
-    Args:
-        client: The Flask test client.
-        job_id: The id of the Job.
-        mlflow_run_id: The id of the mlflow run.
-    Returns:
-        The response from the API.
-
-    """
-    payload = {"mlflowRunId": mlflow_run_id}
-    response = client.post(
-        f"/{V1_ROOT}/{V1_JOBS_ROUTE}/{job_id}/mlflowRun",
-        json=payload,
-        follow_redirects=True,
-    )
-    return response
-
-
-def post_mlflowruns(
-    client: FlaskClient, mlflowruns: dict[str, Any], registered_jobs: dict[str, Any]
-) -> dict[str, Any]:
-    """Add mlflow run ids to multiple jobs.
-
-    Args:
-        client: The Flask test client.
-        mlflowruns: A dictionary mapping job key to mlflow run id.
-        registered_jobs: A dictionary of registered jobs.
-
-    Returns:
-        The responses from the API.
-    """
-
-    responses = {}
-
-    for key in mlflowruns.keys():
-        job_id = registered_jobs[key]["id"]
-        mlflowrun_response = post_mlflowrun(
-            client=client, job_id=job_id, mlflow_run_id=mlflowruns[key]
-        ).get_json()
-        responses[key] = mlflowrun_response
-
-    return responses

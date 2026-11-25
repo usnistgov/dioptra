@@ -31,6 +31,13 @@
 # be left blank if mounts are being configured here.
 # ------------------------------------------------------------------------------
 
+# If manage_ssl.py runs in a developer container or away from the Docker host,
+# select an address through which it can reach nginx's published HTTPS port.
+# This changes the verification connection only, not the certificate identity,
+# service bind address or published port. The chosen address must be reachable.
+# x-dioptra:
+#   nginx-connect-host: host.docker.internal
+
 # services:
 {% for tfcpu_worker_id in range(cookiecutter.num_tensorflow_cpu_workers|int) if cookiecutter.num_tensorflow_cpu_workers|int > 0 -%}
 #   {{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(tfcpu_worker_id+1|int) }}:

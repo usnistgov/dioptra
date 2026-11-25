@@ -20,6 +20,7 @@ Class attributes are packaged defaults. Use ``load_config`` to obtain a fresh
 instance; importing this module never reads deployment settings or key files.
 """
 
+import json
 import logging
 import os
 from collections.abc import Iterable, Mapping
@@ -30,6 +31,7 @@ from redis.connection import parse_url as parse_redis_url
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
+from .authorities import validate_authorities
 from .key_file import _is_windows, _resolve_key_file, _validate_key_content, read_key
 
 
@@ -78,9 +80,13 @@ def _swagger_path(value: object) -> None:
 class _ConfigSchema(Schema):
     """Validate the resolved application settings and their constraints."""
 
+    DIOPTRA_TLS_ALLOWED_AUTHORITIES = fields.List(
+        _String(), required=True, validate=validate_authorities
+    )
     DEBUG = _Boolean(required=True)
     TESTING = _Boolean(required=True)
     LOGIN_DISABLED = _Boolean(required=True)
+    SESSION_COOKIE_SECURE = _Boolean(required=True)
     REMEMBER_COOKIE_SECURE = _Boolean(required=True)
     SQLALCHEMY_TRACK_MODIFICATIONS = _Boolean(required=True)
     USE_MOCK_EQUIVALENCY = _Boolean(required=True)
@@ -103,6 +109,9 @@ class _ConfigSchema(Schema):
     )
     RQ_REDIS_URI = _String(required=True, validate=[validate.Length(min=1), _redis_uri])
     MLFLOW_TRACKING_URI = _String(required=True, validate=validate.Length(min=1))
+    DIOPTRA_ARTIFACT_BASE_URI = _String(
+        required=True, allow_none=True, validate=validate.Length(min=1)
+    )
     DIOPTRA_RESTAPI_LOG_AS_JSON = _Boolean(required=True)
     DIOPTRA_RESTAPI_LOG_LEVEL = _String(
         required=True, validate=validate.OneOf(list(logging.getLevelNamesMapping()))
@@ -117,6 +126,7 @@ class BaseConfig:
     """
 
     CONFIG_NAME = "base"
+    DIOPTRA_TLS_ALLOWED_AUTHORITIES: list[str] = []
     SECRET_KEY: str | None = None
     SECRET_KEY_FILE: Path | None = None
     USE_MOCK_EQUIVALENCY = False
@@ -126,6 +136,7 @@ class BaseConfig:
     SQLALCHEMY_DATABASE_URI: str | None = None
     REMEMBER_COOKIE_NAME = "dioptra_remember_token"
     REMEMBER_COOKIE_DURATION = 1209600
+    SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_SECURE = False
     LOGIN_DISABLED = False
     SESSION_PROTECTION: str | None = "strong"
@@ -135,6 +146,7 @@ class BaseConfig:
     DIOPTRA_MAX_PAGE_SIZE = 1000
     RQ_REDIS_URI = "redis://"
     MLFLOW_TRACKING_URI: str | None = None
+    DIOPTRA_ARTIFACT_BASE_URI: str | None = None
     DIOPTRA_RESTAPI_LOG_AS_JSON = False
     DIOPTRA_RESTAPI_LOG_LEVEL = "INFO"
     _resolved = False
@@ -152,11 +164,7 @@ class BaseConfig:
         if type(self) is not config_by_name[self.CONFIG_NAME]:
             raise ValueError("CONFIG_NAME must match the resolved configuration class.")
         _validate_values(self)
-        if self.CONFIG_NAME == "prod":
-            if self.DEBUG:
-                raise ValueError("DEBUG must be False in production.")
-            if self.LOGIN_DISABLED:
-                raise ValueError("LOGIN_DISABLED must be False in production.")
+        _validate_production_policy(self)
         path = self.SECRET_KEY_FILE
         if not isinstance(path, Path) or not path.is_absolute():
             raise ValueError("SECRET_KEY_FILE must be a resolved absolute path.")
@@ -178,9 +186,11 @@ class DevelopmentConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    """Packaged defaults for explicit production mode."""
+    """Packaged production defaults requiring HTTPS session and remember cookies."""
 
     CONFIG_NAME = "prod"
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
 
 
 config_by_name = {"dev": DevelopmentConfig, "prod": ProductionConfig}
@@ -188,6 +198,7 @@ config_by_name = {"dev": DevelopmentConfig, "prod": ProductionConfig}
 # Only current environment inputs belong here. Other Flask attributes can be
 # overridden explicitly, while SECRET_KEY and CONFIG_NAME have dedicated sources.
 _ENVIRONMENT_SETTINGS = {
+    "DIOPTRA_TLS_ALLOWED_AUTHORITIES": "DIOPTRA_TLS_ALLOWED_AUTHORITIES",
     "LOGIN_DISABLED": "DIOPTRA_LOGIN_DISABLED",
     "SESSION_PROTECTION": "DIOPTRA_SESSION_PROTECTION",
     "REMEMBER_COOKIE_DURATION": "DIOPTRA_REMEMBER_COOKIE_DURATION",
@@ -198,6 +209,7 @@ _ENVIRONMENT_SETTINGS = {
     "DIOPTRA_MAX_PAGE_SIZE": "DIOPTRA_MAX_PAGE_SIZE",
     "RQ_REDIS_URI": "RQ_REDIS_URI",
     "MLFLOW_TRACKING_URI": "MLFLOW_TRACKING_URI",
+    "DIOPTRA_ARTIFACT_BASE_URI": "DIOPTRA_ARTIFACT_BASE_URI",
     "DIOPTRA_RESTAPI_LOG_AS_JSON": "DIOPTRA_RESTAPI_LOG_AS_JSON",
     "DIOPTRA_RESTAPI_LOG_LEVEL": "DIOPTRA_RESTAPI_LOG_LEVEL",
 }
@@ -304,7 +316,14 @@ def _check_overrides(overrides: Mapping[str, object], allowed: set[str]) -> None
 
 
 def _parse_environment_value(name: str, value: str) -> object:
-    """Convert named boolean and integer settings from their environment strings."""
+    """Parse named JSON, boolean and integer environment inputs without loose coercion."""
+    if name == "DIOPTRA_TLS_ALLOWED_AUTHORITIES":
+        try:
+            return json.loads(value)
+        except ValueError:
+            raise ValueError(
+                f"{name} requires a JSON array of HTTPS authorities."
+            ) from None
     if name in _BOOLEAN_ENVIRONMENT_SETTINGS:
         values = {"true": True, "1": True, "false": False, "0": False}
         try:
@@ -329,6 +348,23 @@ def _validate_values(settings: BaseConfig) -> None:
         raise ValueError(
             f"Invalid configuration for {names}; check types and constraints."
         ) from None
+
+
+def _validate_production_policy(settings: BaseConfig) -> None:
+    """Reject production bypasses before key access and on instance revalidation."""
+    if settings.CONFIG_NAME != "prod":
+        return
+    if not settings.DIOPTRA_TLS_ALLOWED_AUTHORITIES:
+        raise ValueError("Production requires DIOPTRA_TLS_ALLOWED_AUTHORITIES.")
+    required = {
+        "DEBUG": False,
+        "LOGIN_DISABLED": False,
+        "SESSION_COOKIE_SECURE": True,
+        "REMEMBER_COOKIE_SECURE": True,
+    }
+    for name, expected in required.items():
+        if getattr(settings, name) is not expected:
+            raise ValueError(f"Production requires {name}={expected}.")
 
 
 def _populate_settings(
@@ -367,6 +403,11 @@ def load_config(
     ``DIOPTRA_MAX_PAGE_SIZE`` applies to paginated endpoints and must be at
     least 10. Session protection accepts ``basic``, ``strong`` or None; the
     environment string ``none`` selects None.
+    Production requires explicit nonempty ``DIOPTRA_TLS_ALLOWED_AUTHORITIES``.
+    Its environment value is a JSON list of HTTPS authorities; typed overrides
+    supply a list of strings. Host checking precedes route matching.
+    Production requires Secure session and remember cookies. Overrides that
+    disable either flag fail validation; explicit development permits HTTP.
 
     Args:
         env: ``dev`` or ``prod``. If omitted, select ``DIOPTRA_RESTAPI_ENV``.
@@ -406,8 +447,7 @@ def load_config(
         settings.DIOPTRA_RESTAPI_LOG_LEVEL = settings.DIOPTRA_RESTAPI_LOG_LEVEL.upper()
     # Validate ordinary values before opening the selected key or constructing clients.
     _validate_values(settings)
-    if mode == "prod" and (settings.DEBUG or settings.LOGIN_DISABLED):
-        raise ValueError("Production requires DEBUG=False and LOGIN_DISABLED=False.")
+    _validate_production_policy(settings)
     if "SECRET_KEY_FILE" in supplied and supplied["SECRET_KEY_FILE"] is None:
         raise ValueError("SECRET_KEY_FILE requires a nonempty filesystem path.")
     settings.SECRET_KEY_FILE = _resolve_key_file(

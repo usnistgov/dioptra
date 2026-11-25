@@ -134,6 +134,10 @@ The Windows initializer option permits development provisioning with ordinary Wi
 
             N.B.: replace <username> with your username. On some systems the home path may also be different. Verify the expansion of '~' with the `pwd` command while in the appropriate directory.
 
+        -   For artifact registration and downloads, export the URI of MLflow's artifact destination in the Flask terminal. For example, for `--artifacts-destination /srv/dioptra/mlflow/runs`:
+
+                export DIOPTRA_ARTIFACT_BASE_URI=file:///srv/dioptra/mlflow/runs
+
         -   Activate the python environment set-up in prior steps
         -   `dioptra-api init-key`
         -   `dioptra-db autoupgrade`

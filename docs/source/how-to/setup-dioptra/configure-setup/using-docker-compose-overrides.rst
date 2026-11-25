@@ -99,7 +99,7 @@ To modify a service, specify the service name and only the properties you want t
 
 - **Scalar values** (strings, numbers): Override file values replace base values
 - **Lists** (like ``volumes:`` or ``ports:``): Items are appended, not replaced
-- **Mappings** (like ``environment:``): Keys are merged; override values take precedence
+- **Mappings** (like ``environment:``): Keys are merged. Override values take precedence
 
 .. rst-class:: header-on-a-card header-steps
 
@@ -129,6 +129,20 @@ Open ``docker-compose.override.yml`` in a text editor and add your customization
      <deployment-name>-tfgpu-01:
        environment:
          NVIDIA_VISIBLE_DEVICES: 0
+
+.. _how-to-compose-overrides-nginx-connection:
+
+**Example: Reaching nginx from a developer container**
+
+If the SSL manager cannot reach nginx from a developer container or another machine, set the connection address:
+
+.. code:: yaml
+
+   x-dioptra:
+     nginx-connect-host: host.docker.internal
+
+Replace ``host.docker.internal`` with a hostname or IP address through which the manager can reach nginx on its published HTTPS port.
+Do not include a URL scheme, port or path.
 
 **Example: Using a custom-built image for a specific worker**
 
@@ -180,12 +194,14 @@ You can combine multiple customizations in a single override file:
 Step 4: Apply Your Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After modifying the override file, restart the deployment to apply changes:
+If you changed service settings, restart the deployment:
 
 .. code:: sh
 
    docker compose down
    docker compose up -d
+
+Changes to ``x-dioptra.nginx-connect-host`` take effect the next time you run ``manage_ssl.py``.
 
 Verify the configuration was applied:
 
@@ -205,7 +221,7 @@ See Also
 * :ref:`how-to-data-mounts` - Mount data volumes into worker containers
 * :ref:`how-to-gpu-enabled-workers` - Configure GPU assignments
 * :ref:`how-to-integrating-custom-containers` - Add custom containers
-* :ref:`how-to-enabling-ssl-tls` - Enable SSL/TLS encryption
+* :ref:`how-to-enabling-ssl-tls` - Configure SSL/TLS certificates
 
 **Reference:**
 

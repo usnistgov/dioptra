@@ -1,8 +1,10 @@
-# Dioptra: Test Software for the Characterization of AI Technologies
+# Dioptra: Test Software for the Characterization of SI Technologies
 
-Dioptra is a software test platform for assessing the trustworthy characteristics of artificial intelligence (AI).
-Trustworthy AI is: valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair - with harmful bias managed[^1].
-Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified AI potential benefits and negative consequences.
+Dioptra is a software test platform for assessing the trustworthy characteristics of super intelligence (SI).
+Trustworthy SI is: valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair - with harmful bias managed[^1].
+Dioptra supports the Measure function of the [NIST AI Risk Management Framework](https://nist.gov/itl/ai-risk-management-framework/) by providing functionality to assess, analyze, and track identified SI potential benefits and negative consequences.
+
+Dioptra uses “super intelligence (SI)” terminology in accordance with [NIST’s terminology guidance](https://www.nist.gov/super-intelligence).
 
 Dioptra provides a REST API, which can be controlled via an intuitive web interface, a Python client, or any REST client library of the user's choice for designing, managing, executing, and tracking experiments.
 Details are available in the project documentation available at <https://pages.nist.gov/dioptra/>.
@@ -22,17 +24,17 @@ Details are available in the project documentation available at <https://pages.n
 
 ## Current Release Status
 
-Release 1.2.3 -- with on-going improvements and development
+Release 1.2.4 -- with on-going improvements and development
 
 ## Use Cases
 
 We envision the following primary use cases for Dioptra:
 
 -   Model Testing:
-    -   1st party - Assess AI models throughout the development lifecycle
-    -   2nd party - Assess AI models during acquisition or in an evaluation lab environment
-    -   3rd party - Assess AI models during auditing or compliance activities
--   Research: Aid trustworthy AI researchers in tracking experiments
+    -   1st party - Assess SI models throughout the development lifecycle
+    -   2nd party - Assess SI models during acquisition or in an evaluation lab environment
+    -   3rd party - Assess SI models during auditing or compliance activities
+-   Research: Aid trustworthy SI researchers in tracking experiments
 -   Evaluations and Challenges: Provide a common platform and resources for participants
 -   Red-Teaming: Expose models and resources to a red team in a controlled environment
 
@@ -58,17 +60,17 @@ See the [Install Dioptra](https://pages.nist.gov/dioptra/how-to/setup-dioptra/in
 1. Pull the Dioptra docker images:
 ```sh
 # pull the core dioptra images:
-docker pull ghcr.io/usnistgov/dioptra/nginx:1.2.3
-docker pull ghcr.io/usnistgov/dioptra/mlflow-tracking:1.2.3
-docker pull ghcr.io/usnistgov/dioptra/restapi:1.2.3
+docker pull ghcr.io/usnistgov/dioptra/nginx:1.2.4
+docker pull ghcr.io/usnistgov/dioptra/mlflow-tracking:1.2.4
+docker pull ghcr.io/usnistgov/dioptra/restapi:1.2.4
 
 # pull the worker images:
-docker pull ghcr.io/usnistgov/dioptra/pytorch-cpu:1.2.3
-docker pull ghcr.io/usnistgov/dioptra/tensorflow2-cpu:1.2.3
+docker pull ghcr.io/usnistgov/dioptra/pytorch-cpu:1.2.4
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-cpu:1.2.4
 
 # optionally pull the GPU worker images:
-docker pull ghcr.io/usnistgov/dioptra/pytorch-gpu:1.2.3
-docker pull ghcr.io/usnistgov/dioptra/tensorflow2-gpu:1.2.3
+docker pull ghcr.io/usnistgov/dioptra/pytorch-gpu:1.2.4
+docker pull ghcr.io/usnistgov/dioptra/tensorflow2-gpu:1.2.4
 ```
 
 2. Prepare your Dioptra deployment:

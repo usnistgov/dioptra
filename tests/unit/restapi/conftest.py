@@ -18,6 +18,7 @@
 import io
 import tarfile
 import time
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, BinaryIO, List
 
@@ -35,6 +36,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.bootstrap import JobRunStoreConfiguration
 from dioptra.restapi.db import db as restapi_db
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
@@ -156,23 +158,55 @@ def signing_key_file(tmp_path_factory) -> Path:
 
 
 @pytest.fixture(scope="session")
-def flask_app(dependency_modules: List[Any], signing_key_file: Path) -> Flask:
+def app_factory(
+    dependency_modules: List[Any], signing_key_file: Path
+) -> Callable[..., Flask]:
+    """Build API applications with shared test dependencies and explicit mode/overrides.
+
+    The caller owns database setup and teardown. Authentication remains enabled
+    unless LOGIN_DISABLED is explicitly requested, allowing cookie tests to use
+    the same construction as the ordinary login-disabled API fixtures.
+    """
     from dioptra.restapi import create_app
 
-    injector = Injector(dependency_modules)
-    app = create_app(
-        env="dev",
-        injector=injector,
-        overrides={
+    def build(mode: str = "dev", **overrides: Any) -> Flask:
+        """Return an application using isolated database/backend settings.
+
+        Args:
+            mode: Explicit dev or prod configuration to resolve.
+            overrides: Settings to merge with the shared test defaults.
+
+        Returns:
+            Flask application with no schema created and no service started.
+        """
+        settings = {
             "SECRET_KEY_FILE": signing_key_file,
             "TESTING": True,
-            "LOGIN_DISABLED": True,
             "SESSION_PROTECTION": None,
             "SQLALCHEMY_DATABASE_URI": "sqlite://",
             "MLFLOW_TRACKING_URI": "file:///unused-fixture-mlruns",
+            "DIOPTRA_ARTIFACT_BASE_URI": "s3://dioptra-fixtures/outputs",
             "RQ_REDIS_URI": "redis://",
-        },
-    )
+        }
+        settings.update(overrides)
+        injector = Injector(dependency_modules)
+        injector.binder.bind(
+            JobRunStoreConfiguration,
+            to=JobRunStoreConfiguration(
+                tracking_uri=settings["MLFLOW_TRACKING_URI"],
+                artifact_base_uri=settings["DIOPTRA_ARTIFACT_BASE_URI"],
+            ),
+        )
+        return create_app(
+            mode, injector=injector, overrides=settings
+        )
+
+    return build
+
+
+@pytest.fixture(scope="session")
+def flask_app(app_factory) -> Iterator[Flask]:
+    app = app_factory("dev", LOGIN_DISABLED=True)
 
     with app.app_context():
         # sqlite specific fix, see:
@@ -189,7 +223,7 @@ def flask_app(dependency_modules: List[Any], signing_key_file: Path) -> Flask:
 
         restapi_db.drop_all()
         restapi_db.create_all()
-        libdb.setup_ontology(restapi_db.session)
+        libdb.setup_ontology(restapi_db.session())
 
     yield app
 
@@ -282,6 +316,7 @@ def account(db_session: DBSession, fake_data: libdb.FakeData) -> libdb.FakeAccou
 )
 def deletion_policy(request):
     """
+
     A simple parameterized fixture that makes it easy to combine all deletion
     policy values with other things in a parameterized unit test.  This just
     produces the DeletionPolicy enum values.
@@ -294,6 +329,7 @@ def deletion_policy(request):
 )
 def existence_status(request):
     """
+
     A simple parameterized fixture that makes it easy to combine all status
     values (ExistenceResult's) with other things in a parameterized unit test.
     This just produces the ExistenceResult enum values.

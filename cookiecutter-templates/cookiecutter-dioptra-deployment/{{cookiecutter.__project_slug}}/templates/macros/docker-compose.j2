@@ -22,6 +22,16 @@ networks:
   {%- endfor -%}
 {%- endmacro -%}
 
+{% macro service_network_aliases(networks, alias) -%}
+networks:
+  {% for network in networks -%}
+  {{ network }}:
+    aliases:
+      - {{ alias }}{{ "
+  " if not loop.last }}
+  {%- endfor -%}
+{%- endmacro -%}
+
 {% macro service_volumes(volumes, datasets_directory=none) -%}
 {%- if datasets_directory is not none and datasets_directory|trim != "" -%}
 {%- set _volumes_list = volumes + [datasets_directory + ":/dioptra/data:ro"] -%}
@@ -159,7 +169,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro nginx_service(cookiecutter) %}
-{%- set _nginx_env_files = ["envs/ca-certificates.env"] -%}
+{%- set _nginx_env_files = ["envs/ca-certificates.env", "envs/tls.env"] -%}
 {%- set _nginx_port_prefix = "127.0.0.1:" if cookiecutter.nginx_expose_ports_on_localhost_only.lower() == "true" else "" -%}
 {%- set _nginx_volumes = ["nginx-ca-certificates:/usr/local/share/ca-certificates:rw", "nginx-conf-d:/etc/nginx/conf.d:rw", "nginx-etc-ssl:/etc/ssl:rw", "nginx-frontend:/frontend:ro"] -%}
 {{ cookiecutter.__project_slug }}-nginx:
@@ -171,12 +181,10 @@ volumes:
       [
         "CMD",
         "/usr/local/bin/healthcheck.sh",
-        "http://localhost:30080",
-        "http://localhost:35000",
-        "http://localhost:35050/login",
-        "http://localhost:39000/health/ready",
-        "http://localhost:39001/rustfs/console/health",
-        # "https://localhost:30443",
+        "https://localhost:35000",
+        "https://localhost:35050/login",
+        "https://localhost:39000/health/ready",
+        "https://localhost:39001/rustfs/console/health",
         # "https://localhost:35000",
         # "https://localhost:35050/login",
         # "https://localhost:39000/health/ready",
@@ -201,7 +209,7 @@ volumes:
   {% endif -%}
   ports:
     - {{ _nginx_port_prefix ~ cookiecutter.__restapi_http_port ~ ":30080/tcp" }}
-    # - {{ _nginx_port_prefix ~ cookiecutter.__restapi_https_port ~ ":30443/tcp" }}
+    - {{ _nginx_port_prefix ~ cookiecutter.__restapi_https_port ~ ":30443/tcp" }}
     - {{ _nginx_port_prefix ~ "35432:5432/tcp" }}
     - {{ _nginx_port_prefix ~ "35000:35000/tcp" }}
     - {{ _nginx_port_prefix ~ "35050:35050/tcp" }}
@@ -231,7 +239,7 @@ volumes:
     - --host
     - "0.0.0.0"
     - --default-artifact-root
-    - "s3://mlflow-tracking/artifacts"
+    - "{{ cookiecutter.__mlflow_artifact_base_uri }}"
     - --backend-store-uri
     - {{ '$${DIOPTRA_MLFLOW_TRACKING_DATABASE_URI}' }}
     - --wait-for
@@ -246,14 +254,14 @@ volumes:
 {%- endmacro -%}
 
 {% macro restapi_service(cookiecutter) -%}
-{%- set _restapi_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
-{%- set _restapi_volumes = ["restapi-data:/work/data/restapi:ro", "restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
+{%- set _restapi_env_files = ["envs/ca-certificates.env", "envs/tls.env", "envs/" ~ cookiecutter.__project_slug ~ "-restapi.env"] -%}
+{%- set _restapi_volumes = ["restapi-data:/work/data/restapi:ro", "restapi-tls:/etc/dioptra/tls:ro", "restapi-ca-certificates:/usr/local/share/ca-certificates:rw", "restapi-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-restapi:
   image: {{ container_image(cookiecutter.__containers.restapi) }}
   restart: always
   hostname: {{ cookiecutter.__project_slug }}-restapi
   healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    test: ["CMD", "curl", "--disable", "--fail", "--silent", "--show-error", "--noproxy", "*", "--resolve", "{{ cookiecutter.__project_slug }}-restapi:5000:127.0.0.1", "https://{{ cookiecutter.__project_slug }}-restapi:5000/health"]
     interval: 30s
     timeout: 10s
     retries: 3
@@ -273,13 +281,13 @@ volumes:
     - {{ cookiecutter.__project_slug }}-mlflow-tracking:5000
   {{ service_env_files(_restapi_env_files)|indent(2) }}
   {% if cookiecutter.__containers.networks -%}
-  {{ service_networks(cookiecutter.__containers.networks)|indent(2) }}
+  {{ service_network_aliases(cookiecutter.__containers.networks, cookiecutter.__project_slug ~ "-restapi")|indent(2) }}
   {% endif -%}
   {{ service_volumes(_restapi_volumes)|indent(2) }}
 {%- endmacro -%}
 
 {% macro tensorflow_cpu_service(cookiecutter, worker_id) -%}
-{%- set _tfcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
+{%- set _tfcpu_env_files = ["envs/ca-certificates.env", "envs/tls.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
 {%- set _tfcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-tfcpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.tfcpu) }}
@@ -317,7 +325,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro tensorflow_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
-{%- set _tfgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
+{%- set _tfgpu_env_files = ["envs/ca-certificates.env", "envs/tls.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
 {%- set _tfgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-tfgpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.tfgpu) }}
@@ -357,7 +365,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro pytorch_cpu_service(cookiecutter, worker_id) -%}
-{%- set _pytorchcpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
+{%- set _pytorchcpu_env_files = ["envs/ca-certificates.env", "envs/tls.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker-cpu.env"] -%}
 {%- set _pytorchcpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-pytorchcpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.pytorchcpu) }}
@@ -395,7 +403,7 @@ volumes:
 {%- endmacro -%}
 
 {% macro pytorch_gpu_service(cookiecutter, worker_id, gpu_device_id) -%}
-{%- set _pytorchgpu_env_files = ["envs/ca-certificates.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
+{%- set _pytorchgpu_env_files = ["envs/ca-certificates.env", "envs/tls.env", "envs/" ~ cookiecutter.__project_slug ~ "-worker.env"] -%}
 {%- set _pytorchgpu_volumes = ["worker-ca-certificates:/usr/local/share/ca-certificates:rw", "worker-etc-ssl:/etc/ssl:rw"] -%}
 {{ cookiecutter.__project_slug }}-pytorchgpu-{{ "%02d" | format(worker_id|int) }}:
   image: {{ container_image(cookiecutter.__containers.pytorchgpu) }}

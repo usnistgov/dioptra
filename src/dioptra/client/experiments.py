@@ -380,29 +380,6 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
             self.build_sub_collection_url(experiment_id), str(job_id), MLFLOW_RUN
         )
 
-    def set_mlflow_run_id(
-        self, experiment_id: str | int, job_id: str | int, mlflow_run_id: str
-    ) -> T:
-        """Sets the MLflow run id for an experiment's job.
-
-        Args:
-            experiment_id: The experiment id, an integer.
-            job_id: The job id, an integer.
-            mlflow_run_id: The UUid as a string for the associated MLflow run.
-
-        Returns:
-            The response from the Dioptra API.
-        """
-        json_ = {
-            "mlflowRunId": mlflow_run_id,
-        }
-        return self._session.post(
-            self.build_sub_collection_url(experiment_id),
-            str(job_id),
-            MLFLOW_RUN,
-            json_=json_,
-        )
-
     def get_status(self, experiment_id: str | int, job_id: str | int) -> T:
         """Gets the status for an experiment's job.
 
@@ -418,19 +395,27 @@ class ExperimentJobsSubCollectionClient(SubCollectionClient[T]):
         )
 
     def set_status(self, experiment_id: str | int, job_id: str | int, status: str) -> T:
-        """Sets the status for an experiment's job.
+        """Report a lifecycle transition for a submitted job.
 
-            Primarily used for testing or to reset a job that has failed, whose cause
-            has been remedied, in order to re-run the job.
+        Allowed transitions by current status:
+
+        * ``queued`` accepts ``started`` or ``deferred``.
+        * ``deferred`` accepts ``started``.
+        * ``started`` accepts ``finished`` or ``failed``.
+        * ``finished`` and ``failed`` are terminal.
 
         Args:
-            experiment_id: The experiment id, an integer.
-            job_id: The job id, an integer.
-            status: The new status for the job. The allowed values are: queued, started,
-                deferred, finished, failed.
+            experiment_id: The ID of the experiment containing the job.
+            job_id: The ID of the job whose lifecycle has advanced.
+            status: The resulting status. Use started, deferred, finished, or failed
+                as permitted by the current job status.
 
         Returns:
-            The response from the Dioptra API.
+            The API response with the job ID and status.
+
+        Raises:
+            StatusCodeError: A JSON client received a non-success response, such as
+                rejection of an invalid lifecycle transition.
         """
         json_ = {"status": status}
         return self._session.put(

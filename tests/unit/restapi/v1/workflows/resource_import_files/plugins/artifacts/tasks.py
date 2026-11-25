@@ -178,7 +178,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
         compression.
         - `feather` - A binary feather file.
         - `json` - A plain text JSON file.
-        - `pickle` - A binary pickle file.
         - `parquet` - A parquet file
 
         Args:
@@ -197,7 +196,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             - :py:meth:`pandas.DataFrame.to_csv`
             - :py:meth:`pandas.DataFrame.to_feather`
             - :py:meth:`pandas.DataFrame.to_json`
-            - :py:meth:`pandas.DataFrame.to_pickle`
             - :py:meth:`pandas.DataFrame.to_parquet`
         """
         filepath: Path = working_dir / name
@@ -208,7 +206,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             "csv.xz": {"func": contents.to_csv, "ext": ".csv.xz"},
             "feather": {"func": contents.to_feather, "ext": ".feather"},
             "json": {"func": contents.to_json, "ext": ".json"},
-            "pickle": {"func": contents.to_pickle, "ext": ".pkl"},
             "parquet": {"func": contents.to_parquet, "ext": ".parquet"},
         }
 
@@ -242,7 +239,6 @@ class DataframeArtifactTask(ArtifactTaskInterface):
             ".xz": {"func": pd.read_csv, "args": {"index_col": 0}},
             ".feather": {"func": pd.read_feather, "args": {}},
             ".json": {"func": pd.read_json, "args": {}},
-            ".pkl": {"func": pd.read_pickle, "args": {}},
             ".parquet": {"func": pd.read_parquet, "args": {}},
         }
 
@@ -261,7 +257,15 @@ class DataframeArtifactTask(ArtifactTaskInterface):
     def validation() -> dict[str, Any]:
         return {
             "format": {
-                "enum": ["csv", "bz2", "gz", "xz", "feather", "json", "pkl", "parquet"]
+                "enum": [
+                    "csv",
+                    "csv.bz2",
+                    "csv.gz",
+                    "csv.xz",
+                    "feather",
+                    "json",
+                    "parquet",
+                ]
             }
         }
 

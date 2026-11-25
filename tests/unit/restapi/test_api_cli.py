@@ -17,7 +17,7 @@ POSIX = pytest.mark.skipif(os.name == "nt", reason="Gunicorn needs a POSIX host.
 
 
 @pytest.fixture(autouse=True)
-def launcher_environment(monkeypatch, tmp_path):
+def launcher_environment(monkeypatch, tmp_path, tls_certificates):
     """Keep launcher tests independent of deployment variables and logging state."""
     for name in [
         *config._ENVIRONMENT_SETTINGS.values(),
@@ -31,6 +31,11 @@ def launcher_environment(monkeypatch, tmp_path):
         "GUNICORN_CMD_ARGS",
     ]:
         monkeypatch.delenv(name, raising=False)
+    cert, private_key, _ = tls_certificates
+    monkeypatch.setenv(
+        "GUNICORN_CMD_ARGS", f"--certfile '{cert}' --keyfile '{private_key}'"
+    )
+    monkeypatch.setenv("DIOPTRA_TLS_ALLOWED_AUTHORITIES", '["localhost:54321"]')
     monkeypatch.setenv("MLFLOW_TRACKING_URI", tmp_path.resolve().as_uri())
     monkeypatch.setattr(api, "configure_logging", lambda settings: None)
 
@@ -239,7 +244,9 @@ def test_dev_rejects_app_replacement(key, arguments):
 
 
 @POSIX
-def test_prod_native_configuration_and_fixed_factory(key, tmp_path, monkeypatch):
+def test_prod_native_configuration_and_fixed_factory(
+    key, tmp_path, monkeypatch, tls_certificates
+):
     """Retain Gunicorn option/config parsing with a fixed resolved Dioptra app.
 
     A working-directory change must not reinterpret the selected relative key or
@@ -250,6 +257,9 @@ def test_prod_native_configuration_and_fixed_factory(key, tmp_path, monkeypatch)
     root = tmp_path.resolve()
     target = root / "server"
     target.mkdir()
+    cert, private_key, _ = tls_certificates
+    (target / "server.crt").write_bytes(cert.read_bytes())
+    (target / "server.key").write_bytes(private_key.read_bytes())
     config_path = root / "gunicorn.conf.py"
     config_path.write_text("workers = 2\ntimeout = 47\n")
     monkeypatch.chdir(root)
@@ -362,12 +372,14 @@ def test_pre_exec_retains_configured_hook_and_invocation_directory(
     target.mkdir()
     configuration = root / "gunicorn.conf.py"
     configuration.write_text(
-        "def pre_exec(server):\n    server.operator_hook_ran = True\n"
+        "def pre_exec(server):\n    server.operator_hook_ran = True\n    server.observed_arguments = server.START_CTX['args'][: ]\n"
     )
     monkeypatch.chdir(root)
     monkeypatch.setattr(sys, "path", sys.path.copy())
     args = ["dioptra-api", "prod", "--key-file", "api-data/key"]
     monkeypatch.setattr(sys, "argv", args)
+    original = [sys.executable, "-m", "dioptra.restapi.cli.api", *args[1:]]
+    monkeypatch.setattr(sys, "orig_argv", original)
     settings = config.load_config("prod", overrides={"SECRET_KEY_FILE": key})
     app = DioptraApplication(
         settings, ["-c", str(configuration), "--chdir", str(target)]
@@ -376,6 +388,8 @@ def test_pre_exec_retains_configured_hook_and_invocation_directory(
     server = SimpleNamespace(START_CTX={"cwd": str(target)})
     app.cfg.pre_exec(server)
     assert server.operator_hook_ran
+    assert server.observed_arguments == original
+    assert server.START_CTX["args"] == original
     assert server.START_CTX["cwd"] == str(root)
     assert Path.cwd() == target
 

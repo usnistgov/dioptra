@@ -92,6 +92,9 @@ start_rq() {
 # Main script
 ###########################################################################################
 
+if [[ "${DIOPTRA_SSL_MANAGED:-0}" == "1" ]]; then
+  /usr/local/bin/check-ssl-material.sh
+fi
 wait_for_services
 start_rq
 # ] <-- needed because of Argbash

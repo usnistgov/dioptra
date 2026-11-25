@@ -30,9 +30,9 @@ TEST_DIR = "test_cruft_deploy"
 # Based on cookiecutter.json
 EXPECTED_DEFAULTS = {
     "deployment_name": "dioptra-deployment",  # slugified deployment name
-    "container_tag": "1.2.3",
+    "container_tag": "1.2.4",
     "docker_compose_path": "docker compose",
-    "nginx_server_name": "dioptra.example.org",
+    "nginx_server_name": "localhost",
     "nginx_expose_ports_on_localhost_only": "True",
     "postgres_container_tag": "17",
     "pgadmin_default_email": "dioptra@example.com",
@@ -191,7 +191,6 @@ def test_nginx_server_name(rendered_folder):
         "https_dbadmin.conf",
         "https_rustfs.conf",
         "https_mlflow.conf",
-        "https_restapi.conf",
     ]
 
     assert os.path.exists(nginx_config_dir), (

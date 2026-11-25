@@ -30,3 +30,4 @@ How to guides on advanced workflows.
 
       distribute-plugins
       develop-for-dioptra
+      recover-certificate-creation

@@ -21,15 +21,24 @@ functionalities for the model entity. The tests ensure that the models can be
 registered, renamed, deleted, and locked/unlocked as expected through the REST API.
 """
 
+import tarfile
+import tempfile
 from http import HTTPStatus
-from tempfile import TemporaryDirectory
+from pathlib import Path
 from typing import Any, cast
+from urllib.parse import parse_qs, urlsplit
+from uuid import UUID
 
 import mlflow
 import pytest
+from pytest import MonkeyPatch
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
-from dioptra.client.base import DioptraResponseProtocol
+from dioptra.client.base import DioptraResponseProtocol, StatusCodeError
 from dioptra.client.client import DioptraClient
+from dioptra.restapi.db import models
+from dioptra.restapi.v1.shared import job_run_store
 
 from ..lib import helpers, mock_mlflow
 from ..test_utils import assert_retrieving_resource_works, assert_searchable_field_works
@@ -68,7 +77,7 @@ def assert_artifact_response_contents_matches_expectations(
         "isDir",
         "fileSize",
         "fileUrl",
-        "artifactUri",
+        "artifactPath",
         "job",
         "deleted",
     }
@@ -86,11 +95,11 @@ def assert_artifact_response_contents_matches_expectations(
     assert isinstance(response["isDir"], bool)
     assert response["fileSize"] is None or isinstance(response["fileSize"], int)
     assert isinstance(response["fileUrl"], str)
-    assert isinstance(response["artifactUri"], str)
+    assert isinstance(response["artifactPath"], str)
     assert isinstance(response["job"], int)
     assert isinstance(response["deleted"], bool)
 
-    assert response["artifactUri"] == expected_contents["artifactUri"]
+    assert response["artifactPath"] == expected_contents["artifactPath"]
     assert response["description"] == expected_contents["description"]
     assert response["isDir"] == expected_contents["isDir"]
     assert response["job"] == expected_contents["job"]
@@ -178,23 +187,23 @@ def assert_retrieving_artifacts_works(
     )
 
 
-def assert_registering_existing_artifact_uri_fails(
+def assert_registering_existing_artifact_path_fails(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
-    uri: str,
+    artifact_path: str,
     group_id: int,
     job_id: int,
 ) -> None:
-    """Assert that registering an artifact with an existing uri fails.
+    """Assert that registering an artifact with an existing path fails.
 
     Args:
         client: The Flask test client.
-        uri: The uri to assign to the new artifact.
+        artifact_path: The artifact_path to assign to the new artifact.
 
     Raises:
         AssertionError: If the response status code is not 400.
     """
     response = dioptra_client.artifacts.create(
-        group_id=group_id, job_id=job_id, artifact_uri=uri, description=""
+        group_id=group_id, job_id=job_id, artifact_path=artifact_path, description=""
     )
     assert response.status_code == HTTPStatus.CONFLICT
 
@@ -234,7 +243,7 @@ def test_create_artifact(
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
     registered_artifact_plugins: dict[str, Any],
-    mlflow_artifact_uris: dict[str, str],
+    mlflow_artifact_paths: dict[str, str],
     job_name: str,
     artifact_name: str,
     plugin_name: str | None,
@@ -242,10 +251,10 @@ def test_create_artifact(
 ) -> None:
     """Test that artifacts can be correctly registered and retrieved using the API.
 
-    Given an authenticated user and an existing uri that has been logged to mlflow
+    Given an authenticated user and an existing path that has been logged to mlflow
     for the given job, this test validates the following sequence of actions:
 
-    - The user registers an artifact with uri "s3://bucket/model_v1.artifact".
+    - The user registers an artifact by its run-relative path.
     - The response is valid matches the expected values given the registration request.
     - The user is able to retrieve information about the artifact using the artifact id.
     """
@@ -253,14 +262,14 @@ def test_create_artifact(
     job_id = registered_jobs[job_name]["id"]
     user_id = auth_account["id"]
     group_id = auth_account["groups"][0]["id"]
-    uri = mlflow_artifact_uris[artifact_name]
+    artifact_path = mlflow_artifact_paths[artifact_name]
     task_contents = get_artifact_artifact_task_contents(
         dioptra_client, registered_artifact_plugins, plugin_name, task_index
     )
     artifact_response = dioptra_client.artifacts.create(
         group_id=group_id,
         job_id=job_id,
-        artifact_uri=uri,
+        artifact_path=artifact_path,
         plugin_snapshot_id=task_contents.get("pluginResourceSnapshotId", None),
         task_id=task_contents.get("id", None),
         description=description,
@@ -271,7 +280,7 @@ def test_create_artifact(
     assert_artifact_response_contents_matches_expectations(
         response=artifact_expected,
         expected_contents={
-            "artifactUri": uri,
+            "artifactPath": artifact_path,
             "description": description,
             "user_id": user_id,
             "group_id": group_id,
@@ -289,14 +298,28 @@ def test_register_artifact_with_missing_mlflow_run_returns_not_found(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_jobs: dict[str, Any],
-    registered_mlflowrun_incomplete: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run_id = registered_mlflowrun_incomplete["job1"]["mlflowRunId"]
+    """Verify artifact registration reports an unavailable run as not found.
+
+    The job has a persisted run association, but the tracking server cannot
+    retrieve that run. The API reports the missing run without registering
+    an artifact it cannot verify.
+    """
 
     def missing_run(
         self: mock_mlflow.MockMlflowClient, run_id: str
     ) -> mock_mlflow.MockMlflowRun:
+        """Raise the tracking error for a previously assigned run ID.
+
+        Args:
+            self: The test tracking client receiving the lookup.
+            run_id: The run requested by the artifact service.
+
+        Raises:
+            MlflowException: The test scenario simulates a missing run.
+        """
         raise mlflow.exceptions.MlflowException("Run not found")
 
     monkeypatch.setattr(mock_mlflow.MockMlflowClient, "get_run", missing_run)
@@ -304,7 +327,7 @@ def test_register_artifact_with_missing_mlflow_run_returns_not_found(
     response = dioptra_client.artifacts.create(
         group_id=auth_account["groups"][0]["id"],
         job_id=registered_jobs["job1"]["id"],
-        artifact_uri=f"s3://bucket/runs/1/{run_id}/artifacts/model_v1.artifact",
+        artifact_path="model v1.artifact",
         description="artifact with missing run",
     )
 
@@ -312,6 +335,92 @@ def test_register_artifact_with_missing_mlflow_run_returns_not_found(
     assert response.json()["error"] == "MlflowRunNotFoundError"
     assert response.json()["detail"] == {}
     assert "Failed to locate mlflow run" in response.json()["message"]
+
+
+def test_artifact_locations_keep_the_producing_run_after_reset(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db_session: Session,
+    registered_artifacts: dict[str, Any],
+    mockup_mlflow: mock_mlflow.MockMlflowClient,
+) -> None:
+    """A job can publish the same filename again after a development reset.
+
+    Both artifacts should remain accessible, each from the run that produced it.
+    Other files uploaded in the first run should share its storage directory.
+    """
+    first = registered_artifacts["artifact1"]
+    second = registered_artifacts["artifact2"]
+    first_location = db_session.get(models.ArtifactLocation, first["id"])
+    second_location = db_session.get(models.ArtifactLocation, second["id"])
+    assert first_location is not None and second_location is not None
+    original_prefix = first_location.storage_prefix_id
+    assert second_location.storage_prefix_id == original_prefix
+
+    new_run = mockup_mlflow.create_run("0")
+    binding = db_session.get(models.JobMlflowRun, first["job"])
+    assert binding is not None
+    binding.mlflow_run_id = UUID(new_run.info.run_id)
+    db_session.commit()
+    mlflow.start_run(new_run.info.run_id)
+    mlflow.log_artifact(first["artifactPath"], artifact_path=None)
+    mlflow.end_run()
+    response = dioptra_client.artifacts.create(
+        group_id=first["group"]["id"],
+        job_id=first["job"],
+        artifact_path=first["artifactPath"],
+    )
+    assert response.status_code == HTTPStatus.OK
+    replacement = response.json()
+    new_location = db_session.get(models.ArtifactLocation, replacement["id"])
+    assert new_location is not None
+    assert first_location.storage_prefix_id == original_prefix
+    assert new_location.storage_prefix_id != original_prefix
+    assert new_location.relative_path == first_location.relative_path
+
+    snapshot = dioptra_client.artifacts.snapshots.get_by_id(
+        first["id"], snapshot_id=first["snapshot"]
+    )
+    assert snapshot.status_code == HTTPStatus.OK
+    assert snapshot.json()["artifactPath"] == first["artifactPath"]
+
+    search = f'artifactPath:"{first["artifactPath"]}"'
+    matches = dioptra_client.artifacts.get(search=search, sort_by="artifactPath").json()
+    assert {artifact["id"] for artifact in matches["data"]} == {
+        first["id"],
+        registered_artifacts["artifact4"]["id"],
+        replacement["id"],
+    }
+
+
+def test_failed_first_registration_preserves_no_storage_prefix(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    db_session: Session,
+    auth_account: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    mlflow_artifact_paths: dict[str, str],
+) -> None:
+    """A task ID alone cannot identify the plugin that knows how to read a file.
+
+    Rejecting that registration should leave no record of the file or its run
+    directory, even though the upload to MLflow succeeded.
+    """
+    response = dioptra_client.artifacts.create(
+        group_id=auth_account["groups"][0]["id"],
+        job_id=registered_jobs["job1"]["id"],
+        artifact_path=mlflow_artifact_paths["artifact1"],
+        task_id=1,
+    )
+    assert response.status_code >= HTTPStatus.BAD_REQUEST
+    assert (
+        db_session.scalar(select(func.count()).select_from(models.ArtifactLocation))
+        == 0
+    )
+    assert (
+        db_session.scalar(
+            select(func.count()).select_from(models.ArtifactStoragePrefix)
+        )
+        == 0
+    )
 
 
 def test_artifacts_get_all(
@@ -356,10 +465,33 @@ def test_artifact_get_by_snapshot_id(
         assert response["snapshot"] == artifact["snapshot"]
 
 
+def test_artifact_snapshot_search_uses_the_requested_resource(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    registered_artifacts: dict[str, Any],
+) -> None:
+    """Searching one artifact’s history should match only its own file path.
+
+    A path belonging to a different artifact should return an empty page.
+    """
+    artifact = registered_artifacts["artifact1"]
+    other_path = registered_artifacts["artifact2"]["artifactPath"]
+    for path, expected in (
+        (artifact["artifactPath"], [artifact["snapshot"]]),
+        (other_path, []),
+    ):
+        response = dioptra_client.artifacts.snapshots.get(
+            artifact["id"], search=f'artifactPath:"{path}"'
+        )
+        assert response.status_code == HTTPStatus.OK
+        page = response.json()
+        assert page["totalNumResults"] == len(expected)
+        assert [snapshot["snapshot"] for snapshot in page["data"]] == expected
+
+
 @pytest.mark.parametrize(
     "field, value, expected_count",
     [
-        ("artifactUri", None, 1),
+        ("artifactPath", None, 2),
         ("description", None, 1),
         ("tag", "Foo", 0),
     ],
@@ -405,7 +537,7 @@ def test_artifact_sort(
     Given an authenticated user and registered artifacts, this test validates the
     following sequence of actions:
 
-    - A user registers four artifacts with these descriptions:
+    - A user registers four artifacts with distinct descriptions and a repeated path:
         "Model artifact.",
         "Trained conv net model artifact.",
         "Another model",
@@ -467,23 +599,23 @@ def test_artifact_group_query(
     )
 
 
-def test_cannot_register_existing_artifact_uri(
+def test_cannot_register_existing_artifact_path(
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:
-    """Test that registering a artifact with an existing uri fails.
+    """Test that registering a artifact with an existing path fails.
 
     Given an authenticated user and registered artifacts, this test validates the
     following sequence of actions:
 
-    - The user attempts to register a second artifact with the same uri.
+    - The user attempts to register a second artifact with the same path.
     - The request fails with an appropriate error message and response code.
     """
     existing_artifact = registered_artifacts["artifact1"]
-    assert_registering_existing_artifact_uri_fails(
+    assert_registering_existing_artifact_path_fails(
         dioptra_client,
-        uri=existing_artifact["artifactUri"],
+        artifact_path=existing_artifact["artifactPath"],
         group_id=existing_artifact["group"]["id"],
         job_id=existing_artifact["job"],
     )
@@ -519,7 +651,7 @@ def test_modify_artifact(
     assert_artifact_response_contents_matches_expectations(
         response=response,
         expected_contents={
-            "artifactUri": artifact_to_modify["artifactUri"],
+            "artifactPath": artifact_to_modify["artifactPath"],
             "description": "New Description",
             "user_id": artifact_to_modify["user"]["id"],
             "group_id": artifact_to_modify["group"]["id"],
@@ -531,44 +663,120 @@ def test_modify_artifact(
 
 
 def test_get_contents(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
     registered_artifacts: dict[str, Any],
 ) -> None:
-    """Test the get the contents of an artifact works.
+    """A download must close the server's file before removing its temporary copy.
 
-    Given an authenticated user and registered artifacts, this test validates the
-    following sequence of actions:
-
-    - The user is able to successfully retrieve the contents for an artifact
+    Windows prevents deletion while the file is open. The client should receive
+    the complete contents, and closing the response should leave no server files.
     """
-    existing_artifact = registered_artifacts["artifact1"]
-    with TemporaryDirectory() as tmp_dir:
-        contents = dioptra_client.artifacts.get_contents(
-            artifact_id=existing_artifact["id"], output_dir=tmp_dir
-        )
-        assert contents.exists()
+    server_temp = tmp_path / "server"
+    server_temp.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(server_temp))
+    contents = dioptra_client.artifacts.get_contents(
+        artifact_id=registered_artifacts["artifact1"]["id"], output_dir=tmp_path
+    )
+    assert contents.read_bytes() == b"test contents"
+    assert not list(server_temp.iterdir())
 
 
 def test_get_file_listing(
+    tmp_path: Path,
     dioptra_client: DioptraClient[DioptraResponseProtocol],
     auth_account: dict[str, Any],
-    registered_artifacts: dict[str, Any],
-    artifact_info: dict[str, Any],
+    registered_jobs: dict[str, Any],
+    registered_mlflowrun: dict[str, Any],
+    mockup_mlflow: mock_mlflow.MockMlflowClient,
 ) -> None:
-    """Test the get the file list for an artifact.
+    """A user can list a directory and download a nested file by its original name.
 
-    Given an authenticated user and registered artifacts, this test validates the
-    following sequence of actions:
-
-    - The user is able to successfully retrieve the file listing for an artifact
+    Spaces, Unicode letters, and a percent sign should survive both a snapshot
+    download and a download of the complete directory as an archive.
     """
-    info = artifact_info["artifact1"]
-    existing_artifact = registered_artifacts["artifact1"]
+    name = "résumé 測試 50%.csv"
+    relative_path = f"monthly/{name}"
+    mlflow.start_run(registered_mlflowrun["job1"]["mlflowRunId"])
+    mlflow.log_artifact(name, artifact_path="reports/monthly")
+    mlflow.end_run()
+    response = dioptra_client.artifacts.create(
+        group_id=auth_account["groups"][0]["id"],
+        job_id=registered_jobs["job1"]["id"],
+        artifact_path="reports",
+    )
+    assert response.status_code == HTTPStatus.OK
+    artifact = response.json()
+    artifact_id = artifact["id"]
     contents = cast(
         list[dict[str, Any]],
-        dioptra_client.artifacts.get_files(artifact_id=existing_artifact["id"]).json(),
+        dioptra_client.artifacts.get_files(artifact_id=artifact_id).json(),
     )
 
-    assert contents[0]["relativePath"] == info["name"]
-    assert not contents[0]["isDir"]
+    assert len(contents) == 1
+    entry = contents[0]
+    assert entry["relativePath"] == relative_path
+    listing_url = urlsplit(entry["fileUrl"])
+    assert listing_url.path == urlsplit(artifact["fileUrl"]).path
+    assert parse_qs(listing_url.query)["path"] == [relative_path]
+    child = dioptra_client.artifacts.get_contents(
+        artifact_id, artifact_path=entry["relativePath"], output_dir=tmp_path
+    )
+    assert child.read_bytes() == b"test contents"
+    snapshot = dioptra_client.artifacts.snapshots.get_contents(
+        artifact_id,
+        artifact["snapshot"],
+        artifact_path=relative_path,
+        output_dir=tmp_path,
+    )
+    assert snapshot.read_bytes() == b"test contents"
+    with pytest.raises(StatusCodeError) as invalid:
+        dioptra_client.artifacts.get_contents(
+            artifact_id, artifact_path=".", output_dir=tmp_path
+        )
+    assert invalid.value.status_code == HTTPStatus.BAD_REQUEST
+
+    archive = dioptra_client.artifacts.get_contents(artifact_id, output_dir=tmp_path)
+    with tarfile.open(archive, mode="r:gz") as bundle:
+        bundled_file = bundle.extractfile(f"reports/{relative_path}")
+        assert bundled_file is not None
+        assert bundled_file.read() == b"test contents"
+
+
+@pytest.mark.parametrize("malformed_field", ["relative_path", "relative_prefix"])
+def test_invalid_snapshot_location_is_rejected_before_storage_access(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    tmp_path: Path,
+    registered_artifacts: dict[str, Any],
+    db_session: Session,
+    monkeypatch: MonkeyPatch,
+    malformed_field: str,
+) -> None:
+    """An invalid location in the database should stop a snapshot download.
+
+    For example, an incomplete conversion could leave an empty filename.
+    The API should report the error before asking MLflow to look up the file.
+    """
+    artifact = registered_artifacts["artifact1"]
+    location = db_session.get(models.ArtifactLocation, artifact["id"])
+    assert location is not None
+    if malformed_field == "relative_prefix":
+        location.storage_prefix.relative_prefix = "invalid saved prefix"
+    else:
+        location.relative_path = ""
+    db_session.commit()
+
+    def unexpected_repository(*args, **kwargs):
+        """Fail the test if the malformed location reaches repository selection."""
+        pytest.fail("An invalid stored location reached artifact storage.")
+
+    monkeypatch.setattr(
+        job_run_store, "get_mlflow_artifact_repository", unexpected_repository
+    )
+    with pytest.raises(StatusCodeError) as invalid:
+        dioptra_client.artifacts.snapshots.get_contents(
+            artifact["id"], artifact["snapshot"], output_dir=tmp_path
+        )
+    assert invalid.value.status_code == HTTPStatus.INTERNAL_SERVER_ERROR

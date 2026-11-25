@@ -20,9 +20,24 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Union
 
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
+from dioptra.sdk.exceptions.task_engine import (
+    DioptraTypeError,
+    TypeReferenceCycleError,
+    ValidationLimitError,
+)
 from dioptra.task_engine import type_registry, type_validation, types, util
 from dioptra.task_engine.error_message import json_path_to_string
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.issues import (
+    IssueSeverity,
+    IssueType,
+    ValidationIssue,
+    ValidationLimitIssue,
+)
+from dioptra.task_engine.type_validation_state import (
+    TypeValidationLimits,
+    TypeValidationState,
+    check_validation_input,
+)
 
 SCHEMA_FILENAME = "experiment_schema.json"
 
@@ -129,6 +144,8 @@ def schema_validate(
     experiment_desc: Mapping[str, Any],
     schema: dict | None = None,
     resources: list[tuple[str, dict]] | None = None,
+    *,
+    limits: TypeValidationLimits | None = None,
 ) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description against a JSON-Schema
@@ -137,11 +154,20 @@ def schema_validate(
     Args:
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
+        schema: An optional JSON schema to use instead of the default schema.
+        resources: Additional schemas available for resolving references.
+        limits: Resource limits for input preflight. Defaults are used when omitted.
 
     Returns:
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
+    try:
+        if isinstance(experiment_desc, Mapping):
+            check_validation_input(experiment_desc, limits=limits)
+    except ValidationLimitError as error:
+        return [ValidationLimitIssue(error)]
+
     schema = schema or get_json_schema()
 
     error_messages = util.schema_validate(
@@ -347,15 +373,16 @@ def _check_artifact_output_types(
     return issues
 
 
-def _check_type_definition_type_references(
-    experiment_desc: Mapping[str, Any],
+def _check_type_definition_references(
+    experiment_desc: Mapping[str, Any], state: TypeValidationState
 ) -> list[ValidationIssue]:
     """
-    Check for references to undefined types in all type definitions.
+    Check that type definitions refer to known types without forming a cycle.
 
     Args:
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
+        state: State shared by the phases of the current validation.
 
     Returns:
         A list of ValidationIssue objects; will be an empty list if the
@@ -364,15 +391,17 @@ def _check_type_definition_type_references(
 
     type_defs = experiment_desc.get("types", {})
     type_names = type_registry.BUILTIN_TYPES.keys() | type_defs.keys()
-
     issues = []
 
     for type_name, type_def in type_defs.items():
         for type_ref in type_registry.get_dependency_types(type_def):
             if type_ref not in type_names:
-                message = (
-                    'In definition of type "{}": reference to undefined type: {}'
-                ).format(type_name, type_ref)
+                message = state.message(
+                    'In definition of type "',
+                    str(type_name),
+                    '": reference to undefined type: ',
+                    type_ref,
+                )
 
                 issue = ValidationIssue(
                     IssueType.SEMANTIC, IssueSeverity.ERROR, message
@@ -380,52 +409,30 @@ def _check_type_definition_type_references(
 
                 issues.append(issue)
 
-    return issues
-
-
-def _check_type_reference_cycle(
-    experiment_desc: Mapping[str, Any],
-) -> list[ValidationIssue]:
-    """
-    Check for a reference cycle among type definitions.
-
-    Args:
-        experiment_desc: The experiment description, as parsed YAML or
-            equivalent
-
-    Returns:
-        A list of ValidationIssue objects; will be an empty list if the
-        experiment description was valid.
-    """
-
-    type_defs = experiment_desc.get("types", {})
-    issues = []
-    message = None
+    if issues:
+        return issues
 
     try:
-        type_registry.get_sorted_types(type_defs)
+        type_registry.get_sorted_types(
+            type_defs, check_message_length=state.check_message_length
+        )
+    except TypeReferenceCycleError as error:
+        message = state.message(str(error))
+        return [ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)]
 
-    except BaseTaskEngineError as e:
-        # If all references resolve and the description is schema-valid, the
-        # only exception that could be thrown is a TypeReferenceCycleError.
-        # But I will catch all task engine errors, just in case.
-        message = str(e)
-
-    if message:
-        issue = ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
-        issues.append(issue)
-
-    return issues
+    return []
 
 
 def _check_union_member_duplicates(
     experiment_desc: Mapping[str, Any],
+    state: TypeValidationState,
 ) -> list[ValidationIssue]:
     """
     Check for union type definitions for which there is duplication in the
     membership.
 
     Args:
+        state: State shared by the phases of the current validation.
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
 
@@ -436,7 +443,12 @@ def _check_union_member_duplicates(
 
     issues = []
     type_defs = experiment_desc.get("types", {})
-    type_reg = type_registry.build_type_registry(type_defs)
+    if state.registry is None:
+        state.inspect(type_defs)
+        state.registry = type_registry.build_type_registry(
+            type_defs, check_message_length=state.check_message_length
+        )
+    type_reg = state.registry
 
     for type_name, type_ in type_reg.items():
         if isinstance(type_, types.UnionType):
@@ -450,7 +462,7 @@ def _check_union_member_duplicates(
 
             dupe_types = set()
             seen_types = set()
-            for member_type_def in member_type_defs:
+            for member_type_def in state.members(member_type_defs):
                 member_type = type_registry.build_or_get_type(member_type_def, type_reg)
 
                 if member_type in seen_types:
@@ -459,9 +471,15 @@ def _check_union_member_duplicates(
                     seen_types.add(member_type)
 
             if dupe_types:
-                message = (
-                    'In definition of type "{}": duplicate member types encountered: {}'
-                ).format(type_name, ", ".join(str(t) for t in dupe_types))
+                details = []
+                for duplicate in state.members(dupe_types):
+                    details.append(state.message(state.describe(duplicate), ", "))
+                prefix = state.message(
+                    'In definition of type "',
+                    type_name,
+                    '": duplicate member types encountered: ',
+                )
+                message = prefix + "".join(details)
 
                 issue = ValidationIssue(
                     IssueType.SEMANTIC, IssueSeverity.WARNING, message
@@ -1100,12 +1118,15 @@ def _any_errors(issues: Iterable[ValidationIssue]) -> bool:
     return any(issue.severity is IssueSeverity.ERROR for issue in issues)
 
 
-def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIssue]:
+def _manually_validate(
+    experiment_desc: Mapping[str, Any], state: TypeValidationState
+) -> list[ValidationIssue]:
     """
     Do any extra domain-specific handwritten validation we can think of, which
     can't be done (or awkward to do) via JSON-Schema.
 
     Args:
+        state: State shared by the phases of the current validation.
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
 
@@ -1162,26 +1183,33 @@ def _manually_validate(experiment_desc: Mapping[str, Any]) -> list[ValidationIss
 
     issues += _check_global_parameter_types(experiment_desc)
     issues += _check_artifact_output_types(experiment_desc)
-    issues += _check_type_definition_type_references(experiment_desc)
-    issues += _check_type_reference_cycle(experiment_desc)
+    issues += _check_type_definition_references(experiment_desc, state)
 
     # We must have basic things like correct types, tasks, steps, global
     # parameters, and resolvable references therein, before type validation can
     # be expected to succeed.  So maybe make type validation depend on
     # everything above?
     if not _any_errors(issues):
-        issues += type_validation.check_types(experiment_desc)
-
-        # This check re-creates the type registry, which can error out if
-        # there were type issues detected above (e.g. a type reference cycle).
-        # So let's skip the check if there were other errors.
-        issues += _check_union_member_duplicates(experiment_desc)
+        try:
+            issues += type_validation.check_types_with_state(experiment_desc, state)
+        except DioptraTypeError as error:
+            message = state.message(*error.message_parts())
+            issues.append(
+                ValidationIssue(IssueType.SEMANTIC, IssueSeverity.ERROR, message)
+            )
+        else:
+            # Reuse the registry built by type checking. Construction and duplicate
+            # diagnostics share this validation's resource allowances.
+            issues += _check_union_member_duplicates(experiment_desc, state)
 
     return issues
 
 
 def validate(
-    experiment_desc: Mapping[str, Any], schema: dict | None = None
+    experiment_desc: Mapping[str, Any],
+    schema: dict | None = None,
+    *,
+    limits: TypeValidationLimits | None = None,
 ) -> list[ValidationIssue]:
     """
     Validate the given declarative experiment description.
@@ -1189,20 +1217,35 @@ def validate(
     Args:
         experiment_desc: The experiment description, as parsed YAML or
             equivalent
+        schema: An optional JSON schema to use instead of the default schema.
+        limits: Resource limits for this validation. Defaults are used when omitted.
 
     Returns:
         A list of ValidationIssue objects; will be an empty list if the
         experiment description was valid.
     """
 
-    issues = schema_validate(experiment_desc, schema)
+    return _validate(experiment_desc, TypeValidationState(limits), schema)
 
-    # If the description is not schema-valid, the basic structure is incorrect,
-    # so we won't even try to dig inside it to check anything.
-    if not issues:
-        issues = _manually_validate(experiment_desc)
 
-    return issues
+def _validate(
+    experiment_desc: Mapping[str, Any],
+    state: TypeValidationState,
+    schema: dict | None = None,
+) -> list[ValidationIssue]:
+    """Run validation phases with state owned by the current validation."""
+    try:
+        # Reference discovery walks values before type inference. Bound those
+        # visits here, without restricting unrelated configuration sections.
+        if isinstance(experiment_desc, Mapping):
+            state.inspect(experiment_desc.get("parameters", {}))
+            state.inspect(experiment_desc.get("graph", {}))
+        issues = schema_validate(experiment_desc, schema, limits=state.limits)
+        if not issues:
+            issues = _manually_validate(experiment_desc, state)
+        return issues
+    except ValidationLimitError as error:
+        return [ValidationLimitIssue(error)]
 
 
 def is_valid(experiment_desc: Mapping[str, Any]) -> bool:

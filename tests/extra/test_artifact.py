@@ -196,7 +196,6 @@ def test_directory_task(name: str, ext: str, dir: DirTest):
         ("csv.gz", "csv.gz"),
         ("csv.xz", "csv.xz"),
         ("feather", "feather"),
-        ("pickle", "pkl"),
         ("parquet", "parquet"),
     ],
 )

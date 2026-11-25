@@ -45,7 +45,7 @@ print_main_help()
 read_properties_from_file()
 {
   echo "Reading environment from config file: ${1}"
-  file=`grep -v '^#\|^\s*$' ${1} | sed 's/\r//'`
+  file="$(grep -v '^#\|^\s*$' "${1}" | sed 's/\r//')"
   
   while IFS="=" read -r key value ; do
     case "${key}" in
@@ -97,7 +97,8 @@ read_init_parameters()
     case "$1" in
       --environment|--env|-e)
         export DIOPTRA_CONF_FILE="${2}"
-        export DIOPTRA_CONF_REAL_PATH="$(realpath ${2})"
+        DIOPTRA_CONF_REAL_PATH="$(realpath "${2}")" || return 1
+        export DIOPTRA_CONF_REAL_PATH
         shift
         break
         ;;
@@ -144,12 +145,12 @@ setup_tmux(){
 ###########################################################################################
 decide_dioptra_environment(){
     ###
-    SCRIPT_SOURCE="$(realpath ${BASH_SOURCE[0]})"
-    DIOPTRA_CONF_RP="$(realpath $DIOPTRA_CONF_FILE)" 
+    SCRIPT_SOURCE="$(realpath "${BASH_SOURCE[0]}")"
+    DIOPTRA_CONF_RP="$(realpath "${DIOPTRA_CONF_FILE}")"
     CURRENT_DOT_PATH="$(realpath ./)"
 
     tmux_dir_name="tmux-start"
-    parent_dir="$(basename $(dirname ${SCRIPT_SOURCE}))"
+    parent_dir="$(basename "$(dirname "${SCRIPT_SOURCE}")")"
 
     # Useful code chunks for debugging in case new functionality needs to be added 
     # echo "!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -181,7 +182,7 @@ decide_dioptra_environment(){
         export DIOPTRA_ML_FLOW="${DIOPTRA_CODE}/dev-kb/ml-flow"
         export DIOPTRA_LOCAL="${DIOPTRA_CODE}/dev-kb/local-setup"
     fi
-    dir="$(realpath ${DIOPTRA_CODE})"
+    dir="$(realpath "${DIOPTRA_CODE}")" || return 1
     echo "DIR=${dir}"
 
     ml_dir="${dir}/mlflow-${DIOPTRA_BRANCH}"
@@ -218,7 +219,7 @@ if [ "${BASH_MAJOR}" -lt 5 ]; then
   exit -1
 fi
 
-read_init_parameters $@
+read_init_parameters "$@" || exit 1
 # Section below is helpful for debugging
 #
 # echo "DCF = $DIOPTRA_CONF_FILE"
@@ -244,15 +245,15 @@ if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; the
     fi
 
     read_properties_from_file "${DIOPTRA_CONF_REAL_PATH}"
-    decide_dioptra_environment
+    decide_dioptra_environment || exit 1
 
     # check to make sure all scripts are available
-    if ! [ -d  ${DIOPTRA_CODE} ]; then
+    if ! [ -d "${DIOPTRA_CODE}" ]; then
         echo "[${DIOPTRA_CODE}]"
         echo "DIOPTRA_CODE [] environment variable does not point to a directory"
         exit -1
     fi
-    if ! [ -d  ${DIOPTRA_LOCAL} ]; then
+    if ! [ -d "${DIOPTRA_LOCAL}" ]; then
         echo "DIOPTRA_LOCAL [${DIOPTRA_LOCAL}] environment variable does not point to a directory"
         exit -1
     fi
@@ -261,12 +262,24 @@ if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; the
     # exit 0
 
     # Begin talking to tmux server and create a new session
-    tmux new-session -d -s di-all
+    for python_command in python3 python; do
+        if "$python_command" -c 'import pathlib, sys; sys.exit(sys.version_info.major != 3)' 2>/dev/null; then
+            break
+        fi
+        python_command=""
+    done
+    if [[ -z "$python_command" ]]; then
+        echo "Starting Dioptra requires Python 3. Install it or activate an environment with python3 or python on PATH." >&2
+        exit 1
+    fi
+    artifact_base_uri="$("$python_command" -c 'import sys; from pathlib import Path; print(Path(sys.argv[1]).as_uri())' "${DIOPTRA_MLF_ART}")" || exit 1
+    tmux new-session -d -s di-all -e "DIOPTRA_ARTIFACT_BASE_URI=${artifact_base_uri}" || exit 1
     setup_tmux
 
     # 0. Set up and name Flask pane
     tmux select-pane -t 0 -T 'Flask'
-    tmux send-keys "${DIOPTRA_LOCAL}/run-flask.sh" 'C-m'
+    printf -v flask_command '%q' "${DIOPTRA_LOCAL}/run-flask.sh"
+    tmux send-keys "$flask_command" 'C-m'
 
     # 1. Split out, set up, and name Redis pane
     tmux split-window -v -t 0
@@ -290,8 +303,11 @@ if ! [ -z "${DIOPTRA_CONF_FILE}" ] && ! [ -z "${DIOPTRA_CONF_REAL_PATH}" ] ; the
     # 4. Split out, set up, and name MLFlow pane
     tmux split-window -h -l 50% -t 3
     tmux select-pane -t 4 -T 'MLFlow'
-    tmux send-keys "source ${DIOPTRA_CODE}/${DIOPTRA_VENV}/bin/activate" 'C-m'
-    tmux send-keys "${DIOPTRA_ML_FLOW}/start-mlflow.sh --artifacts-destination ${DIOPTRA_MLF_ART} --backend-store-uri ${DIOPTRA_MLF_SQL} --port 35000" 'C-m'
+    printf -v activate_command 'source %q' "${DIOPTRA_CODE}/${DIOPTRA_VENV}/bin/activate"
+    printf -v mlflow_command '%q --artifacts-destination %q --backend-store-uri %q --port 35000' \
+        "${DIOPTRA_ML_FLOW}/start-mlflow.sh" "${DIOPTRA_MLF_ART}" "${DIOPTRA_MLF_SQL}"
+    tmux send-keys "$activate_command" 'C-m'
+    tmux send-keys "$mlflow_command" 'C-m'
 
     tmux -2 attach-session -t di-all
 else

@@ -27,7 +27,13 @@ from dioptra.sdk.api.swappable_validation import (
 )
 from dioptra.sdk.exceptions.base import BaseTaskEngineError
 from dioptra.task_engine import util, validation
-from dioptra.task_engine.issues import IssueSeverity, IssueType, ValidationIssue
+from dioptra.task_engine.issues import (
+    IssueSeverity,
+    IssueType,
+    ValidationIssue,
+    ValidationLimitIssue,
+)
+from dioptra.task_engine.type_validation_state import check_validation_input
 
 
 def get_swap_choices(declaration: dict[str, Any]) -> dict[str, Any]:
@@ -45,6 +51,7 @@ def render_swaps_config(
     Selected swaps retain their interface and just the selected alias. Unselected
     partial swaps retain all aliases. Registered task definitions are unchanged.
     """
+    check_validation_input(config)
     rendered = deepcopy(config)
     graph = rendered["graph"]
     # Share selection validation with the graph-only introspection helper.
@@ -94,7 +101,9 @@ class CompiledSwapsConfig:
         """Validate internally while returning only author-facing diagnostics."""
         with self.public_errors():
             return [
-                ValidationIssue(
+                issue
+                if isinstance(issue, ValidationLimitIssue)
+                else ValidationIssue(
                     issue.type, issue.severity, self.public_message(issue.message)
                 )
                 for issue in validation.validate(self.config)
@@ -129,6 +138,7 @@ def compile_swaps_config(config: Mapping[str, Any]) -> CompiledSwapsConfig:
     Each remaining swap must contain exactly one choice. Generated definitions
     are local to each step; original task definitions and the source are retained.
     """
+    check_validation_input(config)
     schema_issues = validation.schema_validate(
         config,
         get_swappable_experiment_schema(),

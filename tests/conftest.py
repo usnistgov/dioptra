@@ -14,6 +14,8 @@
 #
 # ACCESS THE FULL CC BY 4.0 LICENSE HERE:
 # https://creativecommons.org/licenses/by/4.0/legalcode
+import os
+
 import pytest
 
 
@@ -35,3 +37,22 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "v1_test" in item.keywords:
             item.add_marker(skip_v1)
+
+
+@pytest.fixture
+def tls_certificates(tmp_path):
+    """Issue a localhost certificate/key pair and CA trust file for TLS tests."""
+    if os.name == "nt":
+        pytest.skip("Certificate file protections require POSIX")
+    from dioptra.ssl import certificates, publication
+
+    ca_key, ca, _ = certificates.create_ca("Transport test CA", 2048, 2, None)
+    key, cert, _ = certificates.issue(
+        ca, ca_key, certificates.identities(("localhost",), ()), 2048, 1, None
+    )
+    cert_path, key_path, ca_path = (
+        tmp_path / name for name in ("server.crt", "server.key", "ca.crt")
+    )
+    publication.publish("create-ca", ca_key, ca, tmp_path / "ca.key", ca_path)
+    publication.publish("issue", key, cert, key_path, cert_path)
+    return cert_path, key_path, ca_path

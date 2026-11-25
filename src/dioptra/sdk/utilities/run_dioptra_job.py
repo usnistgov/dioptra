@@ -28,6 +28,7 @@ from typing import (
     MutableMapping,
     cast,
 )
+from uuid import UUID
 
 import mlflow
 import structlog
@@ -38,6 +39,7 @@ from dioptra.client import DioptraClient, connect_json_dioptra_client
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
 from dioptra.sdk.utilities.contexts import env_vars, import_temp
 from dioptra.sdk.utilities.entrypoint_swaps import compile_swaps_config
 from dioptra.task_engine.issues import IssueSeverity
@@ -254,11 +256,13 @@ def _get_client(log: BoundLogger) -> DioptraClient[dict[str, Any]]:
 
     # Instantiate a Dioptra client and login using worker's authentication details
     try:
-        client = connect_json_dioptra_client()
+        client = connect_json_dioptra_client(
+            key_exchange=os.getenv("DIOPTRA_TLS_KEY_EXCHANGE", "default")
+        )
 
-    except ValueError:
-        log.error(f"{ENV_DIOPTRA_API} environment variable is not set")
-        raise ValueError(f"{ENV_DIOPTRA_API} environment variable is not set") from None
+    except ValueError as exc:
+        log.error("Dioptra client configuration is invalid")
+        raise ValueError(f"Dioptra client configuration is invalid: {exc}") from exc
 
     client.auth.login(username=username, password=password)
 
@@ -282,6 +286,23 @@ def _download_artifacts(
     dioptra_client: DioptraClient[dict[str, Any]],
     log: BoundLogger,
 ) -> dict[str, Any]:
+    """Download the files and plugin code needed to read this job’s artifact inputs.
+
+    Inputs from different snapshots can have the same filename. Each snapshot
+    gets a separate directory so its deserializer can open the original name.
+
+    Args:
+        job_id: Resource ID of the consuming job.
+        context: Working directories for the job and its downloaded inputs.
+        dioptra_client: Authenticated client for the selected job.
+        log: Logger associated with the job.
+
+    Returns:
+        Artifact input metadata keyed by parameter name.
+
+    Raises:
+        StatusCodeError: If the API rejects an input or task download.
+    """
     artifact_params = dioptra_client.jobs.get_artifact_parameters(job_id=job_id)
     _save_as_json(context.artifact_parameters_file, artifact_params)
     for artifact in artifact_params.values():
@@ -302,7 +323,7 @@ def _download_artifacts(
             dioptra_client.artifacts.snapshots.get_contents(
                 artifact_id=artifact["artifact_id"],
                 artifact_snapshot_id=artifact["artifact_snapshot_id"],
-                file_stem=PurePosixPath(artifact["artifact_uri"]).name,
+                file_stem=PurePosixPath(artifact["artifact_path"]).name,
                 output_dir=artifact_dir,
             )
 
@@ -332,7 +353,21 @@ def _register_artifacts(
     dioptra_client: DioptraClient[dict[str, Any]],
     artifact_results_file: Path,
 ) -> None:
-    # load up the artifacts.json file
+    """Upload and register the outputs reported by the task engine.
+
+    MLflow stores each file or directory under the output name from the job.
+    Dioptra records that path so later jobs can download the same output.
+
+    Args:
+        group_id: Owning group for the registered artifacts.
+        job_id: Resource ID of the job bound to the active MLflow run.
+        dioptra_client: Authenticated client for the producing job.
+        artifact_results_file: Task engine manifest of outputs and artifact tasks.
+
+    Raises:
+        mlflow.exceptions.MlflowException: If MLflow cannot upload an output.
+        StatusCodeError: If the API rejects a registration.
+    """
     artifacts: list[ArtifactOutputEntry] = []
     if artifact_results_file.exists():
         artifacts = cast(
@@ -340,15 +375,14 @@ def _register_artifacts(
             _load_json(filepath=artifact_results_file).get("artifacts", []),
         )
     for artifact in artifacts:
-        artifact_path_name = PurePosixPath(artifact["path"]).name
-        # add artifact to mlflow
-        mlflow.log_artifact(local_path=artifact["path"], artifact_path=artifact["name"])
-        uri = mlflow.get_artifact_uri(f"{artifact['name']}/{artifact_path_name}")
-        # add artifact to dioptra_client
+        local_path = artifact["path"]
+        output_name = artifact["name"]
+        artifact_path = f"{output_name}/{PurePosixPath(local_path).name}"
+        mlflow.log_artifact(local_path=local_path, artifact_path=output_name)
         dioptra_client.artifacts.create(
             group_id=group_id,
             job_id=job_id,
-            artifact_uri=uri,
+            artifact_path=artifact_path,
             plugin_snapshot_id=artifact["task_plugin_snapshot_id"],
             task_id=artifact["task_id"],
             description=(
@@ -409,23 +443,32 @@ def _run_tracked_job(
     artifact_tasks: dict[str, ArtifactTaskEntry],
     logger: BoundLogger,
 ) -> None:
-    """Run the job and start tracking the run in MLflow tracking server.
+    """Execute a job with tracking and artifact publication in its assigned run.
 
     Args:
-        dioptra_client: A client for interacting with the Dioptra service.
-        plugins_dir: Path to the plugins directory
-        job_yaml: A declarative experiment description, as a mapping
-        job_parameters: Global parameters for this run, as a mapping from
-            parameter name to value
-        logger: A structlog logger instance. If not provided, a new logger
-            will be created
+        group_id: The group that owns the job and its registered artifacts.
+        job_id: The Dioptra job ID used for tracking and output registration.
+        entrypoint_name: The name under which to log the job's configuration.
+        dioptra_client: The authenticated client for reading the run and
+            registering artifacts with Dioptra.
+        context: Paths used for the job's task code, inputs, and outputs.
+        job_yaml: The job's declarative experiment configuration.
+        job_parameters: Resolved values for global task parameters.
+        artifact_parameters: Prepared inputs from existing artifacts.
+        artifact_tasks: Serializer tasks available to the task graph.
+        logger: Logger for the executing job.
+
+    Raises:
+        ValueError: The job has no run association or the ID is not a UUID.
+        StatusCodeError: Dioptra rejects the run lookup or artifact registration.
+        MlflowException: The assigned run cannot be resumed or tracking fails.
     """
-    active_run = mlflow.start_run()
+    run_id = dioptra_client.jobs.get_mlflow_run_id(job_id=job_id).get("mlflowRunId")
+    if not isinstance(run_id, str):
+        raise ValueError(f"Job {job_id} has no usable MLflow run ID.")
+    mlflow.start_run(run_id=UUID(run_id).hex)
 
     try:
-        dioptra_client.jobs.set_mlflow_run_id(
-            job_id=job_id, mlflow_run_id=active_run.info.run_id
-        )
         mlflow.set_tag(DIOPTRA_JOB_ID, job_id)
         mlflow.log_dict(cast(dict[str, Any], job_yaml), entrypoint_name)
         mlflow.log_params(cast(dict[str, Any], job_parameters))
@@ -580,7 +623,11 @@ def _validate_yaml(
     job_yaml: Mapping[str, Any],
     log: BoundLogger,
 ) -> None:
-    issues = compile_swaps_config(job_yaml).validate()
+    try:
+        issues = compile_swaps_config(job_yaml).validate()
+    except ValidationLimitError as error:
+        log.error("Found error in Job YAML", message=str(error))
+        raise
     errors: list[str] = []
 
     for issue in issues:

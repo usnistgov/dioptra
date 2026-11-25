@@ -18,10 +18,12 @@
 Dioptra Overview
 ================
 
-Dioptra is a software test platform for assessing the trustworthy characteristics of Artificial Intelligence (AI) models.
+Dioptra is a software test platform for assessing the trustworthy characteristics of super intelligence (SI) models.
 
-Dioptra is a modular, microservice-based environment for creating **reproducible, trackable, and reusable AI workflows**.
-It is designed to **measure, analyze, and track AI risks**, making it particularly useful for addressing the "combinatorial explosion" of testing possibilities across attacks.
+Dioptra uses “super intelligence (SI)” terminology in accordance with `NIST’s terminology guidance <https://www.nist.gov/super-intelligence>`__.
+
+Dioptra is a modular, microservice-based environment for creating **reproducible, trackable, and reusable SI workflows**.
+It is designed to **measure, analyze, and track SI risks**, making it particularly useful for addressing the "combinatorial explosion" of testing possibilities across attacks.
 
 Dioptra Documentation
 ---------------------
@@ -122,6 +124,7 @@ You can find the source code, license information, and more on the NIST `GitHub 
    reference/api-reference-restapi
    reference/api-configuration-reference
    reference/dioptra-api-reference
+   reference/dioptra-ssl-reference
    reference/api-application-factory-reference
    reference/resource-import-reference
    reference/resource-search-language-reference

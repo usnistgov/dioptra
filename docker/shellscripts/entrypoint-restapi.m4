@@ -128,6 +128,9 @@ start_restapi() {
 ###########################################################################################
 
 set_parsed_globals
+if [[ "${DIOPTRA_SSL_MANAGED:-0}" == "1" ]]; then
+  /usr/local/bin/check-ssl-material.sh
+fi
 wait_for_services
 upgrade_database
 start_restapi
