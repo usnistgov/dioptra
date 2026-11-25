@@ -39,6 +39,7 @@ from dioptra.client import DioptraClient, connect_json_dioptra_client
 from dioptra.client.base import StatusCodeError
 from dioptra.client.utils import FileTypes
 from dioptra.sdk.api.artifact import ArtifactTaskInterface
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
 from dioptra.sdk.utilities.contexts import env_vars, import_temp
 from dioptra.sdk.utilities.entrypoint_swaps import compile_swaps_config
 from dioptra.task_engine.issues import IssueSeverity
@@ -622,7 +623,11 @@ def _validate_yaml(
     job_yaml: Mapping[str, Any],
     log: BoundLogger,
 ) -> None:
-    issues = compile_swaps_config(job_yaml).validate()
+    try:
+        issues = compile_swaps_config(job_yaml).validate()
+    except ValidationLimitError as error:
+        log.error("Found error in Job YAML", message=str(error))
+        raise
     errors: list[str] = []
 
     for issue in issues:
