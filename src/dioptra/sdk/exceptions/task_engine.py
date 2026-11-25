@@ -231,7 +231,7 @@ class DioptraTypeError(BaseTaskEngineError):
 
         super().__init__(message)
 
-        # Step name which is the context for this error.
+        # Definition in which the error occurred.
         self.context_type_name = context_type_name
 
         self.__message = message
@@ -244,15 +244,18 @@ class DioptraTypeError(BaseTaskEngineError):
 
         :return: A composed error message string
         """
-        msg_parts = []
+        return "".join(self.message_parts())
+
+    def message_parts(self) -> tuple[str, ...]:
+        """Return the context and message as separate strings."""
         if self.context_type_name:
-            msg_parts.append(
-                'In definition of type "{}": '.format(self.context_type_name)
+            return (
+                'In definition of type "',
+                self.context_type_name,
+                '": ',
+                self.__message,
             )
-
-        msg_parts.append(self.__message)
-
-        return "".join(msg_parts)
+        return (self.__message,)
 
 
 class TypeNotFoundError(DioptraTypeError):
@@ -260,9 +263,10 @@ class TypeNotFoundError(DioptraTypeError):
     A reference to an unknown type was found.
     """
 
+    message_prefix = "Type not found: "
+
     def __init__(self, type_name: str, context_type_name: Optional[str] = None) -> None:
-        message = "Type not found: " + type_name
-        super().__init__(message, context_type_name)
+        super().__init__(self.message_prefix + type_name, context_type_name)
 
         self.type_name = type_name
 
@@ -272,11 +276,12 @@ class NonSimpleSuperTypeError(DioptraTypeError):
     A simple type definition referenced a super-type which was not simple.
     """
 
+    message_prefix = "Super-types must be simple: "
+
     def __init__(
         self, super_type_name: str, context_type_name: Optional[str] = None
     ) -> None:
-        message = "Super-types must be simple: " + super_type_name
-        super().__init__(message, context_type_name)
+        super().__init__(self.message_prefix + super_type_name, context_type_name)
 
         self.super_type_name = super_type_name
 
@@ -292,7 +297,7 @@ class InvalidKeyTypeError(DioptraTypeError):
         context_type_name: Optional[str] = None,
     ) -> None:
         message = "Invalid key type; require string or integer: {!s}".format(
-            invalid_key_type
+            (invalid_key_type.name or "<anonymous type>")[:128]
         )
 
         super().__init__(message, context_type_name)
@@ -361,7 +366,17 @@ class AnonymousSimpleTypeError(DioptraTypeError):
 class TypeReferenceCycleError(BaseTaskEngineError):
     """A cycle was detected in a set of type definitions."""
 
+    message_prefix = "Type reference cycle detected: "
+    separator = " > "
+
     def __init__(self, cycle: Iterable[str]) -> None:
-        super().__init__("Type reference cycle detected: {}".format(" > ".join(cycle)))
+        super().__init__(self.message_prefix + self.separator.join(cycle))
 
         self.cycle = cycle
+
+
+class ValidationLimitError(BaseTaskEngineError, ValueError):
+    """Validation exhausted a counted resource or encountered recursive input."""
+
+    def __init__(self, resource: str = "work") -> None:
+        super().__init__(f"Type validation exceeded its supported {resource} limit.")

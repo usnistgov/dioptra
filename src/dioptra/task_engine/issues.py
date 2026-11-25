@@ -16,6 +16,8 @@
 # https://creativecommons.org/licenses/by/4.0/legalcode
 import enum
 
+from dioptra.sdk.exceptions.task_engine import ValidationLimitError
+
 
 class IssueSeverity(enum.Enum):
     """
@@ -60,3 +62,10 @@ class ValidationIssue:
         )
 
         return value
+
+
+class ValidationLimitIssue(ValidationIssue):
+    """Report that validation stopped after exceeding a resource limit."""
+
+    def __init__(self, error: ValidationLimitError) -> None:
+        super().__init__(IssueType.TYPE, IssueSeverity.ERROR, str(error))

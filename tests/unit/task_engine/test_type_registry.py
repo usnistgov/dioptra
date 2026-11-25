@@ -17,6 +17,7 @@
 """
 Test building types from type definitions.
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -206,14 +207,19 @@ def test_build_nested_type() -> None:
 
 
 def test_build_mapping_type_invalid_key_type() -> None:
-    types = {"A": None, "bad_mapping_type": {"mapping": ["A", "integer"]}}
+    """Keep the invalid key and enclosing definition on the registry exception.
 
-    # The key type in a key/value type style mapping type must be either
-    # string or integer.
+    Direct registry callers get an exception with enough context to identify
+    a mapping that uses a type other than string or integer for its keys.
+    """
+    types = {"Category": None, "LabelCounts": {"mapping": ["Category", "integer"]}}
     with pytest.raises(InvalidKeyTypeError) as e:
         build_type_registry(types)
 
-    assert e.value.invalid_key_type == SimpleType("A")
+    assert e.value.invalid_key_type == SimpleType("Category")
+    assert e.value.context_type_name == "LabelCounts"
+    assert "LabelCounts" in str(e.value)
+    assert "Category" in str(e.value)
 
 
 def test_too_many_structure_types() -> None:
