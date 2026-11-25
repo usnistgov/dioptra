@@ -30,7 +30,7 @@ TEST_DIR = "test_cruft_deploy"
 # Based on cookiecutter.json
 EXPECTED_DEFAULTS = {
     "deployment_name": "dioptra-deployment",  # slugified deployment name
-    "container_tag": "1.2.3",
+    "container_tag": "1.2.4",
     "docker_compose_path": "docker compose",
     "nginx_server_name": "localhost",
     "nginx_expose_ports_on_localhost_only": "True",

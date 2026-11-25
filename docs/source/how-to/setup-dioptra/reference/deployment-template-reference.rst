@@ -58,7 +58,7 @@ If you are using locally built images instead, set this to an empty string.
 container_tag
 ~~~~~~~~~~~~~
 
-**Default:** ``1.2.3``
+**Default:** ``1.2.4``
 
 This should match the tags of the Dioptra container images you will be using.
 If you are using Docker, you can see the available tags by running ``docker images``.
@@ -209,7 +209,7 @@ Press Enter to accept the default, or type a new value.
 
    deployment_name [Dioptra deployment]: Dioptra deployment
    container_registry [ghcr.io/usnistgov]:
-   container_tag [1.2.3]: 1.2.3
+   container_tag [1.2.4]: 1.2.4
    docker_compose_path [docker compose]: docker compose
    systemd_required_mounts []:
    nginx_server_name [localhost]:
