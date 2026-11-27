@@ -116,7 +116,7 @@ def _resolve_archive(
         public = project.get("private") is False
         commit_path, commit_key = "commits", "sha"
     else:
-        api_host = "gitlab.com"
+        api_host = host
         base = f"https://{api_host}/api/v4/projects/{quote(repository, safe='')}"
         project = _metadata(session, base, api_host)
         public = project.get("visibility") == "public"
