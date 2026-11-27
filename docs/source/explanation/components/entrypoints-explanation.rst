@@ -99,6 +99,9 @@ Dioptra performs static type validation on entrypoints. Because every parameter 
 
 For example, if a string parameter is provided to a task expecting a DataFrame, Dioptra will flag the mismatch.
 
+See :ref:`explanation-parameter-type-systems` for the distinction between entrypoint
+parameter types, registered plugin parameter types, and Python type annotations.
+
 The Attached Queue(s)
 ------------------------
 

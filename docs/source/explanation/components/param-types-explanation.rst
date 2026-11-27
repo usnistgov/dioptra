@@ -30,6 +30,69 @@ parameter type. During validation of an entrypoint, these types are used to veri
 compatibility between the inputs and outputs of different steps, including artifact loading
 and usage.
 
+.. _explanation-parameter-type-systems:
+
+Entrypoint Types and Python Annotations
+----------------------------------------
+
+Dioptra uses three related descriptions of types. They serve different purposes:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 35 40
+
+   * - Description
+     - Where it is declared
+     - What it controls
+   * - Entrypoint parameter type
+     - The ``parameterType`` of a standard entrypoint parameter
+     - How a default or job-provided string value is converted before execution
+   * - Plugin parameter type
+     - A registered type assigned to a plugin task input or output
+     - Static compatibility checks between declared types in a task graph
+   * - Python type annotation
+     - An argument or return annotation in the plugin's Python source
+     - Information for developers and suggestions when Dioptra analyzes a plugin signature
+
+Standard entrypoint parameters accept ``string``, ``float``, ``integer``,
+``boolean``, ``list``, and ``mapping``. For example, an ``integer`` parameter
+converts the string ``"5"`` to the Python integer ``5``. A ``list`` parameter
+parses a JSON array, and a ``mapping`` parameter parses a JSON object.
+Selecting ``list`` alone does not specify the types of its elements.
+
+These names are not interchangeable with registered plugin parameter types.
+An entrypoint parameter uses ``float``, while the corresponding builtin plugin
+parameter type is ``number``. A plugin input that accepts a list of numbers can
+use a registered type such as ``numbers`` with the structure
+``{"list": "number"}``.
+
+Python annotations can help populate plugin task metadata. For example:
+
+.. code-block:: python
+
+   from dioptra import pyplugs
+
+   @pyplugs.register
+   def scale(values: list[float], factor: float) -> list[float]:
+       return [value * factor for value in values]
+
+Signature analysis suggests ``number`` for ``factor`` and a name such as
+``list_float`` for the list annotation. The suggested name does not define a
+list structure: review the registered type and supply its structure if element
+types matter. The plugin's input and output metadata are the declarations used
+for graph validation.
+
+Python does not enforce these annotations when calling a function. Likewise,
+Dioptra's static graph checks compare declared types and types inferred from
+configured values; they do not inspect the contents of every object produced
+by a plugin. A simple registered type named
+``nparray``, for example, does not validate an array's shape or dtype. The plugin
+implementation must honor its declared input and output contracts and perform
+any additional value checks its task requires.
+
+See :ref:`explanation-entrypoints` for standard and artifact parameters, and
+:ref:`how-to-create-parameter-types` for registering plugin parameter types.
+
 
 .. _explanation-plugin-parameter-types-structures:
 
@@ -115,7 +178,7 @@ For example, the output of this function:
 
 .. code-block:: python
    
-   def accuracy(correct: int, total: int) -> dict[str, float]:
+   def accuracy(correct: int, total: int) -> dict[str, str | float]:
       return {
          "name": "accuracy",
          "value": float(correct)/float(total),
@@ -206,7 +269,7 @@ And the second, ``list_of_nparray`` with the following structure:
 
 .. code-block:: json
 
-   { "list" : ["nparray"] }
+   { "list" : "nparray" }
 
 
 Note that as a simple type, ``nparray`` has no defined structure, and is just a placeholder
@@ -219,8 +282,8 @@ The input to this function:
 
 .. code-block:: python
    
-   def my_len(arrs: dict[str, list[np.ndarray]] | str) -> str:
-      return len(arrs) if isinstance(arr, str) else len(arrs["arr"])
+   def my_len(arrs: dict[str, list[np.ndarray]] | str) -> int:
+      return len(arrs) if isinstance(arrs, str) else len(arrs["arr"])
 
 
 can be represented with the following types:
@@ -230,15 +293,15 @@ can be represented with the following types:
 
 .. code-block:: json
 
-   { "list" : ["nparray"] }
+   { "list" : "nparray" }
 
-* ``nparry_dict`` with the structure:
+* ``nparray_dict`` with the structure:
 
 .. code-block:: json
 
    { "mapping" : ["string", "list_of_nparray"] }
 
-* ``nparry_dict_or_string`` with the structure:
+* ``nparray_dict_or_string`` with the structure:
 
 .. code-block:: json
 
@@ -248,7 +311,7 @@ can be represented with the following types:
 Note that the Python function uses a complex union type, ``dict[str, list[np.ndarray]] | str``. The example 
 not only defines that complex type, but also explicitly defines the subtypes of it, including the 
 ``list_of_nparray`` (``list[np.ndarray]``) and ``nparray_dict`` (``dict[str, list[np.ndarray]]``) as their own types.
-Defining these subtypes is optional, and the ``nparray_dict_or_str`` could be simply defined as follows:
+Defining these subtypes is optional, and the ``nparray_dict_or_string`` could be simply defined as follows:
 
 .. code-block:: json
 
@@ -257,7 +320,7 @@ Defining these subtypes is optional, and the ``nparray_dict_or_str`` could be si
          { 
             "mapping" : [
                "string", 
-               { "list" : ["nparray"] }
+               { "list" : "nparray" }
             ]
          }, 
          "string"
