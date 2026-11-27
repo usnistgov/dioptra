@@ -35,6 +35,7 @@ from structlog.stdlib import BoundLogger
 from werkzeug.wsgi import ClosingIterator
 
 from dioptra.restapi.db import models
+from dioptra.restapi.db.repository.artifacts import ArtifactRepository
 from dioptra.restapi.errors import QueryParameterValidationError
 from dioptra.restapi.routes import V1_ARTIFACTS_ROUTE
 from dioptra.restapi.utils import validate_artifact_child_path
@@ -55,8 +56,11 @@ from .schema import (
     ArtifactPageSchema,
     ArtifactSchema,
 )
-from .service import SEARCHABLE_FIELDS, ArtifactIdService, ArtifactService
-from .snapshot import ArtifactSnapshotIdService
+from .service import (
+    ArtifactIdService,
+    ArtifactService,
+    ArtifactSnapshotIdService,
+)
 
 LOGGER: BoundLogger = structlog.stdlib.get_logger()
 
@@ -338,7 +342,7 @@ ArtifactSnapshotsResource = generate_resource_snapshots_endpoint(
     resource_model=models.Artifact,
     resource_type=EntityType.ARTIFACT,
     route_prefix=V1_ARTIFACTS_ROUTE,
-    searchable_fields=SEARCHABLE_FIELDS,
+    searchable_fields=ArtifactRepository.SEARCHABLE_FIELDS,
     page_schema=ArtifactPageSchema,
     build_fn=utils.build_artifact,
 )

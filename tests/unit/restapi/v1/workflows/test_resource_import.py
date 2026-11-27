@@ -152,6 +152,62 @@ def assert_resource_import_overwrite_works(
 # -- Tests -----------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("same_file", [False, True])
+@pytest.mark.parametrize("second_kind", ["functions", "artifacts"])
+def test_import_task_names_are_unique_per_file(
+    dioptra_client, auth_account, tmp_path, same_file, second_kind
+):
+    plugin_dir = tmp_path / "tasks"
+    plugin_dir.mkdir()
+    first = plugin_dir / "first.py"
+    second = plugin_dir / "second.py"
+    first.write_text("# first task file")
+    second.write_text("# second task file")
+    second_filename = "first.py" if same_file else "second.py"
+    second_inputs = "input_params = []" if second_kind == "functions" else ""
+    config = tmp_path / "dioptra.toml"
+    config.write_text(
+        textwrap.dedent(f"""\
+        [[plugins]]
+        path = "tasks"
+        [[plugins.tasks.functions]]
+        filename = "first.py"
+        name = "duplicate"
+        input_params = []
+        output_params = []
+        [[plugins.tasks.{second_kind}]]
+        filename = "{second_filename}"
+        name = "duplicate"
+        {second_inputs}
+        output_params = []
+    """)
+    )
+    files = select_one_or_more_files(
+        [str(path) for path in (config, first, second)],
+        renames={
+            str(path): path.relative_to(tmp_path).as_posix()
+            for path in (config, first, second)
+        },
+    )
+    response = dioptra_client.workflows.import_resources(
+        auth_account["groups"][0]["id"], source=files
+    )
+    if same_file:
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.text
+        assert response.json()["error"] == "InputParameterNotUniqueError"
+        assert dioptra_client.plugins.get().json()["data"] == []
+    else:
+        assert response.status_code == HTTPStatus.OK, response.text
+        plugin_id = response.json()["resources"]["plugins"]["tasks"]
+        response = dioptra_client.plugins.files.get(plugin_id=plugin_id)
+        assert response.status_code == HTTPStatus.OK
+        assert {file["filename"] for file in response.json()["data"]} == {
+            "first.py",
+            "second.py",
+        }
+        assert response.json()["totalNumResults"] == 2
+
+
 @pytest.mark.parametrize(
     ("strategy", "existing"),
     [("fail", False), ("overwrite", False), ("update", False), ("update", True)],
@@ -594,6 +650,29 @@ def test_resource_import_update_deleted_queue(
         archive_file=resources_tar_file,
         description=description_to_replace,
     )
+
+
+def test_resource_import_update_dioptra_optic(
+    dioptra_client: DioptraClient[DioptraResponseProtocol],
+    auth_account: dict[str, Any],
+):
+    group_id = auth_account["groups"][0]["id"]
+    extra_path = Path(__file__).parents[5] / "extra"
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    response = dioptra_client.workflows.import_resources(
+        group_id=group_id,
+        source=select_files_in_directory(extra_path, recursive=True),
+        config_path="dioptra_optic.toml",
+        resolve_name_conflicts_strategy="update",
+    )
+    assert response.status_code == HTTPStatus.OK
 
 
 def test_resource_import_overwrite(

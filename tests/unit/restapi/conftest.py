@@ -38,10 +38,13 @@ from dioptra.client.base import DioptraResponseProtocol
 from dioptra.client.client import DioptraClient
 from dioptra.restapi.bootstrap import JobRunStoreConfiguration
 from dioptra.restapi.db import db as restapi_db
+from dioptra.restapi.db.repository.artifacts import ArtifactRepository
 from dioptra.restapi.db.repository.drafts import DraftsRepository
 from dioptra.restapi.db.repository.entrypoints import EntrypointRepository
 from dioptra.restapi.db.repository.experiments import ExperimentRepository
 from dioptra.restapi.db.repository.groups import GroupRepository
+from dioptra.restapi.db.repository.jobs import JobRepository
+from dioptra.restapi.db.repository.plugins import PluginRepository
 from dioptra.restapi.db.repository.queues import QueueRepository
 from dioptra.restapi.db.repository.types import TypeRepository
 from dioptra.restapi.db.repository.users import UserRepository
@@ -87,6 +90,7 @@ def dependency_modules() -> List[Any]:
         PasswordServiceModule,
         RQServiceConfiguration,
         RQServiceV1Module,
+        ServiceContextModule,
         _bind_password_service_configuration,
     )
 
@@ -105,13 +109,26 @@ def dependency_modules() -> List[Any]:
 
     def _bind_job_run_store_configuration(binder: Binder):
         binder.bind(interface=MlflowClient, to=MockMlflowClient(), scope=request)
+        binder.bind(
+            JobRunStoreConfiguration,
+            to=JobRunStoreConfiguration(
+                tracking_uri="file:///unused-fixture-mlruns",
+                artifact_base_uri="s3://dioptra-fixtures/outputs",
+            ),
+        )
 
     def configure(binder: Binder) -> None:
         _bind_password_service_configuration(binder)
         _bind_rq_service_configuration(binder)
         _bind_job_run_store_configuration(binder)
 
-    return [configure, PasswordServiceModule, RQServiceV1Module, JobRunStoreModule]
+    return [
+        configure,
+        PasswordServiceModule,
+        RQServiceV1Module,
+        JobRunStoreModule,
+        ServiceContextModule,
+    ]
 
 
 @pytest.fixture(scope="session")
@@ -387,5 +404,26 @@ def entrypoint_repo(db_session: DBSession) -> EntrypointRepository:
 
 
 @pytest.fixture
-def uow(db_session: DBSession) -> UnitOfWork:
-    return UnitOfWork()
+def plugin_repo(db_session: DBSession) -> PluginRepository:
+    repo = PluginRepository(db_session)
+
+    return repo
+
+
+@pytest.fixture
+def job_repo(db_session: DBSession) -> JobRepository:
+    repo = JobRepository(db_session)
+
+    return repo
+
+
+@pytest.fixture
+def artifact_repo(db_session: DBSession) -> ArtifactRepository:
+    repo = ArtifactRepository(db_session)
+
+    return repo
+
+
+@pytest.fixture
+def uow(db_session: DBSession, dependency_injector: Injector) -> UnitOfWork:
+    return dependency_injector.get(UnitOfWork)
