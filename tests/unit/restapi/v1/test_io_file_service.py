@@ -266,3 +266,219 @@ def test_resource_read_rejects_symlink_escape(tmp_path, io_file_service):
     (root / "link").symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(ValueError, match="escapes the import directory"):
         io_file_service.resolve_import_path(root, "link/outside")
+
+
+@pytest.mark.parametrize("mode", ["w:", "w:gz", "w:bz2", "w:xz"])
+@pytest.mark.parametrize("format_", [tarfile.PAX_FORMAT, tarfile.GNU_FORMAT])
+def test_archive_accepts_long_paths(mode, format_, tmp_path, io_file_service):
+    name = "snapshot/" + "nested/" * 20 + "file.py"
+    archive = BytesIO()
+    with tarfile.open(fileobj=archive, mode=mode, format=format_) as tar:
+        member = tarfile.TarInfo(name)
+        member.size = 8
+        if format_ == tarfile.PAX_FORMAT:
+            member.pax_headers = {"comment": "valid metadata " * 18000}
+        tar.addfile(member, BytesIO(b"contents"))
+    archive.seek(0)
+    files = io_file_service.safe_extract_archive(
+        tmp_path, archive_fileobj=archive, preserve_paths=True, strip_root=True
+    )
+    expected = tmp_path.joinpath(*Path(name).parts[1:])
+    assert files == [str(expected)]
+    assert expected.read_bytes() == b"contents"
+
+
+def _raw_header(type_, size):
+    member = tarfile.TarInfo("extension")
+    member.type = type_
+    member.size = size
+    return member.tobuf(format=tarfile.USTAR_FORMAT)
+
+
+@pytest.mark.parametrize(
+    "type_",
+    [
+        tarfile.XHDTYPE,
+        tarfile.XGLTYPE,
+        tarfile.SOLARIS_XHDTYPE,
+        tarfile.GNUTYPE_LONGNAME,
+        tarfile.GNUTYPE_LONGLINK,
+    ],
+)
+@pytest.mark.parametrize("after_file", [False, True])
+def test_archive_rejects_metadata_before_reading_body(
+    type_, after_file, monkeypatch, tmp_path, io_file_service
+):
+    # A small truncated fixture: no giant body or allocation is needed. A normal
+    # parser attempts the missing extension body and raises ReadError instead.
+    monkeypatch.setattr(file_io, "MAX_METADATA_BYTES", 2048)
+    prefix = b""
+    if after_file:
+        prefix = _raw_header(tarfile.REGTYPE, 0)
+    archive = BytesIO(prefix + _raw_header(type_, 8192))
+    with pytest.raises(ValueError, match="metadata exceeds the record size"):
+        io_file_service.safe_extract_archive(tmp_path, archive_fileobj=archive)
+    assert (tmp_path / "extension").exists() == after_file
+
+
+def test_archive_bounds_cumulative_metadata(monkeypatch, tmp_path, io_file_service):
+    monkeypatch.setattr(file_io, "MAX_METADATA_BYTES", 2048)
+    monkeypatch.setattr(file_io, "MAX_TOTAL_METADATA_BYTES", 2048)
+    archive = BytesIO()
+    with tarfile.open(fileobj=archive, mode="w:") as tar:
+        for number in range(3):
+            member = tarfile.TarInfo(f"file{number}")
+            member.pax_headers = {"comment": "metadata" * 10}
+            tar.addfile(member)
+    archive.seek(0)
+    with pytest.raises(ValueError, match="metadata exceeds the total size"):
+        io_file_service.safe_extract_archive(tmp_path, archive_fileobj=archive)
+    assert (tmp_path / "file0").is_file()
+    assert (tmp_path / "file1").is_file()
+    assert not (tmp_path / "file2").exists()
+
+
+def test_archive_counts_hidden_headers(monkeypatch, tmp_path, io_file_service):
+    monkeypatch.setattr(file_io, "MAX_HEADER_RECORDS", 2)
+    # Three hidden global headers precede the first yielded file.
+    header = _raw_header(tarfile.XGLTYPE, 0)
+    archive = BytesIO(header * 3 + _raw_header(tarfile.REGTYPE, 0) + b"\0" * 1024)
+    destination = tmp_path / "output"
+    with pytest.raises(ValueError, match="too many header records"):
+        io_file_service.safe_extract_archive(destination, archive_fileobj=archive)
+    assert not destination.exists()
+
+
+def test_archive_limits_compressed_input(monkeypatch, tmp_path, io_file_service):
+    monkeypatch.setattr(file_io, "MAX_ARCHIVE_BYTES", 20)
+    destination = tmp_path / "output"
+    with _archive([("file", tarfile.REGTYPE, b"contents")]) as archive:
+        with pytest.raises(ValueError, match="archive exceeds the size"):
+            io_file_service.safe_extract_archive(destination, archive_fileobj=archive)
+    assert not destination.exists()
+
+
+def test_archive_file_path_and_custom_limits(tmp_path, io_file_service):
+    archive_path = tmp_path / "input.tar.gz"
+    with _archive([("file", tarfile.REGTYPE, b"contents")]) as archive:
+        archive_path.write_bytes(archive.read())
+    limits = file_io.ArchiveLimits(file_bytes=4)
+    destination = tmp_path / "output"
+    with pytest.raises(ValueError, match="file exceeds"):
+        io_file_service.safe_extract_archive(
+            destination, archive_file_path=archive_path, limits=limits
+        )
+    assert not destination.exists()
+
+
+@pytest.mark.parametrize("timeout", [-1, float("inf"), float("nan")])
+def test_archive_rejects_invalid_timeout(timeout, tmp_path, io_file_service):
+    with pytest.raises(ValueError, match="finite and nonnegative"):
+        io_file_service.safe_extract_archive(
+            tmp_path, archive_fileobj=BytesIO(), timeout_seconds=timeout
+        )
+
+
+def test_archive_zero_timeout_does_not_start_worker(
+    monkeypatch, tmp_path, io_file_service
+):
+    def unexpected_start(*args, **kwargs):
+        pytest.fail("expired budget must not start a worker")
+
+    monkeypatch.setattr(file_io.subprocess, "Popen", unexpected_start)
+    with pytest.raises(ValueError, match="timed out"):
+        io_file_service.safe_extract_archive(
+            tmp_path, archive_fileobj=BytesIO(), timeout_seconds=0
+        )
+
+
+@pytest.mark.skipif(os.name != "posix", reason="SIGSTOP synchronizes a stalled worker")
+def test_archive_timeout_kills_and_reaps_active_worker(
+    monkeypatch, tmp_path, io_file_service
+):
+    import signal
+    from time import monotonic, sleep
+
+    real_popen = file_io.subprocess.Popen
+    processes = []
+    output = tmp_path / "output"
+
+    def stalled_after_first_write(*args, **kwargs):
+        process = real_popen(*args, **kwargs)
+        processes.append(process)
+        real_wait = process.wait
+        first_wait = True
+
+        def wait(timeout=None):
+            nonlocal first_wait
+            if first_wait:
+                first_wait = False
+                until = monotonic() + 5
+                while not (output / "file0").exists():
+                    assert process.poll() is None, "worker exited before first write"
+                    assert monotonic() < until, "worker did not start extraction"
+                    sleep(0.001)
+                os.kill(process.pid, signal.SIGSTOP)
+            return real_wait(timeout=timeout)
+
+        process.wait = wait
+        return process
+
+    monkeypatch.setattr(file_io.subprocess, "Popen", stalled_after_first_write)
+    # Enough tiny files to observe the worker while it is actively extracting.
+    with _archive([(f"file{i}", tarfile.REGTYPE, b"") for i in range(2000)]) as archive:
+        with pytest.raises(ValueError, match="timed out"):
+            io_file_service.safe_extract_archive(
+                output, archive_fileobj=archive, timeout_seconds=2
+            )
+    assert len(processes) == 1
+    assert processes[0].returncode == -signal.SIGKILL
+    with pytest.raises(ProcessLookupError):
+        os.kill(processes[0].pid, 0)
+    files = sorted(output.iterdir())
+    assert files
+    sleep(0.05)
+    assert sorted(output.iterdir()) == files
+
+
+def test_archive_worker_failure_is_reported(monkeypatch, tmp_path, io_file_service):
+    real_popen = file_io.subprocess.Popen
+
+    def crash_worker(args, **kwargs):
+        return real_popen([args[0], "-c", "raise SystemExit(73)"], **kwargs)
+
+    monkeypatch.setattr(file_io.subprocess, "Popen", crash_worker)
+    destination = tmp_path / "output"
+    with _archive([("file", tarfile.REGTYPE, b"contents")]) as archive:
+        with pytest.raises(ValueError, match="worker failed"):
+            io_file_service.safe_extract_archive(destination, archive_fileobj=archive)
+    assert not destination.exists()
+
+
+def test_archive_rejects_old_gnu_sparse_before_extensions(tmp_path, io_file_service):
+    header = bytearray(_raw_header(tarfile.GNUTYPE_SPARSE, 0))
+    header[482] = 1  # Claims an additional sparse map block, intentionally absent.
+    header[148:156] = b" " * 8
+    header[148:156] = f"{sum(header):06o}\0 ".encode()
+    with pytest.raises(ValueError, match="unsafe entry"):
+        io_file_service.safe_extract_archive(
+            tmp_path / "output", archive_fileobj=BytesIO(header)
+        )
+
+
+def test_archive_bounds_pax_sparse_map_reads(tmp_path, io_file_service):
+    archive = BytesIO()
+    body = (b"10000\n" + b"0\n" * 5000)[:8192]
+    with tarfile.open(fileobj=archive, mode="w:") as tar:
+        member = tarfile.TarInfo("sparse")
+        member.pax_headers = {"GNU.sparse.major": "1", "GNU.sparse.minor": "0"}
+        member.size = len(body)
+        tar.addfile(member, BytesIO(body))
+    archive.seek(0)
+    limits = file_io.ArchiveLimits(
+        total_bytes=1024, total_metadata_bytes=2048, header_records=2
+    )
+    with pytest.raises(ValueError, match="expanded size limit"):
+        io_file_service.safe_extract_archive(
+            tmp_path / "output", archive_fileobj=archive, limits=limits
+        )
